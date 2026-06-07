@@ -1,4 +1,4 @@
-from .models import KeikeuSpec
+from .models import Ticket
 
 
 def _bullets(items: list[str]) -> str:
@@ -18,47 +18,47 @@ def _status_from_length(raw: str) -> str:
     return "可扩纲（信息量已足够，建议先拉大纲）"
 
 
-def render_sop(spec: KeikeuSpec) -> str:
+def render_sop(ticket: Ticket) -> str:
     return f"""# 饼胚 SOP
 
 ## 原始灵感 I
 
-{spec.raw_idea.strip()}
+{ticket.raw.strip()}
 
 ## Tags
 
-{_bullets(spec.tags)}
+{_bullets(ticket.tags)}
 
 ## 饺子醋（必须保留的画面 / 瞬间）
 
-{_bullets(spec.vinegar)}
+{_bullets(ticket.jiaozi_cu)}
 
 ## Summary
 
-{spec.summary}
+{ticket.summary}
 
 ## 饺子（让饺子醋成立的铺垫）
 
-{_bullets(spec.dumplings)}
+{_bullets(ticket.jiaozi)}
 
 ## 成品形态
 
-{spec.final_form}
+{ticket.product}
 
 ## 禁忌
 
-{_bullets(spec.taboos)}
+{_bullets(ticket.taboo)}
 
 ## 下一步
 
-{_bullets(spec.next_steps)}
+{_bullets(ticket.next_step)}
 """
 
 
-def render_brief(spec: KeikeuSpec) -> str:
-    cp_tags = [t for t in spec.tags if any(sep in t for sep in ("/", "×", "x", "&"))]
+def render_brief(ticket: Ticket) -> str:
+    cp_tags = [t for t in ticket.tags if any(sep in t for sep in ("/", "×", "x", "&"))]
     cp_line = "、".join(cp_tags) if cp_tags else "（待补充）"
-    selling_points = spec.vinegar[:3] if spec.vinegar else ["（待补充）"]
+    selling_points = ticket.jiaozi_cu[:3] if ticket.jiaozi_cu else ["（待补充）"]
 
     return f"""# 约文 Brief
 
@@ -76,11 +76,11 @@ def render_brief(spec: KeikeuSpec) -> str:
 
 ## 必须出现的画面
 
-{_bullets(spec.vinegar)}
+{_bullets(ticket.jiaozi_cu)}
 
 ## 故事大意
 
-{spec.summary}
+{ticket.summary}
 
 ## 希望的风格
 
@@ -88,7 +88,7 @@ def render_brief(spec: KeikeuSpec) -> str:
 
 ## 禁忌与雷点
 
-{_bullets(spec.taboos)}
+{_bullets(ticket.taboo)}
 
 ## 可自由发挥部分
 
@@ -98,23 +98,23 @@ def render_brief(spec: KeikeuSpec) -> str:
 
 ## 篇幅建议
 
-{spec.final_form}
+{ticket.product}
 """
 
 
-def render_card(spec: KeikeuSpec) -> str:
-    headline_keyword = next((t for t in spec.tags if t != "同人"), "饼胚")
-    top_vinegar = spec.vinegar[0] if spec.vinegar else "（饺子醋待定）"
+def render_card(ticket: Ticket) -> str:
+    headline_keyword = next((t for t in ticket.tags if t != "同人"), "饼胚")
+    top_vinegar = ticket.jiaozi_cu[0] if ticket.jiaozi_cu else "（饺子醋待定）"
 
     return f"""# 灵感名片
 
 ## 一句话
 
-{spec.summary}
+{ticket.summary}
 
 ## 关键词
 
-{_bullets(spec.tags)}
+{_bullets(ticket.tags)}
 
 ## 我最想看到
 
@@ -122,13 +122,29 @@ def render_card(spec: KeikeuSpec) -> str:
 
 ## 适合做成
 
-{spec.final_form}
+{ticket.product}
 
 ## 当前状态
 
-{_status_from_length(spec.raw_idea)}
+{_status_from_length(ticket.raw)}
 
 ---
 
 _关键词锚点：{headline_keyword}_
 """
+
+
+# Ticket output modes — one Potion Ticket fans out into three Markdown views.
+MODES = {
+    "SOP": render_sop,
+    "Brief": render_brief,
+    "Card": render_card,
+}
+
+
+def render_ticket(ticket: Ticket, mode: str) -> str:
+    """Render a Ticket in one of its output modes: 'SOP' | 'Brief' | 'Card'."""
+    try:
+        return MODES[mode](ticket)
+    except KeyError as exc:
+        raise ValueError(f"未知输出模式：{mode}") from exc

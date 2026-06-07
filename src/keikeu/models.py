@@ -2,12 +2,17 @@ from dataclasses import dataclass, field
 
 
 @dataclass
-class KeikeuSpec:
-    raw_idea: str
+class Memo:
+    raw: str
+
+
+@dataclass
+class Ticket:
+    raw: str
     tags: list[str] = field(default_factory=list)
-    vinegar: list[str] = field(default_factory=list)
+    jiaozi_cu: list[str] = field(default_factory=list)
     summary: str = ""
-    dumplings: list[str] = field(default_factory=list)
-    final_form: str = ""
-    taboos: list[str] = field(default_factory=list)
-    next_steps: list[str] = field(default_factory=list)
+    jiaozi: list[str] = field(default_factory=list)
+    product: str = ""
+    taboo: list[str] = field(default_factory=list)
+    next_step: list[str] = field(default_factory=list)

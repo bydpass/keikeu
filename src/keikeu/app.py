@@ -3,7 +3,7 @@ from __future__ import annotations
 import customtkinter as ctk
 
 from .clipboard import copy_to_clipboard
-from .generator import generate_spec
+from .generator import make_ticket
 from .renderers import render_brief, render_card, render_sop
 
 TAB_SOP = "自用 SOP"
@@ -26,7 +26,7 @@ class KeikeuApp(ctk.CTk):
 
         ctk.CTkLabel(
             self,
-            text="饼胚输入区",
+            text="灵感输入区（灵光池）",
             font=ctk.CTkFont(size=16, weight="bold"),
             anchor="w",
         ).grid(row=0, column=0, sticky="ew", padx=20, pady=(20, 6))
@@ -43,7 +43,7 @@ class KeikeuApp(ctk.CTk):
         button_row.grid_columnconfigure(2, weight=1)
 
         ctk.CTkButton(
-            button_row, text="生成饼胚", width=140, command=self._on_generate
+            button_row, text="生成配方票", width=140, command=self._on_generate
         ).grid(row=0, column=0, padx=(0, 8))
         ctk.CTkButton(
             button_row,
@@ -90,15 +90,15 @@ class KeikeuApp(ctk.CTk):
     def _on_generate(self) -> None:
         raw = self.input_box.get("0.0", "end")
         try:
-            spec = generate_spec(raw)
+            ticket = make_ticket(raw)
         except ValueError as exc:
             self.status_label.configure(text=f"⚠ {exc}")
             return
 
         self.status_label.configure(text="")
-        self._set_output(TAB_SOP, render_sop(spec))
-        self._set_output(TAB_BRIEF, render_brief(spec))
-        self._set_output(TAB_CARD, render_card(spec))
+        self._set_output(TAB_SOP, render_sop(ticket))
+        self._set_output(TAB_BRIEF, render_brief(ticket))
+        self._set_output(TAB_CARD, render_card(ticket))
 
     def _on_clear(self) -> None:
         self.input_box.delete("0.0", "end")

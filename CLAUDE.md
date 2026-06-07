@@ -1,6 +1,6 @@
-# AGENTS.md
+# CLAUDE.md
 
-This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Repo status
 
@@ -12,9 +12,9 @@ keikeu is a fanwork pre-writing tool — the *幽灵助手* (ghost assistant) of
 
 Pipeline: **灵光池(Memo) → 配方票(Ticket) → 试药包(ReviewKit)**.
 
-- **Memo (灵光池)** — low-friction capture of a raw idea. Preserve the user's words; do not interrogate or flatten. (Legacy name 饼胚 = a Memo's raw input.)
-- **Ticket (配方票)** — the core: one Memo is structured into an executable brief that fans out into three Markdown output modes: a self-use **SOP**, a commission **Brief**, and an inspiration **Card**.
-- **ReviewKit (试药包)** — v0.2: after the author writes a prototype draft, generate critique materials (AI `skill.md`, human beta-reader sheet, revision log). Analyze only; never rewrite by default.
+- **Memo (灵光池)** — low-friction capture of a raw idea: a shipping ramble, scene craving, AU premise, plot seed, unshaped fandom thought. Preserve the user's words; do not interrogate or flatten. (Legacy name 饼胚 = a Memo's raw input.)
+- **Ticket (配方票)** — the core: one Memo is structured into an executable brief. The Ticket fans out into three Markdown output modes: a self-use **SOP**, a commission **Brief**, and an inspiration **Card**.
+- **ReviewKit (试药包)** — v0.2: after the author writes a prototype draft, generate critique materials (an AI `skill.md`, a human beta-reader sheet, a revision log). Analyze only; never rewrite by default.
 - **Slogan** — *别让好灵感烂在仓库里 — turn "I want to see this" into "here is how to write / commission / display it."*
 
 ## Product invariants
@@ -44,17 +44,19 @@ These hold across all versions.
 Concrete decisions already locked:
 
 - **Language:** Python, ≥3.11 and <3.14.
-- **GUI:** CustomTkinter (locked; neo's "tkinter" wording is generic).
+- **GUI:** CustomTkinter desktop app (locked; neo's "tkinter" wording is generic).
 - **Generator:** local mock / rule-based. No external AI API in v0.1.
 - **Storage:** no database. Markdown can be saved manually or copied to clipboard.
-- **Data flow:** `raw idea → Memo → Ticket → SOP Markdown / Brief Markdown / Card Markdown`. `Memo` and `Ticket` are the in-memory product data types (`Ticket` was `KeikeuSpec` pre-neo).
+- **Data flow:** `raw idea → Memo → Ticket → SOP Markdown / Brief Markdown / Card Markdown`. `Memo` and `Ticket` are the in-memory product data types (`Ticket` is the structured brief; `KeikeuSpec` was its pre-neo name).
 
 ## Open implementation decisions
 
-TECH SPEC deliberately leaves these unresolved:
+TECH SPEC v0.1 deliberately leaves these unresolved:
 
 - Packaging and distribution (PyInstaller, Briefcase, plain `pip`, etc.).
 - Whether to add a real LLM-backed generator behind a strategy boundary post-v0.1.
+
+GUI framework is now locked: **CustomTkinter** (per Task 001).
 
 ## Commands
 
@@ -75,7 +77,22 @@ Run the GUI:
 Run tests:
 
 ```bash
-.venv/bin/python -m pytest
+.venv/bin/python -m pytest        # all tests
+.venv/bin/python -m pytest tests/test_generator.py::test_empty_input_raises  # single test
+```
+
+Regenerate `examples/output_sample.md` from `examples/bug_cp.txt`:
+
+```bash
+.venv/bin/python -c "
+from pathlib import Path
+from keikeu.generator import make_ticket
+from keikeu.renderers import render_sop, render_brief, render_card
+raw = Path('examples/bug_cp.txt').read_text(encoding='utf-8')
+ticket = make_ticket(raw)
+out = '\n\n---\n\n'.join([render_sop(ticket), render_brief(ticket), render_card(ticket)])
+Path('examples/output_sample.md').write_text(out, encoding='utf-8')
+"
 ```
 
 ## Terminology
@@ -97,4 +114,4 @@ Run tests:
 - `.spec/keikeu_SPEC.md` — product spec (neo-0.1, Chinese), authoritative.
 - `.spec/techspec.md` — TECH SPEC (neo-0.1, English), locks Python version, CustomTkinter, generator strategy, real `src/` layout.
 - `.spec/IO_example.md` — I/O shapes for Memo / Ticket / ReviewKit.
-- `.Codex/settings.local.json` — local Codex permissions (currently only `rtk ls *` and `rtk read *`).
+- `.claude/settings.local.json` — local Claude permissions (currently only `rtk ls *` and `rtk read *`).

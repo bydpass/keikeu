@@ -1,0 +1,1999 @@
+{
+  "nodes": [
+    {
+      "id": "claude_settings_local",
+      "label": "settings.local.json",
+      "file_type": "code",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L1"
+    },
+    {
+      "id": "claude_settings_local_permissions",
+      "label": "permissions",
+      "file_type": "code",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L2"
+    },
+    {
+      "id": "claude_settings_local_permissions_allow",
+      "label": "allow",
+      "file_type": "code",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3"
+    },
+    {
+      "id": "keikeu_init",
+      "label": "__init__.py",
+      "file_type": "code",
+      "source_file": "src/keikeu/__init__.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "keikeu_app",
+      "label": "app.py",
+      "file_type": "code",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "keikeu_app_keikeuapp",
+      "label": "KeikeuApp",
+      "file_type": "code",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L14"
+    },
+    {
+      "id": "keikeu_app_keikeuapp_init",
+      "label": ".__init__()",
+      "file_type": "code",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L15"
+    },
+    {
+      "id": "keikeu_app_keikeuapp_set_output",
+      "label": "._set_output()",
+      "file_type": "code",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L83"
+    },
+    {
+      "id": "src_keikeu_app_py_str",
+      "label": "str",
+      "file_type": "code",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L83"
+    },
+    {
+      "id": "keikeu_app_keikeuapp_on_generate",
+      "label": "._on_generate()",
+      "file_type": "code",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L90"
+    },
+    {
+      "id": "keikeu_app_keikeuapp_on_clear",
+      "label": "._on_clear()",
+      "file_type": "code",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L103"
+    },
+    {
+      "id": "keikeu_app_keikeuapp_on_copy",
+      "label": "._on_copy()",
+      "file_type": "code",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L109"
+    },
+    {
+      "id": "keikeu_app_main",
+      "label": "main()",
+      "file_type": "code",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L125"
+    },
+    {
+      "id": "keikeu_clipboard",
+      "label": "clipboard.py",
+      "file_type": "code",
+      "source_file": "src/keikeu/clipboard.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "keikeu_clipboard_copy_to_clipboard",
+      "label": "copy_to_clipboard()",
+      "file_type": "code",
+      "source_file": "src/keikeu/clipboard.py",
+      "source_location": "L6"
+    },
+    {
+      "id": "any",
+      "label": "Any",
+      "file_type": "code",
+      "source_file": "src/keikeu/clipboard.py",
+      "source_location": "L6"
+    },
+    {
+      "id": "src_keikeu_clipboard_py_str",
+      "label": "str",
+      "file_type": "code",
+      "source_file": "src/keikeu/clipboard.py",
+      "source_location": "L6"
+    },
+    {
+      "id": "keikeu_clipboard_rationale_7",
+      "label": "Copy `text` to the system clipboard using Tk's built-in mechanism.      `root` s",
+      "file_type": "rationale",
+      "source_file": "src/keikeu/clipboard.py",
+      "source_location": "L7"
+    },
+    {
+      "id": "keikeu_generator",
+      "label": "generator.py",
+      "file_type": "code",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "keikeu_generator_normalize",
+      "label": "_normalize()",
+      "file_type": "code",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L20"
+    },
+    {
+      "id": "src_keikeu_generator_py_str",
+      "label": "str",
+      "file_type": "code",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L20"
+    },
+    {
+      "id": "keikeu_generator_split_sentences",
+      "label": "_split_sentences()",
+      "file_type": "code",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L24"
+    },
+    {
+      "id": "keikeu_generator_extract_tags",
+      "label": "_extract_tags()",
+      "file_type": "code",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L29"
+    },
+    {
+      "id": "keikeu_generator_extract_jiaozi_cu",
+      "label": "_extract_jiaozi_cu()",
+      "file_type": "code",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L54"
+    },
+    {
+      "id": "keikeu_generator_build_summary",
+      "label": "_build_summary()",
+      "file_type": "code",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L87"
+    },
+    {
+      "id": "keikeu_generator_build_jiaozi",
+      "label": "_build_jiaozi()",
+      "file_type": "code",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L95"
+    },
+    {
+      "id": "keikeu_generator_pick_product",
+      "label": "_pick_product()",
+      "file_type": "code",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L106"
+    },
+    {
+      "id": "keikeu_generator_build_taboo",
+      "label": "_build_taboo()",
+      "file_type": "code",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L115"
+    },
+    {
+      "id": "keikeu_generator_build_next_step",
+      "label": "_build_next_step()",
+      "file_type": "code",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L124"
+    },
+    {
+      "id": "keikeu_generator_make_memo",
+      "label": "make_memo()",
+      "file_type": "code",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L135"
+    },
+    {
+      "id": "memo",
+      "label": "Memo",
+      "file_type": "code",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L135"
+    },
+    {
+      "id": "keikeu_generator_make_ticket",
+      "label": "make_ticket()",
+      "file_type": "code",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L140"
+    },
+    {
+      "id": "src_keikeu_generator_py_ticket",
+      "label": "Ticket",
+      "file_type": "code",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L140"
+    },
+    {
+      "id": "keikeu_generator_rationale_136",
+      "label": "灵光池：先接住灵感，不整理、不审问，保留原文。",
+      "file_type": "rationale",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L136"
+    },
+    {
+      "id": "keikeu_generator_rationale_141",
+      "label": "配方票：把裸灵感整理成可执行的创作 brief。",
+      "file_type": "rationale",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L141"
+    },
+    {
+      "id": "keikeu_models",
+      "label": "models.py",
+      "file_type": "code",
+      "source_file": "src/keikeu/models.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "keikeu_models_memo",
+      "label": "Memo",
+      "file_type": "code",
+      "source_file": "src/keikeu/models.py",
+      "source_location": "L5"
+    },
+    {
+      "id": "keikeu_models_ticket",
+      "label": "Ticket",
+      "file_type": "code",
+      "source_file": "src/keikeu/models.py",
+      "source_location": "L10"
+    },
+    {
+      "id": "keikeu_renderers",
+      "label": "renderers.py",
+      "file_type": "code",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "keikeu_renderers_bullets",
+      "label": "_bullets()",
+      "file_type": "code",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L4"
+    },
+    {
+      "id": "src_keikeu_renderers_py_str",
+      "label": "str",
+      "file_type": "code",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L4"
+    },
+    {
+      "id": "keikeu_renderers_status_from_length",
+      "label": "_status_from_length()",
+      "file_type": "code",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L10"
+    },
+    {
+      "id": "keikeu_renderers_render_sop",
+      "label": "render_sop()",
+      "file_type": "code",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L21"
+    },
+    {
+      "id": "src_keikeu_renderers_py_ticket",
+      "label": "Ticket",
+      "file_type": "code",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L21"
+    },
+    {
+      "id": "keikeu_renderers_render_brief",
+      "label": "render_brief()",
+      "file_type": "code",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L58"
+    },
+    {
+      "id": "keikeu_renderers_render_card",
+      "label": "render_card()",
+      "file_type": "code",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L105"
+    },
+    {
+      "id": "keikeu_renderers_render_ticket",
+      "label": "render_ticket()",
+      "file_type": "code",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L145"
+    },
+    {
+      "id": "keikeu_renderers_rationale_146",
+      "label": "Render a Ticket in one of its output modes: 'SOP' | 'Brief' | 'Card'.",
+      "file_type": "rationale",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L146"
+    },
+    {
+      "id": "tests_test_generator",
+      "label": "test_generator.py",
+      "file_type": "code",
+      "source_file": "tests/test_generator.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "tests_test_generator_test_empty_input_raises",
+      "label": "test_empty_input_raises()",
+      "file_type": "code",
+      "source_file": "tests/test_generator.py",
+      "source_location": "L7"
+    },
+    {
+      "id": "tests_test_generator_test_whitespace_only_raises",
+      "label": "test_whitespace_only_raises()",
+      "file_type": "code",
+      "source_file": "tests/test_generator.py",
+      "source_location": "L12"
+    },
+    {
+      "id": "tests_test_generator_test_non_empty_returns_ticket_with_minimums",
+      "label": "test_non_empty_returns_ticket_with_minimums()",
+      "file_type": "code",
+      "source_file": "tests/test_generator.py",
+      "source_location": "L17"
+    },
+    {
+      "id": "tests_test_generator_test_raw_preserved_verbatim",
+      "label": "test_raw_preserved_verbatim()",
+      "file_type": "code",
+      "source_file": "tests/test_generator.py",
+      "source_location": "L27"
+    },
+    {
+      "id": "tests_test_generator_test_au_keyword_adds_next_step",
+      "label": "test_au_keyword_adds_next_step()",
+      "file_type": "code",
+      "source_file": "tests/test_generator.py",
+      "source_location": "L33"
+    },
+    {
+      "id": "tests_test_renderers",
+      "label": "test_renderers.py",
+      "file_type": "code",
+      "source_file": "tests/test_renderers.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "tests_test_renderers_test_sop_contains_required_header",
+      "label": "test_sop_contains_required_header()",
+      "file_type": "code",
+      "source_file": "tests/test_renderers.py",
+      "source_location": "L8"
+    },
+    {
+      "id": "tests_test_renderers_test_brief_contains_required_header",
+      "label": "test_brief_contains_required_header()",
+      "file_type": "code",
+      "source_file": "tests/test_renderers.py",
+      "source_location": "L14"
+    },
+    {
+      "id": "tests_test_renderers_test_card_contains_required_header",
+      "label": "test_card_contains_required_header()",
+      "file_type": "code",
+      "source_file": "tests/test_renderers.py",
+      "source_location": "L20"
+    },
+    {
+      "id": "tests_test_renderers_test_sop_preserves_raw",
+      "label": "test_sop_preserves_raw()",
+      "file_type": "code",
+      "source_file": "tests/test_renderers.py",
+      "source_location": "L26"
+    }
+  ],
+  "edges": [
+    {
+      "source": "claude_settings_local",
+      "target": "claude_settings_local_permissions",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_settings_local_permissions",
+      "target": "claude_settings_local_permissions_allow",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_rtk_ls",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_rtk_read",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_rtk_git",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_git_config",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_rtk_wc",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_rtk_grep",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_venv_bin_python",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_rtk_tree",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_python3",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "claude_settings_local_permissions_allow",
+      "target": "ref_bash_rtk_find",
+      "relation": "extends",
+      "confidence": "EXTRACTED",
+      "source_file": ".claude/settings.local.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "context": "import"
+    },
+    {
+      "source": "keikeu_app",
+      "target": "customtkinter",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_app",
+      "target": "keikeu_clipboard",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_app",
+      "target": "keikeu_generator",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_app",
+      "target": "keikeu_renderers",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_app",
+      "target": "keikeu_app_keikeuapp",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_app_keikeuapp",
+      "target": "keikeu_app_keikeuapp_init",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_app_keikeuapp",
+      "target": "keikeu_app_keikeuapp_set_output",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L83",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_app_keikeuapp_set_output",
+      "target": "src_keikeu_app_py_str",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L83",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_app_keikeuapp_set_output",
+      "target": "src_keikeu_app_py_str",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L83",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_app_keikeuapp",
+      "target": "keikeu_app_keikeuapp_on_generate",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L90",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_app_keikeuapp",
+      "target": "keikeu_app_keikeuapp_on_clear",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L103",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_app_keikeuapp",
+      "target": "keikeu_app_keikeuapp_on_copy",
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L109",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_app",
+      "target": "keikeu_app_main",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L125",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_app_keikeuapp_on_generate",
+      "target": "keikeu_app_keikeuapp_set_output",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L99",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_app_keikeuapp_on_clear",
+      "target": "keikeu_app_keikeuapp_set_output",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L106",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_app_main",
+      "target": "keikeu_app_keikeuapp",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L126",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_clipboard",
+      "target": "typing",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/clipboard.py",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_clipboard",
+      "target": "keikeu_clipboard_copy_to_clipboard",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/clipboard.py",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_clipboard_copy_to_clipboard",
+      "target": "any",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/clipboard.py",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_clipboard_copy_to_clipboard",
+      "target": "src_keikeu_clipboard_py_str",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/clipboard.py",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_clipboard_rationale_7",
+      "target": "keikeu_clipboard_copy_to_clipboard",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/clipboard.py",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator",
+      "target": "re",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator",
+      "target": "keikeu_models",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator",
+      "target": "keikeu_generator_normalize",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L20",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_normalize",
+      "target": "src_keikeu_generator_py_str",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L20",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_normalize",
+      "target": "src_keikeu_generator_py_str",
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L20",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator",
+      "target": "keikeu_generator_split_sentences",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L24",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_split_sentences",
+      "target": "src_keikeu_generator_py_str",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L24",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_split_sentences",
+      "target": "src_keikeu_generator_py_str",
+      "relation": "references",
+      "context": "generic_arg",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L24",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator",
+      "target": "keikeu_generator_extract_tags",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L29",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_extract_tags",
+      "target": "src_keikeu_generator_py_str",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L29",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_extract_tags",
+      "target": "src_keikeu_generator_py_str",
+      "relation": "references",
+      "context": "generic_arg",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L29",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator",
+      "target": "keikeu_generator_extract_jiaozi_cu",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L54",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_extract_jiaozi_cu",
+      "target": "src_keikeu_generator_py_str",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L54",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_extract_jiaozi_cu",
+      "target": "src_keikeu_generator_py_str",
+      "relation": "references",
+      "context": "generic_arg",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L54",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator",
+      "target": "keikeu_generator_build_summary",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L87",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_build_summary",
+      "target": "src_keikeu_generator_py_str",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L87",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_build_summary",
+      "target": "src_keikeu_generator_py_str",
+      "relation": "references",
+      "context": "generic_arg",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L87",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_build_summary",
+      "target": "src_keikeu_generator_py_str",
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L87",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator",
+      "target": "keikeu_generator_build_jiaozi",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L95",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_build_jiaozi",
+      "target": "src_keikeu_generator_py_str",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L95",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_build_jiaozi",
+      "target": "src_keikeu_generator_py_str",
+      "relation": "references",
+      "context": "generic_arg",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L95",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator",
+      "target": "keikeu_generator_pick_product",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L106",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_pick_product",
+      "target": "src_keikeu_generator_py_str",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L106",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_pick_product",
+      "target": "src_keikeu_generator_py_str",
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L106",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator",
+      "target": "keikeu_generator_build_taboo",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L115",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_build_taboo",
+      "target": "src_keikeu_generator_py_str",
+      "relation": "references",
+      "context": "generic_arg",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L115",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator",
+      "target": "keikeu_generator_build_next_step",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L124",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_build_next_step",
+      "target": "src_keikeu_generator_py_str",
+      "relation": "references",
+      "context": "generic_arg",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L124",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_build_next_step",
+      "target": "src_keikeu_generator_py_str",
+      "relation": "references",
+      "context": "generic_arg",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L124",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator",
+      "target": "keikeu_generator_make_memo",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L135",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_make_memo",
+      "target": "src_keikeu_generator_py_str",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L135",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_make_memo",
+      "target": "memo",
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L135",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator",
+      "target": "keikeu_generator_make_ticket",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L140",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_make_ticket",
+      "target": "src_keikeu_generator_py_str",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L140",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_make_ticket",
+      "target": "src_keikeu_generator_py_ticket",
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L140",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_extract_tags",
+      "target": "keikeu_generator_normalize",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L33",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_extract_jiaozi_cu",
+      "target": "keikeu_generator_split_sentences",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L55",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_build_summary",
+      "target": "keikeu_generator_normalize",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L88",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_pick_product",
+      "target": "keikeu_generator_normalize",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L107",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_make_memo",
+      "target": "memo",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L137",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_make_ticket",
+      "target": "keikeu_generator_extract_tags",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L146",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_make_ticket",
+      "target": "keikeu_generator_extract_jiaozi_cu",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L147",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_make_ticket",
+      "target": "keikeu_generator_build_summary",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L148",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_make_ticket",
+      "target": "keikeu_generator_build_jiaozi",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L149",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_make_ticket",
+      "target": "keikeu_generator_pick_product",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L150",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_make_ticket",
+      "target": "keikeu_generator_build_taboo",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L151",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_make_ticket",
+      "target": "keikeu_generator_build_next_step",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L152",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_make_ticket",
+      "target": "src_keikeu_generator_py_ticket",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L154",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_rationale_136",
+      "target": "keikeu_generator_make_memo",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L136",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_rationale_141",
+      "target": "keikeu_generator_make_ticket",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L141",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_models",
+      "target": "dataclasses",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/models.py",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_models",
+      "target": "keikeu_models_memo",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/models.py",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_models",
+      "target": "keikeu_models_ticket",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/models.py",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_renderers",
+      "target": "keikeu_models",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_renderers",
+      "target": "keikeu_renderers_bullets",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_renderers_bullets",
+      "target": "src_keikeu_renderers_py_str",
+      "relation": "references",
+      "context": "generic_arg",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_renderers_bullets",
+      "target": "src_keikeu_renderers_py_str",
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_renderers",
+      "target": "keikeu_renderers_status_from_length",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_renderers_status_from_length",
+      "target": "src_keikeu_renderers_py_str",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_renderers_status_from_length",
+      "target": "src_keikeu_renderers_py_str",
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_renderers",
+      "target": "keikeu_renderers_render_sop",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L21",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_renderers_render_sop",
+      "target": "src_keikeu_renderers_py_ticket",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L21",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_renderers_render_sop",
+      "target": "src_keikeu_renderers_py_str",
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L21",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_renderers",
+      "target": "keikeu_renderers_render_brief",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L58",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_renderers_render_brief",
+      "target": "src_keikeu_renderers_py_ticket",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L58",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_renderers_render_brief",
+      "target": "src_keikeu_renderers_py_str",
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L58",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_renderers",
+      "target": "keikeu_renderers_render_card",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L105",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_renderers_render_card",
+      "target": "src_keikeu_renderers_py_ticket",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L105",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_renderers_render_card",
+      "target": "src_keikeu_renderers_py_str",
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L105",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_renderers",
+      "target": "keikeu_renderers_render_ticket",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L145",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_renderers_render_ticket",
+      "target": "src_keikeu_renderers_py_ticket",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L145",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_renderers_render_ticket",
+      "target": "src_keikeu_renderers_py_str",
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L145",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_renderers_render_ticket",
+      "target": "src_keikeu_renderers_py_str",
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L145",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_renderers_render_sop",
+      "target": "keikeu_renderers_bullets",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L30",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_renderers_render_brief",
+      "target": "keikeu_renderers_bullets",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L75",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_renderers_render_card",
+      "target": "keikeu_renderers_bullets",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L117",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_renderers_render_card",
+      "target": "keikeu_renderers_status_from_length",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L129",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_renderers_rationale_146",
+      "target": "keikeu_renderers_render_ticket",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L146",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_test_generator",
+      "target": "pytest",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_generator.py",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_test_generator",
+      "target": "keikeu_generator",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_generator.py",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_test_generator",
+      "target": "keikeu_models",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_generator.py",
+      "source_location": "L4",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_test_generator",
+      "target": "tests_test_generator_test_empty_input_raises",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_generator.py",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_test_generator",
+      "target": "tests_test_generator_test_whitespace_only_raises",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_generator.py",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_test_generator",
+      "target": "tests_test_generator_test_non_empty_returns_ticket_with_minimums",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_generator.py",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_test_generator",
+      "target": "tests_test_generator_test_raw_preserved_verbatim",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_generator.py",
+      "source_location": "L27",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_test_generator",
+      "target": "tests_test_generator_test_au_keyword_adds_next_step",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_generator.py",
+      "source_location": "L33",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_test_renderers",
+      "target": "keikeu_generator",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_renderers.py",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_test_renderers",
+      "target": "keikeu_renderers",
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_renderers.py",
+      "source_location": "L2",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_test_renderers",
+      "target": "tests_test_renderers_test_sop_contains_required_header",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_renderers.py",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_test_renderers",
+      "target": "tests_test_renderers_test_brief_contains_required_header",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_renderers.py",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_test_renderers",
+      "target": "tests_test_renderers_test_card_contains_required_header",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_renderers.py",
+      "source_location": "L20",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_test_renderers",
+      "target": "tests_test_renderers_test_sop_preserves_raw",
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_renderers.py",
+      "source_location": "L26",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_app",
+      "target": "keikeu_clipboard_copy_to_clipboard",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_app",
+      "target": "keikeu_generator_make_ticket",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_app",
+      "target": "keikeu_renderers_render_brief",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_app",
+      "target": "keikeu_renderers_render_card",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_app",
+      "target": "keikeu_renderers_render_sop",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator",
+      "target": "keikeu_models_memo",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator",
+      "target": "keikeu_models_ticket",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_renderers",
+      "target": "keikeu_models_ticket",
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_make_memo",
+      "target": "keikeu_models_memo",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L137",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_generator_make_ticket",
+      "target": "keikeu_models_ticket",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L154",
+      "weight": 1.0
+    },
+    {
+      "source": "src_keikeu_generator_py_str",
+      "target": "keikeu_models_memo",
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L3",
+      "weight": 0.8
+    },
+    {
+      "source": "memo",
+      "target": "keikeu_models_memo",
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L3",
+      "weight": 0.8
+    },
+    {
+      "source": "src_keikeu_generator_py_ticket",
+      "target": "keikeu_models_memo",
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L3",
+      "weight": 0.8
+    },
+    {
+      "source": "src_keikeu_generator_py_str",
+      "target": "keikeu_models_ticket",
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L3",
+      "weight": 0.8
+    },
+    {
+      "source": "memo",
+      "target": "keikeu_models_ticket",
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L3",
+      "weight": 0.8
+    },
+    {
+      "source": "src_keikeu_generator_py_ticket",
+      "target": "keikeu_models_ticket",
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "src/keikeu/generator.py",
+      "source_location": "L3",
+      "weight": 0.8
+    },
+    {
+      "source": "src_keikeu_renderers_py_str",
+      "target": "keikeu_models_ticket",
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L1",
+      "weight": 0.8
+    },
+    {
+      "source": "src_keikeu_renderers_py_ticket",
+      "target": "keikeu_models_ticket",
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "src/keikeu/renderers.py",
+      "source_location": "L1",
+      "weight": 0.8
+    },
+    {
+      "source": "keikeu_app_keikeuapp_on_generate",
+      "target": "keikeu_generator_make_ticket",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L93",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_app_keikeuapp_on_generate",
+      "target": "keikeu_renderers_render_sop",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L99",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_app_keikeuapp_on_generate",
+      "target": "keikeu_renderers_render_brief",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L100",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_app_keikeuapp_on_generate",
+      "target": "keikeu_renderers_render_card",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L101",
+      "weight": 1.0
+    },
+    {
+      "source": "keikeu_app_keikeuapp_on_copy",
+      "target": "keikeu_clipboard_copy_to_clipboard",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/keikeu/app.py",
+      "source_location": "L118",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_test_generator_test_empty_input_raises",
+      "target": "keikeu_generator_make_ticket",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_generator.py",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_test_generator_test_whitespace_only_raises",
+      "target": "keikeu_generator_make_ticket",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_generator.py",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_test_generator_test_non_empty_returns_ticket_with_minimums",
+      "target": "keikeu_generator_make_ticket",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_generator.py",
+      "source_location": "L18",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_test_generator_test_raw_preserved_verbatim",
+      "target": "keikeu_generator_make_ticket",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_generator.py",
+      "source_location": "L29",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_test_generator_test_au_keyword_adds_next_step",
+      "target": "keikeu_generator_make_ticket",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_generator.py",
+      "source_location": "L34",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_test_renderers_test_sop_contains_required_header",
+      "target": "keikeu_generator_make_ticket",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_renderers.py",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_test_renderers_test_sop_contains_required_header",
+      "target": "keikeu_renderers_render_sop",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_renderers.py",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_test_renderers_test_brief_contains_required_header",
+      "target": "keikeu_generator_make_ticket",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_renderers.py",
+      "source_location": "L15",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_test_renderers_test_brief_contains_required_header",
+      "target": "keikeu_renderers_render_brief",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_renderers.py",
+      "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_test_renderers_test_card_contains_required_header",
+      "target": "keikeu_generator_make_ticket",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_renderers.py",
+      "source_location": "L21",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_test_renderers_test_card_contains_required_header",
+      "target": "keikeu_renderers_render_card",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_renderers.py",
+      "source_location": "L22",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_test_renderers_test_sop_preserves_raw",
+      "target": "keikeu_generator_make_ticket",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_renderers.py",
+      "source_location": "L27",
+      "weight": 1.0
+    },
+    {
+      "source": "tests_test_renderers_test_sop_preserves_raw",
+      "target": "keikeu_renderers_render_sop",
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/test_renderers.py",
+      "source_location": "L28",
+      "weight": 1.0
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

@@ -1,4 +1,4 @@
-from keikeu.generator import generate_spec
+from keikeu.generator import make_ticket
 from keikeu.renderers import render_brief, render_card, render_sop
 
 
@@ -6,24 +6,24 @@ SAMPLE = "A/B CP，某日 B 变成一只小虫。A 必须找到办法让 B 变�
 
 
 def test_sop_contains_required_header():
-    spec = generate_spec(SAMPLE)
-    out = render_sop(spec)
+    ticket = make_ticket(SAMPLE)
+    out = render_sop(ticket)
     assert "# 饼胚 SOP" in out
 
 
 def test_brief_contains_required_header():
-    spec = generate_spec(SAMPLE)
-    out = render_brief(spec)
+    ticket = make_ticket(SAMPLE)
+    out = render_brief(ticket)
     assert "# 约文 Brief" in out
 
 
 def test_card_contains_required_header():
-    spec = generate_spec(SAMPLE)
-    out = render_card(spec)
+    ticket = make_ticket(SAMPLE)
+    out = render_card(ticket)
     assert "# 灵感名片" in out
 
 
-def test_sop_preserves_raw_idea():
-    spec = generate_spec(SAMPLE)
-    out = render_sop(spec)
+def test_sop_preserves_raw():
+    ticket = make_ticket(SAMPLE)
+    out = render_sop(ticket)
     assert SAMPLE in out

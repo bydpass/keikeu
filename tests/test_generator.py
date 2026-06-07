@@ -1,35 +1,35 @@
 import pytest
 
-from keikeu.generator import generate_spec
-from keikeu.models import KeikeuSpec
+from keikeu.generator import make_ticket
+from keikeu.models import Ticket
 
 
 def test_empty_input_raises():
     with pytest.raises(ValueError):
-        generate_spec("")
+        make_ticket("")
 
 
 def test_whitespace_only_raises():
     with pytest.raises(ValueError):
-        generate_spec("   \n\t  ")
+        make_ticket("   \n\t  ")
 
 
-def test_non_empty_returns_spec_with_minimums():
-    spec = generate_spec("A 和 B 曾是一对 CP，某天 B 变成一只小虫。")
-    assert isinstance(spec, KeikeuSpec)
-    assert spec.raw_idea == "A 和 B 曾是一对 CP，某天 B 变成一只小虫。"
-    assert "同人" in spec.tags
-    assert len(spec.vinegar) >= 3
-    assert len(spec.dumplings) >= 3
-    assert len(spec.next_steps) >= 3
+def test_non_empty_returns_ticket_with_minimums():
+    ticket = make_ticket("A 和 B 曾是一对 CP，某天 B 变成一只小虫。")
+    assert isinstance(ticket, Ticket)
+    assert ticket.raw == "A 和 B 曾是一对 CP，某天 B 变成一只小虫。"
+    assert "同人" in ticket.tags
+    assert len(ticket.jiaozi_cu) >= 3
+    assert len(ticket.jiaozi) >= 3
+    assert len(ticket.next_step) >= 3
 
 
-def test_raw_idea_preserved_verbatim():
+def test_raw_preserved_verbatim():
     raw = "   多余空白测试   "
-    spec = generate_spec(raw)
-    assert spec.raw_idea == raw
+    ticket = make_ticket(raw)
+    assert ticket.raw == raw
 
 
 def test_au_keyword_adds_next_step():
-    spec = generate_spec("ABO 设定下 A 是 alpha，B 是 omega，想看初遇。")
-    assert any("AU" in step for step in spec.next_steps)
+    ticket = make_ticket("ABO 设定下 A 是 alpha，B 是 omega，想看初遇。")
+    assert any("AU" in step for step in ticket.next_step)

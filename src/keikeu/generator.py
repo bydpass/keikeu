@@ -1,6 +1,6 @@
 import re
 
-from .models import KeikeuSpec
+from .models import Memo, Ticket
 
 _CP_PATTERN = re.compile(r"[A-Za-z一-鿿]+\s*[/×x&]\s*[A-Za-z一-鿿]+")
 _AU_KEYWORDS = (
@@ -51,7 +51,7 @@ def _extract_tags(raw: str) -> list[str]:
     return deduped[:8]
 
 
-def _extract_vinegar(raw: str) -> list[str]:
+def _extract_jiaozi_cu(raw: str) -> list[str]:
     sentences = _split_sentences(raw)
     picked: list[str] = []
 
@@ -92,7 +92,7 @@ def _build_summary(raw: str, tags: list[str]) -> str:
     return f"围绕「{anchor}」展开的同人创作：{snippet}"
 
 
-def _build_dumplings(raw: str) -> list[str]:
+def _build_jiaozi(raw: str) -> list[str]:
     base = [
         "前因 — 让饺子醋成立的人物状态与关系铺垫",
         "中段 — 把情绪和处境推到饺子醋爆点",
@@ -103,7 +103,7 @@ def _build_dumplings(raw: str) -> list[str]:
     return base
 
 
-def _pick_final_form(raw: str) -> str:
+def _pick_product(raw: str) -> str:
     length = len(_normalize(raw))
     if length < 200:
         return "短打片段（适合一口气写完）"
@@ -112,7 +112,7 @@ def _pick_final_form(raw: str) -> str:
     return "长篇 / 多段（建议提前写大纲）"
 
 
-def _build_taboos() -> list[str]:
+def _build_taboo() -> list[str]:
     return [
         "OOC（角色失真）",
         "突然降智或破坏角色逻辑",
@@ -121,7 +121,7 @@ def _build_taboos() -> list[str]:
     ]
 
 
-def _build_next_steps(tags: list[str]) -> list[str]:
+def _build_next_step(tags: list[str]) -> list[str]:
     steps = [
         "从饺子醋反推，开写第一段",
         "压缩成约文 Brief 发给写手 / 画师",
@@ -132,26 +132,32 @@ def _build_next_steps(tags: list[str]) -> list[str]:
     return steps
 
 
-def generate_spec(raw_idea: str) -> KeikeuSpec:
+def make_memo(raw: str) -> Memo:
+    """灵光池：先接住灵感，不整理、不审问，保留原文。"""
+    return Memo(raw=raw)
+
+
+def make_ticket(raw_idea: str) -> Ticket:
+    """配方票：把裸灵感整理成可执行的创作 brief。"""
     if not raw_idea or not raw_idea.strip():
         raise ValueError("饼胚不能为空")
 
     raw = raw_idea  # preserve original verbatim
     tags = _extract_tags(raw)
-    vinegar = _extract_vinegar(raw)
+    jiaozi_cu = _extract_jiaozi_cu(raw)
     summary = _build_summary(raw, tags)
-    dumplings = _build_dumplings(raw)
-    final_form = _pick_final_form(raw)
-    taboos = _build_taboos()
-    next_steps = _build_next_steps(tags)
+    jiaozi = _build_jiaozi(raw)
+    product = _pick_product(raw)
+    taboo = _build_taboo()
+    next_step = _build_next_step(tags)
 
-    return KeikeuSpec(
-        raw_idea=raw,
+    return Ticket(
+        raw=raw,
         tags=tags,
-        vinegar=vinegar,
+        jiaozi_cu=jiaozi_cu,
         summary=summary,
-        dumplings=dumplings,
-        final_form=final_form,
-        taboos=taboos,
-        next_steps=next_steps,
+        jiaozi=jiaozi,
+        product=product,
+        taboo=taboo,
+        next_step=next_step,
     )
