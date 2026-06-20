@@ -1,0 +1,481 @@
+"""Markdown serialization for keikeu (appdesign.md Step 4).
+
+Pure Python. No Flet, no GUI, no third-party dependencies (no PyYAML).
+
+Each user asset is one Markdown file: a flat ``key: value`` frontmatter block
+fenced by ``---`` lines at the very top, then a body of ``#``/``##`` sections.
+Frontmatter holds authoritative scalars (status, enums, datetimes) parsed back
+exactly; the body holds free-text prose and lists.
+
+Product invariant 1 (sacred): the user's words are preserved verbatim. Free-text
+body fields (a cache's raw spark, an outline's raw inspiration, etc.) round-trip
+without summarizing, flattening, or rewriting. The only framing this module owns
+is the single blank line inserted after each header — that one blank line is
+stripped on read; everything else, including internal blank lines, ``##`` and
+``---`` lines inside content, is kept byte-for-byte.
+
+Documented limitations (acceptable for MVP): a free-text field loses purely
+leading/trailing newline framing; a content line byte-identical to a known
+structural header is not supported; interior CRLF is normalized to LF. In the
+list fields, a character name containing ``", "`` or a relation field containing
+``" | "`` is split on that delimiter, so keep those delimiters out of list
+values. Frontmatter scalars are backslash-escaped, so they round-trip exactly
+even across embedded newlines.
+"""
+
+from __future__ import annotations
+
+import secrets
+from datetime import datetime
+from pathlib import Path
+
+from keikeu_core.models import (
+    Cache,
+    CacheStatus,
+    EndingType,
+    Outline,
+    Relation,
+    RelationType,
+)
+
+__all__ = [
+    "write_cache",
+    "read_cache",
+    "update_cache",
+    "write_outline",
+    "read_outline",
+    "update_outline",
+]
+
+_FENCE = "---"
+
+# Body section headers, byte-exact and in document order. A body line is treated
+# as a section boundary only if it is identical to one of these for its type.
+_CACHE_HEADERS = ("## 原始灵感", "## 临时备注")
+_OUTLINE_HEADERS = (
+    "## 1. 原始灵感",
+    "## 2. 整理后摘要",
+    "## 3. Fandom + 人物 / CP",
+    "## 4. 观前提醒",
+    "## 5. 流水账",
+    "## 6. Ending Type",
+    "## 7. 与其他灵感的逻辑关联（Optional）",
+)
+
+# Characters that are unsafe in a filename on common filesystems.
+_DANGEROUS_CHARS = set('/\\:*?"<>|')
+
+
+# --------------------------------------------------------------------------- #
+# Filename helpers
+# --------------------------------------------------------------------------- #
+
+
+def _slugify(title: str) -> str:
+    """Turn ``title`` into a filesystem-safe slug, keeping CJK and alphanumerics.
+
+    Removes filesystem-dangerous characters and ASCII control characters,
+    collapses internal whitespace runs to a single ``-``, and strips leading and
+    trailing dots and whitespace. Falls back to ``"untitled"`` when nothing
+    usable remains.
+    """
+    kept = []
+    for ch in title:
+        if ch in _DANGEROUS_CHARS:
+            continue
+        # Drop ASCII control characters, but keep whitespace controls (tab,
+        # newline): str.split below treats them as word separators, so they
+        # become slug "-" boundaries rather than being silently swallowed.
+        if ord(ch) < 0x20 and not ch.isspace():
+            continue
+        kept.append(ch)
+    cleaned = "".join(kept)
+    # Collapse internal whitespace runs (incl. tab/newline) to a single "-".
+    slug = "-".join(cleaned.split())
+    slug = slug.strip(". \t")
+    return slug or "untitled"
+
+
+def _unique_path(directory: Path, created: datetime, title: str) -> Path:
+    """Return a not-yet-existing file path in ``directory`` for the asset.
+
+    Filename is ``<YYYY-MM-DD-HHMMSS>-<short_id>-<slug>.md``. ``short_id`` is a
+    fresh 4-hex-char token regenerated until the path does not already exist, so
+    two assets with the same second and title never collide.
+    """
+    stamp = created.strftime("%Y-%m-%d-%H%M%S")
+    slug = _slugify(title)
+    while True:
+        short_id = secrets.token_hex(2)
+        candidate = directory / f"{stamp}-{short_id}-{slug}.md"
+        if not candidate.exists():
+            return candidate
+
+
+# --------------------------------------------------------------------------- #
+# Frontmatter helpers
+# --------------------------------------------------------------------------- #
+
+
+def _escape_scalar(value: str) -> str:
+    """Escape characters that would break a single-line frontmatter scalar.
+
+    Frontmatter is flat ``key: value`` lines, so a raw newline (which would
+    split the block — a ``---`` on its own line even terminates the fence) or a
+    backslash must not appear unescaped. We backslash-escape ``\\``, ``\n`` and
+    ``\r`` on write and reverse it on read, so any scalar — e.g. a hand-edited
+    ``linked_outline`` — round-trips without corrupting the block or crashing
+    the reader. Free-text prose lives in the body, not here.
+    """
+    return value.replace("\\", "\\\\").replace("\n", "\\n").replace("\r", "\\r")
+
+
+def _unescape_scalar(value: str) -> str:
+    """Reverse :func:`_escape_scalar`, decoding ``\\n`` / ``\\r`` / ``\\\\``."""
+    out: list[str] = []
+    i = 0
+    while i < len(value):
+        ch = value[i]
+        if ch == "\\" and i + 1 < len(value):
+            out.append({"n": "\n", "r": "\r", "\\": "\\"}.get(value[i + 1], value[i + 1]))
+            i += 2
+        else:
+            out.append(ch)
+            i += 1
+    return "".join(out)
+
+
+def _format_frontmatter(pairs: list[tuple[str, str]]) -> str:
+    """Render ordered ``key: value`` pairs as a fenced frontmatter block."""
+    lines = [_FENCE]
+    lines.extend(f"{key}: {_escape_scalar(value)}" for key, value in pairs)
+    lines.append(_FENCE)
+    return "\n".join(lines)
+
+
+def _split_document(text: str) -> tuple[dict[str, str], list[str]]:
+    """Split a document into (frontmatter dict, body lines).
+
+    The frontmatter is the block between the first ``---`` line and the FIRST
+    following ``---`` line; a later ``---`` in the body never terminates it.
+    Body lines are returned without trailing newlines.
+    """
+    lines = text.split("\n")
+    if not lines or lines[0] != _FENCE:
+        raise ValueError("missing frontmatter fence at start of document")
+    fm: dict[str, str] = {}
+    idx = 1
+    closed = False
+    while idx < len(lines):
+        line = lines[idx]
+        idx += 1
+        if line == _FENCE:
+            closed = True
+            break
+        key, sep, value = line.partition(":")
+        if sep:
+            fm[key.strip()] = _unescape_scalar(value.strip())
+    if not closed:
+        raise ValueError("frontmatter fence was never closed")
+    return fm, lines[idx:]
+
+
+def _split_sections(
+    body_lines: list[str], headers: tuple[str, ...]
+) -> dict[str, str]:
+    """Map each known header to its verbatim content within ``body_lines``.
+
+    A line is a section boundary only if it is byte-identical to one of
+    ``headers``. Content is everything between a header and the next header (or
+    EOF). The single blank line this module inserts after each header is
+    stripped; all other content — internal blank lines, ``##`` and ``---`` lines
+    — is preserved verbatim.
+    """
+    sections: dict[str, str] = {}
+    current: str | None = None
+    buf: list[str] = []
+    for line in body_lines:
+        if line in headers:
+            if current is not None:
+                sections[current] = "\n".join(buf)
+            current = line
+            buf = []
+        elif current is not None:
+            buf.append(line)
+    if current is not None:
+        sections[current] = "\n".join(buf)
+    # Strip exactly the one framing blank line we add after each header and
+    # before the next header / EOF.
+    for header, content in sections.items():
+        if content.startswith("\n"):
+            content = content[1:]
+        if content.endswith("\n"):
+            content = content[:-1]
+        sections[header] = content
+    return sections
+
+
+# --------------------------------------------------------------------------- #
+# Cache
+# --------------------------------------------------------------------------- #
+
+
+def _render_cache(cache: Cache) -> str:
+    """Render ``cache`` to its full Markdown document text (frontmatter + body).
+
+    The single source of truth for cache serialization, shared by
+    :func:`write_cache` (fresh path) and :func:`update_cache` (in place).
+    """
+    frontmatter = _format_frontmatter(
+        [
+            ("type", "cache"),
+            ("status", cache.status.value),
+            ("created", cache.created.isoformat()),
+            ("updated", cache.updated.isoformat()),
+            ("linked_outline", cache.linked_outline or ""),
+        ]
+    )
+    body = "\n".join(
+        [
+            f"# {cache.title}",
+            "",
+            "## 原始灵感",
+            "",
+            cache.raw,
+            "",
+            "## 临时备注",
+            "",
+            cache.notes,
+        ]
+    )
+    return f"{frontmatter}\n{body}\n"
+
+
+def write_cache(vault: Path, cache: Cache) -> Path:
+    """Write ``cache`` as a Markdown file under ``vault/cache/`` (appdesign.md 6).
+
+    Returns the path written. Creates the ``cache`` subdirectory if missing and
+    chooses a collision-free filename from the cache's ``created`` timestamp.
+    """
+    directory = vault / "cache"
+    directory.mkdir(parents=True, exist_ok=True)
+    path = _unique_path(directory, cache.created, cache.title)
+    path.write_text(_render_cache(cache), encoding="utf-8")
+    return path
+
+
+def update_cache(path: Path, cache: Cache) -> None:
+    """Overwrite the cache file at ``path`` in place with ``cache``.
+
+    Unlike :func:`write_cache`, this never picks a new filename: the GUI edits,
+    saves, and archives an existing asset against its own path. Serialization
+    stays in core via :func:`_render_cache`, never duplicated in the GUI layer.
+    """
+    path.write_text(_render_cache(cache), encoding="utf-8")
+
+
+def read_cache(path: Path) -> Cache:
+    """Read a cache Markdown file written by :func:`write_cache`.
+
+    Frontmatter scalars are authoritative; ``raw`` and ``notes`` come from the
+    body verbatim. An empty ``linked_outline`` in the file becomes ``None``.
+    """
+    text = path.read_text(encoding="utf-8")
+    fm, body_lines = _split_document(text)
+    title = _read_title(body_lines)
+    sections = _split_sections(body_lines, _CACHE_HEADERS)
+    linked = fm.get("linked_outline", "")
+    return Cache(
+        title=title,
+        raw=sections.get("## 原始灵感", ""),
+        notes=sections.get("## 临时备注", ""),
+        status=CacheStatus(fm["status"]),
+        created=datetime.fromisoformat(fm["created"]),
+        updated=datetime.fromisoformat(fm["updated"]),
+        linked_outline=linked or None,
+    )
+
+
+# --------------------------------------------------------------------------- #
+# Outline
+# --------------------------------------------------------------------------- #
+
+
+def _render_outline(outline: Outline) -> str:
+    """Render ``outline`` to its full Markdown document text (frontmatter + body).
+
+    The single source of truth for outline serialization, shared by
+    :func:`write_outline` (fresh path) and :func:`update_outline` (in place).
+    ``ending_type`` is an authoritative frontmatter scalar; ``custom_ending`` is
+    free text stored verbatim in section 6 and parsed back from there (so a
+    multi-line custom ending never enters the frontmatter).
+    """
+    frontmatter = _format_frontmatter(
+        [
+            ("type", "outline"),
+            ("ending_type", outline.ending_type.value),
+            ("created", outline.created.isoformat()),
+            ("updated", outline.updated.isoformat()),
+        ]
+    )
+    fandom_cp = "\n".join(
+        [
+            f"- Fandom: {outline.fandom}",
+            f"- 人物: {', '.join(outline.characters)}",
+            f"- CP: {outline.cp}",
+        ]
+    )
+    relations_block = "\n".join(
+        f"- {rel.relation_type.value} | {rel.target_path} | {rel.note}"
+        for rel in outline.relations
+    )
+    body = "\n".join(
+        [
+            f"# {outline.title}",
+            "",
+            "## 1. 原始灵感",
+            "",
+            outline.raw_inspiration,
+            "",
+            "## 2. 整理后摘要",
+            "",
+            outline.summary,
+            "",
+            "## 3. Fandom + 人物 / CP",
+            "",
+            fandom_cp,
+            "",
+            "## 4. 观前提醒",
+            "",
+            outline.content_warnings,
+            "",
+            "## 5. 流水账",
+            "",
+            outline.plot,
+            "",
+            "## 6. Ending Type",
+            "",
+            outline.custom_ending,
+            "",
+            "## 7. 与其他灵感的逻辑关联（Optional）",
+            "",
+            relations_block,
+        ]
+    )
+    return f"{frontmatter}\n{body}\n"
+
+
+def write_outline(vault: Path, outline: Outline) -> Path:
+    """Write ``outline`` as a Markdown file under ``vault/outlines/`` (appdesign.md 5).
+
+    Returns the path written. Creates the ``outlines`` subdirectory if missing
+    and chooses a collision-free filename from the outline's ``created``
+    timestamp.
+    """
+    directory = vault / "outlines"
+    directory.mkdir(parents=True, exist_ok=True)
+    path = _unique_path(directory, outline.created, outline.title)
+    path.write_text(_render_outline(outline), encoding="utf-8")
+    return path
+
+
+def update_outline(path: Path, outline: Outline) -> None:
+    """Overwrite the outline file at ``path`` in place with ``outline``.
+
+    Unlike :func:`write_outline`, this never picks a new filename: the GUI edits,
+    saves, and archives an existing asset against its own path. Serialization
+    stays in core via :func:`_render_outline`, never duplicated in the GUI layer.
+    """
+    path.write_text(_render_outline(outline), encoding="utf-8")
+
+
+def read_outline(path: Path) -> Outline:
+    """Read an outline Markdown file written by :func:`write_outline`.
+
+    ``ending_type`` is authoritative from frontmatter; ``custom_ending`` is read
+    verbatim from section 6. Free-text sections round-trip verbatim; characters
+    and relations are parsed from their list lines.
+    """
+    text = path.read_text(encoding="utf-8")
+    fm, body_lines = _split_document(text)
+    title = _read_title(body_lines)
+    sections = _split_sections(body_lines, _OUTLINE_HEADERS)
+
+    fandom, characters, cp = _parse_fandom_cp(
+        sections.get("## 3. Fandom + 人物 / CP", "")
+    )
+    relations = _parse_relations(
+        sections.get("## 7. 与其他灵感的逻辑关联（Optional）", "")
+    )
+    return Outline(
+        title=title,
+        raw_inspiration=sections.get("## 1. 原始灵感", ""),
+        summary=sections.get("## 2. 整理后摘要", ""),
+        fandom=fandom,
+        characters=characters,
+        cp=cp,
+        content_warnings=sections.get("## 4. 观前提醒", ""),
+        plot=sections.get("## 5. 流水账", ""),
+        ending_type=EndingType(fm["ending_type"]),
+        custom_ending=sections.get("## 6. Ending Type", ""),
+        relations=relations,
+        created=datetime.fromisoformat(fm["created"]),
+        updated=datetime.fromisoformat(fm["updated"]),
+    )
+
+
+# --------------------------------------------------------------------------- #
+# Body parsing helpers
+# --------------------------------------------------------------------------- #
+
+
+def _read_title(body_lines: list[str]) -> str:
+    """Return the title from the first ``# `` heading, or ``""`` if absent."""
+    for line in body_lines:
+        if line.startswith("# "):
+            return line[2:]
+    return ""
+
+
+def _parse_fandom_cp(content: str) -> tuple[str, list[str], str]:
+    """Parse a section-3 block into (fandom, characters, cp).
+
+    Characters are the ``- 人物: `` value split on ``", "`` with empties
+    dropped, mirroring how :func:`write_outline` joins them.
+    """
+    fandom = ""
+    characters: list[str] = []
+    cp = ""
+    for line in content.split("\n"):
+        if line.startswith("- Fandom: "):
+            fandom = line[len("- Fandom: ") :]
+        elif line.startswith("- 人物: "):
+            value = line[len("- 人物: ") :]
+            characters = [c for c in value.split(", ") if c]
+        elif line.startswith("- CP: "):
+            cp = line[len("- CP: ") :]
+    return fandom, characters, cp
+
+
+def _parse_relations(content: str) -> list[Relation]:
+    """Parse section-7 ``- type | target | note`` lines into ``Relation`` objects.
+
+    An empty section yields ``[]``. Each list line is split on `` | `` into the
+    relation type, target path, and note.
+    """
+    relations: list[Relation] = []
+    for line in content.split("\n"):
+        if not line.startswith("- "):
+            continue
+        parts = line[2:].split(" | ")
+        if len(parts) != 3:
+            continue
+        relation_type, target_path, note = parts
+        relations.append(
+            Relation(
+                relation_type=RelationType(relation_type),
+                target_path=target_path,
+                note=note,
+            )
+        )
+    return relations

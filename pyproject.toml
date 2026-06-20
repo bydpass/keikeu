@@ -14,7 +14,13 @@ dependencies = [
 dev = ["pytest>=8"]
 
 [project.scripts]
-keikeu = "keikeu_app.main:main"
+keikeu = "keikeu_app.main:run"
+
+[tool.hatch.build.targets.wheel]
+# Required: project name "keikeu" has no matching dir, so hatchling cannot
+# auto-detect packages. List them explicitly. The sources remap drops the
+# leading "src/" so they import as keikeu_core / keikeu_app.
+packages = ["src/keikeu_core", "src/keikeu_app"]
 
 [tool.hatch.build.targets.wheel.sources]
 "src" = ""

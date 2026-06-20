@@ -1,52 +1,116 @@
 # keikeu
 
-> 把「我想看这个」变成「这个该怎么写 / 怎么约 / 怎么展示」。
->
-> Turn *"I want to see this"* into *"here is how to write / commission / display it."*
+> keikeu is a local-first writing utility that helps fan creators turn raw inspiration into editable Markdown outlines.
 
-`keikeu` 是一个面向同人创作者的「口嗨 → 创作 brief」工具。输入一段 CP 口嗨、名场面或剧情梗（**饼胚**），生成三种 Markdown 视图：自用 SOP / 约文 Brief / 灵感名片。
+English | [简体中文](READMECN.md)
 
-`keikeu` is a fanwork *idea → brief* tool for shippers and fic-commissioners. One raw idea (**饼胚** / *peibei*) fans out into three Markdown views: self-use SOP, commission Brief, inspiration Card.
+## Current status
 
----
+keikeu is in early restart development.
 
-## 安装 / Install
+The old codebase has been deleted. The current implementation follows
+[`appdesign.md`](appdesign.md) and [`techpolicy.md`](techpolicy.md).
 
-```bash
-python -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-pip install -e .
+It is a development preview, not production-ready.
+
+## Core flow
+
+```text
+raw inspiration → cache Markdown → outline Markdown
 ```
 
-Requires Python 3.11–3.13.
+- **Cache** — low-friction capture of a raw idea. Your words are preserved verbatim, never summarized or rewritten.
+- **Outline** — a structured Markdown file derived from a cache: title, raw inspiration, fandom, characters / CP, content warnings, plot, ending type, relations.
 
-## 运行 / Run
+## Product principles
+
+- Local-first.
+- Markdown files are user assets.
+- `keikeu_index.json` is rebuildable metadata.
+- No account system before MVP.
+- No cloud sync before MVP.
+- No external fandom / character / CP database.
+- No AI-required workflow.
+
+## What keikeu is
+
+- inspiration cache
+- outline editor
+- local Markdown vault tool
+- writing preparation utility for fan creators
+
+## What keikeu is not
+
+- AI writing generator
+- social platform
+- commission marketplace
+- fandom database
+- Obsidian / Notion replacement
+- cloud writing suite
+
+## Development setup
+
+Requires Python ≥3.11, <3.14.
 
 ```bash
-python -m keikeu.app
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -e ".[dev]"
 ```
 
-会打开一个桌面窗口。粘贴一段饼胚 → 点击「生成饼胚」→ 在三个 tab 间切换 → 点击「复制当前 Markdown」。
-
-A desktop window opens. Paste a raw idea → click **生成饼胚** → switch between tabs → click **复制当前 Markdown**.
-
-## 测试 / Tests
+### Run tests
 
 ```bash
-pytest
+python -m pytest
 ```
 
-## v0.1 不包含 / What v0.1 does NOT include
+### Run the app
 
-- 账号系统 / accounts
-- 云同步 / cloud sync
-- AI 模型接入 / AI API integration (uses a local rule-based generator)
-- 社群发布 / community publishing
-- 约稿交易 / commission marketplace
-- 支付 / payments
-- 图片生成 / image generation
-- 多人协作 / multi-user collaboration
-- 完整正文生成 / full-text fiction generation
+```bash
+flet run src/keikeu_app/main.py
+```
 
-详见 [SPEC.md](SPEC.md) 与 [TECH_SPEC.md](TECH_SPEC.md)。See [SPEC.md](SPEC.md) and [TECH_SPEC.md](TECH_SPEC.md) for product and tech contracts.
+## Repo structure
+
+```text
+appdesign.md      product design source of truth
+techpolicy.md     technical policy
+gitspec.md        Git workflow for humans
+gitagent.md       Git workflow for agents
+
+src/
+  keikeu_core/    core logic; must not import Flet
+  keikeu_app/     Flet UI layer
+
+tests/            core and app tests
+```
+
+Hard rule:
+
+```text
+keikeu_core must not import Flet.
+```
+
+Core must be testable without launching the UI.
+
+## Documentation map
+
+| File | Role |
+|---|---|
+| [`appdesign.md`](appdesign.md) | Product design source of truth |
+| [`techpolicy.md`](techpolicy.md) | Technical stack and implementation policy |
+| [`gitspec.md`](gitspec.md) | Human Git workflow manual |
+| [`gitagent.md`](gitagent.md) | Agent Git workflow rules |
+
+## Roadmap
+
+```text
+v0.1 — macOS development preview
+v0.2 — iOS internal build
+v0.3 — Android APK
+v0.4 — Windows preview
+```
+
+## License
+
+License: TBD.
