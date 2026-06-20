@@ -1,7 +1,26 @@
 .DS_Store
 
 #施工文件
-
+#files_for_construction
+appdesign.md
+readmedesign.md
 
 # Python
+.venv/
+__pycache__/
+.pytest_cache/
+dist/
+build/
+*.egg-info/
 
+# Env
+.env
+.env.*
+
+# Mobile build artifacts
+*.apk
+*.aab
+*.ipa
+*.app
+*.exe
+*.dmg

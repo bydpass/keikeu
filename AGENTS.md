@@ -1,100 +1,50 @@
-# AGENTS.md
+# Repository Guidelines
 
-This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
+## Project Structure & Module Organization
 
-## Repo status
+This repository is currently documentation-first. The active source of truth lives at the repo root: `appdesign.md`, `techpolicy.md`, `gitspec.md`, `gitagent.md`, and `CLAUDE.md`. Old `.spec/` and CustomTkinter-era assumptions are retired.
 
-**v0.1 shipped** (commit `15f73a7`, Version_Hana), then **realigned to the neo spec** (neo-0.1): the product is reframed as a 3-function pipeline 灵光池(Memo) → 配方票(Ticket) → 试药包(ReviewKit), and the shipped code was renamed to that vocabulary (`KeikeuSpec`→`Ticket`, added `Memo`; `generate_spec`→`make_ticket`). Shipped surface = Memo capture + Ticket with SOP/Brief/Card output modes (CustomTkinter GUI, rule-based generator, 9 passing tests). **ReviewKit is roadmap v0.2 — not built.** Authoritative spec: `.spec/keikeu_SPEC.md`. Ship log: `tasks/task001-checkpoint.md`.
+When implementation starts, keep the planned split from `CLAUDE.md`:
 
-## What keikeu is
+```text
+src/keikeu_core/   # pure Python, no Flet imports
+src/keikeu_app/    # Flet UI only
+tests/
+```
 
-keikeu is a fanwork pre-writing tool — the *幽灵助手* (ghost assistant) of a 同人药剂师. It listens to inspiration, structures it into an executable recipe, and (later) produces a review kit. It does **not** write the work for you.
+`keikeu_core` owns models, Markdown I/O, vault/index logic, and schema validation. `keikeu_app` owns pages, widgets, and UI flow.
 
-Pipeline: **灵光池(Memo) → 配方票(Ticket) → 试药包(ReviewKit)**.
+## Build, Test, and Development Commands
 
-- **Memo (灵光池)** — low-friction capture of a raw idea. Preserve the user's words; do not interrogate or flatten. (Legacy name 饼胚 = a Memo's raw input.)
-- **Ticket (配方票)** — the core: one Memo is structured into an executable brief that fans out into three Markdown output modes: a self-use **SOP**, a commission **Brief**, and an inspiration **Card**.
-- **ReviewKit (试药包)** — v0.2: after the author writes a prototype draft, generate critique materials (AI `skill.md`, human beta-reader sheet, revision log). Analyze only; never rewrite by default.
-- **Slogan** — *别让好灵感烂在仓库里 — turn "I want to see this" into "here is how to write / commission / display it."*
-
-## Product invariants
-
-These hold across all versions.
-
-1. **饺子醋 (*jiaozicu*, "dumpling vinegar") is the anchor.** It is the must-see moment the user actually craves. Every structured output exists to preserve it. Never flatten it into a generic outline.
-2. **One Memo, one Ticket, three modes.** SOP, Brief, and Card all derive from a single Memo via one Ticket. Do not split capture into multiple inputs.
-3. **GUI must be caveman-usable.** End users should not need CLI, Python knowledge, or config editing. Open → type → click → copy Markdown.
-4. **Not an AI ghostwriter.** keikeu structures briefs, not prose. Do not generate full fiction; preserve the user's voice and craving. ReviewKit analyzes; it does not rewrite by default.
-5. **Hard out-of-scope (do not propose):**
-   - accounts / login
-   - cloud sync / mobile sync
-   - community publishing, comments, rankings (CP 热榜)
-   - commission marketplace / payments
-   - image generation
-   - multi-user collaboration
-   - world-building DB
-   - full-text / auto-continuation generation
-   - plugin system
-   - copyright / platform moderation
-
-## Tech stack (locked by TECH SPEC)
-
-@.spec/techspec.md
-
-Concrete decisions already locked:
-
-- **Language:** Python, ≥3.11 and <3.14.
-- **GUI:** CustomTkinter (locked; neo's "tkinter" wording is generic).
-- **Generator:** local mock / rule-based. No external AI API in v0.1.
-- **Storage:** no database. Markdown can be saved manually or copied to clipboard.
-- **Data flow:** `raw idea → Memo → Ticket → SOP Markdown / Brief Markdown / Card Markdown`. `Memo` and `Ticket` are the in-memory product data types (`Ticket` was `KeikeuSpec` pre-neo).
-
-## Open implementation decisions
-
-TECH SPEC deliberately leaves these unresolved:
-
-- Packaging and distribution (PyInstaller, Briefcase, plain `pip`, etc.).
-- Whether to add a real LLM-backed generator behind a strategy boundary post-v0.1.
-
-## Commands
-
-Setup (requires Python 3.11–3.13; Homebrew users may need `brew install python-tk@3.13`):
+The scaffold does not exist yet, so these commands are provisional:
 
 ```bash
 python3.13 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
-.venv/bin/python -m pip install -e .
-```
-
-Run the GUI:
-
-```bash
-.venv/bin/python -m keikeu.app
-```
-
-Run tests:
-
-```bash
+.venv/bin/python -m pip install -e ".[dev]"
 .venv/bin/python -m pytest
+flet run src/keikeu_app/main.py
 ```
 
-## Terminology
+Use `pytest` for automated tests once `tests/` exists. Run the Flet app locally for UI work only after the scaffold is in place.
 
-| Term | Role |
-|---|---|
-| Memo (灵光池) | The captured raw idea blob (`Memo.raw`). Low-friction; preserve verbatim. |
-| 饼胚 (*bingpei*) | Legacy alias for a Memo's raw input. |
-| Ticket (配方票) | The structured brief generated from a Memo. In-memory type `Ticket`. |
-| 饺子醋 (*jiaozicu*) | The must-see moment that anchors the whole brief. Non-negotiable. (`Ticket.jiaozi_cu`) |
-| 饺子 (*jiaozi*) | The supporting plot/structure built around the 饺子醋 to make it land. (`Ticket.jiaozi`) |
-| ReviewKit (试药包) | v0.2 critique materials (skill.md + human beta sheet + revision log). Not built. |
-| SOP | Self-use writing SOP — Ticket output mode 1. |
-| Brief | Commission brief for a writer/artist — Ticket output mode 2. |
-| Card | Inspiration card, compressed/shareable — Ticket output mode 3. |
+## Coding Style & Naming Conventions
 
-## File pointers
+Target Python `>=3.11,<3.14`. Use 4-space indentation, type hints on public APIs, `snake_case` for functions/modules, `PascalCase` for classes, and short docstrings where behavior is not obvious.
 
-- `.spec/keikeu_SPEC.md` — product spec (neo-0.1, Chinese), authoritative.
-- `.spec/techspec.md` — TECH SPEC (neo-0.1, English), locks Python version, CustomTkinter, generator strategy, real `src/` layout.
-- `.spec/IO_example.md` — I/O shapes for Memo / Ticket / ReviewKit.
-- `.Codex/settings.local.json` — local Codex permissions (currently only `rtk ls *` and `rtk read *`).
+Keep architecture strict: `keikeu_core` must remain GUI-free and testable without launching Flet. Do not add heavy or native dependencies without explicit approval. Prefer stdlib first.
+
+## Testing Guidelines
+
+Use `pytest`. Mirror source layout in tests, for example `tests/test_vault.py` for `src/keikeu_core/vault.py`. Favor core-layer tests first; UI tests should stay narrow and verify behavior that cannot be covered in core.
+
+Before committing, run the relevant tests for every edited module.
+
+## Commit & Pull Request Guidelines
+
+Follow the repo's existing scoped style: `init: full_restart`, `docs: update guide`, `fix: index rebuild`. Keep commits focused to one task and use one branch per task, such as `feature/vault-init` or `docs/contributor-guide`.
+
+PRs should include a concise summary, impacted files, test notes, and screenshots for UI changes. Do not mix architecture changes, dependency changes, and feature work in one PR.
+
+## Product Constraints
+
+Respect the MVP guardrails in `appdesign.md` and `techpolicy.md`: local-first, Markdown as the user asset, rebuildable JSON index, no cloud sync, no accounts, no social features, no plugin system, and no AI-required workflow.
