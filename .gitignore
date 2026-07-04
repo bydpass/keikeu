@@ -2,11 +2,9 @@
 
 #施工/设计文件
 #files_for_construction
-appdesign.md
-readmedesign.md
-ethics.md
 memory/
 tests/test-vault/
+
 # Python
 .venv/
 __pycache__/

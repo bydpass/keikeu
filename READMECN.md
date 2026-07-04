@@ -48,6 +48,19 @@ keikeu 当前处于重启后的早期开发阶段。
 - Obsidian / Notion 替代品
 - 云端写作套件
 
+## 伦理基线
+
+keikeu 以创作者优先的伦理底线为基础。完整论证见 [`ethics.md`](ethics.md)。
+
+- 个人创作工具，不是同人内容平台。
+- 只处理用户自己的输入 —— 不抓取、不搬运。
+- 不做公开评分、排行或聚合。
+- 不建作者库或作品库。
+- 不做未经授权的 AI 训练、总结、仿写或嵌入。
+- 默认本地优先；任何远程模型调用必须手动开启（opt-in）。
+- 所有生成输出可编辑；用户永远是最终作者。
+- 当便利与创作者边界冲突时，边界优先。
+
 ## 开发环境配置
 
 需要 Python ≥3.11，<3.14。
@@ -99,6 +112,8 @@ keikeu_core 不得 import Flet。
 |---|---|
 | [`appdesign.md`](appdesign.md) | 产品设计的唯一事实来源 |
 | [`techpolicy.md`](techpolicy.md) | 技术栈与实现政策 |
+| [`ethics.md`](ethics.md) | 技术伦理指南 |
+| [`readmedesign.md`](readmedesign.md) | readme手册设计的唯一事实来源 |
 | [`gitspec.md`](gitspec.md) | 面向人类的 Git 工作流手册 |
 | [`gitagent.md`](gitagent.md) | 面向 agent 的 Git 工作流规则 |
 

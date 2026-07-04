@@ -48,6 +48,19 @@ raw inspiration → cache Markdown → outline Markdown
 - Obsidian / Notion replacement
 - cloud writing suite
 
+## Ethics
+
+keikeu is built around a creator-first ethical baseline. Full reasoning lives in [`ethics.md`](ethics.md).
+
+- Personal creative tool, not a fandom content platform.
+- User-owned input only — no scraping, no reposting.
+- No public rating, ranking, or aggregation.
+- No creator or fanwork database.
+- No unauthorized AI training, summarization, imitation, or embedding.
+- Local-first by default; any remote model call must be opt-in.
+- All generated output is editable; the user is always the final author.
+- When convenience conflicts with a creator's boundary, the boundary wins.
+
 ## Development setup
 
 Requires Python ≥3.11, <3.14.
@@ -99,6 +112,8 @@ Core must be testable without launching the UI.
 |---|---|
 | [`appdesign.md`](appdesign.md) | Product design source of truth |
 | [`techpolicy.md`](techpolicy.md) | Technical stack and implementation policy |
+| [`ethics.md`](ethics.md) | Technical-ethics guide |
+| [`readmedesign.md`](readmedesign.md) | README handbook design source of truth |
 | [`gitspec.md`](gitspec.md) | Human Git workflow manual |
 | [`gitagent.md`](gitagent.md) | Agent Git workflow rules |
 
