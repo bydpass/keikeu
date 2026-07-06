@@ -19,8 +19,8 @@ from keikeu_app.pages.library_page import build_library_page
 from keikeu_app.pages.outline_editor_page import build_outline_editor_page
 from keikeu_core.indexer import list_caches, list_outlines, rebuild_index
 from keikeu_core.markdown_io import read_cache, read_outline, write_cache, write_outline
-from keikeu_core.models import Cache, CacheStatus, Outline
-from keikeu_core.vault import init_vault
+from keikeu_core.models import Cache, CacheStatus, Outline, Relation, RelationType
+from keikeu_core.vault import init_vault, soft_delete
 
 
 class FakePage:
@@ -46,6 +46,8 @@ def _walk(control: object) -> Iterable[object]:
         child = getattr(control, attr, None)
         if child is not None:
             yield from _walk(child)
+    for child in getattr(control, "actions", []) or []:
+        yield from _walk(child)
     for child in getattr(control, "controls", []) or []:
         yield from _walk(child)
 
@@ -88,6 +90,14 @@ def _file_picker(page: FakePage) -> ft.FilePicker:
     raise AssertionError("FilePicker not found in page services")
 
 
+def _labels(root: object, control_type: type) -> list[str | None]:
+    return [
+        getattr(control, "label", None)
+        for control in _walk(root)
+        if isinstance(control, control_type)
+    ]
+
+
 def test_navigation_shell_disables_page_level_scroll(tmp_path: Path):
     init_vault(tmp_path)
     page = FakePage()
@@ -124,6 +134,77 @@ def test_outline_editor_exposes_split_warning_fields(tmp_path: Path):
     assert _text_field(root, "原作 / AU / IF / PA").value == ""
     assert _text_field(root, "CP 结构").value == ""
     assert _text_field(root, "情节元素").value == ""
+
+
+def test_relation_picker_adds_index_backed_relation_without_path_input(tmp_path: Path):
+    init_vault(tmp_path)
+    target_path = write_cache(tmp_path, Cache(title="target cache", raw="raw words"))
+    rebuild_index(tmp_path)
+    page = FakePage()
+    ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
+
+    root = build_outline_editor_page(ctx)
+    _text_field(root, "Title").value = "outline with relation"
+
+    _button(root, "Add relation").on_click(None)
+    dialog = page.overlay[-1]
+
+    assert "target path" not in _labels(dialog, ft.TextField)
+    _button(dialog, "target cache").on_click(None)
+    _dropdown(dialog, "关系类型").value = RelationType.IF.value
+    _text_field(dialog, "说明").value = "branch note"
+    _button(dialog, "确认添加").on_click(None)
+
+    assert "target path" not in _labels(root, ft.TextField)
+    assert "IF" in _texts(root)
+    assert "target cache" in _texts(root)
+    assert "branch note" in _texts(root)
+
+    _button(root, "Save").on_click(None)
+
+    outline_files = list((tmp_path / "outlines").glob("*.md"))
+    assert len(outline_files) == 1
+    relations = read_outline(outline_files[0]).relations
+    assert len(relations) == 1
+    assert relations[0].relation_type is RelationType.IF
+    assert relations[0].target_path == str(target_path.relative_to(tmp_path))
+    assert relations[0].note == "branch note"
+
+
+def test_existing_relation_displays_title_then_falls_back_to_path(tmp_path: Path):
+    init_vault(tmp_path)
+    target_path = write_cache(tmp_path, Cache(title="target cache", raw="raw words"))
+    rel_path = str(target_path.relative_to(tmp_path))
+    outline_path = write_outline(
+        tmp_path,
+        Outline(
+            title="related outline",
+            relations=[
+                Relation(
+                    relation_type=RelationType.SEQUEL,
+                    target_path=rel_path,
+                    note="next piece",
+                )
+            ],
+        ),
+    )
+    rebuild_index(tmp_path)
+    page = FakePage()
+    ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
+
+    root = build_outline_editor_page(ctx, outline_path)
+
+    assert "target cache" in _texts(root)
+    assert rel_path not in _texts(root)
+
+    soft_delete(tmp_path, rel_path)
+    rebuild_index(tmp_path)
+    page_after_delete = FakePage()
+    ctx_after_delete = AppContext(page=page_after_delete, vault=tmp_path)  # type: ignore[arg-type]
+
+    root_after_delete = build_outline_editor_page(ctx_after_delete, outline_path)
+
+    assert rel_path in _texts(root_after_delete)
 
 
 def test_export_saved_outline_copies_vault_file_bytes(tmp_path: Path):

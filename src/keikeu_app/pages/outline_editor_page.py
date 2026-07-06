@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING
 import flet as ft
 
 from keikeu_app.widgets import notify, section_field, single_line_field
-from keikeu_core.indexer import rebuild_index
+from keikeu_core.indexer import list_caches, list_outlines, rebuild_index
 from keikeu_core.markdown_io import (
     read_cache,
     read_outline,
@@ -80,64 +80,161 @@ def build_outline_editor_page(
         "Custom ending (custom_ending)", "", min_lines=2, max_lines=8
     )
 
-    # === Minimal relations editor ========================================== #
-    # Each row holds a relation-type dropdown, a target-path field, and a note
-    # field. They are read back into Relation objects only at save time.
-    relation_rows: list[ft.Row] = []
+    # === Local relation picker ============================================= #
+    # Relations are selected from the index so users never hand-type target
+    # paths. The stored model still carries the relative path for Markdown I/O.
+    relations: list[Relation] = []
     relations_column = ft.Column(controls=[])
 
-    def _make_relation_row(
-        rtype: str = RelationType.SEQUEL.value,
-        target: str = "",
-        note: str = "",
-    ) -> ft.Row:
-        type_dd = ft.Dropdown(
-            value=rtype,
-            options=[ft.dropdown.Option(r) for r in _RELATION_OPTIONS],
-            width=160,
-        )
-        target_tf = ft.TextField(label="target path", value=target, expand=True)
-        note_tf = ft.TextField(label="note", value=note, expand=True)
-        row = ft.Row(controls=[type_dd, target_tf, note_tf])
+    def _asset_entries() -> list[dict]:
+        """Return relation targets from the rebuildable index."""
+        return list_caches(ctx.vault) + list_outlines(ctx.vault)
 
-        def remove_row(_: ft.ControlEvent) -> None:
-            if row in relation_rows:
-                relation_rows.remove(row)
-                relations_column.controls.remove(row)
-                page.update()
+    def _asset_title_by_path() -> dict[str, str]:
+        """Map indexed relative paths to display titles."""
+        return {
+            str(entry["path"]): entry.get("title") or "(untitled)"
+            for entry in _asset_entries()
+        }
 
-        row.controls.append(
-            ft.IconButton(icon=ft.Icons.DELETE_OUTLINE, on_click=remove_row)
-        )
-        return row
+    def _render_relations() -> None:
+        title_by_path = _asset_title_by_path()
+        relations_column.controls.clear()
+        for rel in relations:
+            target_title = title_by_path.get(rel.target_path, rel.target_path)
+
+            def remove_relation(
+                _: ft.ControlEvent,
+                relation: Relation = rel,
+            ) -> None:
+                if relation in relations:
+                    relations.remove(relation)
+                    _render_relations()
+                    page.update()
+
+            row = ft.Row(
+                controls=[
+                    ft.Text(rel.relation_type.value, weight=ft.FontWeight.BOLD),
+                    ft.Text(target_title, expand=True),
+                    ft.Text(rel.note),
+                    ft.IconButton(
+                        icon=ft.Icons.DELETE_OUTLINE,
+                        on_click=remove_relation,
+                    ),
+                ],
+                wrap=True,
+            )
+            relations_column.controls.append(row)
 
     def add_relation_row(
         rtype: str = RelationType.SEQUEL.value, target: str = "", note: str = ""
     ) -> None:
-        row = _make_relation_row(rtype, target, note)
-        relation_rows.append(row)
-        relations_column.controls.append(row)
+        relations.append(
+            Relation(
+                relation_type=rtype,
+                target_path=target,
+                note=note,
+            )
+        )
+        _render_relations()
 
     def on_add_relation(_: ft.ControlEvent) -> None:
-        add_relation_row()
+        selected: dict[str, object] = {}
+        search_field = ft.TextField(label="搜索本地资产")
+        assets_column = ft.Column(controls=[])
+        relation_type_dd = ft.Dropdown(
+            label="关系类型",
+            value=RelationType.SEQUEL.value,
+            options=[ft.dropdown.Option(r) for r in _RELATION_OPTIONS],
+        )
+        note_field = ft.TextField(label="说明")
+        selected_text = ft.Text("尚未选择关联对象", size=12, color=ft.Colors.OUTLINE)
+        error_text = ft.Text("", color=ft.Colors.ERROR)
+
+        dialog = ft.AlertDialog(
+            modal=True,
+            title=ft.Text("添加关联"),
+            content=ft.Column(
+                controls=[
+                    search_field,
+                    assets_column,
+                    selected_text,
+                    relation_type_dd,
+                    note_field,
+                    error_text,
+                ],
+                tight=True,
+            ),
+            actions=[],
+        )
+
+        def select_asset(entry: dict) -> None:
+            selected["entry"] = entry
+            selected_text.value = f"已选择：{entry.get('title') or '(untitled)'}"
+            error_text.value = ""
+            page.update()
+
+        def refresh_assets(_: ft.ControlEvent | None = None) -> None:
+            query = (search_field.value or "").strip().lower()
+            assets_column.controls.clear()
+            for entry in _asset_entries():
+                title = entry.get("title") or "(untitled)"
+                if query and query not in title.lower():
+                    continue
+                subtitle = "  ·  ".join(
+                    bit
+                    for bit in (
+                        entry.get("type", ""),
+                        entry.get("updated", ""),
+                    )
+                    if bit
+                )
+                assets_column.controls.append(
+                    ft.Row(
+                        controls=[
+                            ft.Button(
+                                content=ft.Text(title),
+                                on_click=lambda _e, item=entry: select_asset(item),
+                            ),
+                            ft.Text(subtitle, size=12, color=ft.Colors.OUTLINE),
+                        ],
+                        wrap=True,
+                    )
+                )
+            if not assets_column.controls:
+                assets_column.controls.append(ft.Text("没有可关联的本地资产"))
+            page.update()
+
+        def cancel(_: ft.ControlEvent) -> None:
+            dialog.open = False
+            page.update()
+
+        def confirm(_: ft.ControlEvent) -> None:
+            entry = selected.get("entry")
+            if not isinstance(entry, dict):
+                error_text.value = "先选择关联对象"
+                page.update()
+                return
+            add_relation_row(
+                relation_type_dd.value or RelationType.SEQUEL.value,
+                str(entry["path"]),
+                note_field.value or "",
+            )
+            dialog.open = False
+            page.update()
+
+        dialog.actions = [
+            ft.OutlinedButton(content=ft.Text("取消"), on_click=cancel),
+            ft.Button(content=ft.Text("确认添加"), on_click=confirm),
+        ]
+        search_field.on_change = refresh_assets
+        refresh_assets()
+        page.overlay.append(dialog)
+        dialog.open = True
         page.update()
 
     def _collect_relations() -> list[Relation]:
-        relations: list[Relation] = []
-        for row in relation_rows:
-            type_dd, target_tf, note_tf = row.controls[0], row.controls[1], row.controls[2]
-            target = (target_tf.value or "").strip()
-            if not target:
-                # Skip empty rows so a blank add-row never blocks the save.
-                continue
-            relations.append(
-                Relation(
-                    relation_type=type_dd.value or RelationType.SEQUEL.value,
-                    target_path=target,
-                    note=note_tf.value or "",
-                )
-            )
-        return relations
+        return list(relations)
 
     def _load_outline(existing: Outline) -> None:
         title_field.value = existing.title
