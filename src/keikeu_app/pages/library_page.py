@@ -10,6 +10,8 @@ No cloud, login, AI, database, or graph view (out of scope before MVP).
 
 from __future__ import annotations
 
+import platform
+import subprocess
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -26,6 +28,44 @@ if TYPE_CHECKING:
 __all__ = ["build_library_page"]
 
 _ALL = "all"
+
+
+def _open_command(path: Path) -> list[str]:
+    """Return the platform command for opening ``path``."""
+    system = platform.system()
+    if system == "Darwin":
+        return ["open", str(path)]
+    if system == "Windows":
+        return ["cmd", "/c", "start", "", str(path)]
+    return ["xdg-open", str(path)]
+
+
+def _reveal_command(path: Path) -> list[str]:
+    """Return the platform command for revealing ``path`` in the file manager."""
+    if platform.system() == "Darwin":
+        if path.is_dir():
+            return ["open", str(path)]
+        return ["open", "-R", str(path)]
+    target = path if path.is_dir() else path.parent
+    return _open_command(target)
+
+
+def _run_system_command(page: ft.Page, command: list[str], action: str) -> None:
+    """Run a system launcher command, reporting failures without crashing."""
+    try:
+        subprocess.run(command, check=True)
+    except (OSError, subprocess.SubprocessError) as ex:
+        notify(page, f"Could not {action}: {ex}")
+
+
+def _open_with_system(page: ft.Page, path: Path) -> None:
+    """Open ``path`` with the OS default app."""
+    _run_system_command(page, _open_command(path), "open file")
+
+
+def _reveal_in_folder(page: ft.Page, path: Path) -> None:
+    """Reveal ``path`` in the OS file manager, or open its folder fallback."""
+    _run_system_command(page, _reveal_command(path), "show in folder")
 
 
 def build_library_page(ctx: "AppContext") -> ft.Control:
@@ -74,13 +114,27 @@ def build_library_page(ctx: "AppContext") -> ft.Control:
             except Exception as ex:
                 notify(page, f"Could not delete item: {ex}")
 
+        def on_system_open(_: ft.ControlEvent, rp: str = rel_path) -> None:
+            _open_with_system(page, ctx.vault / rp)
+
+        def on_reveal(_: ft.ControlEvent, rp: str = rel_path) -> None:
+            _reveal_in_folder(page, ctx.vault / rp)
+
         return ft.ListTile(
             title=ft.Text(title),
             subtitle=ft.Text("  ·  ".join(b for b in subtitle_bits if b)),
             leading=ft.Icon(
                 ft.Icons.NOTE if kind == "cache" else ft.Icons.ARTICLE
             ),
-            trailing=ft.OutlinedButton(content=ft.Text("Delete"), on_click=on_delete),
+            trailing=ft.Row(
+                controls=[
+                    ft.OutlinedButton(content=ft.Text("打开"), on_click=on_system_open),
+                    ft.OutlinedButton(content=ft.Text("在文件夹中显示"), on_click=on_reveal),
+                    ft.OutlinedButton(content=ft.Text("Delete"), on_click=on_delete),
+                ],
+                tight=True,
+                wrap=True,
+            ),
             on_click=on_open,
         )
 
@@ -127,6 +181,18 @@ def build_library_page(ctx: "AppContext") -> ft.Control:
 
     refresh(None)
 
+    vault_row = ft.Row(
+        controls=[
+            ft.Text("Vault", weight=ft.FontWeight.BOLD),
+            ft.Text(str(ctx.vault), expand=True),
+            ft.OutlinedButton(
+                content=ft.Text("在文件夹中显示"),
+                on_click=lambda _e: _reveal_in_folder(page, ctx.vault),
+            ),
+        ],
+        wrap=True,
+    )
+
     return ft.Column(
         controls=[
             ft.Text("Library", size=20, weight=ft.FontWeight.BOLD),
@@ -138,6 +204,8 @@ def build_library_page(ctx: "AppContext") -> ft.Control:
             ),
             ft.Divider(),
             results,
+            ft.Divider(),
+            vault_row,
         ],
         expand=True,
     )

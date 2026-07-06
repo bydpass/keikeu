@@ -14,6 +14,7 @@ import flet as ft
 
 from keikeu_app import main as app_main
 from keikeu_app.main import AppContext
+from keikeu_app.pages import library_page as library_page_mod
 from keikeu_app.pages.cache_page import build_cache_page
 from keikeu_app.pages.library_page import build_library_page
 from keikeu_app.pages.outline_editor_page import build_outline_editor_page
@@ -65,6 +66,16 @@ def _button(root: object, text: str) -> object:
         if getattr(content, "value", None) == text:
             return control
     raise AssertionError(f"Button not found: {text}")
+
+
+def _list_tile(root: object, title: str) -> ft.ListTile:
+    for control in _walk(root):
+        if (
+            isinstance(control, ft.ListTile)
+            and getattr(control.title, "value", None) == title
+        ):
+            return control
+    raise AssertionError(f"ListTile not found: {title}")
 
 
 def _dropdown(root: object, label: str) -> ft.Dropdown:
@@ -598,3 +609,120 @@ def test_library_delete_moves_cache_to_trash_and_refreshes_results(tmp_path: Pat
     assert (tmp_path / ".trash" / "cache" / cache_path.name).is_file()
     assert list_caches(tmp_path) == []
     assert "Caches (0)" in _texts(root)
+
+
+def test_library_row_clicks_still_open_app_editors(tmp_path: Path):
+    init_vault(tmp_path)
+    cache_path = write_cache(tmp_path, Cache(title="library cache", raw="bytes"))
+    outline_path = write_outline(tmp_path, Outline(title="library outline"))
+    rebuild_index(tmp_path)
+    page = FakePage()
+    opened: dict[str, Path] = {}
+    ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
+    ctx.open_cache = lambda path: opened.update(cache=path)  # type: ignore[assignment]
+    ctx.open_outline = lambda path: opened.update(outline=path)  # type: ignore[assignment]
+
+    root = build_library_page(ctx)
+    _list_tile(root, "library cache").on_click(None)
+    _list_tile(root, "library outline").on_click(None)
+
+    assert opened["cache"] == cache_path
+    assert opened["outline"] == outline_path
+
+
+def test_library_open_button_uses_system_default_app(tmp_path: Path, monkeypatch):
+    init_vault(tmp_path)
+    cache_path = write_cache(tmp_path, Cache(title="library cache", raw="bytes"))
+    rebuild_index(tmp_path)
+    page = FakePage()
+    ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
+    calls: list[list[str]] = []
+    monkeypatch.setattr(library_page_mod.platform, "system", lambda: "Darwin")
+    monkeypatch.setattr(
+        library_page_mod.subprocess,
+        "run",
+        lambda command, check: calls.append(command),
+    )
+
+    root = build_library_page(ctx)
+    _button(root, "打开").on_click(None)
+
+    assert calls == [["open", str(cache_path)]]
+
+
+def test_library_reveal_button_uses_finder_on_macos(tmp_path: Path, monkeypatch):
+    init_vault(tmp_path)
+    cache_path = write_cache(tmp_path, Cache(title="library cache", raw="bytes"))
+    rebuild_index(tmp_path)
+    page = FakePage()
+    ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
+    calls: list[list[str]] = []
+    monkeypatch.setattr(library_page_mod.platform, "system", lambda: "Darwin")
+    monkeypatch.setattr(
+        library_page_mod.subprocess,
+        "run",
+        lambda command, check: calls.append(command),
+    )
+
+    root = build_library_page(ctx)
+    _button(root, "在文件夹中显示").on_click(None)
+
+    assert calls == [["open", "-R", str(cache_path)]]
+
+
+def test_library_reveal_button_falls_back_to_parent_dir_off_macos(tmp_path: Path, monkeypatch):
+    init_vault(tmp_path)
+    cache_path = write_cache(tmp_path, Cache(title="library cache", raw="bytes"))
+    rebuild_index(tmp_path)
+    page = FakePage()
+    ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
+    calls: list[list[str]] = []
+    monkeypatch.setattr(library_page_mod.platform, "system", lambda: "Linux")
+    monkeypatch.setattr(
+        library_page_mod.subprocess,
+        "run",
+        lambda command, check: calls.append(command),
+    )
+
+    root = build_library_page(ctx)
+    _button(root, "在文件夹中显示").on_click(None)
+
+    assert calls == [["xdg-open", str(cache_path.parent)]]
+
+
+def test_library_vault_footer_shows_and_reveals_vault_path(tmp_path: Path, monkeypatch):
+    init_vault(tmp_path)
+    page = FakePage()
+    ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
+    calls: list[list[str]] = []
+    monkeypatch.setattr(library_page_mod.platform, "system", lambda: "Darwin")
+    monkeypatch.setattr(
+        library_page_mod.subprocess,
+        "run",
+        lambda command, check: calls.append(command),
+    )
+
+    root = build_library_page(ctx)
+    _button(root, "在文件夹中显示").on_click(None)
+
+    assert str(tmp_path) in _texts(root)
+    assert calls == [["open", str(tmp_path)]]
+
+
+def test_library_system_open_failure_notifies_without_crashing(tmp_path: Path, monkeypatch):
+    init_vault(tmp_path)
+    write_cache(tmp_path, Cache(title="library cache", raw="bytes"))
+    rebuild_index(tmp_path)
+    page = FakePage()
+    ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
+    monkeypatch.setattr(library_page_mod.platform, "system", lambda: "Darwin")
+
+    def fail_run(_command: list[str], check: bool) -> None:
+        raise OSError("launcher unavailable")
+
+    monkeypatch.setattr(library_page_mod.subprocess, "run", fail_run)
+
+    root = build_library_page(ctx)
+    _button(root, "打开").on_click(None)
+
+    assert any("Could not open file" in text for bar in page.overlay for text in _texts(bar))
