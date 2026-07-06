@@ -105,6 +105,13 @@ def _control_by_key(root: object, key: str) -> object:
     raise AssertionError(f"Control not found: {key}")
 
 
+def _icon_button(root: object, icon: str) -> ft.IconButton:
+    for control in _walk(root):
+        if isinstance(control, ft.IconButton) and control.icon == icon:
+            return control
+    raise AssertionError(f"IconButton not found: {icon}")
+
+
 def test_navigation_shell_disables_page_level_scroll(tmp_path: Path):
     init_vault(tmp_path)
     page = FakePage()
@@ -231,6 +238,33 @@ def test_existing_relation_displays_title_then_falls_back_to_path(tmp_path: Path
     root_after_delete = build_outline_editor_page(ctx_after_delete, outline_path)
 
     assert rel_path in _texts(root_after_delete)
+
+
+def test_existing_relation_remove_button_drops_relation_before_save(tmp_path: Path):
+    init_vault(tmp_path)
+    target_path = write_cache(tmp_path, Cache(title="target cache", raw="raw words"))
+    outline_path = write_outline(
+        tmp_path,
+        Outline(
+            title="related outline",
+            relations=[
+                Relation(
+                    relation_type=RelationType.SEQUEL,
+                    target_path=str(target_path.relative_to(tmp_path)),
+                    note="remove me",
+                )
+            ],
+        ),
+    )
+    rebuild_index(tmp_path)
+    page = FakePage()
+    ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
+
+    root = build_outline_editor_page(ctx, outline_path)
+    _icon_button(root, ft.Icons.DELETE_OUTLINE).on_click(None)
+    _button(root, "Save").on_click(None)
+
+    assert read_outline(outline_path).relations == []
 
 
 def test_export_saved_outline_copies_vault_file_bytes(tmp_path: Path):
