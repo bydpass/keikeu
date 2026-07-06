@@ -90,18 +90,29 @@ def build_outline_editor_page(
         """Return relation targets from the rebuildable index."""
         return list_caches(ctx.vault) + list_outlines(ctx.vault)
 
+    def _asset_display_title(entry: dict) -> str:
+        """Return a compact display title without turning assets into previews."""
+        title = str(entry.get("title") or "(untitled)")
+        return title if len(title) <= 60 else f"{title[:57]}..."
+
     def _asset_title_by_path() -> dict[str, str]:
         """Map indexed relative paths to display titles."""
         return {
-            str(entry["path"]): entry.get("title") or "(untitled)"
+            str(entry["path"]): _asset_display_title(entry)
             for entry in _asset_entries()
         }
 
+    def _asset_by_path() -> dict[str, dict]:
+        """Map indexed relative paths to their entries for navigation."""
+        return {str(entry["path"]): entry for entry in _asset_entries()}
+
     def _render_relations() -> None:
+        asset_by_path = _asset_by_path()
         title_by_path = _asset_title_by_path()
         relations_column.controls.clear()
         for rel in relations:
             target_title = title_by_path.get(rel.target_path, rel.target_path)
+            target_entry = asset_by_path.get(rel.target_path)
 
             def remove_relation(
                 _: ft.ControlEvent,
@@ -112,11 +123,33 @@ def build_outline_editor_page(
                     _render_relations()
                     page.update()
 
+            def open_relation_target(
+                _: ft.ControlEvent,
+                relation: Relation = rel,
+            ) -> None:
+                target = ctx.vault / relation.target_path
+                if relation.target_path.startswith("cache/"):
+                    ctx.open_cache(target)
+                elif relation.target_path.startswith("outlines/"):
+                    ctx.open_outline(target)
+
+            if target_entry is None:
+                target_control: ft.Control = ft.Text(target_title, expand=True)
+            else:
+                target_control = ft.Button(
+                    content=ft.Text(
+                        target_title,
+                        max_lines=1,
+                        overflow=ft.TextOverflow.ELLIPSIS,
+                    ),
+                    on_click=open_relation_target,
+                )
+
             row = ft.Row(
                 controls=[
                     ft.Text(rel.relation_type.value, weight=ft.FontWeight.BOLD),
-                    ft.Text(target_title, expand=True),
-                    ft.Text(rel.note),
+                    target_control,
+                    ft.Text(rel.note, size=12, color=ft.Colors.OUTLINE),
                     ft.IconButton(
                         icon=ft.Icons.DELETE_OUTLINE,
                         on_click=remove_relation,
@@ -187,8 +220,9 @@ def build_outline_editor_page(
             query = (search_field.value or "").strip().lower()
             assets_column.controls.clear()
             for entry in _asset_entries():
-                title = entry.get("title") or "(untitled)"
-                if query and query not in title.lower():
+                raw_title = str(entry.get("title") or "(untitled)")
+                title = _asset_display_title(entry)
+                if query and query not in raw_title.lower():
                     continue
                 subtitle = "  ·  ".join(
                     bit
@@ -202,7 +236,11 @@ def build_outline_editor_page(
                     ft.Row(
                         controls=[
                             ft.Button(
-                                content=ft.Text(title),
+                                content=ft.Text(
+                                    title,
+                                    max_lines=1,
+                                    overflow=ft.TextOverflow.ELLIPSIS,
+                                ),
                                 on_click=lambda _e, item=entry: select_asset(item),
                             ),
                             ft.Text(subtitle, size=12, color=ft.Colors.OUTLINE),

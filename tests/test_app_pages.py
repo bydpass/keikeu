@@ -204,6 +204,27 @@ def test_relation_picker_dialog_keeps_asset_list_bounded(tmp_path: Path):
     assert getattr(assets_viewport, "height", None) == 220
 
 
+def test_relation_picker_does_not_preview_target_raw_text(tmp_path: Path):
+    init_vault(tmp_path)
+    write_cache(
+        tmp_path,
+        Cache(
+            title="target cache",
+            raw="raw body should not become a relation thumbnail",
+        ),
+    )
+    rebuild_index(tmp_path)
+    page = FakePage()
+    ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
+
+    root = build_outline_editor_page(ctx)
+    _button(root, "Add relation").on_click(None)
+    dialog = page.overlay[-1]
+
+    assert "target cache" in _texts(dialog)
+    assert "raw body should not become a relation thumbnail" not in _texts(dialog)
+
+
 def test_existing_relation_displays_title_then_falls_back_to_path(tmp_path: Path):
     init_vault(tmp_path)
     target_path = write_cache(tmp_path, Cache(title="target cache", raw="raw words"))
@@ -238,6 +259,41 @@ def test_existing_relation_displays_title_then_falls_back_to_path(tmp_path: Path
     root_after_delete = build_outline_editor_page(ctx_after_delete, outline_path)
 
     assert rel_path in _texts(root_after_delete)
+
+
+def test_existing_relation_target_buttons_open_linked_assets(tmp_path: Path):
+    init_vault(tmp_path)
+    cache_path = write_cache(tmp_path, Cache(title="target cache", raw="cache raw"))
+    outline_target_path = write_outline(tmp_path, Outline(title="target outline"))
+    outline_path = write_outline(
+        tmp_path,
+        Outline(
+            title="related outline",
+            relations=[
+                Relation(
+                    relation_type=RelationType.SEQUEL,
+                    target_path=str(cache_path.relative_to(tmp_path)),
+                ),
+                Relation(
+                    relation_type=RelationType.SAME_SERIES,
+                    target_path=str(outline_target_path.relative_to(tmp_path)),
+                ),
+            ],
+        ),
+    )
+    rebuild_index(tmp_path)
+    page = FakePage()
+    opened: dict[str, Path] = {}
+    ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
+    ctx.open_cache = lambda path: opened.update(cache=path)  # type: ignore[assignment]
+    ctx.open_outline = lambda path: opened.update(outline=path)  # type: ignore[assignment]
+
+    root = build_outline_editor_page(ctx, outline_path)
+    _button(root, "target cache").on_click(None)
+    _button(root, "target outline").on_click(None)
+
+    assert opened["cache"] == cache_path
+    assert opened["outline"] == outline_target_path
 
 
 def test_existing_relation_remove_button_drops_relation_before_save(tmp_path: Path):
