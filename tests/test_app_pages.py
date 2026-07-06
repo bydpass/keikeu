@@ -87,6 +87,18 @@ def test_custom_ending_field_accepts_multiline_input(tmp_path: Path):
     assert field.min_lines and field.min_lines > 1
 
 
+def test_outline_editor_exposes_split_warning_fields(tmp_path: Path):
+    init_vault(tmp_path)
+    page = FakePage()
+    ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
+
+    root = build_outline_editor_page(ctx)
+
+    assert _text_field(root, "原作 / AU / IF / PA").value == ""
+    assert _text_field(root, "CP 结构").value == ""
+    assert _text_field(root, "情节元素").value == ""
+
+
 def test_convert_cache_opens_unsaved_outline_draft(tmp_path: Path):
     init_vault(tmp_path)
     page = FakePage()

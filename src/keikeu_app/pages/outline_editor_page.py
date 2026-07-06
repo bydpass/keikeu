@@ -63,7 +63,9 @@ def build_outline_editor_page(
     fandom_field = single_line_field("Fandom", "")
     characters_field = single_line_field("人物 (characters, comma-separated)", "")
     cp_field = single_line_field("CP", "")
-    warnings_field = section_field("观前提醒 (content_warnings)", "", min_lines=2, max_lines=6)
+    warning_setting_field = single_line_field("原作 / AU / IF / PA", "")
+    warning_cp_structure_field = single_line_field("CP 结构", "")
+    warning_elements_field = single_line_field("情节元素", "")
     plot_field = section_field("流水账 (plot)", "", min_lines=4, max_lines=16)
     ending_dd = ft.Dropdown(
         label="Ending Type",
@@ -140,7 +142,9 @@ def build_outline_editor_page(
         fandom_field.value = existing.fandom
         characters_field.value = ", ".join(existing.characters)
         cp_field.value = existing.cp
-        warnings_field.value = existing.content_warnings
+        warning_setting_field.value = existing.warning_setting
+        warning_cp_structure_field.value = existing.warning_cp_structure
+        warning_elements_field.value = existing.warning_elements
         plot_field.value = existing.plot
         ending_dd.value = existing.ending_type.value
         custom_ending_field.value = existing.custom_ending
@@ -167,7 +171,9 @@ def build_outline_editor_page(
             fandom=fandom_field.value or "",
             characters=chars,
             cp=cp_field.value or "",
-            content_warnings=warnings_field.value or "",
+            warning_setting=warning_setting_field.value or "",
+            warning_cp_structure=warning_cp_structure_field.value or "",
+            warning_elements=warning_elements_field.value or "",
             plot=plot_field.value or "",
             ending_type=ending_dd.value or EndingType.OE.value,
             custom_ending=custom_ending_field.value or "",
@@ -232,7 +238,10 @@ def build_outline_editor_page(
             summary_field,
             ft.Row(controls=[fandom_field, cp_field]),
             characters_field,
-            warnings_field,
+            ft.Text("内容要素", weight=ft.FontWeight.BOLD),
+            warning_setting_field,
+            warning_cp_structure_field,
+            warning_elements_field,
             plot_field,
             ending_dd,
             custom_ending_field,

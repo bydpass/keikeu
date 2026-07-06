@@ -55,16 +55,15 @@ class EndingType(str, Enum):
 class RelationType(str, Enum):
     """Logical relation between outlines (appdesign.md 5.2).
 
-    ``IF`` carries the value ``"if"``. ``if`` is a Python keyword, but
-    that only forbids it as an identifier; ``IF`` as the member name
-    with ``"if"`` as the value is valid.
+    Values are the user-facing Chinese labels written directly into
+    outline Markdown section 7.
     """
 
-    PREQUEL = "prequel"
-    SEQUEL = "sequel"
-    IF = "if"
-    SIDE_STORY = "side_story"
-    SAME_SERIES = "same_series"
+    PREQUEL = "前作"
+    SEQUEL = "续作"
+    IF = "IF"
+    SIDE_STORY = "外传"
+    SAME_SERIES = "同系列"
 
 
 def _coerce_enum(enum_cls: type[Enum], value: object, field_name: str) -> Enum:
@@ -158,7 +157,9 @@ class Outline:
     fandom: str = ""
     characters: list[str] = field(default_factory=list)
     cp: str = ""
-    content_warnings: str = ""
+    warning_setting: str = ""
+    warning_cp_structure: str = ""
+    warning_elements: str = ""
     plot: str = ""
     ending_type: EndingType = EndingType.OE
     custom_ending: str = ""

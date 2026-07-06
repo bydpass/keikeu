@@ -17,10 +17,9 @@ stripped on read; everything else, including internal blank lines, ``##`` and
 Documented limitations (acceptable for MVP): a free-text field loses purely
 leading/trailing newline framing; a content line byte-identical to a known
 structural header is not supported; interior CRLF is normalized to LF. In the
-list fields, a character name containing ``", "`` or a relation field containing
-``" | "`` is split on that delimiter, so keep those delimiters out of list
-values. Frontmatter scalars are backslash-escaped, so they round-trip exactly
-even across embedded newlines.
+list fields, a character name containing ``", "`` is split on that delimiter.
+Frontmatter scalars are backslash-escaped, so they round-trip exactly even
+across embedded newlines.
 """
 
 from __future__ import annotations
@@ -325,8 +324,26 @@ def _render_outline(outline: Outline) -> str:
             f"- CP: {outline.cp}",
         ]
     )
-    relations_block = "\n".join(
-        f"- {rel.relation_type.value} | {rel.target_path} | {rel.note}"
+    warnings = "\n".join(
+        [
+            f"- 原作 / AU / IF / PA: {outline.warning_setting}",
+            f"- CP 结构: {outline.warning_cp_structure}",
+            f"- 情节元素: {outline.warning_elements}",
+        ]
+    )
+    ending_body = (
+        outline.custom_ending
+        if outline.ending_type is EndingType.CUSTOM
+        else outline.ending_type.value
+    )
+    relations_block = "\n\n".join(
+        "\n".join(
+            [
+                f"- 关系: {rel.relation_type.value}",
+                f"- 关联对象: {rel.target_path}",
+                f"- 说明: {rel.note}",
+            ]
+        )
         for rel in outline.relations
     )
     body = "\n".join(
@@ -347,7 +364,7 @@ def _render_outline(outline: Outline) -> str:
             "",
             "## 4. 观前提醒",
             "",
-            outline.content_warnings,
+            warnings,
             "",
             "## 5. 流水账",
             "",
@@ -355,7 +372,7 @@ def _render_outline(outline: Outline) -> str:
             "",
             "## 6. Ending Type",
             "",
-            outline.custom_ending,
+            ending_body,
             "",
             "## 7. 与其他灵感的逻辑关联（Optional）",
             "",
@@ -404,6 +421,12 @@ def read_outline(path: Path) -> Outline:
     fandom, characters, cp = _parse_fandom_cp(
         sections.get("## 3. Fandom + 人物 / CP", "")
     )
+    warning_setting, warning_cp_structure, warning_elements = _parse_warnings(
+        sections.get("## 4. 观前提醒", "")
+    )
+    ending_type = EndingType(fm["ending_type"])
+    ending_body = sections.get("## 6. Ending Type", "")
+    custom_ending = ending_body if ending_type is EndingType.CUSTOM else ""
     relations = _parse_relations(
         sections.get("## 7. 与其他灵感的逻辑关联（Optional）", "")
     )
@@ -414,10 +437,12 @@ def read_outline(path: Path) -> Outline:
         fandom=fandom,
         characters=characters,
         cp=cp,
-        content_warnings=sections.get("## 4. 观前提醒", ""),
+        warning_setting=warning_setting,
+        warning_cp_structure=warning_cp_structure,
+        warning_elements=warning_elements,
         plot=sections.get("## 5. 流水账", ""),
-        ending_type=EndingType(fm["ending_type"]),
-        custom_ending=sections.get("## 6. Ending Type", ""),
+        ending_type=ending_type,
+        custom_ending=custom_ending,
         relations=relations,
         created=datetime.fromisoformat(fm["created"]),
         updated=datetime.fromisoformat(fm["updated"]),
@@ -457,25 +482,61 @@ def _parse_fandom_cp(content: str) -> tuple[str, list[str], str]:
     return fandom, characters, cp
 
 
-def _parse_relations(content: str) -> list[Relation]:
-    """Parse section-7 ``- type | target | note`` lines into ``Relation`` objects.
+def _parse_warnings(content: str) -> tuple[str, str, str]:
+    """Parse section 4 into the three WI-1 warning/content-element fields."""
+    warning_setting = ""
+    warning_cp_structure = ""
+    warning_elements = ""
+    for line in content.split("\n"):
+        if line.startswith("- 原作 / AU / IF / PA: "):
+            warning_setting = line[len("- 原作 / AU / IF / PA: ") :]
+        elif line.startswith("- CP 结构: "):
+            warning_cp_structure = line[len("- CP 结构: ") :]
+        elif line.startswith("- 情节元素: "):
+            warning_elements = line[len("- 情节元素: ") :]
+    return warning_setting, warning_cp_structure, warning_elements
 
-    An empty section yields ``[]``. Each list line is split on `` | `` into the
-    relation type, target path, and note.
+
+def _parse_relations(content: str) -> list[Relation]:
+    """Parse section-7 three-line relation blocks into ``Relation`` objects.
+
+    An empty section yields ``[]``. Incomplete blocks are ignored so hand-edited
+    Markdown with missing labels leaves relations blank rather than crashing.
     """
     relations: list[Relation] = []
-    for line in content.split("\n"):
-        if not line.startswith("- "):
+    current: dict[str, str] = {}
+    for raw_line in content.split("\n"):
+        line = raw_line.strip()
+        if not line:
             continue
-        parts = line[2:].split(" | ")
-        if len(parts) != 3:
-            continue
-        relation_type, target_path, note = parts
+        if line.startswith("- 关系: "):
+            if current:
+                _append_relation_if_complete(relations, current)
+            current = {"relation_type": line[len("- 关系: ") :]}
+        elif line.startswith("- 关联对象: "):
+            current["target_path"] = line[len("- 关联对象: ") :]
+        elif line.startswith("- 说明: "):
+            current["note"] = line[len("- 说明: ") :]
+    if current:
+        _append_relation_if_complete(relations, current)
+    return relations
+
+
+def _append_relation_if_complete(
+    relations: list[Relation], values: dict[str, str]
+) -> None:
+    """Append one parsed relation block if relation type and target are present."""
+    relation_type = values.get("relation_type", "")
+    target_path = values.get("target_path", "")
+    if not relation_type or not target_path:
+        return
+    try:
         relations.append(
             Relation(
                 relation_type=RelationType(relation_type),
                 target_path=target_path,
-                note=note,
+                note=values.get("note", ""),
             )
         )
-    return relations
+    except ValueError:
+        return

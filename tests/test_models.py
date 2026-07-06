@@ -56,17 +56,17 @@ def test_ending_type_members_and_values():
 
 
 def test_relation_type_members_and_values():
-    assert RelationType.PREQUEL.value == "prequel"
-    assert RelationType.SEQUEL.value == "sequel"
-    assert RelationType.IF.value == "if"  # Python keyword OK as enum VALUE
-    assert RelationType.SIDE_STORY.value == "side_story"
-    assert RelationType.SAME_SERIES.value == "same_series"
+    assert RelationType.PREQUEL.value == "前作"
+    assert RelationType.SEQUEL.value == "续作"
+    assert RelationType.IF.value == "IF"
+    assert RelationType.SIDE_STORY.value == "外传"
+    assert RelationType.SAME_SERIES.value == "同系列"
     assert [m.value for m in RelationType] == [
-        "prequel",
-        "sequel",
-        "if",
-        "side_story",
-        "same_series",
+        "前作",
+        "续作",
+        "IF",
+        "外传",
+        "同系列",
     ]
 
 
@@ -81,7 +81,7 @@ def test_str_backed_equality_holds():
     # str-backed Enum: member compares equal to its backing string.
     assert CacheStatus.DRAFTING == "drafting"
     assert EndingType.CUSTOM == "custom"
-    assert RelationType.IF == "if"
+    assert RelationType.IF == "IF"
 
 
 # --------------------------------------------------------------------------- #
@@ -182,6 +182,13 @@ def test_custom_ending_may_be_blank():
     assert o.custom_ending == ""
 
 
+def test_outline_warning_fields_default_to_blank():
+    o = Outline(title="t")
+    assert o.warning_setting == ""
+    assert o.warning_cp_structure == ""
+    assert o.warning_elements == ""
+
+
 def test_outline_ending_type_invalid_raises():
     for bad in ("HEHE", "nope"):
         with pytest.raises(ValueError) as exc:
@@ -205,16 +212,16 @@ def test_outline_ending_type_is_case_sensitive():
 
 
 def test_relation_type_str_coerced_keyword_value():
-    r = Relation(relation_type="if", target_path="vault/foo.md")
+    r = Relation(relation_type="IF", target_path="vault/foo.md")
     assert r.relation_type is RelationType.IF
-    assert r.relation_type.value == "if"
+    assert r.relation_type.value == "IF"
     assert r.target_path == "vault/foo.md"
     assert r.note == ""
 
 
 @pytest.mark.parametrize(
     "value",
-    ["prequel", "sequel", "if", "side_story", "same_series"],
+    ["前作", "续作", "IF", "外传", "同系列"],
 )
 def test_relation_type_all_members_round_trip_from_string(value):
     r = Relation(relation_type=value, target_path="vault/x.md")
@@ -253,7 +260,7 @@ def test_outline_mutable_defaults_are_independent():
     assert a.characters is not b.characters
     assert a.relations is not b.relations
     a.characters.append("Alice")
-    a.relations.append(Relation(relation_type="if", target_path="x.md"))
+    a.relations.append(Relation(relation_type="IF", target_path="x.md"))
     assert b.characters == []
     assert b.relations == []
 
@@ -264,7 +271,7 @@ def test_outline_mutable_defaults_are_independent():
 
 
 def test_outline_relations_hold_relation_objects():
-    rel = Relation(relation_type="sequel", target_path="vault/next.md")
+    rel = Relation(relation_type="续作", target_path="vault/next.md")
     o = Outline(title="t", relations=[rel])
     assert o.relations == [rel]
     assert isinstance(o.relations[0], Relation)
@@ -272,7 +279,7 @@ def test_outline_relations_hold_relation_objects():
 
 def test_outline_does_not_coerce_dicts_into_relation():
     # Step 2 stores whatever it is handed; dict->Relation coercion is Step 4.
-    raw_dict = {"relation_type": "sequel", "target_path": "vault/next.md"}
+    raw_dict = {"relation_type": "续作", "target_path": "vault/next.md"}
     o = Outline(title="t", relations=[raw_dict])
     assert o.relations[0] is raw_dict
     assert not isinstance(o.relations[0], Relation)

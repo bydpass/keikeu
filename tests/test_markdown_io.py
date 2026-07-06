@@ -99,7 +99,9 @@ def test_outline_round_trip_preserves_all_fields(tmp_path):
         fandom="Some Fandom",
         characters=["Alice", "Bob", "查理"],
         cp="Alice/Bob",
-        content_warnings="dark themes",
+        warning_setting="原作后日谈",
+        warning_cp_structure="Alice/Bob",
+        warning_elements="dark themes",
         plot="they meet, they part, they write",
         ending_type=EndingType.CUSTOM,
         custom_ending="they part ways but write letters",
@@ -128,7 +130,9 @@ def test_outline_round_trip_preserves_all_fields(tmp_path):
     assert back.fandom == "Some Fandom"
     assert back.characters == ["Alice", "Bob", "查理"]
     assert back.cp == "Alice/Bob"
-    assert back.content_warnings == "dark themes"
+    assert back.warning_setting == "原作后日谈"
+    assert back.warning_cp_structure == "Alice/Bob"
+    assert back.warning_elements == "dark themes"
     assert back.plot == "they meet, they part, they write"
     assert back.ending_type is EndingType.CUSTOM
     assert back.custom_ending == "they part ways but write letters"
@@ -169,11 +173,73 @@ def test_blank_outline_fields_round_trip(tmp_path):
     assert back.fandom == ""
     assert back.characters == []
     assert back.cp == ""
-    assert back.content_warnings == ""
+    assert back.warning_setting == ""
+    assert back.warning_cp_structure == ""
+    assert back.warning_elements == ""
     assert back.plot == ""
     assert back.ending_type is EndingType.OE
     assert back.custom_ending == ""
     assert back.relations == []
+
+
+def test_outline_renders_wi1_schema_lines(tmp_path):
+    vault.init_vault(tmp_path)
+    created = datetime(2026, 7, 4, 9, 0, 0)
+    updated = datetime(2026, 7, 4, 10, 0, 0)
+    outline = Outline(
+        title="阿德琳等着姐姐",
+        raw_inspiration="车站，雨声，三年后。",
+        summary="姐姐终于回来了。",
+        fandom="Original",
+        characters=["阿德琳", "姐姐"],
+        cp="阿德琳/姐姐",
+        warning_setting="原作",
+        warning_cp_structure="GB",
+        warning_elements="重逢",
+        plot="她们在旧车站见面。",
+        ending_type=EndingType.HE,
+        relations=[
+            Relation(
+                relation_type=RelationType.SEQUEL,
+                target_path="outlines/2026-06-19-xxxx-前篇.md",
+                note="同一车站，三年后",
+            ),
+            Relation(
+                relation_type=RelationType.IF,
+                target_path="cache/2026-06-20-xxxx-琴房雨声.md",
+                note="",
+            ),
+        ],
+        created=created,
+        updated=updated,
+    )
+
+    text = write_outline(tmp_path, outline).read_text(encoding="utf-8")
+
+    assert "## 4. 观前提醒\n\n- 原作 / AU / IF / PA: 原作\n- CP 结构: GB\n- 情节元素: 重逢\n" in text
+    assert "## 6. Ending Type\n\nHE\n\n## 7." in text
+    assert (
+        "## 7. 与其他灵感的逻辑关联（Optional）\n\n"
+        "- 关系: 续作\n"
+        "- 关联对象: outlines/2026-06-19-xxxx-前篇.md\n"
+        "- 说明: 同一车站，三年后\n\n"
+        "- 关系: IF\n"
+        "- 关联对象: cache/2026-06-20-xxxx-琴房雨声.md\n"
+        "- 说明: \n"
+    ) in text
+
+
+def test_non_custom_ending_ignores_body_and_clears_custom_ending(tmp_path):
+    vault.init_vault(tmp_path)
+    path = write_outline(
+        tmp_path,
+        Outline(title="t", ending_type=EndingType.BE, custom_ending="old custom"),
+    )
+
+    back = read_outline(path)
+
+    assert back.ending_type is EndingType.BE
+    assert back.custom_ending == ""
 
 
 # --------------------------------------------------------------------------- #
