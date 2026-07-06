@@ -8,6 +8,8 @@ rebuildable metadata index::
     <vault>/
         cache/                 # inspiration caches (灵感缓存)
         outlines/              # outline Markdown (大纲)
+        .trash/cache/          # soft-deleted caches
+        .trash/outlines/       # soft-deleted outlines
         keikeu_index.json      # auxiliary, rebuildable from Markdown alone
 
 Markdown files are the user asset; ``keikeu_index.json`` is auxiliary and
@@ -23,11 +25,13 @@ layer decides where config lives.
 from __future__ import annotations
 
 import json
+import secrets
 from pathlib import Path
 
 __all__ = [
     "init_vault",
     "is_vault",
+    "soft_delete",
     "get_vault",
     "set_vault",
 ]
@@ -55,14 +59,17 @@ def _write_json(target: Path, obj: object) -> None:
 def init_vault(path: Path) -> None:
     """Create the vault layout at ``path``, idempotently and non-destructively.
 
-    Creates ``path/``, ``path/cache/`` and ``path/outlines/`` (parents and
-    existing directories are tolerated). Writes ``keikeu_index.json`` ONLY
+    Creates ``path/``, ``path/cache/``, ``path/outlines/`` and matching
+    ``path/.trash/`` subdirectories (parents and existing directories are
+    tolerated). Writes ``keikeu_index.json`` ONLY
     if it does not already exist, so calling this twice — or pointing it at
     an existing vault — never overwrites user data in the index.
     """
     path.mkdir(parents=True, exist_ok=True)
     (path / "cache").mkdir(parents=True, exist_ok=True)
     (path / "outlines").mkdir(parents=True, exist_ok=True)
+    (path / ".trash" / "cache").mkdir(parents=True, exist_ok=True)
+    (path / ".trash" / "outlines").mkdir(parents=True, exist_ok=True)
     index = _index_path(path)
     if not index.exists():
         _write_json(index, _EMPTY_INDEX)
@@ -81,6 +88,39 @@ def is_vault(path: Path) -> bool:
         and (path / "cache").is_dir()
         and (path / "outlines").is_dir()
     )
+
+
+def _soft_delete_target(vault: Path, source: Path) -> Path:
+    """Return a non-existing trash destination for ``source``."""
+    trash_dir = vault / ".trash" / source.parent.name
+    trash_dir.mkdir(parents=True, exist_ok=True)
+    target = trash_dir / source.name
+    while target.exists():
+        target = trash_dir / f"{source.stem}-{secrets.token_hex(4)}{source.suffix}"
+    return target
+
+
+def soft_delete(vault: Path, rel_path: str) -> Path:
+    """Move a cache/outline Markdown file into ``.trash`` and return its path.
+
+    Only direct vault asset paths are accepted: ``cache/*.md`` or
+    ``outlines/*.md``. The move preserves file bytes exactly and never
+    overwrites an existing trash file; duplicate names receive a short random
+    suffix.
+    """
+    rel = Path(rel_path)
+    if (
+        rel.is_absolute()
+        or len(rel.parts) != 2
+        or rel.parts[0] not in {"cache", "outlines"}
+        or rel.suffix != ".md"
+    ):
+        raise ValueError("soft_delete expects cache/*.md or outlines/*.md")
+
+    source = vault / rel
+    target = _soft_delete_target(vault, source)
+    source.replace(target)
+    return target
 
 
 def get_vault(config_path: Path) -> Path | None:

@@ -28,6 +28,7 @@ from keikeu_core.markdown_io import (
     write_outline,
 )
 from keikeu_core.models import CacheStatus, EndingType, Outline, Relation, RelationType
+from keikeu_core.vault import soft_delete
 
 if TYPE_CHECKING:
     from keikeu_app.main import AppContext
@@ -213,6 +214,20 @@ def build_outline_editor_page(
         except Exception as ex:
             notify(page, f"Could not save outline: {ex}")
 
+    def on_delete(_: ft.ControlEvent) -> None:
+        path = state["path"]
+        if not isinstance(path, Path):
+            notify(page, "Nothing to delete")
+            return
+        try:
+            soft_delete(ctx.vault, str(path.relative_to(ctx.vault)))
+            state["path"] = None
+            rebuild_index(ctx.vault)
+            notify(page, "已移入回收站")
+            ctx.open_library()
+        except Exception as ex:
+            notify(page, f"Could not delete outline: {ex}")
+
     def _default_export_name() -> str:
         """Return a dialog filename; saved outlines use the vault filename."""
         path = state["path"]
@@ -295,6 +310,7 @@ def build_outline_editor_page(
                         content=ft.Text("导出 Markdown"),
                         on_click=on_export,
                     ),
+                    ft.OutlinedButton(content=ft.Text("Delete"), on_click=on_delete),
                 ],
                 wrap=True,
             ),

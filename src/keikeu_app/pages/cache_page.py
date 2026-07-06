@@ -25,13 +25,24 @@ from keikeu_core.markdown_io import (
     write_cache,
 )
 from keikeu_core.models import Cache, CacheStatus, Outline
+from keikeu_core.vault import soft_delete
 
 if TYPE_CHECKING:
     from keikeu_app.main import AppContext
 
 __all__ = ["build_cache_page"]
 
-_STATUS_OPTIONS = [s.value for s in CacheStatus]
+_STATUS_LABELS = {
+    CacheStatus.RAW: "raw — 刚存，未处理",
+    CacheStatus.DRAFTING: "drafting — 已开始转配方票",
+    CacheStatus.OUTLINED: "outlined — 已生成大纲",
+    CacheStatus.ARCHIVED: "archived — 封存",
+}
+
+
+def _status_label(status: CacheStatus) -> str:
+    """Return the read-only cache status badge text."""
+    return _STATUS_LABELS[status]
 
 
 def build_cache_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Control:
@@ -49,28 +60,32 @@ def build_cache_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
         "path": open_path,
         "created": datetime.now(),
         "linked_outline": None,
+        "status": CacheStatus.RAW,
     }
 
     title_field = single_line_field("Title", "")
     raw_field = section_field("原始灵感 (raw)", "", min_lines=4, max_lines=16)
     notes_field = section_field("临时备注 (notes)", "", min_lines=2, max_lines=8)
-    status_dd = ft.Dropdown(
-        label="Status",
-        value=CacheStatus.RAW.value,
-        options=[ft.dropdown.Option(s) for s in _STATUS_OPTIONS],
-    )
+    status_badge = ft.Text(_status_label(CacheStatus.RAW), size=12)
 
     if open_path is not None:
         existing = read_cache(open_path)
         title_field.value = existing.title
         raw_field.value = existing.raw
         notes_field.value = existing.notes
-        status_dd.value = existing.status.value
         state["created"] = existing.created
         state["linked_outline"] = existing.linked_outline
+        state["status"] = existing.status
+        status_badge.value = _status_label(existing.status)
 
-    def _current_cache(status: CacheStatus | str) -> Cache:
+    def _set_status(status: CacheStatus) -> None:
+        state["status"] = status
+        status_badge.value = _status_label(status)
+
+    def _current_cache(status: CacheStatus | str | None = None) -> Cache:
         """Assemble a Cache from the live field values (verbatim raw)."""
+        if status is None:
+            status = state["status"]  # type: ignore[assignment]
         return Cache(
             title=title_field.value or "",
             raw=raw_field.value or "",
@@ -94,9 +109,8 @@ def build_cache_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
 
     def on_save(_: ft.ControlEvent) -> None:
         try:
-            cache = _current_cache(status_dd.value or CacheStatus.RAW.value)
+            cache = _current_cache()
             _persist(cache)
-            status_dd.value = cache.status.value
             notify(page, "Cache saved")
             page.update()
         except Exception as ex:
@@ -106,11 +120,25 @@ def build_cache_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
         try:
             cache = _current_cache(CacheStatus.ARCHIVED)
             _persist(cache)
-            status_dd.value = CacheStatus.ARCHIVED.value
+            _set_status(CacheStatus.ARCHIVED)
             notify(page, "Cache archived")
             page.update()
         except Exception as ex:
             notify(page, f"Could not archive cache: {ex}")
+
+    def on_delete(_: ft.ControlEvent) -> None:
+        path = state["path"]
+        if not isinstance(path, Path):
+            notify(page, "Nothing to delete")
+            return
+        try:
+            soft_delete(ctx.vault, str(path.relative_to(ctx.vault)))
+            state["path"] = None
+            rebuild_index(ctx.vault)
+            notify(page, "已移入回收站")
+            ctx.open_library()
+        except Exception as ex:
+            notify(page, f"Could not delete cache: {ex}")
 
     def on_convert(_: ft.ControlEvent) -> None:
         try:
@@ -118,14 +146,14 @@ def build_cache_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
             if isinstance(linked, str):
                 outline_path = ctx.vault / linked
                 if outline_path.exists():
-                    cache = _current_cache(status_dd.value or CacheStatus.OUTLINED.value)
+                    cache = _current_cache()
                     _persist(cache)
                     ctx.open_outline(outline_path)
                     return
 
             cache = _current_cache(CacheStatus.DRAFTING)
             cache_path = _persist(cache)
-            status_dd.value = CacheStatus.DRAFTING.value
+            _set_status(CacheStatus.DRAFTING)
 
             # Pre-fill an unsaved outline draft. The outline file is written,
             # and this cache becomes OUTLINED, only when the user saves it.
@@ -148,6 +176,7 @@ def build_cache_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
             ft.Button(content=ft.Text("Save"), on_click=on_save),
             ft.Button(content=ft.Text("Convert to outline"), on_click=on_convert),
             ft.OutlinedButton(content=ft.Text("Archive"), on_click=on_archive),
+            ft.OutlinedButton(content=ft.Text("Delete"), on_click=on_delete),
         ],
         wrap=True,
     )
@@ -158,7 +187,7 @@ def build_cache_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
             title_field,
             raw_field,
             notes_field,
-            status_dd,
+            status_badge,
             buttons,
         ],
         scroll=ft.ScrollMode.AUTO,

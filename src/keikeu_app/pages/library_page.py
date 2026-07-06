@@ -15,8 +15,10 @@ from typing import TYPE_CHECKING
 
 import flet as ft
 
-from keikeu_core.indexer import list_caches, list_outlines
+from keikeu_app.widgets import notify
+from keikeu_core.indexer import list_caches, list_outlines, rebuild_index
 from keikeu_core.models import CacheStatus
+from keikeu_core.vault import soft_delete
 
 if TYPE_CHECKING:
     from keikeu_app.main import AppContext
@@ -63,12 +65,22 @@ def build_library_page(ctx: "AppContext") -> ft.Control:
             else:
                 _open_outline(rp)
 
+        def on_delete(_: ft.ControlEvent, rp: str = rel_path) -> None:
+            try:
+                soft_delete(ctx.vault, rp)
+                rebuild_index(ctx.vault)
+                notify(page, "已移入回收站")
+                refresh(None)
+            except Exception as ex:
+                notify(page, f"Could not delete item: {ex}")
+
         return ft.ListTile(
             title=ft.Text(title),
             subtitle=ft.Text("  ·  ".join(b for b in subtitle_bits if b)),
             leading=ft.Icon(
                 ft.Icons.NOTE if kind == "cache" else ft.Icons.ARTICLE
             ),
+            trailing=ft.OutlinedButton(content=ft.Text("Delete"), on_click=on_delete),
             on_click=on_open,
         )
 

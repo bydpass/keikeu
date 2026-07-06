@@ -222,6 +222,27 @@ def test_wrong_shape_index_rebuilds_and_never_crashes_lists(tmp_path):
 
 
 # --------------------------------------------------------------------------- #
+# Trash is never indexed
+# --------------------------------------------------------------------------- #
+
+
+def test_rebuild_ignores_trash_contents(tmp_path):
+    vault = _fresh_vault(tmp_path)
+    write_cache(vault, Cache(title="live cache", raw="keep visible"))
+    write_outline(vault, Outline(title="live outline"))
+
+    deleted_cache = write_cache(vault, Cache(title="deleted cache", raw="hidden"))
+    deleted_cache.replace(vault / ".trash" / "cache" / deleted_cache.name)
+    deleted_outline = write_outline(vault, Outline(title="deleted outline"))
+    deleted_outline.replace(vault / ".trash" / "outlines" / deleted_outline.name)
+
+    rebuild_index(vault)
+
+    assert [e["title"] for e in list_caches(vault)] == ["live cache"]
+    assert [e["title"] for e in list_outlines(vault)] == ["live outline"]
+
+
+# --------------------------------------------------------------------------- #
 # list_caches / list_outlines return the right slice
 # --------------------------------------------------------------------------- #
 

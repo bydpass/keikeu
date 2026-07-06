@@ -15,7 +15,9 @@ import flet as ft
 from keikeu_app import main as app_main
 from keikeu_app.main import AppContext
 from keikeu_app.pages.cache_page import build_cache_page
+from keikeu_app.pages.library_page import build_library_page
 from keikeu_app.pages.outline_editor_page import build_outline_editor_page
+from keikeu_core.indexer import list_caches, list_outlines, rebuild_index
 from keikeu_core.markdown_io import read_cache, read_outline, write_cache, write_outline
 from keikeu_core.models import Cache, CacheStatus, Outline
 from keikeu_core.vault import init_vault
@@ -40,7 +42,7 @@ class FakePage:
 
 def _walk(control: object) -> Iterable[object]:
     yield control
-    for attr in ("content", "leading"):
+    for attr in ("content", "leading", "trailing"):
         child = getattr(control, attr, None)
         if child is not None:
             yield from _walk(child)
@@ -61,6 +63,21 @@ def _button(root: object, text: str) -> object:
         if getattr(content, "value", None) == text:
             return control
     raise AssertionError(f"Button not found: {text}")
+
+
+def _dropdown(root: object, label: str) -> ft.Dropdown:
+    for control in _walk(root):
+        if isinstance(control, ft.Dropdown) and control.label == label:
+            return control
+    raise AssertionError(f"Dropdown not found: {label}")
+
+
+def _texts(root: object) -> list[str]:
+    return [
+        control.value
+        for control in _walk(root)
+        if isinstance(control, ft.Text) and isinstance(control.value, str)
+    ]
 
 
 def _file_picker(page: FakePage) -> ft.FilePicker:
@@ -207,6 +224,48 @@ def test_convert_cache_opens_unsaved_outline_draft(tmp_path: Path):
     assert cache.linked_outline is None
 
 
+def test_cache_status_is_read_only_and_save_keeps_existing_status(tmp_path: Path):
+    init_vault(tmp_path)
+    cache_path = write_cache(
+        tmp_path,
+        Cache(title="old spark", raw="raw words", status=CacheStatus.ARCHIVED),
+    )
+    page = FakePage()
+    ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
+
+    root = build_cache_page(ctx, cache_path)
+    _text_field(root, "临时备注 (notes)").value = "edited while archived"
+
+    assert "archived — 封存" in _texts(root)
+    try:
+        _dropdown(root, "Status")
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError("Cache status must not be user-selectable")
+
+    _button(root, "Save").on_click(None)
+
+    cache = read_cache(cache_path)
+    assert cache.notes == "edited while archived"
+    assert cache.status is CacheStatus.ARCHIVED
+
+
+def test_archive_button_sets_cache_status_archived(tmp_path: Path):
+    init_vault(tmp_path)
+    cache_path = write_cache(
+        tmp_path,
+        Cache(title="old spark", raw="raw words", status=CacheStatus.RAW),
+    )
+    page = FakePage()
+    ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
+
+    root = build_cache_page(ctx, cache_path)
+    _button(root, "Archive").on_click(None)
+
+    assert read_cache(cache_path).status is CacheStatus.ARCHIVED
+
+
 def test_convert_cache_with_existing_outline_keeps_status(tmp_path: Path):
     init_vault(tmp_path)
     outline_path = write_outline(tmp_path, Outline(title="existing"))
@@ -256,3 +315,60 @@ def test_saving_outline_from_cache_marks_cache_outlined(tmp_path: Path):
     cache = read_cache(cache_path)
     assert cache.status is CacheStatus.OUTLINED
     assert cache.linked_outline == str(outline_files[0].relative_to(tmp_path))
+
+
+def test_cache_editor_delete_moves_file_to_trash_and_opens_library(tmp_path: Path):
+    init_vault(tmp_path)
+    cache_path = write_cache(tmp_path, Cache(title="delete me", raw="exact bytes"))
+    original = cache_path.read_bytes()
+    page = FakePage()
+    opened: dict[str, bool] = {}
+    ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
+    ctx.open_library = lambda: opened.update(library=True)
+
+    root = build_cache_page(ctx, cache_path)
+    _button(root, "Delete").on_click(None)
+
+    moved = tmp_path / ".trash" / "cache" / cache_path.name
+    assert not cache_path.exists()
+    assert moved.read_bytes() == original
+    assert opened["library"] is True
+    assert list_caches(tmp_path) == []
+
+
+def test_outline_editor_delete_moves_file_to_trash_and_opens_library(tmp_path: Path):
+    init_vault(tmp_path)
+    outline_path = write_outline(
+        tmp_path,
+        Outline(title="delete outline", raw_inspiration="exact bytes"),
+    )
+    original = outline_path.read_bytes()
+    page = FakePage()
+    opened: dict[str, bool] = {}
+    ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
+    ctx.open_library = lambda: opened.update(library=True)
+
+    root = build_outline_editor_page(ctx, outline_path)
+    _button(root, "Delete").on_click(None)
+
+    moved = tmp_path / ".trash" / "outlines" / outline_path.name
+    assert not outline_path.exists()
+    assert moved.read_bytes() == original
+    assert opened["library"] is True
+    assert list_outlines(tmp_path) == []
+
+
+def test_library_delete_moves_cache_to_trash_and_refreshes_results(tmp_path: Path):
+    init_vault(tmp_path)
+    cache_path = write_cache(tmp_path, Cache(title="library delete", raw="bytes"))
+    rebuild_index(tmp_path)
+    page = FakePage()
+    ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
+
+    root = build_library_page(ctx)
+    _button(root, "Delete").on_click(None)
+
+    assert not cache_path.exists()
+    assert (tmp_path / ".trash" / "cache" / cache_path.name).is_file()
+    assert list_caches(tmp_path) == []
+    assert "Caches (0)" in _texts(root)
