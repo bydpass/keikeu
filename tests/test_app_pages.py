@@ -6,6 +6,7 @@ and click handlers directly so the cache -> outline workflow stays pinned.
 
 from __future__ import annotations
 
+import asyncio
 from pathlib import Path
 from typing import Iterable
 
@@ -15,7 +16,7 @@ from keikeu_app import main as app_main
 from keikeu_app.main import AppContext
 from keikeu_app.pages.cache_page import build_cache_page
 from keikeu_app.pages.outline_editor_page import build_outline_editor_page
-from keikeu_core.markdown_io import read_cache, write_cache, write_outline
+from keikeu_core.markdown_io import read_cache, read_outline, write_cache, write_outline
 from keikeu_core.models import Cache, CacheStatus, Outline
 from keikeu_core.vault import init_vault
 
@@ -26,6 +27,7 @@ class FakePage:
     def __init__(self) -> None:
         self.controls: list[object] = []
         self.overlay: list[object] = []
+        self.services: list[object] = []
         self.scroll = ft.ScrollMode.AUTO
         self.update_count = 0
 
@@ -59,6 +61,14 @@ def _button(root: object, text: str) -> object:
         if getattr(content, "value", None) == text:
             return control
     raise AssertionError(f"Button not found: {text}")
+
+
+def _file_picker(page: FakePage) -> ft.FilePicker:
+    assert not any(isinstance(control, ft.FilePicker) for control in page.overlay)
+    for control in page.services:
+        if isinstance(control, ft.FilePicker):
+            return control
+    raise AssertionError("FilePicker not found in page services")
 
 
 def test_navigation_shell_disables_page_level_scroll(tmp_path: Path):
@@ -97,6 +107,74 @@ def test_outline_editor_exposes_split_warning_fields(tmp_path: Path):
     assert _text_field(root, "原作 / AU / IF / PA").value == ""
     assert _text_field(root, "CP 结构").value == ""
     assert _text_field(root, "情节元素").value == ""
+
+
+def test_export_saved_outline_copies_vault_file_bytes(tmp_path: Path):
+    init_vault(tmp_path)
+    outline_path = write_outline(
+        tmp_path,
+        Outline(title="export me", raw_inspiration="raw\n---\nbytes"),
+    )
+    target_path = tmp_path / "exported.md"
+    page = FakePage()
+    ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
+
+    root = build_outline_editor_page(ctx, outline_path)
+    picker = _file_picker(page)
+    calls: dict[str, object] = {}
+
+    async def save_file(**kwargs: object) -> str:
+        calls.update(kwargs)
+        return str(target_path)
+
+    picker.save_file = save_file  # type: ignore[method-assign]
+
+    asyncio.run(_button(root, "导出 Markdown").on_click(None))
+
+    assert target_path.read_bytes() == outline_path.read_bytes()
+    assert calls["file_name"] == outline_path.name
+    assert calls["allowed_extensions"] == ["md"]
+
+
+def test_export_unsaved_outline_saves_then_exports(tmp_path: Path):
+    init_vault(tmp_path)
+    target_path = tmp_path / "draft-export.md"
+    page = FakePage()
+    ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
+
+    root = build_outline_editor_page(ctx)
+    _text_field(root, "Title").value = "new export"
+    _text_field(root, "原始灵感 (raw_inspiration)").value = "raw words stay"
+    picker = _file_picker(page)
+    async def save_file(**_kwargs: object) -> str:
+        return str(target_path)
+
+    picker.save_file = save_file  # type: ignore[method-assign]
+
+    asyncio.run(_button(root, "导出 Markdown").on_click(None))
+
+    outline_files = list((tmp_path / "outlines").glob("*.md"))
+    assert len(outline_files) == 1
+    assert target_path.read_bytes() == outline_files[0].read_bytes()
+    assert read_outline(outline_files[0]).raw_inspiration == "raw words stay"
+
+
+def test_export_cancel_leaves_unsaved_outline_unwritten(tmp_path: Path):
+    init_vault(tmp_path)
+    page = FakePage()
+    ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
+
+    root = build_outline_editor_page(ctx)
+    _text_field(root, "Title").value = "cancel export"
+    picker = _file_picker(page)
+    async def save_file(**_kwargs: object) -> None:
+        return None
+
+    picker.save_file = save_file  # type: ignore[method-assign]
+
+    asyncio.run(_button(root, "导出 Markdown").on_click(None))
+
+    assert list((tmp_path / "outlines").glob("*.md")) == []
 
 
 def test_convert_cache_opens_unsaved_outline_draft(tmp_path: Path):

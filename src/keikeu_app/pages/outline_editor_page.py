@@ -11,6 +11,7 @@ verbatim.
 
 from __future__ import annotations
 
+import shutil
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -56,6 +57,8 @@ def build_outline_editor_page(
         "path": open_path,
         "created": datetime.now(),
     }
+    export_picker = ft.FilePicker()
+    page.services.append(export_picker)
 
     title_field = single_line_field("Title", "")
     raw_field = section_field("原始灵感 (raw_inspiration)", "", min_lines=4, max_lines=14)
@@ -182,28 +185,58 @@ def build_outline_editor_page(
             updated=datetime.now(),
         )
 
+    def _persist_current_outline() -> Path:
+        """Save the live outline fields and return the vault source path."""
+        outline = _current_outline()  # never blocks; all fields may be blank
+        path = state["path"]
+        if path is None:
+            path = write_outline(ctx.vault, outline)
+            state["path"] = path
+        else:
+            update_outline(path, outline)  # type: ignore[arg-type]
+
+        if source_cache_path is not None:
+            cache = read_cache(source_cache_path)
+            cache.linked_outline = str(path.relative_to(ctx.vault))  # type: ignore[union-attr]
+            cache.status = CacheStatus.OUTLINED
+            cache.updated = datetime.now()
+            update_cache(source_cache_path, cache)
+
+        rebuild_index(ctx.vault)
+        return path  # type: ignore[return-value]
+
     def on_save(_: ft.ControlEvent) -> None:
         try:
-            outline = _current_outline()  # never blocks; all fields may be blank
-            path = state["path"]
-            if path is None:
-                path = write_outline(ctx.vault, outline)
-                state["path"] = path
-            else:
-                update_outline(path, outline)  # type: ignore[arg-type]
-
-            if source_cache_path is not None:
-                cache = read_cache(source_cache_path)
-                cache.linked_outline = str(path.relative_to(ctx.vault))  # type: ignore[union-attr]
-                cache.status = CacheStatus.OUTLINED
-                cache.updated = datetime.now()
-                update_cache(source_cache_path, cache)
-
-            rebuild_index(ctx.vault)
+            _persist_current_outline()
             notify(page, "Outline saved")
             page.update()
         except Exception as ex:
             notify(page, f"Could not save outline: {ex}")
+
+    def _default_export_name() -> str:
+        """Return a dialog filename; saved outlines use the vault filename."""
+        path = state["path"]
+        if isinstance(path, Path):
+            return path.name
+        title = (title_field.value or "").strip()
+        return f"{title}.md" if title else "outline.md"
+
+    async def on_export(_: ft.ControlEvent) -> None:
+        try:
+            target = await export_picker.save_file(
+                dialog_title="导出 Markdown",
+                file_name=_default_export_name(),
+                file_type=ft.FilePickerFileType.CUSTOM,
+                allowed_extensions=["md"],
+            )
+            if not target:
+                return
+            source_path = _persist_current_outline()
+            shutil.copy2(source_path, Path(target))
+            notify(page, "Markdown exported")
+            page.update()
+        except Exception as ex:
+            notify(page, f"Could not export Markdown: {ex}")
 
     # === Soft completion hint (never blocks) =============================== #
     hint = ft.Text("", size=12, color=ft.Colors.OUTLINE)
@@ -255,7 +288,16 @@ def build_outline_editor_page(
             ),
             ft.Divider(),
             hint,
-            ft.Row(controls=[ft.Button(content=ft.Text("Save"), on_click=on_save)]),
+            ft.Row(
+                controls=[
+                    ft.Button(content=ft.Text("Save"), on_click=on_save),
+                    ft.OutlinedButton(
+                        content=ft.Text("导出 Markdown"),
+                        on_click=on_export,
+                    ),
+                ],
+                wrap=True,
+            ),
         ],
         scroll=ft.ScrollMode.AUTO,
         expand=True,
