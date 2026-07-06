@@ -98,6 +98,13 @@ def _labels(root: object, control_type: type) -> list[str | None]:
     ]
 
 
+def _control_by_key(root: object, key: str) -> object:
+    for control in _walk(root):
+        if getattr(control, "key", None) == key:
+            return control
+    raise AssertionError(f"Control not found: {key}")
+
+
 def test_navigation_shell_disables_page_level_scroll(tmp_path: Path):
     init_vault(tmp_path)
     page = FakePage()
@@ -169,6 +176,25 @@ def test_relation_picker_adds_index_backed_relation_without_path_input(tmp_path:
     assert relations[0].relation_type is RelationType.IF
     assert relations[0].target_path == str(target_path.relative_to(tmp_path))
     assert relations[0].note == "branch note"
+
+
+def test_relation_picker_dialog_keeps_asset_list_bounded(tmp_path: Path):
+    init_vault(tmp_path)
+    for i in range(25):
+        write_cache(tmp_path, Cache(title=f"target cache {i:02d}", raw="raw words"))
+    rebuild_index(tmp_path)
+    page = FakePage()
+    ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
+
+    root = build_outline_editor_page(ctx)
+    _button(root, "Add relation").on_click(None)
+    dialog = page.overlay[-1]
+
+    content = _control_by_key(dialog, "relation-picker-content")
+    assets_viewport = _control_by_key(dialog, "relation-picker-assets")
+
+    assert getattr(content, "width", None) == 520
+    assert getattr(assets_viewport, "height", None) == 220
 
 
 def test_existing_relation_displays_title_then_falls_back_to_path(tmp_path: Path):

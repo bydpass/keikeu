@@ -141,7 +141,12 @@ def build_outline_editor_page(
     def on_add_relation(_: ft.ControlEvent) -> None:
         selected: dict[str, object] = {}
         search_field = ft.TextField(label="搜索本地资产")
-        assets_column = ft.Column(controls=[])
+        assets_column = ft.Column(controls=[], scroll=ft.ScrollMode.AUTO, spacing=6)
+        assets_viewport = ft.Container(
+            key="relation-picker-assets",
+            height=220,
+            content=assets_column,
+        )
         relation_type_dd = ft.Dropdown(
             label="关系类型",
             value=RelationType.SEQUEL.value,
@@ -154,16 +159,20 @@ def build_outline_editor_page(
         dialog = ft.AlertDialog(
             modal=True,
             title=ft.Text("添加关联"),
-            content=ft.Column(
-                controls=[
-                    search_field,
-                    assets_column,
-                    selected_text,
-                    relation_type_dd,
-                    note_field,
-                    error_text,
-                ],
-                tight=True,
+            content=ft.Container(
+                key="relation-picker-content",
+                width=520,
+                content=ft.Column(
+                    controls=[
+                        search_field,
+                        assets_viewport,
+                        selected_text,
+                        relation_type_dd,
+                        note_field,
+                        error_text,
+                    ],
+                    tight=True,
+                ),
             ),
             actions=[],
         )
