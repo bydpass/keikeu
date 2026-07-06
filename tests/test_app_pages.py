@@ -261,6 +261,35 @@ def test_existing_relation_displays_title_then_falls_back_to_path(tmp_path: Path
     assert rel_path in _texts(root_after_delete)
 
 
+def test_missing_relation_target_row_is_not_clickable(tmp_path: Path):
+    init_vault(tmp_path)
+    target_path = write_cache(tmp_path, Cache(title="target cache", raw="raw words"))
+    rel_path = str(target_path.relative_to(tmp_path))
+    outline_path = write_outline(
+        tmp_path,
+        Outline(
+            title="related outline",
+            relations=[
+                Relation(relation_type=RelationType.SEQUEL, target_path=rel_path)
+            ],
+        ),
+    )
+    soft_delete(tmp_path, rel_path)
+    rebuild_index(tmp_path)
+    page = FakePage()
+    ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
+
+    root = build_outline_editor_page(ctx, outline_path)
+
+    assert rel_path in _texts(root)
+    button_labels = [
+        getattr(control.content, "value", None)
+        for control in _walk(root)
+        if isinstance(control, ft.Button)
+    ]
+    assert rel_path not in button_labels
+
+
 def test_existing_relation_target_buttons_open_linked_assets(tmp_path: Path):
     init_vault(tmp_path)
     cache_path = write_cache(tmp_path, Cache(title="target cache", raw="cache raw"))

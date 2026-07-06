@@ -95,23 +95,14 @@ def build_outline_editor_page(
         title = str(entry.get("title") or "(untitled)")
         return title if len(title) <= 60 else f"{title[:57]}..."
 
-    def _asset_title_by_path() -> dict[str, str]:
-        """Map indexed relative paths to display titles."""
-        return {
-            str(entry["path"]): _asset_display_title(entry)
-            for entry in _asset_entries()
-        }
-
     def _asset_by_path() -> dict[str, dict]:
         """Map indexed relative paths to their entries for navigation."""
         return {str(entry["path"]): entry for entry in _asset_entries()}
 
     def _render_relations() -> None:
         asset_by_path = _asset_by_path()
-        title_by_path = _asset_title_by_path()
         relations_column.controls.clear()
         for rel in relations:
-            target_title = title_by_path.get(rel.target_path, rel.target_path)
             target_entry = asset_by_path.get(rel.target_path)
 
             def remove_relation(
@@ -123,22 +114,24 @@ def build_outline_editor_page(
                     _render_relations()
                     page.update()
 
-            def open_relation_target(
-                _: ft.ControlEvent,
-                relation: Relation = rel,
-            ) -> None:
-                target = ctx.vault / relation.target_path
-                if relation.target_path.startswith("cache/"):
-                    ctx.open_cache(target)
-                elif relation.target_path.startswith("outlines/"):
-                    ctx.open_outline(target)
-
             if target_entry is None:
-                target_control: ft.Control = ft.Text(target_title, expand=True)
+                target_control: ft.Control = ft.Text(rel.target_path, expand=True)
             else:
+
+                def open_relation_target(
+                    _: ft.ControlEvent,
+                    relation: Relation = rel,
+                    entry: dict = target_entry,
+                ) -> None:
+                    target = ctx.vault / relation.target_path
+                    if entry["type"] == "cache":
+                        ctx.open_cache(target)
+                    else:
+                        ctx.open_outline(target)
+
                 target_control = ft.Button(
                     content=ft.Text(
-                        target_title,
+                        _asset_display_title(target_entry),
                         max_lines=1,
                         overflow=ft.TextOverflow.ELLIPSIS,
                     ),
