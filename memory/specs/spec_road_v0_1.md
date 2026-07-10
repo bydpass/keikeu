@@ -90,9 +90,9 @@
 ### 行为规范
 
 - outline 编辑器新增「导出 Markdown」按钮。
-- 点击时：若该 outline 尚未保存过（无 vault 内路径），先按正常保存流程存入 vault，再继续导出。
-- 弹出系统保存对话框（`ft.FilePicker.save_file`），默认文件名 = vault 内文件名。
-- 用户确认后，将 vault 内 `.md` **字节一致**复制到目标位置（`shutil.copy2`，app 层执行；不经过重新序列化）。
+- 点击时先弹出系统保存对话框（`ft.FilePicker.save_file`）；已有 vault 文件时，默认文件名 = vault 内文件名；未保存草稿按当前标题生成默认 `.md` 文件名。
+- 用户确认目标后：若该 outline 尚未保存过（无 vault 内路径），先按正常保存流程存入 vault，再继续导出。
+- 将 vault 内 `.md` **字节一致**复制到目标位置（`shutil.copy2`，app 层执行；不经过重新序列化）。
 - 用户取消对话框：无操作、无报错。
 - 第一版只支持 Markdown（无 PDF/DOCX/HTML）。
 
@@ -100,7 +100,7 @@
 
 - [ ] 导出文件与 vault 内源文件字节一致
 - [ ] 未保存草稿点导出 → 自动落盘 vault 后导出成功
-- [ ] 取消不报错，vault 状态不变
+- [ ] 取消不报错；未保存草稿不落盘，vault 状态不变
 
 ---
 
