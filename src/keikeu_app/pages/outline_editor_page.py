@@ -18,7 +18,31 @@ from typing import TYPE_CHECKING
 
 import flet as ft
 
-from keikeu_app.widgets import notify, section_field, single_line_field
+from keikeu_app.theme import (
+    ACCENT,
+    BG,
+    BORDER,
+    BORDER_SOFT,
+    DANGER,
+    FG,
+    FONT_DISPLAY,
+    MUTED,
+    RADIUS_SM,
+    SPACE_3,
+    SPACE_4,
+    SPACE_6,
+    SURFACE,
+    TEXT_SM,
+)
+from keikeu_app.widgets import (
+    danger_button,
+    notify,
+    page_header,
+    paper_card,
+    primary_button,
+    section_field,
+    single_line_field,
+)
 from keikeu_core.indexer import list_caches, list_outlines, rebuild_index
 from keikeu_core.markdown_io import (
     read_cache,
@@ -61,23 +85,28 @@ def build_outline_editor_page(
     export_picker = ft.FilePicker()
     page.services.append(export_picker)
 
-    title_field = single_line_field("Title", "")
-    raw_field = section_field("原始灵感 (raw_inspiration)", "", min_lines=4, max_lines=14)
-    summary_field = section_field("整理后摘要 (summary)", "", min_lines=2, max_lines=10)
-    fandom_field = single_line_field("Fandom", "")
-    characters_field = single_line_field("人物 (characters, comma-separated)", "")
+    title_field = single_line_field("标题", "")
+    raw_field = section_field("原始灵感", "", min_lines=4, max_lines=14)
+    summary_field = section_field("整理后摘要", "", min_lines=2, max_lines=10)
+    fandom_field = single_line_field("Fandom / 原作", "")
+    characters_field = single_line_field("人物（逗号分隔）", "")
     cp_field = single_line_field("CP", "")
     warning_setting_field = single_line_field("原作 / AU / IF / PA", "")
     warning_cp_structure_field = single_line_field("CP 结构", "")
     warning_elements_field = single_line_field("情节元素", "")
-    plot_field = section_field("流水账 (plot)", "", min_lines=4, max_lines=16)
+    plot_field = section_field("流水账", "", min_lines=4, max_lines=16)
     ending_dd = ft.Dropdown(
-        label="Ending Type",
+        label="结局类型",
         value=EndingType.OE.value,
         options=[ft.dropdown.Option(e) for e in _ENDING_OPTIONS],
+        bgcolor=SURFACE,
+        border_color=BORDER,
+        focused_border_color=ACCENT,
+        border_radius=RADIUS_SM,
+        color=FG,
     )
     custom_ending_field = section_field(
-        "Custom ending (custom_ending)", "", min_lines=2, max_lines=8
+        "自定义结局", "", min_lines=2, max_lines=8
     )
 
     # === Local relation picker ============================================= #
@@ -92,7 +121,7 @@ def build_outline_editor_page(
 
     def _asset_display_title(entry: dict) -> str:
         """Return a compact display title without turning assets into previews."""
-        title = str(entry.get("title") or "(untitled)")
+        title = str(entry.get("title") or "（无标题）")
         return title if len(title) <= 60 else f"{title[:57]}..."
 
     def _asset_by_path() -> dict[str, dict]:
@@ -115,7 +144,14 @@ def build_outline_editor_page(
                     page.update()
 
             if target_entry is None:
-                target_control: ft.Control = ft.Text(rel.target_path, expand=True)
+                target_control: ft.Control = ft.Text(
+                    rel.target_path,
+                    width=280,
+                    max_lines=2,
+                    overflow=ft.TextOverflow.ELLIPSIS,
+                    tooltip=rel.target_path,
+                    color=MUTED,
+                )
             else:
 
                 def open_relation_target(
@@ -142,9 +178,11 @@ def build_outline_editor_page(
                 controls=[
                     ft.Text(rel.relation_type.value, weight=ft.FontWeight.BOLD),
                     target_control,
-                    ft.Text(rel.note, size=12, color=ft.Colors.OUTLINE),
+                    ft.Text(rel.note, size=12, color=MUTED),
                     ft.IconButton(
                         icon=ft.Icons.DELETE_OUTLINE,
+                        icon_color=DANGER,
+                        tooltip="移除关联",
                         on_click=remove_relation,
                     ),
                 ],
@@ -166,7 +204,7 @@ def build_outline_editor_page(
 
     def on_add_relation(_: ft.ControlEvent) -> None:
         selected: dict[str, object] = {}
-        search_field = ft.TextField(label="搜索本地资产")
+        search_field = single_line_field("搜索本地资产")
         assets_column = ft.Column(controls=[], scroll=ft.ScrollMode.AUTO, spacing=6)
         assets_viewport = ft.Container(
             key="relation-picker-assets",
@@ -177,14 +215,19 @@ def build_outline_editor_page(
             label="关系类型",
             value=RelationType.SEQUEL.value,
             options=[ft.dropdown.Option(r) for r in _RELATION_OPTIONS],
+            bgcolor=SURFACE,
+            border_color=BORDER,
+            focused_border_color=ACCENT,
+            border_radius=RADIUS_SM,
         )
-        note_field = ft.TextField(label="说明")
-        selected_text = ft.Text("尚未选择关联对象", size=12, color=ft.Colors.OUTLINE)
-        error_text = ft.Text("", color=ft.Colors.ERROR)
+        note_field = single_line_field("说明")
+        selected_text = ft.Text("尚未选择关联对象", size=12, color=MUTED)
+        error_text = ft.Text("", color=DANGER)
 
         dialog = ft.AlertDialog(
             modal=True,
             title=ft.Text("添加关联"),
+            bgcolor=SURFACE,
             content=ft.Container(
                 key="relation-picker-content",
                 width=520,
@@ -205,7 +248,7 @@ def build_outline_editor_page(
 
         def select_asset(entry: dict) -> None:
             selected["entry"] = entry
-            selected_text.value = f"已选择：{entry.get('title') or '(untitled)'}"
+            selected_text.value = f"已选择：{entry.get('title') or '（无标题）'}"
             error_text.value = ""
             page.update()
 
@@ -213,14 +256,14 @@ def build_outline_editor_page(
             query = (search_field.value or "").strip().lower()
             assets_column.controls.clear()
             for entry in _asset_entries():
-                raw_title = str(entry.get("title") or "(untitled)")
+                raw_title = str(entry.get("title") or "（无标题）")
                 title = _asset_display_title(entry)
                 if query and query not in raw_title.lower():
                     continue
                 subtitle = "  ·  ".join(
                     bit
                     for bit in (
-                        entry.get("type", ""),
+                        "灵感" if entry.get("type") == "cache" else "大纲",
                         entry.get("updated", ""),
                     )
                     if bit
@@ -236,7 +279,7 @@ def build_outline_editor_page(
                                 ),
                                 on_click=lambda _e, item=entry: select_asset(item),
                             ),
-                            ft.Text(subtitle, size=12, color=ft.Colors.OUTLINE),
+                            ft.Text(subtitle, size=12, color=MUTED),
                         ],
                         wrap=True,
                     )
@@ -265,7 +308,7 @@ def build_outline_editor_page(
 
         dialog.actions = [
             ft.OutlinedButton(content=ft.Text("取消"), on_click=cancel),
-            ft.Button(content=ft.Text("确认添加"), on_click=confirm),
+            primary_button("确认添加", confirm),
         ]
         search_field.on_change = refresh_assets
         refresh_assets()
@@ -346,15 +389,15 @@ def build_outline_editor_page(
     def on_save(_: ft.ControlEvent) -> None:
         try:
             _persist_current_outline()
-            notify(page, "Outline saved")
+            notify(page, "大纲已保存")
             page.update()
         except Exception as ex:
-            notify(page, f"Could not save outline: {ex}")
+            notify(page, f"无法保存大纲：{ex}")
 
     def on_delete(_: ft.ControlEvent) -> None:
         path = state["path"]
         if not isinstance(path, Path):
-            notify(page, "Nothing to delete")
+            notify(page, "还没有可删除的大纲文件")
             return
         try:
             soft_delete(ctx.vault, str(path.relative_to(ctx.vault)))
@@ -363,7 +406,7 @@ def build_outline_editor_page(
             notify(page, "已移入回收站")
             ctx.open_library()
         except Exception as ex:
-            notify(page, f"Could not delete outline: {ex}")
+            notify(page, f"无法删除大纲：{ex}")
 
     def _default_export_name() -> str:
         """Return a dialog filename; saved outlines use the vault filename."""
@@ -385,13 +428,13 @@ def build_outline_editor_page(
                 return
             source_path = _persist_current_outline()
             shutil.copy2(source_path, Path(target))
-            notify(page, "Markdown exported")
+            notify(page, "Markdown 已导出")
             page.update()
         except Exception as ex:
-            notify(page, f"Could not export Markdown: {ex}")
+            notify(page, f"无法导出 Markdown：{ex}")
 
     # === Soft completion hint (never blocks) =============================== #
-    hint = ft.Text("", size=12, color=ft.Colors.OUTLINE)
+    hint = ft.Text("", size=TEXT_SM, color=MUTED, italic=True)
 
     def refresh_hint(_: ft.ControlEvent | None = None) -> None:
         missing = []
@@ -400,7 +443,9 @@ def build_outline_editor_page(
         if not (plot_field.value or "").strip():
             missing.append("流水账")
         hint.value = (
-            "Looks complete." if not missing else "Optional, still blank: " + ", ".join(missing)
+            "Optional，建议字段已填写完整。"
+            if not missing
+            else "Optional，还有空白字段：" + " · ".join(missing)
         )
         if page.controls:
             page.update()
@@ -409,49 +454,83 @@ def build_outline_editor_page(
     summary_field.on_change = refresh_hint
     plot_field.on_change = refresh_hint
 
-    header = ft.Text(
-        "New outline" if open_path is None else "Edit outline",
-        size=20,
-        weight=ft.FontWeight.BOLD,
-    )
+    def on_check_missing(_: ft.ControlEvent) -> None:
+        refresh_hint()
+        notify(page, hint.value or "Optional，建议字段已填写完整。")
 
-    return ft.Column(
+    card_title = ft.Text(
+        "新配方票" if open_path is None else "编辑配方票",
+        size=20,
+        color=FG,
+        font_family=FONT_DISPLAY,
+        weight=ft.FontWeight.W_400,
+    )
+    field_pair = ft.Row(controls=[fandom_field, cp_field], wrap=True, spacing=SPACE_3)
+    actions = ft.Row(
         controls=[
-            header,
+            primary_button("保存大纲", on_save),
+            ft.OutlinedButton(content=ft.Text("导出 Markdown"), on_click=on_export),
+            ft.OutlinedButton(content=ft.Text("检查缺什么"), on_click=on_check_missing),
+            danger_button("删除", on_delete),
+        ],
+        wrap=True,
+        spacing=SPACE_3,
+    )
+    hint_panel = ft.Container(
+        content=hint,
+        bgcolor=BG,
+        border=ft.Border.all(1, BORDER_SOFT),
+        border_radius=RADIUS_SM,
+        padding=SPACE_3,
+    )
+    card = paper_card(
+        [
+            ft.Row(
+                controls=[card_title],
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            ),
             title_field,
             raw_field,
+            ft.Text("保持原文，不自动修改。", size=12, color=MUTED),
             summary_field,
-            ft.Row(controls=[fandom_field, cp_field]),
+            field_pair,
             characters_field,
-            ft.Text("内容要素", weight=ft.FontWeight.BOLD),
+            ft.Text("内容要素", size=18, font_family=FONT_DISPLAY, color=FG),
             warning_setting_field,
             warning_cp_structure_field,
             warning_elements_field,
             plot_field,
-            ending_dd,
-            custom_ending_field,
+            ft.Row(controls=[ending_dd, custom_ending_field], wrap=True, spacing=SPACE_3),
             ft.Divider(),
-            ft.Text("逻辑关联 (relations)", weight=ft.FontWeight.BOLD),
-            relations_column,
-            ft.OutlinedButton(
-                content=ft.Text("Add relation"),
-                icon=ft.Icons.ADD,
-                on_click=on_add_relation,
-            ),
-            ft.Divider(),
-            hint,
             ft.Row(
                 controls=[
-                    ft.Button(content=ft.Text("Save"), on_click=on_save),
+                    ft.Text("逻辑关联", size=18, font_family=FONT_DISPLAY, color=FG),
                     ft.OutlinedButton(
-                        content=ft.Text("导出 Markdown"),
-                        on_click=on_export,
+                        content=ft.Text("+ 添加关联"),
+                        on_click=on_add_relation,
                     ),
-                    ft.OutlinedButton(content=ft.Text("Delete"), on_click=on_delete),
                 ],
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                 wrap=True,
             ),
+            relations_column,
+            hint_panel,
+            actions,
         ],
+        key="outline-paper-card",
+        spacing=SPACE_4,
+    )
+
+    return ft.Column(
+        controls=[
+            page_header(
+                "配方票编辑",
+                "把灵感变成能继续写作的结构，而不是标准答案。",
+                "OUTLINE · 可编辑配方票",
+            ),
+            card,
+        ],
+        spacing=SPACE_6,
         scroll=ft.ScrollMode.AUTO,
         expand=True,
     )

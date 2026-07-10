@@ -27,7 +27,28 @@ from keikeu_app.pages import (
     build_library_page,
     build_outline_editor_page,
 )
-from keikeu_app.widgets import notify
+from keikeu_app.theme import (
+    ACCENT,
+    ACCENT_ON,
+    BG,
+    FG,
+    FONT_DISPLAY,
+    MUTED,
+    SIDEBAR_WIDTH,
+    SPACE_2,
+    SPACE_4,
+    SPACE_8,
+    SURFACE,
+    SURFACE_WARM,
+    TEXT_SM,
+    apply_theme,
+)
+from keikeu_app.widgets import (
+    notify,
+    paper_card,
+    primary_button,
+    single_line_field,
+)
 from keikeu_core.indexer import rebuild_index
 from keikeu_core.models import Outline
 from keikeu_core.vault import get_vault, init_vault, is_vault, set_vault
@@ -63,12 +84,13 @@ class AppContext:
 
 def _build_shell(page: ft.Page, vault: Path) -> None:
     """Build the navigation shell once a valid vault is active."""
+    apply_theme(page)
     page.controls.clear()
     # NavigationRail requires a bounded height. Page-level scrolling makes the
     # shell's Row vertically unbounded, so scrolling lives inside each page body.
     page.scroll = None
 
-    body = ft.Container(expand=True, padding=16)
+    body = ft.Container(expand=True, padding=SPACE_8, bgcolor=BG)
     ctx = AppContext(page=page, vault=vault)
 
     def show_cache(open_path: Path | None = None) -> None:
@@ -77,7 +99,7 @@ def _build_shell(page: ft.Page, vault: Path) -> None:
             body.content = build_cache_page(ctx, open_path)
             page.update()
         except Exception as ex:
-            notify(page, f"Could not open cache: {ex}")
+            notify(page, f"无法打开灵感：{ex}")
 
     def show_outline(open_path: Path | None = None) -> None:
         try:
@@ -85,7 +107,7 @@ def _build_shell(page: ft.Page, vault: Path) -> None:
             body.content = build_outline_editor_page(ctx, open_path)
             page.update()
         except Exception as ex:
-            notify(page, f"Could not open outline: {ex}")
+            notify(page, f"无法打开大纲：{ex}")
 
     def start_outline_from_cache(outline: Outline, cache_path: Path) -> None:
         try:
@@ -98,7 +120,7 @@ def _build_shell(page: ft.Page, vault: Path) -> None:
             )
             page.update()
         except Exception as ex:
-            notify(page, f"Could not start outline: {ex}")
+            notify(page, f"无法开始配方票：{ex}")
 
     def show_library() -> None:
         try:
@@ -106,7 +128,7 @@ def _build_shell(page: ft.Page, vault: Path) -> None:
             body.content = build_library_page(ctx)
             page.update()
         except Exception as ex:
-            notify(page, f"Could not open library: {ex}")
+            notify(page, f"无法打开本地文件库：{ex}")
 
     ctx.open_cache = show_cache
     ctx.open_outline = show_outline
@@ -124,16 +146,56 @@ def _build_shell(page: ft.Page, vault: Path) -> None:
 
     nav = ft.NavigationRail(
         selected_index=_NAV_CACHE,
-        label_type=ft.NavigationRailLabelType.ALL,
+        extended=True,
+        min_width=72,
+        min_extended_width=SIDEBAR_WIDTH,
+        bgcolor=SURFACE,
+        indicator_color=SURFACE_WARM,
+        use_indicator=True,
+        elevation=0,
+        leading=ft.Column(
+            controls=[
+                ft.Container(
+                    content=ft.Text(
+                        "k",
+                        color=ACCENT_ON,
+                        size=18,
+                        font_family=FONT_DISPLAY,
+                        text_align=ft.TextAlign.CENTER,
+                    ),
+                    width=34,
+                    height=34,
+                    bgcolor=ACCENT,
+                    border_radius=17,
+                    alignment=ft.Alignment.CENTER,
+                ),
+                ft.Text(
+                    "keikeu",
+                    size=20,
+                    color=FG,
+                    font_family=FONT_DISPLAY,
+                    weight=ft.FontWeight.W_500,
+                ),
+            ],
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=SPACE_2,
+        ),
+        trailing=ft.Text(
+            "存住一瞬的灵光\nv0.1 · 本地优先",
+            size=TEXT_SM,
+            color=MUTED,
+            text_align=ft.TextAlign.CENTER,
+        ),
+        pin_trailing_to_bottom=True,
         destinations=[
             ft.NavigationRailDestination(
-                icon=ft.Icons.NOTE_ADD, label="Cache"
+                icon=ft.Icons.EDIT_NOTE, label="灵感缓存"
             ),
             ft.NavigationRailDestination(
-                icon=ft.Icons.ARTICLE, label="Outline"
+                icon=ft.Icons.DESCRIPTION_OUTLINED, label="配方票编辑"
             ),
             ft.NavigationRailDestination(
-                icon=ft.Icons.LIST, label="Library"
+                icon=ft.Icons.FOLDER_OUTLINED, label="本地文件库"
             ),
         ],
         on_change=on_nav_change,
@@ -143,7 +205,7 @@ def _build_shell(page: ft.Page, vault: Path) -> None:
         ft.Row(
             controls=[
                 nav,
-                ft.VerticalDivider(width=1),
+                ft.VerticalDivider(width=1, color=SURFACE_WARM),
                 body,
             ],
             expand=True,
@@ -162,6 +224,7 @@ def _build_vault_picker(page: ft.Page) -> None:
     the shell. A text path is the accepted MVP fallback (Flet 0.85's directory
     FilePicker uses a different async event model not needed here).
     """
+    apply_theme(page)
     page.controls.clear()
     page.scroll = ft.ScrollMode.AUTO
 
@@ -170,18 +233,15 @@ def _build_vault_picker(page: ft.Page) -> None:
     if existing is not None:
         default = str(existing)
 
-    path_field = ft.TextField(
-        label="Vault folder path",
-        value=default,
-        hint_text=str(Path.home() / "keikeu-vault"),
-        expand=True,
-    )
+    path_field = single_line_field("Vault 文件夹路径", default)
+    path_field.hint_text = str(Path.home() / "keikeu-vault")
+    path_field.expand = True
     error_text = ft.Text("", color=ft.Colors.ERROR)
 
     def on_open(_: ft.ControlEvent) -> None:
         raw = (path_field.value or "").strip()
         if not raw:
-            error_text.value = "Enter a folder path."
+            error_text.value = "请输入文件夹路径。"
             page.update()
             return
         vault = Path(raw).expanduser()
@@ -190,28 +250,41 @@ def _build_vault_picker(page: ft.Page) -> None:
             set_vault(vault, CONFIG_PATH)
             rebuild_index(vault)
         except (OSError, ValueError) as ex:
-            error_text.value = f"Could not open vault: {ex}"
+            error_text.value = f"无法打开 Vault：{ex}"
             page.update()
             return
         if not is_vault(vault):
-            error_text.value = "Path did not become a valid vault."
+            error_text.value = "该路径未能创建为有效 Vault。"
             page.update()
             return
-        notify(page, "Vault ready")
+        notify(page, "Vault 已就绪")
         _build_shell(page, vault)
 
     page.add(
-        ft.Column(
+        ft.Container(
+            padding=SPACE_8,
+            bgcolor=BG,
+            expand=True,
+            content=paper_card(
             controls=[
-                ft.Text("Open or create a vault", size=22, weight=ft.FontWeight.BOLD),
                 ft.Text(
-                    "A vault is a folder holding your caches and outlines.",
-                    color=ft.Colors.OUTLINE,
+                    "打开或创建 Vault",
+                    size=28,
+                    color=FG,
+                    font_family=FONT_DISPLAY,
+                    weight=ft.FontWeight.W_400,
+                ),
+                ft.Text(
+                    "Vault 是保存灵感缓存与本地 Markdown 大纲的文件夹。",
+                    color=MUTED,
                 ),
                 path_field,
-                ft.Button(content=ft.Text("Create / Open vault"), on_click=on_open),
+                primary_button("创建 / 打开 Vault", on_open),
                 error_text,
             ],
+                key="vault-picker-paper-card",
+                spacing=SPACE_4,
+            ),
         )
     )
 
@@ -219,6 +292,7 @@ def _build_vault_picker(page: ft.Page) -> None:
 def main(page: ft.Page) -> None:
     """Flet view builder. Resolves the vault, then shows shell or picker."""
     page.title = "keikeu"
+    apply_theme(page)
 
     vault = get_vault(CONFIG_PATH)
     if vault is not None and is_vault(vault):

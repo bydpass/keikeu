@@ -13,6 +13,7 @@ from typing import Iterable
 import flet as ft
 
 from keikeu_app import main as app_main
+from keikeu_app import theme as app_theme
 from keikeu_app.main import AppContext
 from keikeu_app.pages import library_page as library_page_mod
 from keikeu_app.pages.cache_page import build_cache_page
@@ -33,6 +34,9 @@ class FakePage:
         self.services: list[object] = []
         self.scroll = ft.ScrollMode.AUTO
         self.update_count = 0
+        self.theme: ft.Theme | None = None
+        self.bgcolor: str | None = None
+        self.title = ""
 
     def add(self, *controls: object) -> None:
         self.controls.extend(controls)
@@ -137,6 +141,134 @@ def test_navigation_shell_disables_page_level_scroll(tmp_path: Path):
     assert any(isinstance(control, ft.NavigationRail) for control in shell.controls)
 
 
+def test_phase6_theme_tokens_match_wi6_contract():
+    assert app_theme.BG == "#fbf6ee"
+    assert app_theme.SURFACE == "#fffdf8"
+    assert app_theme.SURFACE_WARM == "#f1e3cf"
+    assert app_theme.FG == "#201914"
+    assert app_theme.MUTED == "#7a6d63"
+    assert app_theme.ACCENT == "#9b5b32"
+    assert app_theme.BORDER == "#ded2c3"
+    assert app_theme.BORDER_SOFT == "#eee4d7"
+    assert (app_theme.TEXT_XS, app_theme.TEXT_SM, app_theme.TEXT_BASE) == (12, 14, 17)
+    assert (app_theme.RADIUS_SM, app_theme.RADIUS_MD, app_theme.RADIUS_LG) == (
+        10,
+        16,
+        24,
+    )
+    assert app_theme.SIDEBAR_WIDTH == 220
+
+
+def test_shell_uses_warm_theme_and_chinese_navigation(tmp_path: Path):
+    init_vault(tmp_path)
+    page = FakePage()
+
+    app_main._build_shell(page, tmp_path)  # type: ignore[attr-defined, arg-type]
+
+    shell = page.controls[0]
+    rail = next(control for control in shell.controls if isinstance(control, ft.NavigationRail))
+    assert page.bgcolor == app_theme.BG
+    assert page.theme is not None
+    assert page.theme.color_scheme is not None
+    assert page.theme.color_scheme.primary == app_theme.ACCENT
+    assert rail.extended is True
+    assert rail.min_extended_width == app_theme.SIDEBAR_WIDTH
+    assert [destination.label for destination in rail.destinations] == [
+        "灵感缓存",
+        "配方票编辑",
+        "本地文件库",
+    ]
+    assert any("存住一瞬的灵光" in text for text in _texts(rail))
+
+
+def test_cache_page_uses_phase6_copy_and_paper_surface(tmp_path: Path):
+    init_vault(tmp_path)
+    page = FakePage()
+    ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
+
+    root = build_cache_page(ctx)
+
+    assert "新灵感" in _texts(root)
+    assert "原文保留，不会被整理改写" in _texts(root)
+    assert "raw — 刚存，未处理" in _texts(root)
+    for label in ("保存", "炼成大纲", "封存", "删除"):
+        assert _button(root, label)
+    assert not any(isinstance(control, ft.Dropdown) for control in _walk(root))
+    card = _control_by_key(root, "cache-paper-card")
+    assert isinstance(card, ft.Container)
+    assert card.bgcolor == app_theme.SURFACE
+    assert card.border_radius == app_theme.RADIUS_MD
+
+
+def test_cache_status_strip_does_not_expand_inside_wrapping_row(tmp_path: Path):
+    init_vault(tmp_path)
+    page = FakePage()
+    ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
+
+    root = build_cache_page(ctx)
+    status_copy = next(
+        control
+        for control in _walk(root)
+        if isinstance(control, ft.Text)
+        and control.value == "状态由保存、炼成与封存动作自动推进。"
+    )
+
+    assert status_copy.expand is not True
+
+
+def test_outline_page_exposes_phase6_hint_and_check_action(tmp_path: Path):
+    init_vault(tmp_path)
+    page = FakePage()
+    ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
+
+    root = build_outline_editor_page(ctx)
+
+    expected_hint = "Optional，还有空白字段：整理后摘要 · 流水账"
+    assert expected_hint in _texts(root)
+    for label in ("保存大纲", "导出 Markdown", "检查缺什么", "+ 添加关联", "删除"):
+        assert _button(root, label)
+
+    _button(root, "检查缺什么").on_click(None)
+
+    assert expected_hint in _texts(page.overlay[-1])
+
+
+def test_check_missing_fields_never_blocks_outline_save(tmp_path: Path):
+    init_vault(tmp_path)
+    page = FakePage()
+    ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
+    root = build_outline_editor_page(ctx)
+    _text_field(root, "标题").value = "仍可保存的空白配方票"
+
+    _button(root, "检查缺什么").on_click(None)
+    _button(root, "保存大纲").on_click(None)
+
+    assert len(list((tmp_path / "outlines").glob("*.md"))) == 1
+
+
+def test_library_page_uses_phase6_copy_and_paper_surface(tmp_path: Path):
+    init_vault(tmp_path)
+    write_cache(tmp_path, Cache(title="票夹里的灵感", raw="原文"))
+    rebuild_index(tmp_path)
+    page = FakePage()
+    ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
+
+    root = build_library_page(ctx)
+
+    search = _text_field(root, "搜索标题")
+    assert search.expand is not True
+    assert search.width == 360
+    assert _dropdown(root, "状态筛选")
+    for label in ("刷新", "打开", "在文件夹中显示", "删除"):
+        assert _button(root, label)
+    assert "灵感缓存 · 1" in _texts(root)
+    assert "大纲 · 0" in _texts(root)
+    card = _control_by_key(root, "library-paper-card")
+    assert isinstance(card, ft.Container)
+    assert card.bgcolor == app_theme.SURFACE
+    assert card.border_radius == app_theme.RADIUS_MD
+
+
 def test_custom_ending_field_accepts_multiline_input(tmp_path: Path):
     init_vault(tmp_path)
     page = FakePage()
@@ -144,7 +276,7 @@ def test_custom_ending_field_accepts_multiline_input(tmp_path: Path):
 
     root = build_outline_editor_page(ctx)
 
-    field = _text_field(root, "Custom ending (custom_ending)")
+    field = _text_field(root, "自定义结局")
     assert field.multiline is True
     assert field.min_lines and field.min_lines > 1
 
@@ -169,9 +301,9 @@ def test_relation_picker_adds_index_backed_relation_without_path_input(tmp_path:
     ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
 
     root = build_outline_editor_page(ctx)
-    _text_field(root, "Title").value = "outline with relation"
+    _text_field(root, "标题").value = "outline with relation"
 
-    _button(root, "Add relation").on_click(None)
+    _button(root, "+ 添加关联").on_click(None)
     dialog = page.overlay[-1]
 
     assert "target path" not in _labels(dialog, ft.TextField)
@@ -185,7 +317,7 @@ def test_relation_picker_adds_index_backed_relation_without_path_input(tmp_path:
     assert "target cache" in _texts(root)
     assert "branch note" in _texts(root)
 
-    _button(root, "Save").on_click(None)
+    _button(root, "保存大纲").on_click(None)
 
     outline_files = list((tmp_path / "outlines").glob("*.md"))
     assert len(outline_files) == 1
@@ -205,7 +337,7 @@ def test_relation_picker_dialog_keeps_asset_list_bounded(tmp_path: Path):
     ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
 
     root = build_outline_editor_page(ctx)
-    _button(root, "Add relation").on_click(None)
+    _button(root, "+ 添加关联").on_click(None)
     dialog = page.overlay[-1]
 
     content = _control_by_key(dialog, "relation-picker-content")
@@ -229,7 +361,7 @@ def test_relation_picker_does_not_preview_target_raw_text(tmp_path: Path):
     ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
 
     root = build_outline_editor_page(ctx)
-    _button(root, "Add relation").on_click(None)
+    _button(root, "+ 添加关联").on_click(None)
     dialog = page.overlay[-1]
 
     assert "target cache" in _texts(dialog)
@@ -293,6 +425,12 @@ def test_missing_relation_target_row_is_not_clickable(tmp_path: Path):
     root = build_outline_editor_page(ctx, outline_path)
 
     assert rel_path in _texts(root)
+    missing_target = next(
+        control
+        for control in _walk(root)
+        if isinstance(control, ft.Text) and control.value == rel_path
+    )
+    assert missing_target.expand is not True
     button_labels = [
         getattr(control.content, "value", None)
         for control in _walk(root)
@@ -358,7 +496,7 @@ def test_existing_relation_remove_button_drops_relation_before_save(tmp_path: Pa
 
     root = build_outline_editor_page(ctx, outline_path)
     _icon_button(root, ft.Icons.DELETE_OUTLINE).on_click(None)
-    _button(root, "Save").on_click(None)
+    _button(root, "保存大纲").on_click(None)
 
     assert read_outline(outline_path).relations == []
 
@@ -397,10 +535,12 @@ def test_export_unsaved_outline_saves_then_exports(tmp_path: Path):
     ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
 
     root = build_outline_editor_page(ctx)
-    _text_field(root, "Title").value = "new export"
-    _text_field(root, "原始灵感 (raw_inspiration)").value = "raw words stay"
+    _text_field(root, "标题").value = "new export"
+    _text_field(root, "原始灵感").value = "raw words stay"
     picker = _file_picker(page)
+
     async def save_file(**_kwargs: object) -> str:
+        assert list((tmp_path / "outlines").glob("*.md")) == []
         return str(target_path)
 
     picker.save_file = save_file  # type: ignore[method-assign]
@@ -419,7 +559,7 @@ def test_export_cancel_leaves_unsaved_outline_unwritten(tmp_path: Path):
     ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
 
     root = build_outline_editor_page(ctx)
-    _text_field(root, "Title").value = "cancel export"
+    _text_field(root, "标题").value = "cancel export"
     picker = _file_picker(page)
     async def save_file(**_kwargs: object) -> None:
         return None
@@ -443,10 +583,10 @@ def test_convert_cache_opens_unsaved_outline_draft(tmp_path: Path):
 
     ctx.start_outline_from_cache = start_outline
     root = build_cache_page(ctx)
-    _text_field(root, "Title").value = "train spark"
-    _text_field(root, "原始灵感 (raw)").value = "raw words stay raw"
+    _text_field(root, "标题").value = "train spark"
+    _text_field(root, "原始灵感").value = "raw words stay raw"
 
-    _button(root, "Convert to outline").on_click(None)
+    _button(root, "炼成大纲").on_click(None)
 
     outline = captured["outline"]
     cache_path = captured["cache_path"]
@@ -471,7 +611,7 @@ def test_cache_status_is_read_only_and_save_keeps_existing_status(tmp_path: Path
     ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
 
     root = build_cache_page(ctx, cache_path)
-    _text_field(root, "临时备注 (notes)").value = "edited while archived"
+    _text_field(root, "临时备注").value = "edited while archived"
 
     assert "archived — 封存" in _texts(root)
     try:
@@ -481,7 +621,7 @@ def test_cache_status_is_read_only_and_save_keeps_existing_status(tmp_path: Path
     else:
         raise AssertionError("Cache status must not be user-selectable")
 
-    _button(root, "Save").on_click(None)
+    _button(root, "保存").on_click(None)
 
     cache = read_cache(cache_path)
     assert cache.notes == "edited while archived"
@@ -498,7 +638,7 @@ def test_archive_button_sets_cache_status_archived(tmp_path: Path):
     ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
 
     root = build_cache_page(ctx, cache_path)
-    _button(root, "Archive").on_click(None)
+    _button(root, "封存").on_click(None)
 
     assert read_cache(cache_path).status is CacheStatus.ARCHIVED
 
@@ -521,7 +661,7 @@ def test_convert_cache_with_existing_outline_keeps_status(tmp_path: Path):
     ctx.open_outline = lambda path: opened.update(path=path)  # type: ignore[assignment]
 
     root = build_cache_page(ctx, cache_path)
-    _button(root, "Convert to outline").on_click(None)
+    _button(root, "炼成大纲").on_click(None)
 
     assert opened["path"] == outline_path
     cache = read_cache(cache_path)
@@ -543,9 +683,9 @@ def test_saving_outline_from_cache_marks_cache_outlined(tmp_path: Path):
         initial_outline=Outline(title="train spark", raw_inspiration="raw words"),
         source_cache_path=cache_path,
     )
-    _text_field(root, "整理后摘要 (summary)").value = "summary"
+    _text_field(root, "整理后摘要").value = "summary"
 
-    _button(root, "Save").on_click(None)
+    _button(root, "保存大纲").on_click(None)
 
     outline_files = list((tmp_path / "outlines").glob("*.md"))
     assert len(outline_files) == 1
@@ -564,7 +704,7 @@ def test_cache_editor_delete_moves_file_to_trash_and_opens_library(tmp_path: Pat
     ctx.open_library = lambda: opened.update(library=True)
 
     root = build_cache_page(ctx, cache_path)
-    _button(root, "Delete").on_click(None)
+    _button(root, "删除").on_click(None)
 
     moved = tmp_path / ".trash" / "cache" / cache_path.name
     assert not cache_path.exists()
@@ -586,7 +726,7 @@ def test_outline_editor_delete_moves_file_to_trash_and_opens_library(tmp_path: P
     ctx.open_library = lambda: opened.update(library=True)
 
     root = build_outline_editor_page(ctx, outline_path)
-    _button(root, "Delete").on_click(None)
+    _button(root, "删除").on_click(None)
 
     moved = tmp_path / ".trash" / "outlines" / outline_path.name
     assert not outline_path.exists()
@@ -603,12 +743,12 @@ def test_library_delete_moves_cache_to_trash_and_refreshes_results(tmp_path: Pat
     ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
 
     root = build_library_page(ctx)
-    _button(root, "Delete").on_click(None)
+    _button(root, "删除").on_click(None)
 
     assert not cache_path.exists()
     assert (tmp_path / ".trash" / "cache" / cache_path.name).is_file()
     assert list_caches(tmp_path) == []
-    assert "Caches (0)" in _texts(root)
+    assert "灵感缓存 · 0" in _texts(root)
 
 
 def test_library_row_clicks_still_open_app_editors(tmp_path: Path):
@@ -706,6 +846,12 @@ def test_library_vault_footer_shows_and_reveals_vault_path(tmp_path: Path, monke
     _button(root, "在文件夹中显示").on_click(None)
 
     assert str(tmp_path) in _texts(root)
+    vault_path_text = next(
+        control
+        for control in _walk(root)
+        if isinstance(control, ft.Text) and control.value == str(tmp_path)
+    )
+    assert vault_path_text.expand is not True
     assert calls == [["open", str(tmp_path)]]
 
 
@@ -725,4 +871,4 @@ def test_library_system_open_failure_notifies_without_crashing(tmp_path: Path, m
     root = build_library_page(ctx)
     _button(root, "打开").on_click(None)
 
-    assert any("Could not open file" in text for bar in page.overlay for text in _texts(bar))
+    assert any("无法打开文件" in text for bar in page.overlay for text in _texts(bar))
