@@ -128,6 +128,7 @@ keikeu_core 不得 import Flet。
 | [`readmedesign.md`](readmedesign.md) | readme手册设计的唯一事实来源 |
 | [`gitspec.md`](gitspec.md) | 面向人类的 Git 工作流手册 |
 | [`gitagent.md`](gitagent.md) | 面向 agent 的 Git 工作流规则 |
+| [`memory/specs/README.md`](memory/specs/README.md) | 当前需求与历史规格归档索引 |
 | [`memory/specs/9d033db326295874d1f32f23325e430e0461396d/planbook_road_v0_1.md`](memory/specs/9d033db326295874d1f32f23325e430e0461396d/planbook_road_v0_1.md) | Road v0.1 执行手册与阶段定义 |
 | [`memory/specs/9d033db326295874d1f32f23325e430e0461396d/spec_road_v0_1.md`](memory/specs/9d033db326295874d1f32f23325e430e0461396d/spec_road_v0_1.md) | Road v0.1 功能规范与验收标准 |
 

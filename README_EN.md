@@ -129,6 +129,7 @@ Core must be testable without launching the UI.
 | [`readmedesign.md`](readmedesign.md) | README handbook design source of truth |
 | [`gitspec.md`](gitspec.md) | Human Git workflow manual |
 | [`gitagent.md`](gitagent.md) | Agent Git workflow rules |
+| [`memory/specs/README.md`](memory/specs/README.md) | Current requirements and historical specification archive index |
 | [`memory/specs/9d033db326295874d1f32f23325e430e0461396d/planbook_road_v0_1.md`](memory/specs/9d033db326295874d1f32f23325e430e0461396d/planbook_road_v0_1.md) | Road v0.1 execution handbook and phase definitions |
 | [`memory/specs/9d033db326295874d1f32f23325e430e0461396d/spec_road_v0_1.md`](memory/specs/9d033db326295874d1f32f23325e430e0461396d/spec_road_v0_1.md) | Road v0.1 behavior specification and acceptance criteria |
 
