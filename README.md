@@ -11,7 +11,7 @@ keikeu Road v0.1 已完成并合入 `main`，当前是面向 macOS 的 pre-alpha
 
 当前实现以 [`appdesign.md`](appdesign.md) 与 [`techpolicy.md`](techpolicy.md)
 为准；Road v0.1 的执行记录见
-[`memory/specs/planbook_road_v0_1.md`](memory/specs/planbook_road_v0_1.md)。
+[`memory/specs/9d033db326295874d1f32f23325e430e0461396d/planbook_road_v0_1.md`](memory/specs/9d033db326295874d1f32f23325e430e0461396d/planbook_road_v0_1.md)。
 
 ## 核心流程
 
@@ -128,8 +128,8 @@ keikeu_core 不得 import Flet。
 | [`readmedesign.md`](readmedesign.md) | readme手册设计的唯一事实来源 |
 | [`gitspec.md`](gitspec.md) | 面向人类的 Git 工作流手册 |
 | [`gitagent.md`](gitagent.md) | 面向 agent 的 Git 工作流规则 |
-| [`memory/specs/planbook_road_v0_1.md`](memory/specs/planbook_road_v0_1.md) | Road v0.1 执行手册与阶段定义 |
-| [`memory/specs/spec_road_v0_1.md`](memory/specs/spec_road_v0_1.md) | Road v0.1 功能规范与验收标准 |
+| [`memory/specs/9d033db326295874d1f32f23325e430e0461396d/planbook_road_v0_1.md`](memory/specs/9d033db326295874d1f32f23325e430e0461396d/planbook_road_v0_1.md) | Road v0.1 执行手册与阶段定义 |
+| [`memory/specs/9d033db326295874d1f32f23325e430e0461396d/spec_road_v0_1.md`](memory/specs/9d033db326295874d1f32f23325e430e0461396d/spec_road_v0_1.md) | Road v0.1 功能规范与验收标准 |
 
 ## 路线图
 

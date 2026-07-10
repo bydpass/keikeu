@@ -12,7 +12,7 @@ not been released as a production build.
 
 The implementation follows [`appdesign.md`](appdesign.md) and
 [`techpolicy.md`](techpolicy.md). The Road v0.1 execution record lives in
-[`memory/specs/planbook_road_v0_1.md`](memory/specs/planbook_road_v0_1.md).
+[`memory/specs/9d033db326295874d1f32f23325e430e0461396d/planbook_road_v0_1.md`](memory/specs/9d033db326295874d1f32f23325e430e0461396d/planbook_road_v0_1.md).
 
 ## Core flow
 
@@ -129,8 +129,8 @@ Core must be testable without launching the UI.
 | [`readmedesign.md`](readmedesign.md) | README handbook design source of truth |
 | [`gitspec.md`](gitspec.md) | Human Git workflow manual |
 | [`gitagent.md`](gitagent.md) | Agent Git workflow rules |
-| [`memory/specs/planbook_road_v0_1.md`](memory/specs/planbook_road_v0_1.md) | Road v0.1 execution handbook and phase definitions |
-| [`memory/specs/spec_road_v0_1.md`](memory/specs/spec_road_v0_1.md) | Road v0.1 behavior specification and acceptance criteria |
+| [`memory/specs/9d033db326295874d1f32f23325e430e0461396d/planbook_road_v0_1.md`](memory/specs/9d033db326295874d1f32f23325e430e0461396d/planbook_road_v0_1.md) | Road v0.1 execution handbook and phase definitions |
+| [`memory/specs/9d033db326295874d1f32f23325e430e0461396d/spec_road_v0_1.md`](memory/specs/9d033db326295874d1f32f23325e430e0461396d/spec_road_v0_1.md) | Road v0.1 behavior specification and acceptance criteria |
 
 ## Roadmap
 
