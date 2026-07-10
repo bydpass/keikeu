@@ -2,25 +2,37 @@
 
 > keikeu 是一个本地优先的写作辅助工具，用来帮助同人创作者把零碎灵感整理成可继续写作的 Markdown 大纲。
 
-简体中文 | [English](README.md)
+简体中文 | [English](README_EN.md)
 
 ## 当前状态
 
-keikeu 当前处于重启后的早期开发阶段。
+keikeu Road v0.1 已完成并合入 `main`，当前是面向 macOS 的 pre-alpha
+开发预览版。核心创作流程已经可用，但尚未作为生产版本发布。
 
-旧代码库已经清空。当前实现以 [`appdesign.md`](appdesign.md) 与
-[`techpolicy.md`](techpolicy.md) 为准。
-
-这是开发预览版，尚未达到生产可用状态。
+当前实现以 [`appdesign.md`](appdesign.md) 与 [`techpolicy.md`](techpolicy.md)
+为准；Road v0.1 的执行记录见
+[`memory/specs/planbook_road_v0_1.md`](memory/specs/planbook_road_v0_1.md)。
 
 ## 核心流程
 
 ```text
-原始灵感 → 灵感 cache Markdown → 大纲 Markdown
+原始灵感 → 灵感 cache Markdown → 可编辑配方票 / 大纲 → 导出 Markdown
 ```
 
 - **cache（灵感缓存）** —— 低摩擦记录一个原始念头。你的原话会被原样保留，不做总结、不做改写。
-- **大纲（outline）** —— 从某条 cache 衍生出的结构化 Markdown 文件：标题、原始灵感、fandom、人物 / CP、观前提醒、流水账、Ending Type、与其他灵感的关联。
+- **大纲（outline）** —— 从某条 cache 衍生出的结构化 Markdown 文件：标题、原始灵感、fandom、人物 / CP、内容要素、流水账、Ending Type、与其他灵感的关联。
+- **本地文件库（Library）** —— 搜索和筛选本地资产，在 keikeu、默认编辑器或 Finder 中打开文件。
+
+## Road v0.1 已完成
+
+- 稳定的 Outline Markdown schema：内容要素、结局正文和三行关系块均可往返读取。
+- Markdown 导出：系统保存对话框确认后，从 vault 字节一致复制到目标位置；取消无副作用。
+- 软删除：cache 与 outline 移入 `.trash/`，重名自动避让，索引自动排除回收站内容。
+- 动作驱动的 cache 状态：保存、炼成大纲和封存负责推进状态，用户不能手动制造冲突状态。
+- 本地关系 picker：从索引选择前作、续作、IF、外传或同系列；不需要手输路径。
+- Library 系统操作：默认程序打开、Finder 定位、vault 路径入口，并为非 macOS 提供安全降级。
+- 暖纸色视觉 tokens、中文主界面和轻量侧栏，保持本地灵感小册子的气质。
+- 当前测试基线：`112 passed`。
 
 ## 产品原则
 
@@ -116,6 +128,8 @@ keikeu_core 不得 import Flet。
 | [`readmedesign.md`](readmedesign.md) | readme手册设计的唯一事实来源 |
 | [`gitspec.md`](gitspec.md) | 面向人类的 Git 工作流手册 |
 | [`gitagent.md`](gitagent.md) | 面向 agent 的 Git 工作流规则 |
+| [`memory/specs/planbook_road_v0_1.md`](memory/specs/planbook_road_v0_1.md) | Road v0.1 执行手册与阶段定义 |
+| [`memory/specs/spec_road_v0_1.md`](memory/specs/spec_road_v0_1.md) | Road v0.1 功能规范与验收标准 |
 
 ## 路线图
 

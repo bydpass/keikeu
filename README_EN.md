@@ -2,25 +2,38 @@
 
 > keikeu is a local-first writing utility that helps fan creators turn raw inspiration into editable Markdown outlines.
 
-English | [简体中文](READMECN.md)
+English | [简体中文](README.md)
 
 ## Current status
 
-keikeu is in early restart development.
+keikeu Road v0.1 is complete and merged into `main`. It is currently a macOS
+pre-alpha development preview: the core creative workflow is usable, but it has
+not been released as a production build.
 
-The old codebase has been deleted. The current implementation follows
-[`appdesign.md`](appdesign.md) and [`techpolicy.md`](techpolicy.md).
-
-It is a development preview, not production-ready.
+The implementation follows [`appdesign.md`](appdesign.md) and
+[`techpolicy.md`](techpolicy.md). The Road v0.1 execution record lives in
+[`memory/specs/planbook_road_v0_1.md`](memory/specs/planbook_road_v0_1.md).
 
 ## Core flow
 
 ```text
-raw inspiration → cache Markdown → outline Markdown
+raw inspiration → cache Markdown → editable recipe ticket / outline → exported Markdown
 ```
 
 - **Cache** — low-friction capture of a raw idea. Your words are preserved verbatim, never summarized or rewritten.
-- **Outline** — a structured Markdown file derived from a cache: title, raw inspiration, fandom, characters / CP, content warnings, plot, ending type, relations.
+- **Outline** — a structured Markdown file derived from a cache: title, raw inspiration, fandom, characters / CP, content elements, plot, ending type, and relations.
+- **Library** — search and filter local assets, then open them in keikeu, the system editor, or Finder.
+
+## Completed in Road v0.1
+
+- Stable Outline Markdown schema with round-trip content elements, ending text, and three-line relation blocks.
+- Markdown export through the system save dialog, using a byte-identical vault copy after confirmation and leaving no changes on cancel.
+- Soft deletion into `.trash/` for caches and outlines, with collision avoidance and automatic index exclusion.
+- Action-driven cache status: save, convert, and archive actions advance state without a conflicting manual status selector.
+- Local relation picker for prequel, sequel, IF, side story, and same-series links without hand-typed paths.
+- Library integration with system open, Finder reveal, a vault location entry, and safe non-macOS fallbacks.
+- Warm-paper visual tokens, Chinese-first interface copy, and a lighter navigation shell.
+- Current test baseline: `112 passed`.
 
 ## Product principles
 
@@ -116,6 +129,8 @@ Core must be testable without launching the UI.
 | [`readmedesign.md`](readmedesign.md) | README handbook design source of truth |
 | [`gitspec.md`](gitspec.md) | Human Git workflow manual |
 | [`gitagent.md`](gitagent.md) | Agent Git workflow rules |
+| [`memory/specs/planbook_road_v0_1.md`](memory/specs/planbook_road_v0_1.md) | Road v0.1 execution handbook and phase definitions |
+| [`memory/specs/spec_road_v0_1.md`](memory/specs/spec_road_v0_1.md) | Road v0.1 behavior specification and acceptance criteria |
 
 ## Roadmap
 
