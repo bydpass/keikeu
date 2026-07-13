@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Iterable
 
 import flet as ft
@@ -37,6 +38,7 @@ class FakePage:
         self.theme: ft.Theme | None = None
         self.bgcolor: str | None = None
         self.title = ""
+        self.window = SimpleNamespace(width=None, height=None)
 
     def add(self, *controls: object) -> None:
         self.controls.extend(controls)
@@ -141,25 +143,34 @@ def test_navigation_shell_disables_page_level_scroll(tmp_path: Path):
     assert any(isinstance(control, ft.NavigationRail) for control in shell.controls)
 
 
-def test_phase6_theme_tokens_match_wi6_contract():
-    assert app_theme.BG == "#fbf6ee"
-    assert app_theme.SURFACE == "#fffdf8"
-    assert app_theme.SURFACE_WARM == "#f1e3cf"
-    assert app_theme.FG == "#201914"
-    assert app_theme.MUTED == "#7a6d63"
-    assert app_theme.ACCENT == "#9b5b32"
-    assert app_theme.BORDER == "#ded2c3"
-    assert app_theme.BORDER_SOFT == "#eee4d7"
+def test_window_uses_retina_reference_size():
+    page = FakePage()
+
+    app_main._configure_window(page)  # type: ignore[attr-defined, arg-type]
+
+    assert page.window.width == 890
+    assert page.window.height == 741
+
+
+def test_showa_word_processor_theme_tokens_match_contract():
+    assert app_theme.BG == "#e5dcc4"
+    assert app_theme.SURFACE == "#fff8e7"
+    assert app_theme.SURFACE_WARM == "#ded0aa"
+    assert app_theme.FG == "#253d34"
+    assert app_theme.MUTED == "#647168"
+    assert app_theme.ACCENT == "#ad5e2f"
+    assert app_theme.BORDER == "#84907c"
+    assert app_theme.BORDER_SOFT == "#c9bea2"
     assert (app_theme.TEXT_XS, app_theme.TEXT_SM, app_theme.TEXT_BASE) == (12, 14, 17)
     assert (app_theme.RADIUS_SM, app_theme.RADIUS_MD, app_theme.RADIUS_LG) == (
-        10,
-        16,
-        24,
+        2,
+        4,
+        6,
     )
-    assert app_theme.SIDEBAR_WIDTH == 220
+    assert app_theme.SIDEBAR_WIDTH == 248
 
 
-def test_shell_uses_warm_theme_and_chinese_navigation(tmp_path: Path):
+def test_shell_uses_showa_theme_and_chinese_navigation(tmp_path: Path):
     init_vault(tmp_path)
     page = FakePage()
 
@@ -173,15 +184,17 @@ def test_shell_uses_warm_theme_and_chinese_navigation(tmp_path: Path):
     assert page.theme.color_scheme.primary == app_theme.ACCENT
     assert rail.extended is True
     assert rail.min_extended_width == app_theme.SIDEBAR_WIDTH
+    assert rail.bgcolor == app_theme.FG
+    assert rail.indicator_color == app_theme.ACCENT
     assert [destination.label for destination in rail.destinations] == [
         "灵感缓存",
         "配方票编辑",
         "本地文件库",
     ]
-    assert any("存住一瞬的灵光" in text for text in _texts(rail))
+    assert any("PERSONAL WORD PROCESSOR" in text for text in _texts(rail))
 
 
-def test_cache_page_uses_phase6_copy_and_paper_surface(tmp_path: Path):
+def test_cache_page_uses_stationery_surface(tmp_path: Path):
     init_vault(tmp_path)
     page = FakePage()
     ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
@@ -216,7 +229,7 @@ def test_cache_status_strip_does_not_expand_inside_wrapping_row(tmp_path: Path):
     assert status_copy.expand is not True
 
 
-def test_outline_page_exposes_phase6_hint_and_check_action(tmp_path: Path):
+def test_outline_page_exposes_hint_and_check_action(tmp_path: Path):
     init_vault(tmp_path)
     page = FakePage()
     ctx = AppContext(page=page, vault=tmp_path)  # type: ignore[arg-type]
@@ -246,7 +259,7 @@ def test_check_missing_fields_never_blocks_outline_save(tmp_path: Path):
     assert len(list((tmp_path / "outlines").glob("*.md"))) == 1
 
 
-def test_library_page_uses_phase6_copy_and_paper_surface(tmp_path: Path):
+def test_library_page_uses_stationery_surface(tmp_path: Path):
     init_vault(tmp_path)
     write_cache(tmp_path, Cache(title="票夹里的灵感", raw="原文"))
     rebuild_index(tmp_path)

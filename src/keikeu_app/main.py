@@ -34,6 +34,7 @@ from keikeu_app.theme import (
     FG,
     FONT_DISPLAY,
     MUTED,
+    RADIUS_SM,
     SIDEBAR_WIDTH,
     SPACE_2,
     SPACE_4,
@@ -58,6 +59,11 @@ __all__ = ["main", "run", "AppContext", "CONFIG_PATH"]
 # App-layer config location (NOT decided by core).
 CONFIG_PATH = Path.home() / ".keikeu_config.json"
 
+# The supplied 1780 × 1482 Retina reference image maps to this desktop-size
+# window in Flet's logical pixels. The window remains user-resizable.
+INITIAL_WINDOW_WIDTH = 890
+INITIAL_WINDOW_HEIGHT = 741
+
 # Navigation slots.
 _NAV_CACHE = 0
 _NAV_OUTLINE = 1
@@ -80,6 +86,12 @@ class AppContext:
         default=lambda _outline, _cache_path: None
     )
     open_library: Callable[[], None] = field(default=lambda: None)
+
+
+def _configure_window(page: ft.Page) -> None:
+    """Set the desktop launch size from the approved visual reference."""
+    page.window.width = INITIAL_WINDOW_WIDTH
+    page.window.height = INITIAL_WINDOW_HEIGHT
 
 
 def _build_shell(page: ft.Page, vault: Path) -> None:
@@ -149,15 +161,15 @@ def _build_shell(page: ft.Page, vault: Path) -> None:
         extended=True,
         min_width=72,
         min_extended_width=SIDEBAR_WIDTH,
-        bgcolor=SURFACE,
-        indicator_color=SURFACE_WARM,
+        bgcolor=FG,
+        indicator_color=ACCENT,
         use_indicator=True,
         elevation=0,
         leading=ft.Column(
             controls=[
                 ft.Container(
                     content=ft.Text(
-                        "k",
+                        "K",
                         color=ACCENT_ON,
                         size=18,
                         font_family=FONT_DISPLAY,
@@ -166,24 +178,30 @@ def _build_shell(page: ft.Page, vault: Path) -> None:
                     width=34,
                     height=34,
                     bgcolor=ACCENT,
-                    border_radius=17,
+                    border_radius=RADIUS_SM,
                     alignment=ft.Alignment.CENTER,
                 ),
                 ft.Text(
-                    "keikeu",
-                    size=20,
-                    color=FG,
+                    "KEIKEU",
+                    size=22,
+                    color=ACCENT_ON,
                     font_family=FONT_DISPLAY,
-                    weight=ft.FontWeight.W_500,
+                    weight=ft.FontWeight.W_700,
+                ),
+                ft.Text(
+                    "PERSONAL WORD PROCESSOR",
+                    size=10,
+                    color=SURFACE_WARM,
+                    font_family=FONT_DISPLAY,
                 ),
             ],
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             spacing=SPACE_2,
         ),
         trailing=ft.Text(
-            "存住一瞬的灵光\nv0.1 · 本地优先",
+            "LOCAL MEMORY UNIT\nV0.1 · OFFLINE READY",
             size=TEXT_SM,
-            color=MUTED,
+            color=SURFACE_WARM,
             text_align=ft.TextAlign.CENTER,
         ),
         pin_trailing_to_bottom=True,
@@ -205,7 +223,7 @@ def _build_shell(page: ft.Page, vault: Path) -> None:
         ft.Row(
             controls=[
                 nav,
-                ft.VerticalDivider(width=1, color=SURFACE_WARM),
+                ft.VerticalDivider(width=3, color=ACCENT),
                 body,
             ],
             expand=True,
@@ -292,6 +310,7 @@ def _build_vault_picker(page: ft.Page) -> None:
 def main(page: ft.Page) -> None:
     """Flet view builder. Resolves the vault, then shows shell or picker."""
     page.title = "keikeu"
+    _configure_window(page)
     apply_theme(page)
 
     vault = get_vault(CONFIG_PATH)

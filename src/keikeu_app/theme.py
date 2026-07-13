@@ -1,4 +1,4 @@
-"""Warm paper design tokens and Flet theme for the keikeu app layer."""
+"""Showa stationery and home-computer design tokens for the app layer."""
 
 from __future__ import annotations
 
@@ -39,21 +39,23 @@ __all__ = [
     "build_theme",
 ]
 
-# Storytelling palette from WI-6 and the accepted "inspiration folio" prototype.
-BG = "#fbf6ee"
-SURFACE = "#fffdf8"
-SURFACE_WARM = "#f1e3cf"
-FG = "#201914"
-MUTED = "#7a6d63"
-ACCENT = "#9b5b32"
-ACCENT_ON = "#ffffff"
-BORDER = "#ded2c3"
-BORDER_SOFT = "#eee4d7"
-SUCCESS = "#4f8a4f"
-WARN = "#c9822f"
-DANGER = "#b33a3a"
+# A late-80s Japanese word processor: khaki case, phosphor-green type,
+# oxide-orange keys, and slightly yellowed stationery paper.
+BG = "#e5dcc4"
+SURFACE = "#fff8e7"
+SURFACE_WARM = "#ded0aa"
+FG = "#253d34"
+MUTED = "#647168"
+ACCENT = "#ad5e2f"
+ACCENT_ON = "#fff8e7"
+BORDER = "#84907c"
+BORDER_SOFT = "#c9bea2"
+SUCCESS = "#3f745d"
+WARN = "#ad7628"
+DANGER = "#a94b3f"
 
-FONT_DISPLAY = "Georgia"
+# System monospace keeps the interface legible without shipping web fonts.
+FONT_DISPLAY = "Courier New"
 TEXT_XS = 12
 TEXT_SM = 14
 TEXT_BASE = 17
@@ -69,15 +71,15 @@ SPACE_6 = 24
 SPACE_8 = 32
 SPACE_12 = 48
 
-RADIUS_SM = 10
-RADIUS_MD = 16
-RADIUS_LG = 24
-SIDEBAR_WIDTH = 220
+RADIUS_SM = 2
+RADIUS_MD = 4
+RADIUS_LG = 6
+SIDEBAR_WIDTH = 248
 CONTENT_MAX_WIDTH = 1180
 
 
 def build_theme() -> ft.Theme:
-    """Build the shared light theme without introducing external assets."""
+    """Build the shared CRT-and-stationery theme without external assets."""
     return ft.Theme(
         use_material3=True,
         scaffold_bgcolor=BG,
@@ -107,7 +109,7 @@ def build_theme() -> ft.Theme:
                 size=TEXT_XL,
                 color=FG,
                 font_family=FONT_DISPLAY,
-                weight=ft.FontWeight.W_400,
+                weight=ft.FontWeight.W_700,
             ),
             title_medium=ft.TextStyle(
                 size=TEXT_LG,
@@ -118,17 +120,20 @@ def build_theme() -> ft.Theme:
         ),
         divider_theme=ft.DividerTheme(color=BORDER_SOFT, thickness=1, space=1),
         navigation_rail_theme=ft.NavigationRailTheme(
-            bgcolor=SURFACE,
-            indicator_color=SURFACE_WARM,
+            bgcolor=FG,
+            indicator_color=ACCENT,
             elevation=0,
             min_extended_width=SIDEBAR_WIDTH,
             use_indicator=True,
             selected_label_text_style=ft.TextStyle(
-                color=ACCENT,
+                color=ACCENT_ON,
                 size=TEXT_SM,
                 weight=ft.FontWeight.W_600,
             ),
-            unselected_label_text_style=ft.TextStyle(color=MUTED, size=TEXT_SM),
+            unselected_label_text_style=ft.TextStyle(
+                color=SURFACE_WARM,
+                size=TEXT_SM,
+            ),
         ),
         filled_button_theme=ft.FilledButtonTheme(
             style=ft.ButtonStyle(
@@ -159,7 +164,7 @@ def build_theme() -> ft.Theme:
 
 
 def apply_theme(page: ft.Page) -> None:
-    """Apply the accepted Phase 6 visual direction to a page-like object."""
+    """Apply the shared Showa word-processor visual direction."""
     page.theme = build_theme()
     page.theme_mode = ft.ThemeMode.LIGHT
     page.bgcolor = BG

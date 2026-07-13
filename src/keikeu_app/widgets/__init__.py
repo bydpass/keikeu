@@ -48,9 +48,9 @@ __all__ = [
 
 
 def _field_style() -> dict[str, object]:
-    """Return the shared warm-paper TextField styling."""
+    """Return the shared stationery-sheet TextField styling."""
     return {
-        "bgcolor": SURFACE,
+        "bgcolor": "#fffdf2",
         "border_color": BORDER,
         "focused_border_color": ACCENT,
         "border_radius": RADIUS_SM,
@@ -88,25 +88,42 @@ def section_field(
 
 
 def page_header(title: str, subtitle: str, eyebrow: str) -> ft.Control:
-    """Build the compact editorial header shared by all three pages."""
-    return ft.Column(
-        controls=[
-            ft.Text(
-                eyebrow.upper(),
-                size=TEXT_XS,
-                color=ACCENT,
-                weight=ft.FontWeight.W_600,
-            ),
-            ft.Text(
-                title,
-                size=TEXT_XL,
-                color=FG,
-                font_family=FONT_DISPLAY,
-                weight=ft.FontWeight.W_400,
-            ),
-            ft.Text(subtitle, size=TEXT_SM, color=MUTED),
-        ],
-        spacing=SPACE_2,
+    """Build a compact label-maker header shared by all three pages."""
+    return ft.Container(
+        padding=ft.Padding.only(bottom=SPACE_3),
+        border=ft.Border.only(bottom=ft.BorderSide(width=2, color=FG)),
+        content=ft.Column(
+            controls=[
+                ft.Row(
+                    controls=[
+                        ft.Container(
+                            content=ft.Text(
+                                f"◆ {eyebrow.upper()}",
+                                size=TEXT_XS,
+                                color=ACCENT_ON,
+                                weight=ft.FontWeight.W_700,
+                            ),
+                            bgcolor=FG,
+                            padding=ft.Padding.symmetric(
+                                horizontal=SPACE_2,
+                                vertical=4,
+                            ),
+                            border_radius=RADIUS_SM,
+                        ),
+                    ],
+                    tight=True,
+                ),
+                ft.Text(
+                    title,
+                    size=TEXT_XL,
+                    color=FG,
+                    font_family=FONT_DISPLAY,
+                    weight=ft.FontWeight.W_700,
+                ),
+                ft.Text(subtitle, size=TEXT_SM, color=MUTED),
+            ],
+            spacing=SPACE_2,
+        ),
     )
 
 
@@ -117,20 +134,20 @@ def paper_card(
     spacing: int = SPACE_4,
     expand: bool = False,
 ) -> ft.Container:
-    """Wrap related controls in a flat bordered paper surface."""
+    """Wrap related controls in a squared-off stationery paper surface."""
     return ft.Container(
         key=key,
         content=ft.Column(controls=controls, spacing=spacing),
         padding=SPACE_6,
         bgcolor=SURFACE,
-        border=ft.Border.all(1, BORDER_SOFT),
+        border=ft.Border.all(1, BORDER),
         border_radius=RADIUS_MD,
         expand=expand,
     )
 
 
 def status_badge(text: str | ft.Text, tone: str = "meta") -> ft.Container:
-    """Build a quiet read-only status ticket."""
+    """Build a compact machine-label status ticket."""
     palette = {
         "meta": (SURFACE_WARM, MUTED),
         "success": ("#edf4ea", SUCCESS),
@@ -145,12 +162,12 @@ def status_badge(text: str | ft.Text, tone: str = "meta") -> ft.Container:
         content=content,
         bgcolor=bgcolor,
         padding=ft.Padding.symmetric(horizontal=SPACE_3, vertical=6),
-        border_radius=999,
+        border_radius=RADIUS_SM,
     )
 
 
 def primary_button(text: str, on_click: Callable[..., object]) -> ft.Button:
-    """Build the single high-emphasis action used on each page."""
+    """Build the oxide-orange action key used on each page."""
     return ft.Button(
         content=ft.Text(text),
         on_click=on_click,
