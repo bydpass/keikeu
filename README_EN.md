@@ -156,4 +156,24 @@ later still — Android / Windows
 
 ## License
 
-License: TBD.
+Copyright © 2026 BeyondPassenger.
+
+keikeu's source code and accompanying documentation are licensed under the
+[GNU General Public License v3.0 or later](LICENSE) (`GPL-3.0-or-later`).
+User-created Papers, vaults, and exports are not part of keikeu and are not
+covered by this license; they remain their authors' content.
+
+### Use and distribution notes
+
+- You may use, copy, modify, and distribute keikeu, including for a fee or
+  alongside paid support.
+- Private modifications need not be published. When distributing the original
+  or a modified version — including a packaged macOS app — you must preserve
+  copyright and license notices and provide recipients with the corresponding
+  source code.
+- A distributed work based on keikeu must remain licensed under
+  GPL-3.0-or-later, and its changes must be clearly marked.
+- keikeu is provided "as is", without express or implied warranty and without
+  liability beyond what applicable law requires.
+- This license does not grant rights to the `keikeu` name, logo, or other
+  trademarks. Third-party dependencies remain subject to their own licenses.

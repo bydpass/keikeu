@@ -154,4 +154,16 @@ Pre-Advance — 可选 Markdown Outline
 
 ## 许可证
 
-License: TBD.
+Copyright © 2026 BeyondPassenger.
+
+keikeu 的源代码和随附文档采用
+[GNU General Public License v3.0 或更高版本](LICENSE)（`GPL-3.0-or-later`）许可。
+用户创建的 Paper、vault 与导出内容不属于 keikeu，不受此许可证约束；其权利归各自作者。
+
+### 使用与分发注意事项
+
+- 可以使用、复制、修改和分发 keikeu，也可以为副本或支持服务收费。
+- 私下修改不需要公开；但向他人分发原版或改版（包括打包后的 macOS App）时，必须保留版权和许可证声明，并让接收者获得对应源码。
+- 分发改版时，整个基于 keikeu 的作品须继续以 GPL-3.0-or-later 授权，并显著说明改动。
+- keikeu 按“现状”提供，不提供明示或默示担保，也不承担法律允许范围外的责任。
+- 本许可证不授予 `keikeu` 名称、标志或其他商标权；第三方依赖仍分别适用其自身许可证。
