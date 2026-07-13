@@ -171,9 +171,11 @@ keikeu 的正确路线：
 ```text
 local-first
 no account by default
-no cloud by default
+no keikeu cloud backend by default
 no analytics by default
 ```
+
+用户可以主动把 vault 放进 iCloud Drive、Dropbox、OneDrive 等系统文件服务目录。这不授权 keikeu 收集账号或上传内容：keikeu 只处理用户选择的普通文件路径，同步与账号由第三方服务负责。
 
 ---
 
@@ -185,7 +187,7 @@ keikeu 只需要：
 
 ```text
 用户自己的灵感
-用户自己的 brief
+用户自己的 Paper / 写作锚点
 本地 Markdown
 ```
 

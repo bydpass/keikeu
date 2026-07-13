@@ -24,7 +24,7 @@ You must not silently:
 - add new frameworks;
 - add heavy dependencies;
 - rewrite architecture;
-- introduce cloud sync, account systems, external fandom databases, AI-required workflows, social features, plugin systems, or graph systems;
+- introduce a keikeu cloud backend, account systems, provider APIs, external fandom databases, AI ghostwriting, social features, plugin systems, or graph systems;
 - change release route.
 
 Current keikeu policy:
@@ -33,8 +33,9 @@ Current keikeu policy:
 Language / stack: Python 3 + Flet
 Development: human-led learning + agentic coding
 Repo: GitHub
-Release route: macOS dev → iOS → Android → Windows
+Release route: macOS Paper/Flashcard Core → iPhone/iPad parity → Android → Windows
 Data: Markdown files as source of truth; JSON index as rebuildable metadata
+Sync boundary: user-selected OS file-service folders allowed; no keikeu-managed cloud
 ```
 
 ---
@@ -222,12 +223,12 @@ Never delete, overwrite, normalize, upload, or auto-correct creative text unless
 
 Rules:
 
-- Preserve raw inspiration.
-- Preserve blank fields.
+- Never auto-rewrite author text; preserve the first-save draft copy.
+- Preserve intentionally blank optional fields; enforce required Summary explicitly.
 - Preserve unknown Markdown frontmatter fields when feasible.
 - Do not guess fandom / character / CP from external data.
 - Do not use external databases.
-- Do not send user content to cloud services.
+- Do not upload user content through keikeu APIs. A user-selected iCloud Drive or other file-service directory is treated as an ordinary local path.
 - Markdown is the asset body.
 - `keikeu_index.json` is disposable and rebuildable.
 
@@ -345,7 +346,7 @@ Good:
 feat: initialize local vault
 test: cover index rebuild
 docs: add git workflow guide
-fix: preserve raw inspiration on save
+fix: preserve first-save draft copy
 ```
 
 Bad:
@@ -493,7 +494,7 @@ Task: implement vault initialization.
 
 Scope:
 - create vault folder
-- create cache/ and outlines/
+- create cache/ and .trash/cache/
 - create keikeu_index.json
 - add tests
 

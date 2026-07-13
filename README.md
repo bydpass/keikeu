@@ -1,29 +1,32 @@
 # keikeu
 
-> keikeu 是一个本地优先的写作辅助工具，用来帮助同人创作者把零碎灵感整理成可继续写作的 Markdown 大纲。
+> keikeu 是一个本地优先的同人写作辅助工具：把已有灵感整理成 Markdown 纸片，再用 Flashcard 帮作者聚焦扩写。
 
 简体中文 | [English](README_EN.md)
 
 ## 当前状态
 
-keikeu Road v0.1 已完成并合入 `main`，当前是面向 macOS 的 pre-alpha
-开发预览版。核心创作流程已经可用，但尚未作为生产版本发布。
+keikeu Road v0.1 已完成并归档；当前代码仍是旧 `Cache → Outline`
+macOS pre-alpha。新的产品契约已经定案，项目正准备进入
+**Road v0.2：macOS Paper–Flashcard Core**，尚未作为生产版本发布。
 
 当前实现以 [`appdesign.md`](appdesign.md) 与 [`techpolicy.md`](techpolicy.md)
-为准；Road v0.1 的执行记录见
-[`memory/specs/9d033db326295874d1f32f23325e430e0461396d/planbook_road_v0_1.md`](memory/specs/9d033db326295874d1f32f23325e430e0461396d/planbook_road_v0_1.md)。
+为目标；Road v0.2 的行为与执行顺序见
+[`spec_road_v0_2.md`](memory/specs/spec_road_v0_2.md) 和
+[`planbook_road_v0_2.md`](memory/specs/planbook_road_v0_2.md)。
 
 ## 核心流程
 
 ```text
-原始灵感 → 灵感 cache Markdown → 可编辑配方票 / 大纲 → 导出 Markdown
+已有灵感 → Paper Markdown → Flashcard → 外部正文编辑器
 ```
 
-- **cache（灵感缓存）** —— 低摩擦记录一个原始念头。你的原话会被原样保留，不做总结、不做改写。
-- **大纲（outline）** —— 从某条 cache 衍生出的结构化 Markdown 文件：标题、原始灵感、fandom、人物 / CP、内容要素、流水账、Ending Type、与其他灵感的关联。
-- **本地文件库（Library）** —— 搜索和筛选本地资产，在 keikeu、默认编辑器或 Finder 中打开文件。
+- **纸片（Paper）** —— 一次准备写成正文的作品单元；包含必填 Summary、推荐 Highlights、推荐 Tags 和首次保存的初稿副本。
+- **Flashcard** —— Summary-first 的有限上下文只读视图；一条 Highlight 对应一张卡，并记住每台设备的上次位置。
+- **本地文件库（Library）** —— 按代号、Summary 和 Tags 检索 Paper，在 keikeu、默认编辑器或 Finder 中打开资产。
+- **外部正文编辑器** —— 正式正文始终在 keikeu 之外完成。
 
-## Road v0.1 已完成
+## Road v0.1 历史基线
 
 - 稳定的 Outline Markdown schema：内容要素、结局正文和三行关系块均可往返读取。
 - Markdown 导出：系统保存对话框确认后，从 vault 字节一致复制到目标位置；取消无副作用。
@@ -32,24 +35,26 @@ keikeu Road v0.1 已完成并合入 `main`，当前是面向 macOS 的 pre-alpha
 - 本地关系 picker：从索引选择前作、续作、IF、外传或同系列；不需要手输路径。
 - Library 系统操作：默认程序打开、Finder 定位、vault 路径入口，并为非 macOS 提供安全降级。
 - 暖纸色视觉 tokens、中文主界面和轻量侧栏，保持本地灵感小册子的气质。
-- 当前测试基线：`112 passed`。
+- 归档时测试基线：`112 passed`。
+
+这些能力记录旧产品线；Road v0.2 将迁移 Cache、退休活动 Outline，并把核心界面换成 Paper 与 Flashcard。
 
 ## 产品原则
 
 - 本地优先。
 - Markdown 文件是用户资产本体。
 - `keikeu_index.json` 是可重建的软件索引。
-- MVP 前不做账号系统。
-- MVP 前不做云同步。
+- 不做 keikeu 账号、云后端或后台同步。
+- 用户可以把 vault 放在 iCloud Drive 等系统文件服务目录中。
 - 不接入外部 fandom / 角色 / CP 数据库。
-- 不把 AI 作为必要工作流。
+- 不使用 AI 代写或自动改写作者文字。
 
 ## keikeu 是什么
 
-- 灵感缓存工具
-- 大纲编辑器
+- Markdown 纸片工具
+- Flashcard 写作聚焦界面
 - 本地 Markdown vault 工具
-- 面向同人创作者的写作准备工具
+- 面向即兴型和混合型同人作者的写前辅助工具
 
 ## keikeu 不是什么
 
@@ -59,6 +64,7 @@ keikeu Road v0.1 已完成并合入 `main`，当前是面向 macOS 的 pre-alpha
 - fandom 数据库
 - Obsidian / Notion 替代品
 - 云端写作套件
+- 完整正文编辑器
 
 ## 伦理基线
 
@@ -129,16 +135,21 @@ keikeu_core 不得 import Flet。
 | [`gitspec.md`](gitspec.md) | 面向人类的 Git 工作流手册 |
 | [`gitagent.md`](gitagent.md) | 面向 agent 的 Git 工作流规则 |
 | [`memory/specs/README.md`](memory/specs/README.md) | 当前需求与历史规格归档索引 |
+| [`memory/specs/spec_road_v0_2.md`](memory/specs/spec_road_v0_2.md) | Road v0.2 行为规范与迁移契约 |
+| [`memory/specs/planbook_road_v0_2.md`](memory/specs/planbook_road_v0_2.md) | macOS-first 执行手册 |
+| [`memory/specs/audit_v01_to_v02_2026-07-13.md`](memory/specs/audit_v01_to_v02_2026-07-13.md) | Road v0.2 开工前代码对照与测试基线 |
+| [`memory/specs/road_pre_advance.md`](memory/specs/road_pre_advance.md) | 可选 Outline 的后置候选池 |
 | [`memory/specs/9d033db326295874d1f32f23325e430e0461396d/planbook_road_v0_1.md`](memory/specs/9d033db326295874d1f32f23325e430e0461396d/planbook_road_v0_1.md) | Road v0.1 执行手册与阶段定义 |
 | [`memory/specs/9d033db326295874d1f32f23325e430e0461396d/spec_road_v0_1.md`](memory/specs/9d033db326295874d1f32f23325e430e0461396d/spec_road_v0_1.md) | Road v0.1 功能规范与验收标准 |
 
 ## 路线图
 
 ```text
-v0.1 — macOS 开发预览版
-v0.2 — iOS 内测版
-v0.3 — Android APK
-v0.4 — Windows 预览版
+v0.1 — 已归档的 macOS Cache / Outline pre-alpha
+v0.2 — macOS Paper / Flashcard Core
+后续 — iPhone / iPad 文件服务对齐
+Pre-Advance — 可选 Markdown Outline
+更后 — Android / Windows
 ```
 
 ## 许可证

@@ -2,9 +2,9 @@
 
 ## Project Structure & Module Organization
 
-keikeu is a local-first Python/Flet app for turning raw inspiration into editable Markdown outlines. Source lives under `src/`: `src/keikeu_core/` contains pure Python models, vault setup, Markdown I/O, and index rebuilding; `src/keikeu_app/` contains Flet UI shell, pages, and widgets. Tests live in `tests/` and mirror the source modules, for example `tests/test_markdown_io.py` and `tests/test_app_pages.py`.
+keikeu is a local-first Python/Flet app for turning existing fanfiction inspiration into durable Markdown Papers and presenting them through a limited-context Flashcard view while prose remains in an external editor. The current code still reflects the archived v0.1 Cache/Outline model; Road v0.2 performs the macOS migration. Source lives under `src/`: `src/keikeu_core/` contains pure Python models, vault setup, Markdown I/O, and index rebuilding, and Road v0.2 will add an isolated legacy migration module; `src/keikeu_app/` contains Flet UI shell, pages, and widgets. Tests live in `tests/` and mirror the source modules.
 
-Root docs are authoritative: `appdesign.md` for product behavior, `techpolicy.md` for stack policy, `gitspec.md` for human Git workflow, and `gitagent.md` for agent workflow.
+Root docs are authoritative: `appdesign.md` for product behavior, `techpolicy.md` for stack policy, `gitspec.md` for human Git workflow, and `gitagent.md` for agent workflow. Active Road behavior and order live in `memory/specs/spec_road_v0_2.md` and `memory/specs/planbook_road_v0_2.md`; the v0.1 archive is historical only.
 
 ## Build, Test, and Development Commands
 
@@ -35,4 +35,4 @@ Follow the repo's compact scoped history style, such as `init:full_restart`, `in
 
 ## Product Constraints
 
-Preserve raw user inspiration verbatim. Markdown files are the user asset; `keikeu_index.json` is disposable metadata rebuilt from Markdown. Do not add cloud sync, accounts, external fandom databases, AI-required workflows, social features, plugin systems, graph/worldbuilding databases, or image generation before MVP.
+Never auto-rewrite author text. First save freezes a draft copy while the current Summary remains author-editable. Markdown files are the user asset; `keikeu_index.json` and per-device Flashcard position are disposable metadata. Do not add a keikeu cloud backend, accounts, external fandom databases, AI ghostwriting, social features, plugin systems, graph/worldbuilding databases, image generation, a built-in prose editor, or mandatory Outline generation before MVP. User-selected OS file-service folders such as iCloud Drive are allowed; keikeu must treat them as ordinary local paths and must not integrate provider accounts or APIs.

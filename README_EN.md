@@ -1,30 +1,33 @@
 # keikeu
 
-> keikeu is a local-first writing utility that helps fan creators turn raw inspiration into editable Markdown outlines.
+> keikeu is a local-first fanfiction writing utility that turns existing inspiration into Markdown Papers and uses Flashcards to focus expansion.
 
 English | [简体中文](README.md)
 
 ## Current status
 
-keikeu Road v0.1 is complete and merged into `main`. It is currently a macOS
-pre-alpha development preview: the core creative workflow is usable, but it has
-not been released as a production build.
+keikeu Road v0.1 is complete and archived. The current code is still the old
+`Cache → Outline` macOS pre-alpha. The new product contract is settled and the
+project is preparing **Road v0.2: macOS Paper–Flashcard Core**. It has not been
+released as a production build.
 
 The implementation follows [`appdesign.md`](appdesign.md) and
-[`techpolicy.md`](techpolicy.md). The Road v0.1 execution record lives in
-[`memory/specs/9d033db326295874d1f32f23325e430e0461396d/planbook_road_v0_1.md`](memory/specs/9d033db326295874d1f32f23325e430e0461396d/planbook_road_v0_1.md).
+[`techpolicy.md`](techpolicy.md) as its target. Road v0.2 behavior and execution
+order live in [`spec_road_v0_2.md`](memory/specs/spec_road_v0_2.md) and
+[`planbook_road_v0_2.md`](memory/specs/planbook_road_v0_2.md).
 
 ## Core flow
 
 ```text
-raw inspiration → cache Markdown → editable recipe ticket / outline → exported Markdown
+existing inspiration → Paper Markdown → Flashcard → external prose editor
 ```
 
-- **Cache** — low-friction capture of a raw idea. Your words are preserved verbatim, never summarized or rewritten.
-- **Outline** — a structured Markdown file derived from a cache: title, raw inspiration, fandom, characters / CP, content elements, plot, ending type, and relations.
-- **Library** — search and filter local assets, then open them in keikeu, the system editor, or Finder.
+- **Paper** — one unit intended to become a piece of prose, with a required Summary, recommended Highlights and Tags, plus a frozen first-save draft copy.
+- **Flashcard** — a Summary-first, limited-context read-only view; each Highlight becomes one card and the last position is remembered per device.
+- **Library** — search Papers by code, Summary, and Tags, then open them in keikeu, the system editor, or Finder.
+- **External prose editor** — formal prose always remains outside keikeu.
 
-## Completed in Road v0.1
+## Historical Road v0.1 baseline
 
 - Stable Outline Markdown schema with round-trip content elements, ending text, and three-line relation blocks.
 - Markdown export through the system save dialog, using a byte-identical vault copy after confirmation and leaving no changes on cancel.
@@ -33,24 +36,27 @@ raw inspiration → cache Markdown → editable recipe ticket / outline → expo
 - Local relation picker for prequel, sequel, IF, side story, and same-series links without hand-typed paths.
 - Library integration with system open, Finder reveal, a vault location entry, and safe non-macOS fallbacks.
 - Warm-paper visual tokens, Chinese-first interface copy, and a lighter navigation shell.
-- Current test baseline: `112 passed`.
+- Test baseline at archive time: `112 passed`.
+
+These features describe the old product line. Road v0.2 will migrate Caches,
+retire active Outlines, and replace the core interaction with Paper and Flashcard.
 
 ## Product principles
 
 - Local-first.
 - Markdown files are user assets.
 - `keikeu_index.json` is rebuildable metadata.
-- No account system before MVP.
-- No cloud sync before MVP.
+- No keikeu account, cloud backend, or background sync.
+- Users may place a vault in an OS file-service folder such as iCloud Drive.
 - No external fandom / character / CP database.
-- No AI-required workflow.
+- No AI ghostwriting or automatic rewriting of author text.
 
 ## What keikeu is
 
-- inspiration cache
-- outline editor
+- Markdown Paper tool
+- Flashcard writing-focus view
 - local Markdown vault tool
-- writing preparation utility for fan creators
+- pre-writing utility for discovery-first and hybrid fanfiction authors
 
 ## What keikeu is not
 
@@ -60,6 +66,7 @@ raw inspiration → cache Markdown → editable recipe ticket / outline → expo
 - fandom database
 - Obsidian / Notion replacement
 - cloud writing suite
+- full prose editor
 
 ## Ethics
 
@@ -130,16 +137,21 @@ Core must be testable without launching the UI.
 | [`gitspec.md`](gitspec.md) | Human Git workflow manual |
 | [`gitagent.md`](gitagent.md) | Agent Git workflow rules |
 | [`memory/specs/README.md`](memory/specs/README.md) | Current requirements and historical specification archive index |
+| [`memory/specs/spec_road_v0_2.md`](memory/specs/spec_road_v0_2.md) | Road v0.2 behavior and migration contract |
+| [`memory/specs/planbook_road_v0_2.md`](memory/specs/planbook_road_v0_2.md) | macOS-first execution handbook |
+| [`memory/specs/audit_v01_to_v02_2026-07-13.md`](memory/specs/audit_v01_to_v02_2026-07-13.md) | Road v0.2 pre-implementation code audit and test baseline |
+| [`memory/specs/road_pre_advance.md`](memory/specs/road_pre_advance.md) | Deferred optional Outline candidates |
 | [`memory/specs/9d033db326295874d1f32f23325e430e0461396d/planbook_road_v0_1.md`](memory/specs/9d033db326295874d1f32f23325e430e0461396d/planbook_road_v0_1.md) | Road v0.1 execution handbook and phase definitions |
 | [`memory/specs/9d033db326295874d1f32f23325e430e0461396d/spec_road_v0_1.md`](memory/specs/9d033db326295874d1f32f23325e430e0461396d/spec_road_v0_1.md) | Road v0.1 behavior specification and acceptance criteria |
 
 ## Roadmap
 
 ```text
-v0.1 — macOS development preview
-v0.2 — iOS internal build
-v0.3 — Android APK
-v0.4 — Windows preview
+v0.1 — archived macOS Cache / Outline pre-alpha
+v0.2 — macOS Paper / Flashcard Core
+later — iPhone / iPad file-service parity
+Pre-Advance — optional Markdown Outline
+later still — Android / Windows
 ```
 
 ## License

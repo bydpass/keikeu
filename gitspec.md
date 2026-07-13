@@ -628,7 +628,7 @@ Give scoped instruction:
 ```text
 Task: implement vault initialization.
 Scope:
-- create cache/ and outlines/
+- create cache/ and .trash/cache/
 - create keikeu_index.json
 - add tests
 
@@ -760,10 +760,10 @@ git push origin v0.1.0
 Suggested route:
 
 ```text
-v0.1.0  macOS dev preview
-v0.2.0  iOS internal build
-v0.3.0  Android APK
-v0.4.0  Windows preview
+v0.1.0  archived macOS Cache / Outline pre-alpha
+v0.2.0  macOS Paper / Flashcard Core
+later   iPhone / iPad file-service parity
+later   Android / Windows
 ```
 
 ---

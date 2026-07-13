@@ -1,9 +1,31 @@
 # keikeu 新需求搜索与 Road v0.2 候选池
 
 日期：2026-07-10  
-状态：需求发现，不是实现规格  
+状态：需求发现已收束；保留为历史证据，不再作为实现规格  
 研究对象：同人创作者从零碎灵感到大纲、正文交接的个人工作流  
 本地基线：macOS pre-alpha，Road v0.1 已完成；唯一实际用户已提交 O-01～O-05。
+
+## 0. 2026-07-13 产品收束
+
+后续 brainstorming 重新验证了目标用户、内容模型和大纲必要性。本文件中的候选路线已由以下活动文档取代：
+
+- [`../../appdesign.md`](../../appdesign.md)：当前产品事实来源。
+- [`spec_road_v0_2.md`](spec_road_v0_2.md)：macOS Paper–Flashcard Core 行为规格。
+- [`planbook_road_v0_2.md`](planbook_road_v0_2.md)：Road v0.2 执行顺序。
+- [`road_pre_advance.md`](road_pre_advance.md)：可选 Outline 的后置候选池。
+
+新决议：
+
+1. 目标用户收窄为即兴型为主、混合型为辅的私人单作者同人小说作者。
+2. one-shot 与短中篇优先；长篇能力后置。
+3. 一张 Paper 代表一次准备写成正文的作品单元。
+4. 主内容模型为必填 Summary、推荐 Highlights、推荐 Tags；首次保存冻结初稿副本。
+5. Flashcard 第一张是 Summary，后续一条 Highlight 对应一张卡，并默认记住每设备上次位置。
+6. Outline 不再是强制终点，移入 Pre-Advance。
+7. v0.1 Cache 迁移为 Paper v2；旧 Outline 完整备份后从活动 vault 销毁。
+8. Road v0.2 从 macOS 开始；三设备未来通过 iCloud Drive 等第三方文件服务传递 vault，keikeu 不自建云服务。
+
+因此，下文 R-01～R-06 和原“推荐路线”只用于追溯当时证据，不得直接转成实施任务。特别是旧 `cache → outline`、iOS-first v0.2 和 CP 专用检索结论已被新产品模型覆盖。
 
 ## 1. 研究边界
 

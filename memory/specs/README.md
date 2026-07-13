@@ -1,10 +1,16 @@
 # keikeu 规格与研究索引
 
-本目录保存当前需求发现文档与按代码基线归档的历史规格。
+本目录保存当前 Road、后续候选与按代码基线归档的历史规格。
 
-## 当前工作
+## 当前工作：Road v0.2 · macOS Paper–Flashcard Core
 
-- [`requirements_discovery_v0_2.md`](requirements_discovery_v0_2.md)：Road v0.2 需求证据、候选能力与平台路线。它是需求发现文档，不是实现规格。
+- [`spec_road_v0_2.md`](spec_road_v0_2.md)：当前行为规范、迁移契约与完成定义。
+- [`planbook_road_v0_2.md`](planbook_road_v0_2.md)：macOS-first 分阶段执行手册。
+- [`audit_v01_to_v02_2026-07-13.md`](audit_v01_to_v02_2026-07-13.md)：开工前代码影响面、测试基线与高风险顺序。
+- [`requirements_discovery_v0_2.md`](requirements_discovery_v0_2.md)：已收束的需求发现证据；不再是实现入口。
+- [`road_pre_advance.md`](road_pre_advance.md)：可选 Outline 与混合型能力候选；Road v0.2 完成前不实施。
+
+当前产品真理仍是根目录 [`appdesign.md`](../../appdesign.md)。
 
 ## Road v0.1 归档
 
