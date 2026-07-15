@@ -3,6 +3,8 @@
 #施工/设计文件
 #files_for_construction
 tests/test-vault/
+tests/test-vault-bak/
+tests/keikeu-backups/
 
 # Python
 .venv/

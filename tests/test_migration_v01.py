@@ -177,6 +177,30 @@ def test_successful_migration_backs_up_every_byte_and_replaces_legacy_assets(
     )
 
 
+def test_migration_ignores_macos_metadata_but_preserves_it_in_backup(tmp_path):
+    vault = _copy_fixture(tmp_path)
+    _remove_preflight_failures(vault)
+    (vault / "cache" / ".DS_Store").write_bytes(b"cache-metadata")
+    (vault / "outlines" / ".DS_Store").write_bytes(b"outline-metadata")
+    before = _file_bytes(vault)
+
+    preflight = inspect_v01_vault(vault)
+
+    assert preflight.ready is True
+    assert preflight.cache_count == 2
+    assert preflight.outline_count == 1
+
+    result = migrate_v01_vault(
+        vault,
+        backup_root=tmp_path / "backups",
+        now=datetime(2026, 7, 14, 12, 0),
+    )
+
+    assert _file_bytes(result.backup_path) == before
+    assert not (vault / "cache" / ".DS_Store").exists()
+    assert not (vault / "outlines").exists()
+
+
 def test_migration_also_converts_trashed_caches_to_avoid_mixed_schema(tmp_path):
     vault = _copy_fixture(tmp_path)
     _remove_preflight_failures(vault)

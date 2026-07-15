@@ -95,13 +95,3 @@ def list_papers(vault: Path) -> list[dict[str, object]]:
 def list_index_errors(vault: Path) -> list[dict[str, str]]:
     """Return isolated parse errors from the last usable index rebuild."""
     return load_index(vault)["errors"]  # type: ignore[return-value]
-
-
-def list_caches(vault: Path) -> list[dict[str, object]]:
-    """Temporary import shim for the isolated v0.1 GUI; it reads no Cache data."""
-    raise RuntimeError("v0.1 Cache UI is isolated; use list_papers")
-
-
-def list_outlines(vault: Path) -> list[dict[str, object]]:
-    """Temporary import shim for the isolated v0.1 GUI; it reads no Outline data."""
-    raise RuntimeError("v0.1 Outline UI is isolated; use list_papers")

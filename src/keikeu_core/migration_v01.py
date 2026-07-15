@@ -18,8 +18,9 @@ import shutil
 import tempfile
 from typing import Callable
 
-from keikeu_core.markdown_io import next_paper_code, read_cache, read_paper, write_paper
-from keikeu_core.models import Cache, Paper
+from keikeu_core.legacy_v01 import LegacyCache, read_v01_cache
+from keikeu_core.markdown_io import next_paper_code, read_paper, write_paper
+from keikeu_core.models import Paper
 
 __all__ = [
     "MigrationIssue",
@@ -33,6 +34,7 @@ __all__ = [
 
 
 _REPORT_NAME = "keikeu_migration_report.json"
+_MACOS_METADATA_NAMES = {".DS_Store"}
 
 
 @dataclass(frozen=True)
@@ -46,7 +48,7 @@ class MigrationIssue:
 @dataclass(frozen=True)
 class _LegacyCache:
     path: Path
-    cache: Cache
+    cache: LegacyCache
     trashed: bool
 
 
@@ -138,7 +140,11 @@ def is_v01_vault(vault: Path) -> bool:
 def _files_under(directory: Path) -> tuple[Path, ...]:
     if not directory.is_dir():
         return ()
-    return tuple(path for path in sorted(directory.rglob("*")) if path.is_file())
+    return tuple(
+        path
+        for path in sorted(directory.rglob("*"))
+        if path.is_file() and path.name not in _MACOS_METADATA_NAMES
+    )
 
 
 def _inspect_cache_directory(
@@ -151,13 +157,15 @@ def _inspect_cache_directory(
     if not directory.is_dir():
         return
     for path in sorted(directory.iterdir()):
+        if path.name in _MACOS_METADATA_NAMES:
+            continue
         if not path.is_file() or path.suffix != ".md":
             issues.append(
                 MigrationIssue(path, "unsupported entry in v0.1 cache directory")
             )
             continue
         try:
-            cache = read_cache(path)
+            cache = read_v01_cache(path)
         except (OSError, ValueError, KeyError) as exc:
             issues.append(MigrationIssue(path, str(exc)))
             continue

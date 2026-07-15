@@ -13,6 +13,7 @@ from typing import Callable
 import flet as ft
 
 from keikeu_app.pages import build_flashcard_page, build_library_page, build_paper_page
+from keikeu_app.pages.migration_page import build_migration_page
 from keikeu_app.theme import (
     ACCENT,
     ACCENT_ON,
@@ -31,6 +32,7 @@ from keikeu_app.theme import (
 )
 from keikeu_app.widgets import notify, paper_card, primary_button, single_line_field
 from keikeu_core.indexer import rebuild_index
+from keikeu_core.migration_v01 import is_v01_vault
 from keikeu_core.vault import get_vault, init_vault, is_vault, set_vault
 
 __all__ = ["main", "run", "AppContext", "CONFIG_PATH"]
@@ -159,12 +161,37 @@ def _build_shell(page: ft.Page, vault: Path) -> None:
     show_paper()
 
 
-def _build_vault_picker(page: ft.Page) -> None:
+def _build_migration_gate(page: ft.Page, vault: Path) -> None:
+    """Show a no-write v0.1 preflight before allowing any v2 vault action."""
+    apply_theme(page)
+    page.controls.clear()
+    page.scroll = None
+
+    def open_migrated(_: object) -> None:
+        set_vault(vault, CONFIG_PATH)
+        _build_shell(page, vault)
+
+    page.add(
+        ft.Container(
+            expand=True,
+            padding=SPACE_8,
+            bgcolor=BG,
+            content=build_migration_page(
+                page,
+                vault,
+                on_open_migrated=open_migrated,
+                on_choose_other=lambda: _build_vault_picker(page, show_configured=False),
+            ),
+        )
+    )
+
+
+def _build_vault_picker(page: ft.Page, *, show_configured: bool = True) -> None:
     """Offer a minimal local folder picker when no valid vault is configured."""
     apply_theme(page)
     page.controls.clear()
     page.scroll = ft.ScrollMode.AUTO
-    existing = get_vault(CONFIG_PATH)
+    existing = get_vault(CONFIG_PATH) if show_configured else None
     path_field = single_line_field("Vault 文件夹路径", str(existing) if existing is not None else "")
     path_field.hint_text = str(Path.home() / "keikeu-vault")
     path_field.expand = True
@@ -177,10 +204,18 @@ def _build_vault_picker(page: ft.Page) -> None:
             page.update()
             return
         vault = Path(raw).expanduser()
+        if is_v01_vault(vault):
+            _build_migration_gate(page, vault)
+            return
         try:
-            init_vault(vault)
+            if is_vault(vault):
+                rebuild_index(vault)
+            elif vault.exists() and any(vault.iterdir()):
+                raise ValueError("该文件夹不是可用 Vault；请选择空文件夹或现有 Paper Vault")
+            else:
+                init_vault(vault)
+                rebuild_index(vault)
             set_vault(vault, CONFIG_PATH)
-            rebuild_index(vault)
         except (OSError, ValueError) as ex:
             error_text.value = f"无法打开 Vault：{ex}"
             page.update()
@@ -218,7 +253,9 @@ def main(page: ft.Page) -> None:
     _configure_window(page)
     apply_theme(page)
     vault = get_vault(CONFIG_PATH)
-    if vault is not None and is_vault(vault):
+    if vault is not None and is_v01_vault(vault):
+        _build_migration_gate(page, vault)
+    elif vault is not None and is_vault(vault):
         _build_shell(page, vault)
     else:
         _build_vault_picker(page)
