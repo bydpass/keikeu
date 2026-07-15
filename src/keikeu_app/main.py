@@ -1,17 +1,7 @@
-"""keikeu Flet GUI shell (appdesign.md Step 6).
+"""keikeu Flet shell for the Paper v2 macOS flow.
 
-This is the only layer allowed to import Flet. All data logic — Markdown,
-JSON, serialization, the index — lives in ``keikeu_core`` and is reached only
-through its public functions. This module wires three pages together and
-resolves the active vault.
-
-Config is an APP-layer concern: it lives at ``~/.keikeu_config.json``. The core
-``vault`` functions take that path injected, so core never hardcodes a config
-location.
-
-Entry points:
-    ``main(page)`` — the Flet view builder (``flet run src/keikeu_app/main.py``).
-    ``run()``      — no-arg console entry: ``ft.app(target=main)``.
+The GUI only routes user actions to public ``keikeu_core`` APIs.  Markdown,
+JSON, migration, and asset recovery remain in the pure-Python core layer.
 """
 
 from __future__ import annotations
@@ -22,11 +12,7 @@ from typing import Callable
 
 import flet as ft
 
-from keikeu_app.pages import (
-    build_cache_page,
-    build_library_page,
-    build_outline_editor_page,
-)
+from keikeu_app.pages import build_library_page, build_paper_page
 from keikeu_app.theme import (
     ACCENT,
     ACCENT_ON,
@@ -39,100 +25,88 @@ from keikeu_app.theme import (
     SPACE_2,
     SPACE_4,
     SPACE_8,
-    SURFACE,
     SURFACE_WARM,
     TEXT_SM,
     apply_theme,
 )
-from keikeu_app.widgets import (
-    notify,
-    paper_card,
-    primary_button,
-    single_line_field,
-)
+from keikeu_app.widgets import notify, page_header, paper_card, primary_button, single_line_field
 from keikeu_core.indexer import rebuild_index
-from keikeu_core.models import Outline
 from keikeu_core.vault import get_vault, init_vault, is_vault, set_vault
 
 __all__ = ["main", "run", "AppContext", "CONFIG_PATH"]
 
-# App-layer config location (NOT decided by core).
 CONFIG_PATH = Path.home() / ".keikeu_config.json"
-
-# The supplied 1780 × 1482 Retina reference image maps to this desktop-size
-# window in Flet's logical pixels. The window remains user-resizable.
 INITIAL_WINDOW_WIDTH = 890
 INITIAL_WINDOW_HEIGHT = 741
 
-# Navigation slots.
-_NAV_CACHE = 0
-_NAV_OUTLINE = 1
+_NAV_PAPER = 0
+_NAV_FLASHCARD = 1
 _NAV_LIBRARY = 2
 
 
 @dataclass
 class AppContext:
-    """Shared state + callbacks handed to each page.
-
-    Pages call back through here to navigate or open a specific file in its
-    editor. ``vault`` is the resolved, validated active vault directory.
-    """
+    """The active vault and page-navigation callbacks shared by GUI builders."""
 
     page: ft.Page
     vault: Path
-    open_cache: Callable[[Path | None], None] = field(default=lambda _p: None)
-    open_outline: Callable[[Path | None], None] = field(default=lambda _p: None)
-    start_outline_from_cache: Callable[[Outline, Path], None] = field(
-        default=lambda _outline, _cache_path: None
-    )
+    open_paper: Callable[[Path | None], None] = field(default=lambda _path: None)
+    open_flashcards: Callable[[str | None], None] = field(default=lambda _code: None)
     open_library: Callable[[], None] = field(default=lambda: None)
 
 
 def _configure_window(page: ft.Page) -> None:
-    """Set the desktop launch size from the approved visual reference."""
     page.window.width = INITIAL_WINDOW_WIDTH
     page.window.height = INITIAL_WINDOW_HEIGHT
 
 
+def _flashcard_placeholder(code: str | None = None) -> ft.Control:
+    """Keep the Phase 4 navigation honest without implementing Phase 5 state."""
+    return ft.Column(
+        controls=[
+            page_header(
+                "Flashcard",
+                "Summary-first 的只读聚焦视图将在下一 Phase 提供。",
+                "FLASHCARD · 即将可用",
+            ),
+            paper_card(
+                [
+                    ft.Text("Flashcard 正在准备中", size=24, font_family=FONT_DISPLAY),
+                    ft.Text(
+                        f"{code} 已准备好进入卡组。" if code else "先保存并打开一张 Paper。",
+                        color=MUTED,
+                    ),
+                ],
+                key="flashcard-placeholder-card",
+                spacing=SPACE_4,
+            ),
+        ],
+        spacing=SPACE_8,
+        scroll=ft.ScrollMode.AUTO,
+        expand=True,
+    )
+
+
 def _build_shell(page: ft.Page, vault: Path) -> None:
-    """Build the navigation shell once a valid vault is active."""
+    """Build the Paper / Flashcard / Library navigation shell."""
     apply_theme(page)
     page.controls.clear()
-    # NavigationRail requires a bounded height. Page-level scrolling makes the
-    # shell's Row vertically unbounded, so scrolling lives inside each page body.
     page.scroll = None
-
     body = ft.Container(expand=True, padding=SPACE_8, bgcolor=BG)
     ctx = AppContext(page=page, vault=vault)
 
-    def show_cache(open_path: Path | None = None) -> None:
+    def show_paper(open_path: Path | None = None) -> None:
         try:
-            nav.selected_index = _NAV_CACHE
-            body.content = build_cache_page(ctx, open_path)
+            nav.selected_index = _NAV_PAPER
+            body.content = build_paper_page(ctx, open_path)
             page.update()
         except Exception as ex:
-            notify(page, f"无法打开灵感：{ex}")
+            notify(page, f"无法打开 Paper：{ex}")
 
-    def show_outline(open_path: Path | None = None) -> None:
-        try:
-            nav.selected_index = _NAV_OUTLINE
-            body.content = build_outline_editor_page(ctx, open_path)
-            page.update()
-        except Exception as ex:
-            notify(page, f"无法打开大纲：{ex}")
-
-    def start_outline_from_cache(outline: Outline, cache_path: Path) -> None:
-        try:
-            nav.selected_index = _NAV_OUTLINE
-            body.content = build_outline_editor_page(
-                ctx,
-                None,
-                initial_outline=outline,
-                source_cache_path=cache_path,
-            )
-            page.update()
-        except Exception as ex:
-            notify(page, f"无法开始配方票：{ex}")
+    def show_flashcards(code: str | None = None) -> None:
+        nav.selected_index = _NAV_FLASHCARD
+        body.content = _flashcard_placeholder(code)
+        page.update()
 
     def show_library() -> None:
         try:
@@ -142,22 +116,20 @@ def _build_shell(page: ft.Page, vault: Path) -> None:
         except Exception as ex:
             notify(page, f"无法打开本地文件库：{ex}")
 
-    ctx.open_cache = show_cache
-    ctx.open_outline = show_outline
-    ctx.start_outline_from_cache = start_outline_from_cache
+    ctx.open_paper = show_paper
+    ctx.open_flashcards = show_flashcards
     ctx.open_library = show_library
 
     def on_nav_change(e: ft.ControlEvent) -> None:
-        idx = e.control.selected_index
-        if idx == _NAV_CACHE:
-            show_cache(None)
-        elif idx == _NAV_OUTLINE:
-            show_outline(None)
+        if e.control.selected_index == _NAV_PAPER:
+            show_paper()
+        elif e.control.selected_index == _NAV_FLASHCARD:
+            show_flashcards()
         else:
             show_library()
 
     nav = ft.NavigationRail(
-        selected_index=_NAV_CACHE,
+        selected_index=_NAV_PAPER,
         extended=True,
         min_width=72,
         min_extended_width=SIDEBAR_WIDTH,
@@ -181,77 +153,42 @@ def _build_shell(page: ft.Page, vault: Path) -> None:
                     border_radius=RADIUS_SM,
                     alignment=ft.Alignment.CENTER,
                 ),
-                ft.Text(
-                    "KEIKEU",
-                    size=22,
-                    color=ACCENT_ON,
-                    font_family=FONT_DISPLAY,
-                    weight=ft.FontWeight.W_700,
-                ),
-                ft.Text(
-                    "PERSONAL WORD PROCESSOR",
-                    size=10,
-                    color=SURFACE_WARM,
-                    font_family=FONT_DISPLAY,
-                ),
+                ft.Text("KEIKEU", size=22, color=ACCENT_ON, font_family=FONT_DISPLAY, weight=ft.FontWeight.W_700),
+                ft.Text("PERSONAL PAPER DESK", size=10, color=SURFACE_WARM, font_family=FONT_DISPLAY),
             ],
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             spacing=SPACE_2,
         ),
         trailing=ft.Text(
-            "LOCAL MEMORY UNIT\nV0.1 · OFFLINE READY",
+            "LOCAL PAPER UNIT\nV0.2 · OFFLINE READY",
             size=TEXT_SM,
             color=SURFACE_WARM,
             text_align=ft.TextAlign.CENTER,
         ),
         pin_trailing_to_bottom=True,
         destinations=[
-            ft.NavigationRailDestination(
-                icon=ft.Icons.EDIT_NOTE, label="灵感缓存"
-            ),
-            ft.NavigationRailDestination(
-                icon=ft.Icons.DESCRIPTION_OUTLINED, label="配方票编辑"
-            ),
-            ft.NavigationRailDestination(
-                icon=ft.Icons.FOLDER_OUTLINED, label="本地文件库"
-            ),
+            ft.NavigationRailDestination(icon=ft.Icons.EDIT_NOTE, label="纸片"),
+            ft.NavigationRailDestination(icon=ft.Icons.STYLE, label="Flashcard"),
+            ft.NavigationRailDestination(icon=ft.Icons.FOLDER_OUTLINED, label="本地文件库"),
         ],
         on_change=on_nav_change,
     )
-
     page.add(
         ft.Row(
-            controls=[
-                nav,
-                ft.VerticalDivider(width=3, color=ACCENT),
-                body,
-            ],
+            controls=[nav, ft.VerticalDivider(width=3, color=ACCENT), body],
             expand=True,
         )
     )
-
-    # Land on a fresh capture — the 3-minute path starts here.
-    show_cache(None)
+    show_paper()
 
 
 def _build_vault_picker(page: ft.Page) -> None:
-    """Show a minimal vault picker when no valid vault is configured.
-
-    A text path field + "Create / Open vault" button: calls ``init_vault``
-    (idempotent, non-destructive) then ``set_vault`` to record it, then enters
-    the shell. A text path is the accepted MVP fallback (Flet 0.85's directory
-    FilePicker uses a different async event model not needed here).
-    """
+    """Offer a minimal local folder picker when no valid vault is configured."""
     apply_theme(page)
     page.controls.clear()
     page.scroll = ft.ScrollMode.AUTO
-
-    default = ""
     existing = get_vault(CONFIG_PATH)
-    if existing is not None:
-        default = str(existing)
-
-    path_field = single_line_field("Vault 文件夹路径", default)
+    path_field = single_line_field("Vault 文件夹路径", str(existing) if existing is not None else "")
     path_field.hint_text = str(Path.home() / "keikeu-vault")
     path_field.expand = True
     error_text = ft.Text("", color=ft.Colors.ERROR)
@@ -264,7 +201,7 @@ def _build_vault_picker(page: ft.Page) -> None:
             return
         vault = Path(raw).expanduser()
         try:
-            init_vault(vault)  # idempotent; never clobbers existing data
+            init_vault(vault)
             set_vault(vault, CONFIG_PATH)
             rebuild_index(vault)
         except (OSError, ValueError) as ex:
@@ -284,22 +221,13 @@ def _build_vault_picker(page: ft.Page) -> None:
             bgcolor=BG,
             expand=True,
             content=paper_card(
-            controls=[
-                ft.Text(
-                    "打开或创建 Vault",
-                    size=28,
-                    color=FG,
-                    font_family=FONT_DISPLAY,
-                    weight=ft.FontWeight.W_400,
-                ),
-                ft.Text(
-                    "Vault 是保存灵感缓存与本地 Markdown 大纲的文件夹。",
-                    color=MUTED,
-                ),
-                path_field,
-                primary_button("创建 / 打开 Vault", on_open),
-                error_text,
-            ],
+                controls=[
+                    ft.Text("打开或创建 Vault", size=28, color=FG, font_family=FONT_DISPLAY, weight=ft.FontWeight.W_400),
+                    ft.Text("Vault 保存你的 Paper Markdown；索引可随时从 Paper 重建。", color=MUTED),
+                    path_field,
+                    primary_button("创建 / 打开 Vault", on_open),
+                    error_text,
+                ],
                 key="vault-picker-paper-card",
                 spacing=SPACE_4,
             ),
@@ -308,11 +236,10 @@ def _build_vault_picker(page: ft.Page) -> None:
 
 
 def main(page: ft.Page) -> None:
-    """Flet view builder. Resolves the vault, then shows shell or picker."""
+    """Flet view builder: show the selected v2 vault or the local picker."""
     page.title = "keikeu"
     _configure_window(page)
     apply_theme(page)
-
     vault = get_vault(CONFIG_PATH)
     if vault is not None and is_vault(vault):
         _build_shell(page, vault)
@@ -321,7 +248,7 @@ def main(page: ft.Page) -> None:
 
 
 def run() -> None:
-    """No-arg console entry point: launch the Flet app."""
+    """No-argument console entry point."""
     ft.run(main)
 
 

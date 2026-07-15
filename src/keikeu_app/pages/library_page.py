@@ -1,12 +1,4 @@
-"""Library page: browse caches and outlines, search, filter, and open one.
-
-GUI layer only. Listing comes from ``keikeu_core.indexer`` (``list_caches`` /
-``list_outlines``), which reads the rebuildable index derived from the user's
-Markdown. This module never parses Markdown or JSON itself; it only filters the
-flat entry dicts and routes a click back to the right editor page.
-
-No cloud, login, AI, database, or graph view (out of scope before MVP).
-"""
+"""Paper Library: local search, asset health, recovery, and OS handoff."""
 
 from __future__ import annotations
 
@@ -18,16 +10,13 @@ from typing import TYPE_CHECKING
 import flet as ft
 
 from keikeu_app.theme import (
-    ACCENT,
     BORDER,
     FG,
     FONT_DISPLAY,
     MUTED,
-    RADIUS_SM,
     SPACE_3,
     SPACE_4,
     SPACE_6,
-    SURFACE,
 )
 from keikeu_app.widgets import (
     danger_button,
@@ -36,27 +25,17 @@ from keikeu_app.widgets import (
     paper_card,
     single_line_field,
 )
-from keikeu_core.indexer import list_caches, list_outlines, rebuild_index
-from keikeu_core.models import CacheStatus
-from keikeu_core.vault import soft_delete
+from keikeu_core.indexer import list_index_errors, list_papers, rebuild_index
+from keikeu_core.vault import list_trashed_papers, restore_paper, soft_delete
 
 if TYPE_CHECKING:
     from keikeu_app.main import AppContext
 
 __all__ = ["build_library_page"]
 
-_ALL = "all"
-
-_STATUS_FILTER_LABELS = {
-    CacheStatus.RAW: "raw — 刚存，未处理",
-    CacheStatus.DRAFTING: "drafting — 已开始转配方票",
-    CacheStatus.OUTLINED: "outlined — 已生成大纲",
-    CacheStatus.ARCHIVED: "archived — 封存",
-}
-
 
 def _open_command(path: Path) -> list[str]:
-    """Return the platform command for opening ``path``."""
+    """Return the platform command for opening a file with its default app."""
     system = platform.system()
     if system == "Darwin":
         return ["open", str(path)]
@@ -66,17 +45,13 @@ def _open_command(path: Path) -> list[str]:
 
 
 def _reveal_command(path: Path) -> list[str]:
-    """Return the platform command for revealing ``path`` in the file manager."""
+    """Return the platform command for showing a file in its file manager."""
     if platform.system() == "Darwin":
-        if path.is_dir():
-            return ["open", str(path)]
-        return ["open", "-R", str(path)]
-    target = path if path.is_dir() else path.parent
-    return _open_command(target)
+        return ["open", str(path)] if path.is_dir() else ["open", "-R", str(path)]
+    return _open_command(path if path.is_dir() else path.parent)
 
 
 def _run_system_command(page: ft.Page, command: list[str], action: str) -> None:
-    """Run a system launcher command, reporting failures without crashing."""
     try:
         subprocess.run(command, check=True)
     except (OSError, subprocess.SubprocessError) as ex:
@@ -84,166 +59,186 @@ def _run_system_command(page: ft.Page, command: list[str], action: str) -> None:
 
 
 def _open_with_system(page: ft.Page, path: Path) -> None:
-    """Open ``path`` with the OS default app."""
     _run_system_command(page, _open_command(path), "打开文件")
 
 
 def _reveal_in_folder(page: ft.Page, path: Path) -> None:
-    """Reveal ``path`` in the OS file manager, or open its folder fallback."""
     _run_system_command(page, _reveal_command(path), "在文件夹中显示")
 
 
 def build_library_page(ctx: "AppContext") -> ft.Control:
-    """Build the library browser with a title search and a status filter."""
+    """Build one-search Paper Library with health and recovery sections."""
     page = ctx.page
-
-    search_field = single_line_field("搜索标题")
-    search_field.width = 360
-    status_dd = ft.Dropdown(
-        label="状态筛选",
-        value=_ALL,
-        options=[ft.dropdown.Option(key=_ALL, text="全部")]
-        + [
-            ft.dropdown.Option(key=status.value, text=label)
-            for status, label in _STATUS_FILTER_LABELS.items()
-        ],
-        width=240,
-        bgcolor=SURFACE,
-        border_color=BORDER,
-        focused_border_color=ACCENT,
-        border_radius=RADIUS_SM,
-        color=FG,
-    )
-
+    search_field = single_line_field("搜索代号、Summary 或 Tags")
+    search_field.width = 420
     results = ft.Column(controls=[], scroll=ft.ScrollMode.AUTO, expand=True)
 
-    def _open_cache(rel_path: str) -> None:
-        ctx.open_cache(ctx.vault / rel_path)
+    def _paper_row(entry: dict[str, object]) -> ft.Control:
+        rel_path = str(entry["path"])
+        code = str(entry["code"])
+        summary = str(entry["summary"])
+        tags = [tag for tag in entry.get("tags", []) if isinstance(tag, str)]
 
-    def _open_outline(rel_path: str) -> None:
-        ctx.open_outline(ctx.vault / rel_path)
+        def on_edit(_: ft.ControlEvent) -> None:
+            ctx.open_paper(ctx.vault / rel_path)
 
-    def _row(entry: dict, kind: str) -> ft.Control:
-        title = entry.get("title") or "（无标题）"
-        subtitle_bits = ["灵感" if kind == "cache" else "大纲"]
-        if kind == "cache":
-            subtitle_bits.append(entry.get("status", ""))
-        else:
-            subtitle_bits.append(entry.get("ending_type", ""))
-        subtitle_bits.append(entry.get("updated", ""))
-        rel_path = entry["path"]
-
-        def on_open(_: ft.ControlEvent, rp: str = rel_path, k: str = kind) -> None:
-            if k == "cache":
-                _open_cache(rp)
-            else:
-                _open_outline(rp)
-
-        def on_delete(_: ft.ControlEvent, rp: str = rel_path) -> None:
+        def on_delete(_: ft.ControlEvent) -> None:
             try:
-                soft_delete(ctx.vault, rp)
+                soft_delete(ctx.vault, rel_path)
                 rebuild_index(ctx.vault)
                 notify(page, "已移入回收站")
-                refresh(None)
-            except Exception as ex:
-                notify(page, f"无法删除文件：{ex}")
-
-        def on_system_open(_: ft.ControlEvent, rp: str = rel_path) -> None:
-            _open_with_system(page, ctx.vault / rp)
-
-        def on_reveal(_: ft.ControlEvent, rp: str = rel_path) -> None:
-            _reveal_in_folder(page, ctx.vault / rp)
+                refresh()
+            except (OSError, ValueError, FileExistsError) as ex:
+                notify(page, f"无法删除 Paper：{ex}")
 
         tile = ft.ListTile(
-            title=ft.Text(title),
-            subtitle=ft.Text("  ·  ".join(b for b in subtitle_bits if b)),
-            leading=ft.Icon(
-                ft.Icons.EDIT_NOTE if kind == "cache" else ft.Icons.DESCRIPTION_OUTLINED,
-                color=MUTED,
-            ),
-            on_click=on_open,
-        )
-        actions = ft.Row(
-                controls=[
-                    ft.OutlinedButton(content=ft.Text("打开"), on_click=on_system_open),
-                    ft.OutlinedButton(content=ft.Text("在文件夹中显示"), on_click=on_reveal),
-                    danger_button("删除", on_delete),
-                ],
-                wrap=True,
-                spacing=SPACE_3,
-                alignment=ft.MainAxisAlignment.END,
+            title=ft.Text(code),
+            subtitle=ft.Text(summary),
+            leading=ft.Icon(ft.Icons.EDIT_NOTE, color=MUTED),
+            on_click=on_edit,
         )
         return ft.Container(
-            content=ft.Column(controls=[tile, actions], spacing=4),
-            padding=ft.Padding.only(bottom=SPACE_3),
+            content=ft.Column(
+                controls=[
+                    tile,
+                    ft.Text("Tags：" + ("、".join(tags) if tags else "未添加"), size=12, color=MUTED),
+                    ft.Row(
+                        controls=[
+                            ft.OutlinedButton(content=ft.Text("编辑"), on_click=on_edit),
+                            ft.OutlinedButton(
+                                content=ft.Text("打开 Flashcard"),
+                                on_click=lambda _e: ctx.open_flashcards(code),
+                            ),
+                            ft.OutlinedButton(
+                                content=ft.Text("打开"),
+                                on_click=lambda _e: _open_with_system(page, ctx.vault / rel_path),
+                            ),
+                            ft.OutlinedButton(
+                                content=ft.Text("在文件夹中显示"),
+                                on_click=lambda _e: _reveal_in_folder(page, ctx.vault / rel_path),
+                            ),
+                            danger_button("删除", on_delete),
+                        ],
+                        wrap=True,
+                        spacing=SPACE_3,
+                    ),
+                ],
+                spacing=SPACE_3,
+            ),
+            padding=ft.Padding.only(bottom=SPACE_4),
             border=ft.Border.only(bottom=ft.BorderSide(width=1, color=BORDER)),
         )
 
-    def refresh(_: ft.ControlEvent | None = None) -> None:
+    def _recovery_row(rel_path: Path) -> ft.Control:
+        conflict_code = single_line_field("冲突时的新代号")
+        conflict_code.width = 240
+        message = ft.Text("", color=ft.Colors.ERROR, size=12)
+
+        def on_restore(_: ft.ControlEvent) -> None:
+            new_code = (conflict_code.value or "").strip() or None
+            try:
+                restore_paper(ctx.vault, str(rel_path), new_code=new_code)
+                rebuild_index(ctx.vault)
+                notify(page, "Paper 已恢复")
+                refresh()
+            except FileExistsError:
+                message.value = "现有 Paper 代号冲突；输入未占用的新代号后再恢复，或取消。"
+                page.update()
+            except (OSError, ValueError) as ex:
+                message.value = f"无法恢复 Paper：{ex}"
+                page.update()
+
+        return ft.Container(
+            content=ft.Column(
+                controls=[
+                    ft.Text(rel_path.name, color=FG),
+                    ft.Row(
+                        controls=[
+                            conflict_code,
+                            ft.OutlinedButton(content=ft.Text("恢复"), on_click=on_restore),
+                        ],
+                        wrap=True,
+                        spacing=SPACE_3,
+                    ),
+                    message,
+                ],
+                spacing=SPACE_3,
+            ),
+            padding=ft.Padding.only(bottom=SPACE_4),
+            border=ft.Border.only(bottom=ft.BorderSide(width=1, color=BORDER)),
+        )
+
+    def refresh(_: ft.ControlEvent | None = None, *, rebuild: bool = False) -> None:
+        if rebuild:
+            rebuild_index(ctx.vault)
         query = (search_field.value or "").strip().lower()
-        status_filter = status_dd.value or _ALL
+        papers = list_papers(ctx.vault)
+        errors = list_index_errors(ctx.vault)
+        trashed = list_trashed_papers(ctx.vault)
+        visible = [
+            entry
+            for entry in papers
+            if query in " ".join(
+                [
+                    str(entry.get("code", "")),
+                    str(entry.get("summary", "")),
+                    *[tag for tag in entry.get("tags", []) if isinstance(tag, str)],
+                ]
+            ).lower()
+        ]
 
         results.controls.clear()
-
-        caches = list_caches(ctx.vault)
-        outlines = list_outlines(ctx.vault)
-
-        def matches_title(entry: dict) -> bool:
-            return query in (entry.get("title") or "").lower()
-
-        cache_rows = [
-            _row(e, "cache")
-            for e in caches
-            if matches_title(e)
-            and (status_filter == _ALL or e.get("status") == status_filter)
-        ]
-        # The status filter is cache-specific; when a concrete status is
-        # selected, outlines (which have no status) are hidden.
-        outline_rows = (
-            [_row(e, "outline") for e in outlines if matches_title(e)]
-            if status_filter == _ALL
-            else []
-        )
-
         results.controls.append(
-            ft.Text(
-                f"灵感缓存 · {len(cache_rows)}",
-                size=18,
-                font_family=FONT_DISPLAY,
-                color=FG,
-            )
+            ft.Text(f"Paper · {len(visible)}", size=18, font_family=FONT_DISPLAY, color=FG)
         )
-        results.controls.extend(cache_rows or [ft.Text("暂无灵感缓存", color=MUTED)])
+        results.controls.extend(_paper_row(entry) for entry in visible)
+        if not visible:
+            results.controls.append(ft.Text("暂无符合条件的 Paper", color=MUTED))
+
         results.controls.append(ft.Divider())
         results.controls.append(
-            ft.Text(
-                f"大纲 · {len(outline_rows)}",
-                size=18,
-                font_family=FONT_DISPLAY,
-                color=FG,
-            )
+            ft.Text(f"资产健康 · {len(errors)}", size=18, font_family=FONT_DISPLAY, color=FG)
         )
-        results.controls.extend(outline_rows or [ft.Text("暂无大纲", color=MUTED)])
+        if errors:
+            for error in errors:
+                results.controls.append(
+                    ft.Text(
+                        f"损坏 Paper：{error.get('path', '')} — {error.get('reason', '')}",
+                        color=ft.Colors.ERROR,
+                    )
+                )
+        else:
+            results.controls.append(ft.Text("所有活动 Paper 都可读取。", color=MUTED))
+
+        results.controls.append(ft.Divider())
+        results.controls.append(
+            ft.Text(f"回收站 · {len(trashed)}", size=18, font_family=FONT_DISPLAY, color=FG)
+        )
+        results.controls.extend(_recovery_row(path) for path in trashed)
+        if not trashed:
+            results.controls.append(ft.Text("回收站为空。", color=MUTED))
         page.update()
 
-    # TextField fires on_change; Dropdown (Flet 0.85) fires on_select.
     search_field.on_change = refresh
-    status_dd.on_select = refresh
+    refresh()
 
-    refresh(None)
-
-    filters = ft.Row(
-        controls=[
-            search_field,
-            status_dd,
-            ft.OutlinedButton(content=ft.Text("刷新"), on_click=refresh),
-        ],
-        wrap=True,
-        spacing=SPACE_3,
-        vertical_alignment=ft.CrossAxisAlignment.END,
-    )
     library_card = paper_card(
-        [filters, ft.Divider(), results],
+        [
+            ft.Row(
+                controls=[
+                    search_field,
+                    ft.OutlinedButton(
+                        content=ft.Text("刷新"),
+                        on_click=lambda _e: refresh(rebuild=True),
+                    ),
+                ],
+                wrap=True,
+                spacing=SPACE_3,
+                vertical_alignment=ft.CrossAxisAlignment.END,
+            ),
+            ft.Divider(),
+            results,
+        ],
         key="library-paper-card",
         spacing=SPACE_4,
         expand=True,
@@ -258,7 +253,6 @@ def build_library_page(ctx: "AppContext") -> ft.Control:
                         width=360,
                         max_lines=2,
                         overflow=ft.TextOverflow.ELLIPSIS,
-                        tooltip=str(ctx.vault),
                         color=MUTED,
                     ),
                     ft.OutlinedButton(
@@ -273,14 +267,9 @@ def build_library_page(ctx: "AppContext") -> ft.Control:
         key="library-vault-card",
         spacing=SPACE_3,
     )
-
     return ft.Column(
         controls=[
-            page_header(
-                "本地文件库",
-                "所有灵感与大纲，都在你的 keikeu vault 里。",
-                "VAULT · 本地资产",
-            ),
+            page_header("本地文件库", "按代号、Summary 或 Tags 查找你的 Paper。", "VAULT · PAPER 资产"),
             library_card,
             vault_card,
         ],
