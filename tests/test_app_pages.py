@@ -10,8 +10,10 @@ from typing import Iterable
 import flet as ft
 
 from keikeu_app import main as app_main
+from keikeu_app.local_state import get_card_index, load_card_positions, set_card_index
 from keikeu_app.main import AppContext
 from keikeu_app.pages import library_page as library_page_mod
+from keikeu_app.pages.flashcard_page import build_flashcard_page
 from keikeu_app.pages.library_page import build_library_page
 from keikeu_app.pages.paper_page import build_paper_page
 from keikeu_core.indexer import rebuild_index
@@ -83,20 +85,25 @@ def _texts(root: object) -> list[str]:
     ]
 
 
-def _paper(code: str, summary: str, tags: list[str] | None = None) -> Paper:
+def _paper(
+    code: str,
+    summary: str,
+    tags: list[str] | None = None,
+    highlights: list[str] | None = None,
+) -> Paper:
     return Paper(
         code=code,
         initial_summary="",
         summary=summary,
-        highlights=[],
+        highlights=highlights or [],
         tags=tags or [],
         created=datetime(2026, 7, 14, 9, 0),
         updated=datetime(2026, 7, 14, 9, 0),
     )
 
 
-def _ctx(page: FakePage, vault: Path) -> AppContext:
-    return AppContext(page=page, vault=vault)  # type: ignore[arg-type]
+def _ctx(page: FakePage, vault: Path, state_path: Path | None = None) -> AppContext:
+    return AppContext(page=page, vault=vault, state_path=state_path)  # type: ignore[arg-type]
 
 
 def test_shell_uses_paper_flashcard_and_library_navigation(tmp_path):
@@ -186,7 +193,9 @@ def test_rename_is_explicit_and_rebuilds_the_library_index(tmp_path):
     init_vault(tmp_path)
     source = write_paper(tmp_path, _paper("K-20260714-001", "Summary."))
     rebuild_index(tmp_path)
-    root = build_paper_page(_ctx(FakePage(), tmp_path), source)
+    state_path = tmp_path / "device-state.json"
+    set_card_index("K-20260714-001", 1, 3, state_path)
+    root = build_paper_page(_ctx(FakePage(), tmp_path, state_path), source)
 
     _text_field(root, "新代号").value = "K-20260714-002"
     _button(root, "重命名").on_click(None)
@@ -195,6 +204,61 @@ def test_rename_is_explicit_and_rebuilds_the_library_index(tmp_path):
     assert not source.exists()
     assert read_paper(target).code == "K-20260714-002"
     assert "K-20260714-002" in [entry["code"] for entry in rebuild_index(tmp_path)["papers"]]
+    assert load_card_positions(state_path) == {"K-20260714-002": 1}
+
+
+def test_flashcard_is_summary_first_read_only_and_remembers_position(tmp_path):
+    init_vault(tmp_path)
+    paper = _paper(
+        "K-20260714-001",
+        "Current Summary.",
+        highlights=["First writing anchor.", "Second writing anchor."],
+    )
+    path = write_paper(tmp_path, paper)
+    state_path = tmp_path / "device-state.json"
+    page = FakePage()
+    ctx = _ctx(page, tmp_path, state_path)
+    opened: dict[str, Path] = {}
+    ctx.open_paper = lambda opened_path: opened.update(path=opened_path)
+
+    root = build_flashcard_page(ctx, paper.code)
+    assert "Current Summary." in _texts(root)
+    assert "1 / 3" in _texts(root)
+    assert not [control for control in _walk(root) if isinstance(control, ft.TextField)]
+
+    _button(root, "下一张").on_click(None)
+    assert "First writing anchor." in _texts(root)
+    assert "2 / 3" in _texts(root)
+    assert _control_by_key(root, "flashcard-summary-context").visible is False
+
+    _button(root, "查看当前 Summary").on_click(None)
+    assert _control_by_key(root, "flashcard-summary-context").visible is True
+    _button(root, "返回 Paper").on_click(None)
+    assert opened["path"] == path
+
+    reopened = build_flashcard_page(_ctx(FakePage(), tmp_path, state_path), paper.code)
+    assert "2 / 3" in _texts(reopened)
+    assert get_card_index(paper.code, 3, state_path) == 1
+
+    state_path.unlink()
+    reset_view = build_flashcard_page(_ctx(FakePage(), tmp_path, state_path), paper.code)
+    assert "1 / 3" in _texts(reset_view)
+    assert read_paper(path).summary == "Current Summary."
+
+
+def test_library_opens_flashcard_with_the_selected_paper_code(tmp_path):
+    init_vault(tmp_path)
+    paper = _paper("K-20260714-001", "Focus this paper.")
+    write_paper(tmp_path, paper)
+    rebuild_index(tmp_path)
+    ctx = _ctx(FakePage(), tmp_path)
+    opened: list[str | None] = []
+    ctx.open_flashcards = lambda code: opened.append(code)
+
+    root = build_library_page(ctx)
+    _button(root, "打开 Flashcard").on_click(None)
+
+    assert opened == [paper.code]
 
 
 def test_library_searches_code_summary_and_tags_and_opens_paper(tmp_path):

@@ -3,7 +3,7 @@
 > Road：macOS Paper–Flashcard Core  
 > 行为规范：[`spec_road_v0_2.md`](spec_road_v0_2.md)  
 > 产品真理：[`../../appdesign.md`](../../appdesign.md)  
-> 状态：Phase 4 完成，等待 Phase 5（2026-07-14）
+> 状态：Phase 5 完成，等待 Phase 6（2026-07-14）
 
 当前代码对照与测试基线见 [`audit_v01_to_v02_2026-07-13.md`](audit_v01_to_v02_2026-07-13.md)：`0d3d5fb` 上 `113 passed`。
 

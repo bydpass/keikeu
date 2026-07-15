@@ -12,7 +12,7 @@ from typing import Callable
 
 import flet as ft
 
-from keikeu_app.pages import build_library_page, build_paper_page
+from keikeu_app.pages import build_flashcard_page, build_library_page, build_paper_page
 from keikeu_app.theme import (
     ACCENT,
     ACCENT_ON,
@@ -29,7 +29,7 @@ from keikeu_app.theme import (
     TEXT_SM,
     apply_theme,
 )
-from keikeu_app.widgets import notify, page_header, paper_card, primary_button, single_line_field
+from keikeu_app.widgets import notify, paper_card, primary_button, single_line_field
 from keikeu_core.indexer import rebuild_index
 from keikeu_core.vault import get_vault, init_vault, is_vault, set_vault
 
@@ -50,6 +50,7 @@ class AppContext:
 
     page: ft.Page
     vault: Path
+    state_path: Path | None = None
     open_paper: Callable[[Path | None], None] = field(default=lambda _path: None)
     open_flashcards: Callable[[str | None], None] = field(default=lambda _code: None)
     open_library: Callable[[], None] = field(default=lambda: None)
@@ -58,33 +59,6 @@ class AppContext:
 def _configure_window(page: ft.Page) -> None:
     page.window.width = INITIAL_WINDOW_WIDTH
     page.window.height = INITIAL_WINDOW_HEIGHT
-
-
-def _flashcard_placeholder(code: str | None = None) -> ft.Control:
-    """Keep the Phase 4 navigation honest without implementing Phase 5 state."""
-    return ft.Column(
-        controls=[
-            page_header(
-                "Flashcard",
-                "Summary-first 的只读聚焦视图将在下一 Phase 提供。",
-                "FLASHCARD · 即将可用",
-            ),
-            paper_card(
-                [
-                    ft.Text("Flashcard 正在准备中", size=24, font_family=FONT_DISPLAY),
-                    ft.Text(
-                        f"{code} 已准备好进入卡组。" if code else "先保存并打开一张 Paper。",
-                        color=MUTED,
-                    ),
-                ],
-                key="flashcard-placeholder-card",
-                spacing=SPACE_4,
-            ),
-        ],
-        spacing=SPACE_8,
-        scroll=ft.ScrollMode.AUTO,
-        expand=True,
-    )
 
 
 def _build_shell(page: ft.Page, vault: Path) -> None:
@@ -104,9 +78,12 @@ def _build_shell(page: ft.Page, vault: Path) -> None:
             notify(page, f"无法打开 Paper：{ex}")
 
     def show_flashcards(code: str | None = None) -> None:
-        nav.selected_index = _NAV_FLASHCARD
-        body.content = _flashcard_placeholder(code)
-        page.update()
+        try:
+            nav.selected_index = _NAV_FLASHCARD
+            body.content = build_flashcard_page(ctx, code)
+            page.update()
+        except Exception as ex:
+            notify(page, f"无法打开 Flashcard：{ex}")
 
     def show_library() -> None:
         try:

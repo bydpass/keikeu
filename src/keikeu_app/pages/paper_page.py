@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 
 import flet as ft
 
+from keikeu_app.local_state import move_card_position
 from keikeu_app.theme import (
     BORDER_SOFT,
     FG,
@@ -221,14 +222,20 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
             page.update()
             return
         try:
-            target = rename_paper(ctx.vault, stored.code, rename_field.value or "")
+            old_code = stored.code
+            target = rename_paper(ctx.vault, old_code, rename_field.value or "")
             state["path"] = target
             state["paper"] = read_paper(target)
             code_field.value = state["paper"].code  # type: ignore[union-attr]
             rename_field.value = ""
             save_error.value = ""
             rebuild_index(ctx.vault)
-            notify(page, "Paper 已重命名")
+            try:
+                move_card_position(old_code, state["paper"].code, ctx.state_path)  # type: ignore[union-attr]
+                status = "Paper 已重命名"
+            except OSError:
+                status = "Paper 已重命名；Flashcard 位置未能保存，下次将从 Summary 开始"
+            notify(page, status)
             page.update()
         except (OSError, ValueError, FileExistsError) as ex:
             save_error.value = f"无法重命名 Paper：{ex}"
