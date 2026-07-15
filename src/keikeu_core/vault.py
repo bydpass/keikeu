@@ -1,25 +1,9 @@
-"""Local vault layout and config resolution for keikeu (appdesign.md Step 3).
+"""Paper v2 vault layout, recovery bin, and local config resolution.
 
-Pure Python. No Flet, no GUI, no third-party dependencies.
-
-A vault is a user-chosen directory holding two asset folders and a
-rebuildable metadata index::
-
-    <vault>/
-        cache/                 # inspiration caches (灵感缓存)
-        outlines/              # outline Markdown (大纲)
-        .trash/cache/          # soft-deleted caches
-        .trash/outlines/       # soft-deleted outlines
-        keikeu_index.json      # auxiliary, rebuildable from Markdown alone
-
-Markdown files are the user asset; ``keikeu_index.json`` is auxiliary and
-must be rebuildable from Markdown alone (product invariant 2). Init must
-therefore never clobber an existing index.
-
-The config file records which directory is the active vault. Its location
-differs between desktop and mobile, so this layer takes an injected
-``config_path`` and never hardcodes ``~/.keikeu_config.json``; the Flet
-layer decides where config lives.
+The user-selected vault holds only durable Paper Markdown and a disposable
+index.  Recovery moves a file under ``.trash/cache``; it never copies or
+rewrites an asset unless a code collision requires an explicitly requested
+new Paper code.
 """
 
 from __future__ import annotations
@@ -28,71 +12,66 @@ import json
 import secrets
 from pathlib import Path
 
+from keikeu_core.markdown_io import copy_paper_with_code, read_paper
+from keikeu_core.models import validate_paper_code
+
 __all__ = [
     "init_vault",
     "is_vault",
     "soft_delete",
+    "list_trashed_papers",
+    "restore_paper",
     "get_vault",
     "set_vault",
 ]
 
-# Empty index written only when one does not already exist.
-_EMPTY_INDEX: dict[str, object] = {"version": 1, "caches": [], "outlines": []}
+_EMPTY_INDEX: dict[str, object] = {"version": 2, "papers": [], "errors": []}
 
 
-def _index_path(path: Path) -> Path:
-    """Return the index file path inside vault directory ``path``."""
-    return path / "keikeu_index.json"
+def _index_path(vault: Path) -> Path:
+    return vault / "keikeu_index.json"
 
 
 def _write_json(target: Path, obj: object) -> None:
-    """Write ``obj`` as JSON to ``target`` with the project's fixed style.
-
-    Uses ``indent=2``, ``ensure_ascii=False`` (fandom text is often CJK),
-    and a trailing newline so the file is diff-friendly.
-    """
-    with target.open("w", encoding="utf-8") as fh:
-        json.dump(obj, fh, indent=2, ensure_ascii=False)
-        fh.write("\n")
+    with target.open("w", encoding="utf-8") as handle:
+        json.dump(obj, handle, indent=2, ensure_ascii=False)
+        handle.write("\n")
 
 
 def init_vault(path: Path) -> None:
-    """Create the vault layout at ``path``, idempotently and non-destructively.
+    """Create the v2 Paper layout without changing existing user data.
 
-    Creates ``path/``, ``path/cache/``, ``path/outlines/`` and matching
-    ``path/.trash/`` subdirectories (parents and existing directories are
-    tolerated). Writes ``keikeu_index.json`` ONLY
-    if it does not already exist, so calling this twice — or pointing it at
-    an existing vault — never overwrites user data in the index.
+    New vaults contain ``cache/``, ``.trash/cache/``, and a v2 empty index.
+    Existing Outline directories and an existing index are left untouched so
+    this helper cannot damage a vault that still needs migration.
     """
     path.mkdir(parents=True, exist_ok=True)
     (path / "cache").mkdir(parents=True, exist_ok=True)
-    (path / "outlines").mkdir(parents=True, exist_ok=True)
     (path / ".trash" / "cache").mkdir(parents=True, exist_ok=True)
-    (path / ".trash" / "outlines").mkdir(parents=True, exist_ok=True)
-    index = _index_path(path)
-    if not index.exists():
-        _write_json(index, _EMPTY_INDEX)
+    index_path = _index_path(path)
+    if not index_path.exists():
+        _write_json(index_path, _EMPTY_INDEX)
 
 
 def is_vault(path: Path) -> bool:
-    """Return True iff ``path`` is a fully-formed keikeu vault.
+    """Return whether ``path`` has the minimum usable v2 vault structure."""
+    return path.is_dir() and (path / "cache").is_dir() and _index_path(path).is_file()
 
-    Requires ``path`` to be a directory containing both ``cache/`` and
-    ``outlines/`` directories and a ``keikeu_index.json`` file. Returns
-    False (never raises) for a missing or partial layout.
-    """
-    return (
-        path.is_dir()
-        and _index_path(path).is_file()
-        and (path / "cache").is_dir()
-        and (path / "outlines").is_dir()
-    )
+
+def _direct_asset_path(vault: Path, rel_path: str, parent: tuple[str, ...]) -> Path:
+    """Resolve a direct Markdown asset path below one allowed vault directory."""
+    rel = Path(rel_path)
+    if rel.is_absolute() or rel.parts[: len(parent)] != parent or len(rel.parts) != len(parent) + 1:
+        expected = "/".join(parent) + "/*.md"
+        raise ValueError(f"expected {expected}")
+    if rel.suffix != ".md" or not rel.stem:
+        expected = "/".join(parent) + "/*.md"
+        raise ValueError(f"expected {expected}")
+    return vault / rel
 
 
 def _soft_delete_target(vault: Path, source: Path) -> Path:
-    """Return a non-existing trash destination for ``source``."""
-    trash_dir = vault / ".trash" / source.parent.name
+    trash_dir = vault / ".trash" / "cache"
     trash_dir.mkdir(parents=True, exist_ok=True)
     target = trash_dir / source.name
     while target.exists():
@@ -101,58 +80,80 @@ def _soft_delete_target(vault: Path, source: Path) -> Path:
 
 
 def soft_delete(vault: Path, rel_path: str) -> Path:
-    """Move a cache/outline Markdown file into ``.trash`` and return its path.
+    """Move an active ``cache/*.md`` Paper to recovery without overwriting.
 
-    Only direct vault asset paths are accepted: ``cache/*.md`` or
-    ``outlines/*.md``. The move preserves file bytes exactly and never
-    overwrites an existing trash file; duplicate names receive a short random
-    suffix.
+    The file move preserves bytes exactly.  A duplicate recovery filename gains
+    a random suffix; its Paper frontmatter remains the durable code authority.
     """
-    rel = Path(rel_path)
-    if (
-        rel.is_absolute()
-        or len(rel.parts) != 2
-        or rel.parts[0] not in {"cache", "outlines"}
-        or rel.suffix != ".md"
-    ):
-        raise ValueError("soft_delete expects cache/*.md or outlines/*.md")
-
-    source = vault / rel
+    source = _direct_asset_path(vault, rel_path, ("cache",))
     target = _soft_delete_target(vault, source)
     source.replace(target)
     return target
 
 
-def get_vault(config_path: Path) -> Path | None:
-    """Return the configured vault path, or None if it cannot be resolved.
+def list_trashed_papers(vault: Path) -> list[Path]:
+    """Return sorted vault-relative paths for all direct recovery files."""
+    trash_dir = vault / ".trash" / "cache"
+    if not trash_dir.is_dir():
+        return []
+    return [path.relative_to(vault) for path in sorted(trash_dir.glob("*.md"))]
 
-    Reads the JSON object at ``config_path`` and returns ``Path(obj["vault"])``
-    when present. Returns None — never raises — when the file is missing,
-    unreadable, not valid JSON, not a JSON object, or lacks a ``"vault"`` key.
+
+def restore_paper(vault: Path, rel_path: str, new_code: str | None = None) -> Path:
+    """Restore a trashed Paper, requiring a new code only on active collision.
+
+    A normal restore moves the original file bytes to its code-derived active
+    path.  If that code is already active, the caller must either cancel or
+    supply an unused ``new_code``.  The latter rewrites only the Paper code via
+    ``markdown_io`` while preserving the frozen draft and current Summary.
     """
+    source = _direct_asset_path(vault, rel_path, (".trash", "cache"))
+    paper = read_paper(source)
+    target = vault / "cache" / f"{paper.code}.md"
+    target.parent.mkdir(parents=True, exist_ok=True)
+
+    if not target.exists():
+        if new_code is not None and validate_paper_code(new_code) != paper.code:
+            new_target = vault / "cache" / f"{new_code}.md"
+            if new_target.exists():
+                raise FileExistsError(f"Paper already exists: {new_target}")
+            copy_paper_with_code(source, new_target, new_code)
+            try:
+                source.unlink()
+            except OSError:
+                new_target.unlink(missing_ok=True)
+                raise
+            return new_target
+        source.replace(target)
+        return target
+
+    if new_code is None:
+        raise FileExistsError("Paper code is already active; choose a new Paper code or cancel")
+    new_code = validate_paper_code(new_code)
+    target = vault / "cache" / f"{new_code}.md"
+    if target.exists():
+        raise FileExistsError(f"Paper already exists: {target}")
+    copy_paper_with_code(source, target, new_code)
     try:
-        with config_path.open("r", encoding="utf-8") as fh:
-            obj = json.load(fh)
+        source.unlink()
+    except OSError:
+        target.unlink(missing_ok=True)
+        raise
+    return target
+
+
+def get_vault(config_path: Path) -> Path | None:
+    """Return the configured vault path, or ``None`` for absent/bad config."""
+    try:
+        with config_path.open("r", encoding="utf-8") as handle:
+            obj = json.load(handle)
     except (OSError, ValueError):
-        # OSError: missing/unreadable. ValueError: invalid JSON
-        # (json.JSONDecodeError is a ValueError subclass).
         return None
-    if not isinstance(obj, dict) or "vault" not in obj:
-        return None
-    value = obj["vault"]
-    # A syntactically valid but hand-edited/corrupt config may carry a
-    # non-string "vault" (number, null, list). Path(...) would raise TypeError,
-    # breaking the "never raises" contract, so treat it as unresolved.
-    if not isinstance(value, str):
-        return None
-    return Path(value)
+    value = obj.get("vault") if isinstance(obj, dict) else None
+    return Path(value) if isinstance(value, str) else None
 
 
 def set_vault(path: Path, config_path: Path) -> None:
-    """Record ``path`` as the active vault in the config at ``config_path``.
-
-    Creates ``config_path``'s parent directories if needed, then writes
-    ``{"vault": str(path)}`` in the project's fixed JSON style.
-    """
+    """Persist the selected vault path using the project's JSON style."""
     config_path.parent.mkdir(parents=True, exist_ok=True)
     _write_json(config_path, {"vault": str(path)})

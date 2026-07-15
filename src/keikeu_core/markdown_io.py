@@ -51,6 +51,7 @@ __all__ = [
     "write_paper",
     "read_paper",
     "update_paper",
+    "copy_paper_with_code",
     "rename_paper",
     "write_outline",
     "read_outline",
@@ -464,6 +465,19 @@ def _atomic_create_text(target: Path, text: str) -> None:
         temporary.unlink(missing_ok=True)
 
 
+def copy_paper_with_code(source: Path, destination: Path, new_code: str) -> None:
+    """Create ``destination`` from ``source`` with an explicit new Paper code.
+
+    The destination is created atomically without overwrite.  This is shared by
+    explicit rename and recovery-bin collision handling so both preserve the
+    stored initial draft, current Summary, and unknown frontmatter.
+    """
+    new_code = validate_paper_code(new_code)
+    paper = read_paper(source)
+    renamed = replace(paper, code=new_code)
+    _atomic_create_text(destination, _render_paper(renamed))
+
+
 def write_paper(vault: Path, paper: Paper) -> Path:
     """Persist a new Paper and freeze its initial Summary on first save.
 
@@ -558,8 +572,7 @@ def rename_paper(vault: Path, old_code: str, new_code: str) -> Path:
     existing = read_paper(source)
     if existing.code != old_code:
         raise ValueError("Paper filename and frontmatter code do not match")
-    renamed = replace(existing, code=new_code)
-    _atomic_create_text(target, _render_paper(renamed))
+    copy_paper_with_code(source, target, new_code)
     try:
         source.unlink()
     except OSError:

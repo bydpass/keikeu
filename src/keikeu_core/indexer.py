@@ -1,21 +1,8 @@
-"""Rebuildable metadata index for keikeu (appdesign.md Step 5).
+"""Rebuildable v2 Paper metadata index.
 
-Pure Python. No Flet, no GUI, no third-party dependencies.
-
-The index is ``<vault>/keikeu_index.json``, shaped::
-
-    {"version": 1, "caches": [...], "outlines": [...]}
-
-It exists only to make the GUI's list views fast; it is NOT the source of
-truth. Product invariant 2: the Markdown files are the user asset and the
-index is auxiliary, derivable from Markdown alone. So a missing or corrupt
-index is disposable — it is silently rebuilt by re-reading every cache and
-outline — but a user's Markdown file is never deleted or modified to "fix"
-the index.
-
-Parsing stays in :mod:`keikeu_core.markdown_io` (``read_cache`` /
-``read_outline``); this module only walks the vault, projects each parsed
-model down to a flat entry dict, and reads/writes the one JSON file.
+The index is only a local projection of active ``cache/*.md`` Papers.  Every
+file is read independently so one malformed asset becomes an ``errors`` entry
+instead of hiding valid Papers or changing any Markdown bytes.
 """
 
 from __future__ import annotations
@@ -23,142 +10,98 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from keikeu_core.markdown_io import read_cache, read_outline
-from keikeu_core.models import Cache, Outline
+from keikeu_core.markdown_io import read_paper
+from keikeu_core.models import Paper
 
 __all__ = [
     "rebuild_index",
     "load_index",
     "save_index",
-    "list_caches",
-    "list_outlines",
+    "list_papers",
+    "list_index_errors",
 ]
 
 
 def _index_path(vault: Path) -> Path:
-    """Return the index file path inside vault directory ``vault``."""
     return vault / "keikeu_index.json"
 
 
 def _write_json(target: Path, obj: object) -> None:
-    """Write ``obj`` as JSON to ``target`` with the project's fixed style.
-
-    Matches ``vault._write_json``: ``indent=2``, ``ensure_ascii=False`` (fandom
-    and titles are often CJK), and a trailing newline so diffs stay clean.
-    """
-    with target.open("w", encoding="utf-8") as fh:
-        json.dump(obj, fh, indent=2, ensure_ascii=False)
-        fh.write("\n")
+    with target.open("w", encoding="utf-8") as handle:
+        json.dump(obj, handle, indent=2, ensure_ascii=False)
+        handle.write("\n")
 
 
-def _cache_entry(vault: Path, path: Path, cache: Cache) -> dict:
-    """Project a parsed ``Cache`` down to its flat index entry.
-
-    ``path`` is stored relative to ``vault`` (e.g. ``cache/...slug.md``) so the
-    index does not bake in an absolute machine path; datetimes become ISO
-    strings and the status enum becomes its backing value.
-    """
+def _paper_entry(vault: Path, path: Path, paper: Paper) -> dict[str, object]:
+    if path.stem != paper.code:
+        raise ValueError("Paper filename must match frontmatter code")
     return {
-        "type": "cache",
-        "title": cache.title,
+        "code": paper.code,
         "path": str(path.relative_to(vault)),
-        "status": cache.status.value,
-        "created": cache.created.isoformat(),
-        "updated": cache.updated.isoformat(),
-        "linked_outline": cache.linked_outline,
+        "summary": paper.summary,
+        "tags": paper.tags,
+        "created": paper.created.isoformat(),
+        "updated": paper.updated.isoformat(),
     }
 
 
-def _outline_entry(vault: Path, path: Path, outline: Outline) -> dict:
-    """Project a parsed ``Outline`` down to its flat index entry.
-
-    ``path`` is relative to ``vault``; datetimes become ISO strings and the
-    ending-type enum becomes its backing value.
-    """
-    return {
-        "type": "outline",
-        "title": outline.title,
-        "path": str(path.relative_to(vault)),
-        "created": outline.created.isoformat(),
-        "updated": outline.updated.isoformat(),
-        "ending_type": outline.ending_type.value,
-    }
-
-
-def rebuild_index(vault: Path) -> None:
-    """Rebuild ``<vault>/keikeu_index.json`` from the Markdown files alone.
-
-    Scans ``vault/cache/*.md`` via :func:`markdown_io.read_cache` and
-    ``vault/outlines/*.md`` via :func:`markdown_io.read_outline`, projects each
-    to a flat entry, and overwrites the index. Files are visited in sorted
-    filename order so the written index is deterministic and diff-stable.
-
-    This only ever READS Markdown; it never deletes or modifies a user asset.
-    """
-    caches = [
-        _cache_entry(vault, path, read_cache(path))
-        for path in sorted((vault / "cache").glob("*.md"))
-    ]
-    outlines = [
-        _outline_entry(vault, path, read_outline(path))
-        for path in sorted((vault / "outlines").glob("*.md"))
-    ]
-    index = {"version": 1, "caches": caches, "outlines": outlines}
+def rebuild_index(vault: Path) -> dict[str, object]:
+    """Rebuild and return the v2 index from active Paper Markdown only."""
+    papers: list[dict[str, object]] = []
+    errors: list[dict[str, str]] = []
+    cache_dir = vault / "cache"
+    paths = sorted(cache_dir.glob("*.md")) if cache_dir.is_dir() else []
+    for path in paths:
+        try:
+            papers.append(_paper_entry(vault, path, read_paper(path)))
+        except (OSError, ValueError) as exc:
+            errors.append({"path": str(path.relative_to(vault)), "reason": str(exc)})
+    index: dict[str, object] = {"version": 2, "papers": papers, "errors": errors}
     save_index(vault, index)
+    return index
 
 
 def _is_valid_index(data: object) -> bool:
-    """True iff ``data`` has the shape the list helpers rely on.
-
-    Requires a dict carrying ``caches`` and ``outlines`` lists. Anything else —
-    a JSON ``null``/array/number/string, or a dict missing a key — is treated as
-    corrupt so :func:`load_index` rebuilds rather than handing back a value that
-    would make :func:`list_caches`/:func:`list_outlines` raise.
-    """
     return (
         isinstance(data, dict)
-        and isinstance(data.get("caches"), list)
-        and isinstance(data.get("outlines"), list)
+        and data.get("version") == 2
+        and isinstance(data.get("papers"), list)
+        and isinstance(data.get("errors"), list)
     )
 
 
-def load_index(vault: Path) -> dict:
-    """Return the parsed index dict, rebuilding first if it is unusable.
-
-    If the index file is missing, not valid JSON, OR valid JSON of the wrong
-    shape (e.g. a truncated-but-still-parseable or hand-edited file that is not a
-    dict carrying ``caches``/``outlines`` lists), it is rebuilt from the Markdown
-    and then loaded. A corrupt index is disposable; the rebuild reads — never
-    deletes or rewrites — the user's Markdown files (product invariant 2). This
-    keeps :func:`list_caches`/:func:`list_outlines` total: they never crash on a
-    damaged index.
-    """
-    path = _index_path(vault)
+def load_index(vault: Path) -> dict[str, object]:
+    """Load v2 metadata, rebuilding only when its JSON is missing or invalid."""
     try:
-        with path.open("r", encoding="utf-8") as fh:
-            data = json.load(fh)
+        with _index_path(vault).open("r", encoding="utf-8") as handle:
+            data = json.load(handle)
     except (OSError, ValueError):
-        # OSError: missing/unreadable. ValueError: invalid JSON
-        # (json.JSONDecodeError is a ValueError subclass).
         data = None
     if not _is_valid_index(data):
-        # Disposable index — rebuild from the source-of-truth Markdown.
-        rebuild_index(vault)
-        with path.open("r", encoding="utf-8") as fh:
-            data = json.load(fh)
+        return rebuild_index(vault)
     return data
 
 
-def save_index(vault: Path, index: dict) -> None:
-    """Write ``index`` to ``<vault>/keikeu_index.json`` in the fixed style."""
+def save_index(vault: Path, index: dict[str, object]) -> None:
+    """Write the disposable index without touching Markdown assets."""
     _write_json(_index_path(vault), index)
 
 
-def list_caches(vault: Path) -> list[dict]:
-    """Return the index's ``caches`` entries (rebuilding the index if needed)."""
-    return load_index(vault)["caches"]
+def list_papers(vault: Path) -> list[dict[str, object]]:
+    """Return indexed active Papers; callers may explicitly rebuild to refresh."""
+    return load_index(vault)["papers"]  # type: ignore[return-value]
 
 
-def list_outlines(vault: Path) -> list[dict]:
-    """Return the index's ``outlines`` entries (rebuilding the index if needed)."""
-    return load_index(vault)["outlines"]
+def list_index_errors(vault: Path) -> list[dict[str, str]]:
+    """Return isolated parse errors from the last usable index rebuild."""
+    return load_index(vault)["errors"]  # type: ignore[return-value]
+
+
+def list_caches(vault: Path) -> list[dict[str, object]]:
+    """Temporary import shim for the isolated v0.1 GUI; it reads no Cache data."""
+    raise RuntimeError("v0.1 Cache UI is isolated; use list_papers")
+
+
+def list_outlines(vault: Path) -> list[dict[str, object]]:
+    """Temporary import shim for the isolated v0.1 GUI; it reads no Outline data."""
+    raise RuntimeError("v0.1 Outline UI is isolated; use list_papers")

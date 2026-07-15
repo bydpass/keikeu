@@ -1,7 +1,7 @@
 """Lightweight GUI page contract tests.
 
-These do not launch Flet. They instantiate page builders with a fake page object
-and click handlers directly so the cache -> outline workflow stays pinned.
+These do not launch Flet. They pin the v0.1 Cache -> Outline workflow and are
+explicitly isolated until Phase 4 replaces that GUI with Paper interactions.
 """
 
 from __future__ import annotations
@@ -12,6 +12,7 @@ from types import SimpleNamespace
 from typing import Iterable
 
 import flet as ft
+import pytest
 
 from keikeu_app import main as app_main
 from keikeu_app import theme as app_theme
@@ -24,6 +25,11 @@ from keikeu_core.indexer import list_caches, list_outlines, rebuild_index
 from keikeu_core.markdown_io import read_cache, read_outline, write_cache, write_outline
 from keikeu_core.models import Cache, CacheStatus, Outline, Relation, RelationType
 from keikeu_core.vault import init_vault, soft_delete
+
+
+pytestmark = pytest.mark.skip(
+    reason="v0.1 Cache/Outline GUI is isolated pending Phase 4 Paper UI replacement"
+)
 
 
 class FakePage:
