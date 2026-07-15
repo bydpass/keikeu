@@ -18,14 +18,21 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+import pytest
+
 from keikeu_core import vault
 from keikeu_core.markdown_io import (
+    next_paper_code,
     read_cache,
     read_outline,
+    read_paper,
+    rename_paper,
     update_cache,
     update_outline,
+    update_paper,
     write_cache,
     write_outline,
+    write_paper,
 )
 from keikeu_core.markdown_io import _slugify  # internal: filename rule under test
 from keikeu_core.models import (
@@ -33,6 +40,7 @@ from keikeu_core.models import (
     CacheStatus,
     EndingType,
     Outline,
+    Paper,
     Relation,
     RelationType,
 )
@@ -401,6 +409,168 @@ def test_render_is_stable_for_write_then_update(tmp_path):
     before = outline_path.read_bytes()
     update_outline(outline_path, outline)
     assert outline_path.read_bytes() == before
+
+
+# --------------------------------------------------------------------------- #
+# Road v0.2 Paper v2: code, Markdown, atomic write/update, explicit rename
+# --------------------------------------------------------------------------- #
+
+
+def test_paper_v2_complete_cjk_and_multiline_round_trip(tmp_path):
+    created = datetime(2026, 7, 14, 9, 30)
+    paper = Paper(
+        code="K-20260714-001",
+        initial_summary="not persisted before the first save",
+        summary="深夜的末班公交上，两个人隔着一个空位假装睡着。\nA 明早离开。",
+        highlights=["旧打火机被塞回手里。\n谁也没有解释。", "", "公交驶过平时下车的站。"],
+        tags=["  末班车 ", "离别", "末班车", "离别 ", "暧昧"],
+        created=created,
+        updated=created,
+        legacy_title="旧 Cache 标题",
+    )
+
+    path = write_paper(tmp_path, paper)
+    assert path == tmp_path / "cache" / "K-20260714-001.md"
+    assert path.read_text(encoding="utf-8").startswith(
+        "---\ntype: paper\nschema_version: 2\ncode: K-20260714-001\n"
+    )
+
+    back = read_paper(path)
+    assert back.initial_summary == paper.summary
+    assert back.summary == paper.summary
+    assert back.highlights == [
+        "旧打火机被塞回手里。\n谁也没有解释。",
+        "公交驶过平时下车的站。",
+    ]
+    assert back.tags == ["末班车", "离别", "暧昧"]
+    assert back.legacy_title == "旧 Cache 标题"
+    assert back.created == created
+
+    before = path.read_bytes()
+    update_paper(path, back)
+    assert path.read_bytes() == before
+
+
+def test_minimal_paper_keeps_empty_highlights_and_tags_sections(tmp_path):
+    path = write_paper(
+        tmp_path,
+        Paper(
+            code="K-20260714-001",
+            initial_summary="",
+            summary="Only the required Summary is present.",
+        ),
+    )
+
+    text = path.read_text(encoding="utf-8")
+    assert "## Highlights" in text
+    assert "## Tags" in text
+    back = read_paper(path)
+    assert back.initial_summary == "Only the required Summary is present."
+    assert back.highlights == []
+    assert back.tags == []
+
+
+def test_paper_update_preserves_initial_summary_legacy_title_and_unknown_frontmatter(
+    tmp_path,
+):
+    path = write_paper(
+        tmp_path,
+        Paper(
+            code="K-20260714-001",
+            initial_summary="",
+            summary="first summary",
+            legacy_title="old title",
+        ),
+    )
+    text = path.read_text(encoding="utf-8")
+    path.write_text(
+        text.replace("code: K-20260714-001\n", "code: K-20260714-001\nsource: hand-edit\n"),
+        encoding="utf-8",
+    )
+
+    edited = read_paper(path)
+    edited.summary = "new current summary"
+    edited.initial_summary = "attempted rewrite"
+    edited.legacy_title = "attempted rewrite"
+    update_paper(path, edited)
+
+    back = read_paper(path)
+    assert back.initial_summary == "first summary"
+    assert back.summary == "new current summary"
+    assert back.legacy_title == "old title"
+    assert "source: hand-edit" in path.read_text(encoding="utf-8")
+
+
+def test_paper_rejects_blank_summary_without_creating_or_overwriting_files(tmp_path):
+    unsaved = Paper(code="K-20260714-001", initial_summary="", summary="valid")
+    unsaved.summary = "   "
+    with pytest.raises(ValueError, match="summary"):
+        write_paper(tmp_path, unsaved)
+    assert not (tmp_path / "cache" / "K-20260714-001.md").exists()
+
+    path = write_paper(
+        tmp_path,
+        Paper(code="K-20260714-001", initial_summary="", summary="valid"),
+    )
+    before = path.read_bytes()
+    edited = read_paper(path)
+    edited.summary = "   "
+    with pytest.raises(ValueError, match="summary"):
+        update_paper(path, edited)
+    assert path.read_bytes() == before
+
+
+def test_next_paper_code_and_new_paper_write_never_overwrite(tmp_path):
+    day = datetime(2026, 7, 14)
+    first = Paper(code="K-20260714-001", initial_summary="", summary="first")
+    path = write_paper(tmp_path, first)
+    original = path.read_bytes()
+
+    assert next_paper_code(tmp_path, day) == "K-20260714-002"
+    with pytest.raises(FileExistsError):
+        write_paper(
+            tmp_path,
+            Paper(code="K-20260714-001", initial_summary="", summary="replacement"),
+        )
+    assert path.read_bytes() == original
+
+    write_paper(
+        tmp_path,
+        Paper(code="K-20260714-002", initial_summary="", summary="second"),
+    )
+    assert next_paper_code(tmp_path, day) == "K-20260714-003"
+
+
+def test_paper_explicit_rename_never_overwrites_and_preserves_content(tmp_path):
+    source = write_paper(
+        tmp_path,
+        Paper(
+            code="K-20260714-001",
+            initial_summary="",
+            summary="first summary",
+            highlights=["anchor"],
+            tags=["tag"],
+        ),
+    )
+    source_before = source.read_bytes()
+    write_paper(
+        tmp_path,
+        Paper(code="K-20260714-002", initial_summary="", summary="occupied"),
+    )
+
+    with pytest.raises(FileExistsError):
+        rename_paper(tmp_path, "K-20260714-001", "K-20260714-002")
+    assert source.read_bytes() == source_before
+
+    target = rename_paper(tmp_path, "K-20260714-001", "K-20260714-003")
+    assert not source.exists()
+    assert target == tmp_path / "cache" / "K-20260714-003.md"
+    back = read_paper(target)
+    assert back.code == "K-20260714-003"
+    assert back.initial_summary == "first summary"
+    assert back.summary == "first summary"
+    assert back.highlights == ["anchor"]
+    assert back.tags == ["tag"]
 
 
 # --------------------------------------------------------------------------- #

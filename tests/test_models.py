@@ -24,6 +24,7 @@ from keikeu_core.models import (
     CacheStatus,
     EndingType,
     Outline,
+    Paper,
     Relation,
     RelationType,
 )
@@ -348,6 +349,63 @@ def test_empty_string_title_and_raw_are_accepted():
     assert c.raw == ""
     o = Outline(title="")
     assert o.title == ""
+
+
+# --------------------------------------------------------------------------- #
+# Road v0.2 Paper: pure model validation and normalization
+# --------------------------------------------------------------------------- #
+
+
+def test_paper_keeps_required_content_and_normalizes_tags_and_empty_highlights():
+    paper = Paper(
+        code="K-20260714-001",
+        initial_summary="first saved wording",
+        summary="current wording",
+        highlights=["first anchor", "", "  "],
+        tags=["  train  ", "train", "Train", "", "  "],
+        legacy_title="Old Cache title",
+    )
+
+    assert paper.code == "K-20260714-001"
+    assert paper.initial_summary == "first saved wording"
+    assert paper.summary == "current wording"
+    assert paper.highlights == ["first anchor", "  "]
+    assert paper.tags == ["train", "Train"]
+    assert paper.legacy_title == "Old Cache title"
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        "K-20260714-000",
+        "K-20260714-00",
+        "K-20260714-1000",
+        "K-20261314-001",
+        "k-20260714-001",
+        "paper-001",
+    ],
+)
+def test_paper_rejects_noncanonical_or_invalid_codes(code):
+    with pytest.raises(ValueError, match="code"):
+        Paper(code=code, initial_summary="first", summary="current")
+
+
+@pytest.mark.parametrize("summary", ["", "   ", "\n\t"])
+def test_paper_rejects_blank_summary(summary):
+    with pytest.raises(ValueError, match="summary"):
+        Paper(code="K-20260714-001", initial_summary="first", summary=summary)
+
+
+def test_paper_list_defaults_are_independent():
+    a = Paper(code="K-20260714-001", initial_summary="a", summary="a")
+    b = Paper(code="K-20260714-002", initial_summary="b", summary="b")
+
+    assert a.highlights is not b.highlights
+    assert a.tags is not b.tags
+    a.highlights.append("anchor")
+    a.tags.append("tag")
+    assert b.highlights == []
+    assert b.tags == []
 
 
 # --------------------------------------------------------------------------- #

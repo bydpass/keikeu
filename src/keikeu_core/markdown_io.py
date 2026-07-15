@@ -24,23 +24,34 @@ across embedded newlines.
 
 from __future__ import annotations
 
-import secrets
-from datetime import datetime
+from dataclasses import replace
+from datetime import date, datetime
+import os
 from pathlib import Path
+import re
+import secrets
+import tempfile
 
 from keikeu_core.models import (
     Cache,
     CacheStatus,
     EndingType,
     Outline,
+    Paper,
     Relation,
     RelationType,
+    validate_paper_code,
 )
 
 __all__ = [
     "write_cache",
     "read_cache",
     "update_cache",
+    "next_paper_code",
+    "write_paper",
+    "read_paper",
+    "update_paper",
+    "rename_paper",
     "write_outline",
     "read_outline",
     "update_outline",
@@ -51,6 +62,7 @@ _FENCE = "---"
 # Body section headers, byte-exact and in document order. A body line is treated
 # as a section boundary only if it is identical to one of these for its type.
 _CACHE_HEADERS = ("## 原始灵感", "## 临时备注")
+_PAPER_HEADERS = ("## 初稿副本", "## Summary", "## Highlights", "## Tags")
 _OUTLINE_HEADERS = (
     "## 1. 原始灵感",
     "## 2. 整理后摘要",
@@ -63,6 +75,8 @@ _OUTLINE_HEADERS = (
 
 # Characters that are unsafe in a filename on common filesystems.
 _DANGEROUS_CHARS = set('/\\:*?"<>|')
+_PAPER_NUMBERED_ITEM_RE = re.compile(r"^([1-9]\d*)\. (.*)$")
+_PAPER_CODE_FILENAME_RE = re.compile(r"^K-\d{8}-(\d{3})$")
 
 
 # --------------------------------------------------------------------------- #
@@ -293,6 +307,267 @@ def read_cache(path: Path) -> Cache:
         updated=datetime.fromisoformat(fm["updated"]),
         linked_outline=linked or None,
     )
+
+
+# --------------------------------------------------------------------------- #
+# Paper v2
+# --------------------------------------------------------------------------- #
+
+
+def _paper_path(vault: Path, code: str) -> Path:
+    """Return the fixed v2 path for ``code`` under ``vault/cache``."""
+    return vault / "cache" / f"{validate_paper_code(code)}.md"
+
+
+def next_paper_code(vault: Path, on_date: date | datetime | None = None) -> str:
+    """Return the next unused neutral Paper code for ``on_date``.
+
+    Existing matching filenames reserve their sequence even when their content
+    is malformed, so generating a new Paper never overwrites an asset that
+    needs recovery. ``on_date`` is injectable for deterministic tests.
+    """
+    if on_date is None:
+        day = datetime.now().date()
+    elif isinstance(on_date, datetime):
+        day = on_date.date()
+    elif isinstance(on_date, date):
+        day = on_date
+    else:
+        raise ValueError("on_date must be a date or datetime")
+
+    prefix = f"K-{day.strftime('%Y%m%d')}-"
+    cache_dir = vault / "cache"
+    used_sequences: set[int] = set()
+    if cache_dir.is_dir():
+        for path in cache_dir.glob(f"{prefix}*.md"):
+            match = _PAPER_CODE_FILENAME_RE.fullmatch(path.stem)
+            if match is not None:
+                used_sequences.add(int(match.group(1)))
+
+    for sequence in range(1, 1000):
+        if sequence not in used_sequences:
+            return f"{prefix}{sequence:03d}"
+    raise ValueError(f"all Paper codes for {day.isoformat()} are in use")
+
+
+def _render_paper(paper: Paper) -> str:
+    """Render a validated Paper as the stable v2 Markdown contract."""
+    paper.normalize()
+    frontmatter: list[tuple[str, str]] = [
+        ("type", "paper"),
+        ("schema_version", "2"),
+        ("code", paper.code),
+        ("created", paper.created.isoformat()),
+        ("updated", paper.updated.isoformat()),
+    ]
+    if paper.legacy_title is not None:
+        frontmatter.append(("legacy_title", paper.legacy_title))
+    known_fields = {key for key, _ in frontmatter}
+    frontmatter.extend(
+        (key, value)
+        for key, value in paper.extra_frontmatter.items()
+        if key not in known_fields
+    )
+    highlights = "\n".join(
+        f"{index}. {highlight}"
+        for index, highlight in enumerate(paper.highlights, start=1)
+    )
+    tags = "\n".join(f"- {tag}" for tag in paper.tags)
+    def section(header: str, content: str) -> str:
+        return f"{header}\n\n{content}" if content else header
+
+    body = "\n\n".join(
+        [
+            f"# {paper.code}",
+            section("## 初稿副本", paper.initial_summary),
+            section("## Summary", paper.summary),
+            section("## Highlights", highlights),
+            section("## Tags", tags),
+        ]
+    )
+    return f"{_format_frontmatter(frontmatter)}\n{body}\n"
+
+
+def _parse_numbered_items(content: str) -> list[str]:
+    """Read the simple ordered Markdown list used for Paper Highlights."""
+    if not content:
+        return []
+    items: list[str] = []
+    current: str | None = None
+    for line in content.split("\n"):
+        match = _PAPER_NUMBERED_ITEM_RE.fullmatch(line)
+        if match is not None:
+            if current is not None:
+                items.append(current)
+            current = match.group(2)
+        elif current is not None:
+            current = f"{current}\n{line}"
+    if current is not None:
+        items.append(current)
+    # A manually repaired document without an ordered marker is kept as one
+    # Highlight instead of being silently discarded.
+    return items or [content]
+
+
+def _parse_bullet_items(content: str) -> list[str]:
+    """Read the simple unordered Markdown list used for Paper Tags."""
+    if not content:
+        return []
+    items: list[str] = []
+    current: str | None = None
+    for line in content.split("\n"):
+        if line.startswith("- "):
+            if current is not None:
+                items.append(current)
+            current = line[2:]
+        elif current is not None:
+            current = f"{current}\n{line}"
+    if current is not None:
+        items.append(current)
+    return items or [content]
+
+
+def _write_temp_file(target: Path, text: str) -> Path:
+    """Write complete text beside ``target`` and return its temporary path."""
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(
+        mode="w",
+        encoding="utf-8",
+        dir=target.parent,
+        prefix=f".{target.name}.",
+        suffix=".tmp",
+        delete=False,
+    ) as handle:
+        handle.write(text)
+        handle.flush()
+        os.fsync(handle.fileno())
+        return Path(handle.name)
+
+
+def _atomic_replace_text(target: Path, text: str) -> None:
+    """Replace an existing Paper atomically after its full temp write succeeds."""
+    temporary = _write_temp_file(target, text)
+    try:
+        os.replace(temporary, target)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def _atomic_create_text(target: Path, text: str) -> None:
+    """Create a new Paper without ever replacing an existing destination."""
+    temporary = _write_temp_file(target, text)
+    try:
+        # Linking within the same directory atomically fails when ``target``
+        # already exists, avoiding a check-then-replace overwrite race.
+        os.link(temporary, target)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def write_paper(vault: Path, paper: Paper) -> Path:
+    """Persist a new Paper and freeze its initial Summary on first save.
+
+    The code determines the fixed filename. Existing files are never replaced;
+    use :func:`update_paper` or :func:`rename_paper` for later changes.
+    """
+    paper.normalize()
+    path = _paper_path(vault, paper.code)
+    if path.exists():
+        raise FileExistsError(f"Paper already exists: {path}")
+    stored = replace(paper, initial_summary=paper.summary)
+    _atomic_create_text(path, _render_paper(stored))
+    paper.initial_summary = stored.initial_summary
+    return path
+
+
+def read_paper(path: Path) -> Paper:
+    """Read a Paper v2 Markdown file and preserve unknown frontmatter fields."""
+    text = path.read_text(encoding="utf-8")
+    frontmatter, body_lines = _split_document(text)
+    if frontmatter.get("type") != "paper":
+        raise ValueError("Paper must declare type: paper")
+    if frontmatter.get("schema_version") != "2":
+        raise ValueError("Paper must declare schema_version: 2")
+    try:
+        code = frontmatter["code"]
+        created = datetime.fromisoformat(frontmatter["created"])
+        updated = datetime.fromisoformat(frontmatter["updated"])
+    except KeyError as exc:
+        raise ValueError(f"Paper frontmatter is missing {exc.args[0]}") from None
+    except ValueError:
+        raise ValueError("Paper has invalid datetime frontmatter") from None
+
+    sections = _split_sections(body_lines, _PAPER_HEADERS)
+    initial_summary = sections.get("## 初稿副本", "")
+    if not initial_summary.strip():
+        raise ValueError("Paper initial_summary must not be blank")
+    known_fields = {
+        "type",
+        "schema_version",
+        "code",
+        "created",
+        "updated",
+        "legacy_title",
+    }
+    return Paper(
+        code=code,
+        initial_summary=initial_summary,
+        summary=sections.get("## Summary", ""),
+        highlights=_parse_numbered_items(sections.get("## Highlights", "")),
+        tags=_parse_bullet_items(sections.get("## Tags", "")),
+        created=created,
+        updated=updated,
+        legacy_title=(
+            frontmatter["legacy_title"] if "legacy_title" in frontmatter else None
+        ),
+        extra_frontmatter={
+            key: value
+            for key, value in frontmatter.items()
+            if key not in known_fields
+        },
+    )
+
+
+def update_paper(path: Path, paper: Paper) -> None:
+    """Update a stored Paper while preserving its immutable first-save fields."""
+    existing = read_paper(path)
+    if paper.code != existing.code:
+        raise ValueError("Paper code changes require rename_paper")
+    paper.initial_summary = existing.initial_summary
+    paper.legacy_title = existing.legacy_title
+    paper.extra_frontmatter = existing.extra_frontmatter.copy()
+    paper.normalize()
+    _atomic_replace_text(path, _render_paper(paper))
+
+
+def rename_paper(vault: Path, old_code: str, new_code: str) -> Path:
+    """Explicitly rename one Paper code and its fixed Markdown filename.
+
+    The replacement file is created first without overwriting anything. The
+    old file is removed only after the new complete Paper exists, so a failed
+    rename leaves the original asset available.
+    """
+    old_code = validate_paper_code(old_code)
+    new_code = validate_paper_code(new_code)
+    if old_code == new_code:
+        raise ValueError("new Paper code must differ from the current code")
+    source = _paper_path(vault, old_code)
+    target = _paper_path(vault, new_code)
+    if target.exists():
+        raise FileExistsError(f"Paper already exists: {target}")
+    existing = read_paper(source)
+    if existing.code != old_code:
+        raise ValueError("Paper filename and frontmatter code do not match")
+    renamed = replace(existing, code=new_code)
+    _atomic_create_text(target, _render_paper(renamed))
+    try:
+        source.unlink()
+    except OSError:
+        # Best-effort rollback preserves the original source as the authority
+        # if removing it fails after target creation.
+        target.unlink(missing_ok=True)
+        raise
+    return target
 
 
 # --------------------------------------------------------------------------- #
