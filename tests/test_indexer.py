@@ -106,6 +106,27 @@ def test_rebuild_treats_v1_or_filename_mismatched_markdown_as_an_error(tmp_path)
     assert "type: paper" in index["errors"][1]["reason"]
 
 
+def test_rebuild_quarantines_a_conflict_copy_without_changing_the_active_paper(tmp_path):
+    vault = _fresh_vault(tmp_path)
+    active = write_paper(vault, _paper("K-20260714-001", "Active summary."))
+    conflict_copy = vault / "cache" / "K-20260714-001 (conflicted copy).md"
+    conflict_copy.write_bytes(active.read_bytes())
+    active_before = active.read_bytes()
+    copy_before = conflict_copy.read_bytes()
+
+    index = rebuild_index(vault)
+
+    assert [entry["code"] for entry in index["papers"]] == ["K-20260714-001"]
+    assert index["errors"] == [
+        {
+            "path": "cache/K-20260714-001 (conflicted copy).md",
+            "reason": "Paper filename must match frontmatter code",
+        }
+    ]
+    assert active.read_bytes() == active_before
+    assert conflict_copy.read_bytes() == copy_before
+
+
 def test_rebuild_excludes_trashed_papers_and_syncs_after_external_deletion(tmp_path):
     vault = _fresh_vault(tmp_path)
     first = write_paper(vault, _paper("K-20260714-001", "First."))

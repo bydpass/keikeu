@@ -17,7 +17,7 @@ from keikeu_app.pages.flashcard_page import build_flashcard_page
 from keikeu_app.pages.library_page import build_library_page
 from keikeu_app.pages.paper_page import build_paper_page
 from keikeu_core.indexer import rebuild_index
-from keikeu_core.markdown_io import read_paper, write_paper
+from keikeu_core.markdown_io import read_paper, update_paper, write_paper
 from keikeu_core.models import Paper
 from keikeu_core.vault import init_vault, soft_delete
 
@@ -170,6 +170,37 @@ def test_save_reopen_and_update_preserves_first_draft(tmp_path):
     updated = read_paper(path)
     assert updated.initial_summary == "First draft summary."
     assert updated.summary == "Edited current summary."
+
+
+def test_editor_refuses_to_overwrite_an_externally_changed_paper(tmp_path):
+    init_vault(tmp_path)
+    path = write_paper(tmp_path, _paper("K-20260714-001", "Original summary."))
+    page = FakePage()
+    root = build_paper_page(_ctx(page, tmp_path), path)
+    _text_field(root, "Summary").value = "Local unsaved change."
+
+    external = read_paper(path)
+    external.summary = "External editor change."
+    external.updated = datetime(2026, 7, 14, 10, 0)
+    update_paper(path, external)
+
+    _button(root, "保存").on_click(None)
+
+    assert read_paper(path).summary == "External editor change."
+    assert "Paper 已在外部修改；未覆盖。请重新打开后决定如何处理。" in _texts(root)
+
+
+def test_editor_refuses_to_recreate_an_externally_deleted_paper(tmp_path):
+    init_vault(tmp_path)
+    path = write_paper(tmp_path, _paper("K-20260714-001", "Original summary."))
+    root = build_paper_page(_ctx(FakePage(), tmp_path), path)
+    _text_field(root, "Summary").value = "Local unsaved change."
+    path.unlink()
+
+    _button(root, "保存").on_click(None)
+
+    assert not path.exists()
+    assert "Paper 已在外部删除或移动；未保存。请返回本地文件库刷新。" in _texts(root)
 
 
 def test_highlight_reorder_is_saved_in_the_visible_order(tmp_path):

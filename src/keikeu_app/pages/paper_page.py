@@ -68,7 +68,11 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
     """Build a Paper create/edit page for ``open_path`` or a fresh Paper."""
     page = ctx.page
     existing = read_paper(open_path) if open_path is not None else None
-    state: dict[str, Path | Paper | None] = {"path": open_path, "paper": existing}
+    state: dict[str, object] = {
+        "path": open_path,
+        "paper": existing,
+        "source_bytes": open_path.read_bytes() if open_path is not None else None,
+    }
 
     code_field = single_line_field(
         "Paper 代号", existing.code if existing is not None else next_paper_code(ctx.vault)
@@ -198,6 +202,15 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
             paper = _build_paper()
             path = state["path"]
             if isinstance(path, Path):
+                if not path.is_file():
+                    save_error.value = "Paper 已在外部删除或移动；未保存。请返回本地文件库刷新。"
+                    page.update()
+                    return
+                source_bytes = state["source_bytes"]
+                if isinstance(source_bytes, bytes) and path.read_bytes() != source_bytes:
+                    save_error.value = "Paper 已在外部修改；未覆盖。请重新打开后决定如何处理。"
+                    page.update()
+                    return
                 update_paper(path, paper)
             else:
                 path = write_paper(ctx.vault, paper)
@@ -205,6 +218,7 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
                 code_field.read_only = True
                 rename_area.visible = True
             state["paper"] = read_paper(path)
+            state["source_bytes"] = path.read_bytes()
             initial_copy.value = state["paper"].initial_summary  # type: ignore[union-attr]
             save_error.value = ""
             rebuild_index(ctx.vault)
@@ -226,6 +240,7 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
             target = rename_paper(ctx.vault, old_code, rename_field.value or "")
             state["path"] = target
             state["paper"] = read_paper(target)
+            state["source_bytes"] = target.read_bytes()
             code_field.value = state["paper"].code  # type: ignore[union-attr]
             rename_field.value = ""
             save_error.value = ""

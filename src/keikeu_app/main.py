@@ -187,7 +187,7 @@ def _build_migration_gate(page: ft.Page, vault: Path) -> None:
 
 
 def _build_vault_picker(page: ft.Page, *, show_configured: bool = True) -> None:
-    """Offer a minimal local folder picker when no valid vault is configured."""
+    """Offer a system folder chooser with a path-entry fallback."""
     apply_theme(page)
     page.controls.clear()
     page.scroll = ft.ScrollMode.AUTO
@@ -196,9 +196,11 @@ def _build_vault_picker(page: ft.Page, *, show_configured: bool = True) -> None:
     path_field.hint_text = str(Path.home() / "keikeu-vault")
     path_field.expand = True
     error_text = ft.Text("", color=ft.Colors.ERROR)
+    directory_picker = ft.FilePicker(key="vault-directory-picker")
+    page.services.append(directory_picker)
 
-    def on_open(_: ft.ControlEvent) -> None:
-        raw = (path_field.value or "").strip()
+    def open_vault(raw: str) -> None:
+        raw = raw.strip()
         if not raw:
             error_text.value = "请输入文件夹路径。"
             page.update()
@@ -227,6 +229,26 @@ def _build_vault_picker(page: ft.Page, *, show_configured: bool = True) -> None:
         notify(page, "Vault 已就绪")
         _build_shell(page, vault)
 
+    def on_open(_: ft.ControlEvent) -> None:
+        open_vault(path_field.value or "")
+
+    async def on_choose_directory(_: ft.ControlEvent) -> None:
+        try:
+            selected = await directory_picker.get_directory_path(
+                dialog_title="选择 Vault 文件夹",
+                initial_directory=str(existing or Path.home()),
+            )
+        except (OSError, ValueError) as ex:
+            error_text.value = f"系统目录选择器不可用：{ex}；可改为手工输入路径。"
+            page.update()
+            return
+        if selected is None:
+            error_text.value = "未选择文件夹；可继续手工输入完整路径。"
+            page.update()
+            return
+        path_field.value = selected
+        open_vault(selected)
+
     page.add(
         ft.Container(
             padding=SPACE_8,
@@ -236,6 +258,12 @@ def _build_vault_picker(page: ft.Page, *, show_configured: bool = True) -> None:
                 controls=[
                     ft.Text("打开或创建 Vault", size=28, color=FG, font_family=FONT_DISPLAY, weight=ft.FontWeight.W_400),
                     ft.Text("Vault 保存你的 Paper Markdown；索引可随时从 Paper 重建。", color=MUTED),
+                    ft.OutlinedButton(
+                        content=ft.Text("从系统选择文件夹"),
+                        on_click=on_choose_directory,
+                        key="vault-directory-chooser",
+                    ),
+                    ft.Text("系统选择器不可用或取消时，可手工输入完整路径。", color=MUTED),
                     path_field,
                     primary_button("创建 / 打开 Vault", on_open),
                     error_text,

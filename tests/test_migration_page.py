@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from pathlib import Path
 import shutil
 from types import SimpleNamespace
@@ -12,6 +13,7 @@ import flet as ft
 from keikeu_app import main as app_main
 from keikeu_app.pages.migration_page import build_migration_page
 from keikeu_core.migration_v01 import MigrationResult
+from keikeu_core.vault import is_vault
 
 
 FIXTURE_VAULT = Path(__file__).parent / "fixtures" / "v01-vault"
@@ -157,6 +159,59 @@ def test_picker_routes_a_manually_selected_v01_vault_without_writing_it(tmp_path
 
     assert _by_key(page.controls[0], "migration-preflight-card")
     assert _file_bytes(vault) == before
+
+
+def test_system_directory_chooser_opens_a_v2_vault_with_path_fallback(tmp_path, monkeypatch):
+    vault = tmp_path / "selected-vault"
+    page = FakePage()
+    configured: list[tuple[Path, Path]] = []
+    monkeypatch.setattr(app_main, "get_vault", lambda _config: None)
+    monkeypatch.setattr(app_main, "CONFIG_PATH", tmp_path / "config.json")
+    monkeypatch.setattr(
+        app_main,
+        "set_vault",
+        lambda selected, config: configured.append((selected, config)),
+    )
+
+    app_main._build_vault_picker(page)  # type: ignore[attr-defined, arg-type]
+    root = page.controls[0]
+    picker = next(
+        service
+        for service in page.services
+        if getattr(service, "key", None) == "vault-directory-picker"
+    )
+    async def choose_directory(**_kwargs: object) -> str:
+        return str(vault)
+
+    monkeypatch.setattr(picker, "get_directory_path", choose_directory)
+
+    asyncio.run(_button(root, "从系统选择文件夹").on_click(None))
+
+    assert is_vault(vault)
+    assert configured == [(vault, app_main.CONFIG_PATH)]
+    assert "系统选择器不可用或取消时，可手工输入完整路径。" in _texts(root)
+
+
+def test_system_directory_chooser_cancel_keeps_path_fallback_visible(tmp_path, monkeypatch):
+    page = FakePage()
+    monkeypatch.setattr(app_main, "get_vault", lambda _config: None)
+
+    app_main._build_vault_picker(page)  # type: ignore[attr-defined, arg-type]
+    root = page.controls[0]
+    picker = next(
+        service
+        for service in page.services
+        if getattr(service, "key", None) == "vault-directory-picker"
+    )
+    async def cancel_directory(**_kwargs: object) -> None:
+        return None
+
+    monkeypatch.setattr(picker, "get_directory_path", cancel_directory)
+
+    asyncio.run(_button(root, "从系统选择文件夹").on_click(None))
+
+    assert _text_field(root, "Vault 文件夹路径")
+    assert "未选择文件夹；可继续手工输入完整路径。" in _texts(root)
 
 
 def test_confirmed_fixture_migration_displays_backup_report_and_open_action(tmp_path):
