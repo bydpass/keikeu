@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "caches": [
+    {
+      "type": "cache",
+      "title": "Rain Platform",
+      "path": "cache/2026-07-01-090000-a101-rain-platform.md",
+      "status": "outlined",
+      "created": "2026-07-01T09:00:00",
+      "updated": "2026-07-01T10:30:00",
+      "linked_outline": "outlines/2026-07-01-091000-b101-rain-platform-outline.md"
+    },
+    {
+      "type": "cache",
+      "title": "Blank Optional Fields",
+      "path": "cache/2026-07-02-090000-a102-blank-optional.md",
+      "status": "raw",
+      "created": "2026-07-02T09:00:00",
+      "updated": "2026-07-02T09:00:00",
+      "linked_outline": null
+    },
+    {
+      "type": "cache",
+      "title": "Empty Raw Must Stop Migration",
+      "path": "cache/2026-07-03-090000-a103-empty-raw.md",
+      "status": "archived",
+      "created": "2026-07-03T09:00:00",
+      "updated": "2026-07-03T11:00:00",
+      "linked_outline": null
+    },
+    {
+      "type": "cache",
+      "title": "Corrupt Status",
+      "path": "cache/2026-07-04-090000-a104-corrupt-status.md",
+      "status": "invented-status",
+      "created": "2026-07-04T09:00:00",
+      "updated": "2026-07-04T09:00:00",
+      "linked_outline": null
+    }
+  ],
+  "outlines": [
+    {
+      "type": "outline",
+      "title": "Rain Platform Outline",
+      "path": "outlines/2026-07-01-091000-b101-rain-platform-outline.md",
+      "created": "2026-07-01T09:10:00",
+      "updated": "2026-07-01T11:00:00",
+      "ending_type": "HE"
+    }
+  ]
+}
