@@ -69,9 +69,15 @@ def _reveal_in_folder(page: ft.Page, path: Path) -> None:
 def build_library_page(ctx: "AppContext") -> ft.Control:
     """Build one-search Paper Library with health and recovery sections."""
     page = ctx.page
+    is_desktop = page.platform.is_desktop()
     search_field = single_line_field("搜索代号、Summary 或 Tags")
-    search_field.width = 420
-    results = ft.Column(controls=[], scroll=ft.ScrollMode.AUTO, expand=True)
+    search_field.width = 420 if is_desktop else None
+    results = ft.Column(
+        key="library-results",
+        controls=[],
+        scroll=ft.ScrollMode.AUTO if is_desktop else None,
+        expand=is_desktop,
+    )
 
     def _paper_row(entry: dict[str, object]) -> ft.Control:
         rel_path = str(entry["path"])
@@ -241,7 +247,7 @@ def build_library_page(ctx: "AppContext") -> ft.Control:
         ],
         key="library-paper-card",
         spacing=SPACE_4,
-        expand=True,
+        expand=is_desktop,
     )
     vault_card = paper_card(
         [
@@ -250,7 +256,7 @@ def build_library_page(ctx: "AppContext") -> ft.Control:
                 controls=[
                     ft.Text(
                         str(ctx.vault),
-                        width=360,
+                        width=360 if is_desktop else None,
                         max_lines=2,
                         overflow=ft.TextOverflow.ELLIPSIS,
                         color=MUTED,

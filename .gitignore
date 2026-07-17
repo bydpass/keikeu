@@ -6,6 +6,9 @@ tests/test-vault/
 tests/test-vault-bak/
 tests/keikeu-backups/
 
+statusv02.html
+statusv025.html
+
 # Python
 .venv/
 __pycache__/

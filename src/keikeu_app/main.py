@@ -59,6 +59,8 @@ class AppContext:
 
 
 def _configure_window(page: ft.Page) -> None:
+    if not page.platform.is_desktop():
+        return
     page.window.width = INITIAL_WINDOW_WIDTH
     page.window.height = INITIAL_WINDOW_HEIGHT
 
@@ -68,7 +70,12 @@ def _build_shell(page: ft.Page, vault: Path) -> None:
     apply_theme(page)
     page.controls.clear()
     page.scroll = None
-    body = ft.Container(expand=True, padding=SPACE_8, bgcolor=BG)
+    is_desktop = page.platform.is_desktop()
+    body = ft.Container(
+        expand=True,
+        padding=SPACE_8 if is_desktop else SPACE_4,
+        bgcolor=BG,
+    )
     ctx = AppContext(page=page, vault=vault)
 
     def show_paper(open_path: Path | None = None) -> None:
@@ -107,57 +114,77 @@ def _build_shell(page: ft.Page, vault: Path) -> None:
         else:
             show_library()
 
-    nav = ft.NavigationRail(
-        selected_index=_NAV_PAPER,
-        extended=True,
-        min_width=72,
-        min_extended_width=SIDEBAR_WIDTH,
-        bgcolor=FG,
-        indicator_color=ACCENT,
-        use_indicator=True,
-        elevation=0,
-        leading=ft.Column(
-            controls=[
-                ft.Container(
-                    content=ft.Text(
-                        "K",
-                        color=ACCENT_ON,
-                        size=18,
-                        font_family=FONT_DISPLAY,
-                        text_align=ft.TextAlign.CENTER,
+    if is_desktop:
+        nav: ft.NavigationRail | ft.NavigationBar = ft.NavigationRail(
+            selected_index=_NAV_PAPER,
+            extended=True,
+            min_width=72,
+            min_extended_width=SIDEBAR_WIDTH,
+            bgcolor=FG,
+            indicator_color=ACCENT,
+            use_indicator=True,
+            leading=ft.Column(
+                controls=[
+                    ft.Container(
+                        content=ft.Text(
+                            "K",
+                            color=ACCENT_ON,
+                            size=18,
+                            font_family=FONT_DISPLAY,
+                            text_align=ft.TextAlign.CENTER,
+                        ),
+                        width=34,
+                        height=34,
+                        bgcolor=ACCENT,
+                        border_radius=RADIUS_SM,
+                        alignment=ft.Alignment.CENTER,
                     ),
-                    width=34,
-                    height=34,
-                    bgcolor=ACCENT,
-                    border_radius=RADIUS_SM,
-                    alignment=ft.Alignment.CENTER,
-                ),
-                ft.Text("KEIKEU", size=22, color=ACCENT_ON, font_family=FONT_DISPLAY, weight=ft.FontWeight.W_700),
-                ft.Text("PERSONAL PAPER DESK", size=10, color=SURFACE_WARM, font_family=FONT_DISPLAY),
+                    ft.Text("KEIKEU", size=22, color=ACCENT_ON, font_family=FONT_DISPLAY, weight=ft.FontWeight.W_700),
+                    ft.Text("PERSONAL PAPER DESK", size=10, color=SURFACE_WARM, font_family=FONT_DISPLAY),
+                ],
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=SPACE_2,
+            ),
+            trailing=ft.Text(
+                "LOCAL PAPER UNIT\nV0.2 · OFFLINE READY",
+                size=TEXT_SM,
+                color=SURFACE_WARM,
+                text_align=ft.TextAlign.CENTER,
+            ),
+            pin_trailing_to_bottom=True,
+            destinations=[
+                ft.NavigationRailDestination(icon=ft.Icons.EDIT_NOTE, label="纸片"),
+                ft.NavigationRailDestination(icon=ft.Icons.STYLE, label="Flashcard"),
+                ft.NavigationRailDestination(icon=ft.Icons.FOLDER_OUTLINED, label="本地文件库"),
             ],
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            spacing=SPACE_2,
-        ),
-        trailing=ft.Text(
-            "LOCAL PAPER UNIT\nV0.2 · OFFLINE READY",
-            size=TEXT_SM,
-            color=SURFACE_WARM,
-            text_align=ft.TextAlign.CENTER,
-        ),
-        pin_trailing_to_bottom=True,
-        destinations=[
-            ft.NavigationRailDestination(icon=ft.Icons.EDIT_NOTE, label="纸片"),
-            ft.NavigationRailDestination(icon=ft.Icons.STYLE, label="Flashcard"),
-            ft.NavigationRailDestination(icon=ft.Icons.FOLDER_OUTLINED, label="本地文件库"),
-        ],
-        on_change=on_nav_change,
-    )
-    page.add(
-        ft.Row(
-            controls=[nav, ft.VerticalDivider(width=3, color=ACCENT), body],
-            expand=True,
+            on_change=on_nav_change,
         )
-    )
+        page.navigation_bar = None
+        page.add(
+            ft.Row(
+                controls=[nav, ft.VerticalDivider(width=3, color=ACCENT), body],
+                expand=True,
+            )
+        )
+    else:
+        nav = ft.NavigationBar(
+            selected_index=_NAV_PAPER,
+            indicator_color=ACCENT,
+            destinations=[
+                ft.NavigationBarDestination(icon=ft.Icons.EDIT_NOTE, label="纸片"),
+                ft.NavigationBarDestination(icon=ft.Icons.STYLE, label="Flashcard"),
+                ft.NavigationBarDestination(icon=ft.Icons.FOLDER_OUTLINED, label="本地文件库"),
+            ],
+            on_change=on_nav_change,
+        )
+        page.navigation_bar = nav
+        page.add(
+            ft.SafeArea(
+                content=body,
+                avoid_intrusions_bottom=False,
+                expand=True,
+            )
+        )
     show_paper()
 
 
@@ -191,10 +218,11 @@ def _build_vault_picker(page: ft.Page, *, show_configured: bool = True) -> None:
     apply_theme(page)
     page.controls.clear()
     page.scroll = ft.ScrollMode.AUTO
+    is_desktop = page.platform.is_desktop()
     existing = get_vault(CONFIG_PATH) if show_configured else None
     path_field = single_line_field("Vault 文件夹路径", str(existing) if existing is not None else "")
     path_field.hint_text = str(Path.home() / "keikeu-vault")
-    path_field.expand = True
+    path_field.expand = is_desktop
     error_text = ft.Text("", color=ft.Colors.ERROR)
     directory_picker = ft.FilePicker(key="vault-directory-picker")
     page.services.append(directory_picker)
@@ -253,7 +281,7 @@ def _build_vault_picker(page: ft.Page, *, show_configured: bool = True) -> None:
         ft.Container(
             padding=SPACE_8,
             bgcolor=BG,
-            expand=True,
+            expand=is_desktop,
             content=paper_card(
                 controls=[
                     ft.Text("打开或创建 Vault", size=28, color=FG, font_family=FONT_DISPLAY, weight=ft.FontWeight.W_400),

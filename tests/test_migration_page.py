@@ -20,10 +20,11 @@ FIXTURE_VAULT = Path(__file__).parent / "fixtures" / "v01-vault"
 
 
 class FakePage:
-    def __init__(self) -> None:
+    def __init__(self, platform: ft.PagePlatform = ft.PagePlatform.MACOS) -> None:
         self.controls: list[object] = []
         self.overlay: list[object] = []
         self.services: list[object] = []
+        self.platform = platform
         self.theme: ft.Theme | None = None
         self.bgcolor: str | None = None
         self.scroll = ft.ScrollMode.AUTO
@@ -116,6 +117,19 @@ def test_startup_detects_v01_before_any_v2_write(tmp_path, monkeypatch):
 
     assert _by_key(page.controls[0], "migration-preflight-card")
     assert _file_bytes(vault) == before
+
+
+def test_startup_skips_desktop_window_settings_on_ios(monkeypatch):
+    page = FakePage(platform=ft.PagePlatform.IOS)
+    monkeypatch.setattr(app_main, "get_vault", lambda _config: None)
+
+    app_main.main(page)  # type: ignore[arg-type]
+
+    assert page.window.width is None
+    assert page.window.height is None
+    assert _by_key(page.controls[0], "vault-picker-paper-card")
+    assert page.controls[0].expand is False
+    assert _text_field(page.controls[0], "Vault 文件夹路径").expand is False
 
 
 def test_preflight_lists_blockers_and_cancel_keeps_legacy_vault_unchanged(tmp_path):

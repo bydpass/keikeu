@@ -9,7 +9,7 @@ license = "GPL-3.0-or-later"
 license-files = ["LICENSE"]
 requires-python = ">=3.11, <3.14"
 dependencies = [
-    "flet",
+    "flet==0.85.3",
 ]
 
 [project.optional-dependencies]
@@ -26,6 +26,9 @@ packages = ["src/keikeu_core", "src/keikeu_app"]
 
 [tool.hatch.build.targets.wheel.sources]
 "src" = ""
+
+[tool.flet.app]
+path = "src"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

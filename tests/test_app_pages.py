@@ -25,10 +25,12 @@ from keikeu_core.vault import init_vault, soft_delete
 class FakePage:
     """The small subset of ``ft.Page`` exercised by the page builders."""
 
-    def __init__(self) -> None:
+    def __init__(self, platform: ft.PagePlatform = ft.PagePlatform.MACOS) -> None:
         self.controls: list[object] = []
         self.overlay: list[object] = []
         self.services: list[object] = []
+        self.platform = platform
+        self.navigation_bar: ft.NavigationBar | None = None
         self.scroll = ft.ScrollMode.AUTO
         self.update_count = 0
         self.theme: ft.Theme | None = None
@@ -113,10 +115,26 @@ def test_shell_uses_paper_flashcard_and_library_navigation(tmp_path):
     app_main._build_shell(page, tmp_path)  # type: ignore[attr-defined, arg-type]
 
     assert page.scroll is None
+    assert page.navigation_bar is None
     rail = next(control for control in _walk(page.controls[0]) if isinstance(control, ft.NavigationRail))
     labels = [destination.label for destination in rail.destinations]
     assert labels == ["纸片", "Flashcard", "本地文件库"]
     assert "配方票编辑" not in labels
+
+
+def test_shell_uses_bottom_navigation_on_ios(tmp_path):
+    init_vault(tmp_path)
+    page = FakePage(platform=ft.PagePlatform.IOS)
+
+    app_main._build_shell(page, tmp_path)  # type: ignore[attr-defined, arg-type]
+
+    assert page.scroll is None
+    assert isinstance(page.navigation_bar, ft.NavigationBar)
+    labels = [destination.label for destination in page.navigation_bar.destinations]
+    assert labels == ["纸片", "Flashcard", "本地文件库"]
+    assert isinstance(page.controls[0], ft.SafeArea)
+    assert page.controls[0].avoid_intrusions_bottom is False
+    assert not any(isinstance(control, ft.NavigationRail) for control in _walk(page.controls[0]))
 
 
 def test_paper_page_exposes_only_v2_fields(tmp_path):
@@ -330,6 +348,19 @@ def test_library_delete_and_restore_are_reachable_from_the_ui(tmp_path):
     _button(root, "恢复").on_click(None)
     assert path.exists()
     assert "回收站 · 0" in _texts(root)
+
+
+def test_library_uses_one_scroll_region_on_ios(tmp_path):
+    init_vault(tmp_path)
+    root = build_library_page(_ctx(FakePage(platform=ft.PagePlatform.IOS), tmp_path))
+
+    library_card = _control_by_key(root, "library-paper-card")
+    results = _control_by_key(root, "library-results")
+    assert root.scroll == ft.ScrollMode.AUTO
+    assert library_card.expand is False
+    assert results.scroll is None
+    assert results.expand is False
+    assert _text_field(root, "搜索代号、Summary 或 Tags").width is None
 
 
 def test_library_recovery_accepts_an_explicit_new_code_after_a_collision(tmp_path):
