@@ -119,9 +119,13 @@ def test_startup_detects_v01_before_any_v2_write(tmp_path, monkeypatch):
     assert _file_bytes(vault) == before
 
 
-def test_startup_skips_desktop_window_settings_on_ios(monkeypatch):
+def test_ios_vault_picker_creates_a_sandbox_vault(tmp_path, monkeypatch):
     page = FakePage(platform=ft.PagePlatform.IOS)
+    opened: list[Path] = []
     monkeypatch.setattr(app_main, "get_vault", lambda _config: None)
+    monkeypatch.setattr(app_main, "CONFIG_PATH", tmp_path / "config.json")
+    monkeypatch.setattr(app_main.Path, "home", classmethod(lambda _cls: tmp_path))
+    monkeypatch.setattr(app_main, "_build_shell", lambda _page, vault: opened.append(vault))
 
     app_main.main(page)  # type: ignore[arg-type]
 
@@ -129,7 +133,14 @@ def test_startup_skips_desktop_window_settings_on_ios(monkeypatch):
     assert page.window.height is None
     assert _by_key(page.controls[0], "vault-picker-paper-card")
     assert page.controls[0].expand is False
-    assert _text_field(page.controls[0], "Vault 文件夹路径").expand is False
+    assert page.services == []
+    assert any("iOS 不允许 keikeu 直接打开“文件”App 选择的文件夹。" in text for text in _texts(page.controls[0]))
+
+    _button(page.controls[0], "创建本机 Vault").on_click(None)
+
+    vault = tmp_path / "keikeu-vault"
+    assert is_vault(vault)
+    assert opened == [vault]
 
 
 def test_preflight_lists_blockers_and_cancel_keeps_legacy_vault_unchanged(tmp_path):

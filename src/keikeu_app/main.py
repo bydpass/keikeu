@@ -214,18 +214,13 @@ def _build_migration_gate(page: ft.Page, vault: Path) -> None:
 
 
 def _build_vault_picker(page: ft.Page, *, show_configured: bool = True) -> None:
-    """Offer a system folder chooser with a path-entry fallback."""
+    """Open a desktop Vault chooser or create an iOS sandbox Vault."""
     apply_theme(page)
     page.controls.clear()
     page.scroll = ft.ScrollMode.AUTO
     is_desktop = page.platform.is_desktop()
     existing = get_vault(CONFIG_PATH) if show_configured else None
-    path_field = single_line_field("Vault 文件夹路径", str(existing) if existing is not None else "")
-    path_field.hint_text = str(Path.home() / "keikeu-vault")
-    path_field.expand = is_desktop
     error_text = ft.Text("", color=ft.Colors.ERROR)
-    directory_picker = ft.FilePicker(key="vault-directory-picker")
-    page.services.append(directory_picker)
 
     def open_vault(raw: str) -> None:
         raw = raw.strip()
@@ -256,6 +251,36 @@ def _build_vault_picker(page: ft.Page, *, show_configured: bool = True) -> None:
             return
         notify(page, "Vault 已就绪")
         _build_shell(page, vault)
+
+    if page.platform == ft.PagePlatform.IOS:
+        page.add(
+            ft.Container(
+                padding=SPACE_8,
+                bgcolor=BG,
+                expand=False,
+                content=paper_card(
+                    controls=[
+                        ft.Text("创建本机 Vault", size=28, color=FG, font_family=FONT_DISPLAY, weight=ft.FontWeight.W_400),
+                        ft.Text("Vault 保存你的 Paper Markdown；索引可随时从 Paper 重建。", color=MUTED),
+                        ft.Text(
+                            "iOS 不允许 keikeu 直接打开“文件”App 选择的文件夹。本机 Vault 会保存在 keikeu 应用内，暂不自动同步到 Mac 或 iCloud。",
+                            color=MUTED,
+                        ),
+                        primary_button("创建本机 Vault", lambda _event: open_vault(str(Path.home() / "keikeu-vault"))),
+                        error_text,
+                    ],
+                    key="vault-picker-paper-card",
+                    spacing=SPACE_4,
+                ),
+            )
+        )
+        return
+
+    path_field = single_line_field("Vault 文件夹路径", str(existing) if existing is not None else "")
+    path_field.hint_text = str(Path.home() / "keikeu-vault")
+    path_field.expand = is_desktop
+    directory_picker = ft.FilePicker(key="vault-directory-picker")
+    page.services.append(directory_picker)
 
     def on_open(_: ft.ControlEvent) -> None:
         open_vault(path_field.value or "")
