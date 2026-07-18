@@ -14,6 +14,7 @@ import flet as ft
 
 from keikeu_app.pages import build_flashcard_page, build_library_page, build_paper_page
 from keikeu_app.pages.migration_page import build_migration_page
+from keikeu_app.storage import app_data_path
 from keikeu_app.theme import (
     ACCENT,
     ACCENT_ON,
@@ -37,7 +38,7 @@ from keikeu_core.vault import get_vault, init_vault, is_vault, set_vault
 
 __all__ = ["main", "run", "AppContext", "CONFIG_PATH"]
 
-CONFIG_PATH = Path.home() / ".keikeu_config.json"
+CONFIG_PATH = app_data_path() / ".keikeu_config.json"
 INITIAL_WINDOW_WIDTH = 890
 INITIAL_WINDOW_HEIGHT = 741
 
@@ -263,10 +264,10 @@ def _build_vault_picker(page: ft.Page, *, show_configured: bool = True) -> None:
                         ft.Text("创建本机 Vault", size=28, color=FG, font_family=FONT_DISPLAY, weight=ft.FontWeight.W_400),
                         ft.Text("Vault 保存你的 Paper Markdown；索引可随时从 Paper 重建。", color=MUTED),
                         ft.Text(
-                            "iOS 不允许 keikeu 直接打开“文件”App 选择的文件夹。本机 Vault 会保存在 keikeu 应用内，暂不自动同步到 Mac 或 iCloud。",
+                            "本机 Vault 会显示在“文件”App 的「在我的 iPhone／keikeu」中；它暂不自动同步到 Mac 或 iCloud。",
                             color=MUTED,
                         ),
-                        primary_button("创建本机 Vault", lambda _event: open_vault(str(Path.home() / "keikeu-vault"))),
+                        primary_button("创建本机 Vault", lambda _event: open_vault(str(app_data_path() / "keikeu-vault"))),
                         error_text,
                     ],
                     key="vault-picker-paper-card",

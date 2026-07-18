@@ -124,7 +124,7 @@ def test_ios_vault_picker_creates_a_sandbox_vault(tmp_path, monkeypatch):
     opened: list[Path] = []
     monkeypatch.setattr(app_main, "get_vault", lambda _config: None)
     monkeypatch.setattr(app_main, "CONFIG_PATH", tmp_path / "config.json")
-    monkeypatch.setattr(app_main.Path, "home", classmethod(lambda _cls: tmp_path))
+    monkeypatch.setattr(app_main, "app_data_path", lambda: tmp_path)
     monkeypatch.setattr(app_main, "_build_shell", lambda _page, vault: opened.append(vault))
 
     app_main.main(page)  # type: ignore[arg-type]
@@ -134,7 +134,7 @@ def test_ios_vault_picker_creates_a_sandbox_vault(tmp_path, monkeypatch):
     assert _by_key(page.controls[0], "vault-picker-paper-card")
     assert page.controls[0].expand is False
     assert page.services == []
-    assert any("iOS 不允许 keikeu 直接打开“文件”App 选择的文件夹。" in text for text in _texts(page.controls[0]))
+    assert any("本机 Vault 会显示在“文件”App 的「在我的 iPhone／keikeu」中" in text for text in _texts(page.controls[0]))
 
     _button(page.controls[0], "创建本机 Vault").on_click(None)
 

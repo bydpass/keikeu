@@ -13,6 +13,8 @@ import os
 from pathlib import Path
 import tempfile
 
+from keikeu_app.storage import app_data_path
+
 __all__ = [
     "STATE_PATH",
     "get_card_index",
@@ -22,7 +24,7 @@ __all__ = [
 ]
 
 
-STATE_PATH = Path.home() / ".keikeu_state.json"
+STATE_PATH = app_data_path() / ".keikeu_state.json"
 _STATE_VERSION = 1
 
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
@@ -295,6 +296,21 @@ def test_flashcard_is_summary_first_read_only_and_remembers_position(tmp_path):
     assert read_paper(path).summary == "Current Summary."
 
 
+def test_flashcard_card_uses_the_available_screen_height(tmp_path):
+    init_vault(tmp_path)
+    paper = _paper("K-20260714-001", "A long Summary.")
+    write_paper(tmp_path, paper)
+
+    root = build_flashcard_page(_ctx(FakePage(), tmp_path), paper.code)
+
+    assert root.expand is True
+    assert root.scroll is None
+    assert _control_by_key(root, "flashcard-card").expand is True
+    body = _control_by_key(root, "flashcard-card-body")
+    assert body.expand is True
+    assert body.scroll == ft.ScrollMode.AUTO
+
+
 def test_library_opens_flashcard_with_the_selected_paper_code(tmp_path):
     init_vault(tmp_path)
     paper = _paper("K-20260714-001", "Focus this paper.")
@@ -363,6 +379,29 @@ def test_library_uses_one_scroll_region_on_ios(tmp_path):
     assert _text_field(root, "搜索代号、Summary 或 Tags").width is None
 
 
+def test_ios_library_shares_a_paper_and_names_its_files_location(tmp_path, monkeypatch):
+    class FakeShare:
+        def __init__(self) -> None:
+            self.paths: list[str] = []
+
+        async def share_files(self, files, *, title: str) -> None:
+            assert title == "打开 Paper"
+            self.paths = [file.path for file in files]
+
+    init_vault(tmp_path)
+    path = write_paper(tmp_path, _paper("K-20260714-001", "Open externally."))
+    rebuild_index(tmp_path)
+    monkeypatch.setattr(library_page_mod.ft, "Share", FakeShare)
+    page = FakePage(platform=ft.PagePlatform.IOS)
+
+    root = build_library_page(_ctx(page, tmp_path))
+    asyncio.run(_button(root, "打开 / 导出").on_click(None))
+
+    share = next(service for service in page.services if isinstance(service, FakeShare))
+    assert share.paths == [str(path)]
+    assert "“文件”App → 在我的 iPhone → keikeu → keikeu-vault" in _texts(root)
+
+
 def test_library_recovery_accepts_an_explicit_new_code_after_a_collision(tmp_path):
     init_vault(tmp_path)
     deleted = write_paper(tmp_path, _paper("K-20260714-001", "Deleted paper."))
@@ -392,7 +431,7 @@ def test_library_delegates_open_and_reveal_to_macos_system_commands(tmp_path, mo
     )
     root = build_library_page(_ctx(FakePage(), tmp_path))
 
-    _button(root, "打开").on_click(None)
+    asyncio.run(_button(root, "打开").on_click(None))
     _button(root, "在文件夹中显示").on_click(None)
 
     assert calls == [["open", str(path)], ["open", "-R", str(path)]]

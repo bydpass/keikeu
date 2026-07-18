@@ -58,7 +58,24 @@ def _run_system_command(page: ft.Page, command: list[str], action: str) -> None:
         notify(page, f"无法{action}：{ex}")
 
 
-def _open_with_system(page: ft.Page, path: Path) -> None:
+def _share_service(page: ft.Page) -> ft.Share:
+    """Return the one native share sheet service for this app session."""
+    for service in page.services:
+        if isinstance(service, ft.Share):
+            return service
+    share = ft.Share()
+    page.services.append(share)
+    return share
+
+
+async def _open_with_system(page: ft.Page, path: Path, share: ft.Share) -> None:
+    """Open on desktop or hand one Paper to the iOS system share sheet."""
+    if page.platform == ft.PagePlatform.IOS:
+        try:
+            await share.share_files([ft.ShareFile.from_path(str(path))], title="打开 Paper")
+        except (OSError, RuntimeError, ValueError) as ex:
+            notify(page, f"无法打开 Paper：{ex}")
+        return
     _run_system_command(page, _open_command(path), "打开文件")
 
 
@@ -70,6 +87,8 @@ def build_library_page(ctx: "AppContext") -> ft.Control:
     """Build one-search Paper Library with health and recovery sections."""
     page = ctx.page
     is_desktop = page.platform.is_desktop()
+    is_ios = page.platform == ft.PagePlatform.IOS
+    share = _share_service(page)
     search_field = single_line_field("搜索代号、Summary 或 Tags")
     search_field.width = 420 if is_desktop else None
     results = ft.Column(
@@ -97,34 +116,42 @@ def build_library_page(ctx: "AppContext") -> ft.Control:
             except (OSError, ValueError, FileExistsError) as ex:
                 notify(page, f"无法删除 Paper：{ex}")
 
+        async def on_open(_: ft.ControlEvent) -> None:
+            await _open_with_system(page, ctx.vault / rel_path, share)
+
         tile = ft.ListTile(
             title=ft.Text(code),
             subtitle=ft.Text(summary),
             leading=ft.Icon(ft.Icons.EDIT_NOTE, color=MUTED),
             on_click=on_edit,
         )
+        actions: list[ft.Control] = [
+            ft.OutlinedButton(content=ft.Text("编辑"), on_click=on_edit),
+            ft.OutlinedButton(
+                content=ft.Text("打开 Flashcard"),
+                on_click=lambda _e: ctx.open_flashcards(code),
+            ),
+            ft.OutlinedButton(
+                content=ft.Text("打开 / 导出" if is_ios else "打开"),
+                on_click=on_open,
+            ),
+        ]
+        if not is_ios:
+            actions.append(
+                ft.OutlinedButton(
+                    content=ft.Text("在文件夹中显示"),
+                    on_click=lambda _e: _reveal_in_folder(page, ctx.vault / rel_path),
+                )
+            )
+        actions.append(danger_button("删除", on_delete))
+
         return ft.Container(
             content=ft.Column(
                 controls=[
                     tile,
                     ft.Text("Tags：" + ("、".join(tags) if tags else "未添加"), size=12, color=MUTED),
                     ft.Row(
-                        controls=[
-                            ft.OutlinedButton(content=ft.Text("编辑"), on_click=on_edit),
-                            ft.OutlinedButton(
-                                content=ft.Text("打开 Flashcard"),
-                                on_click=lambda _e: ctx.open_flashcards(code),
-                            ),
-                            ft.OutlinedButton(
-                                content=ft.Text("打开"),
-                                on_click=lambda _e: _open_with_system(page, ctx.vault / rel_path),
-                            ),
-                            ft.OutlinedButton(
-                                content=ft.Text("在文件夹中显示"),
-                                on_click=lambda _e: _reveal_in_folder(page, ctx.vault / rel_path),
-                            ),
-                            danger_button("删除", on_delete),
-                        ],
+                        controls=actions,
                         wrap=True,
                         spacing=SPACE_3,
                     ),
@@ -249,9 +276,18 @@ def build_library_page(ctx: "AppContext") -> ft.Control:
         spacing=SPACE_4,
         expand=is_desktop,
     )
-    vault_card = paper_card(
-        [
-            ft.Text("Vault 路径", size=18, font_family=FONT_DISPLAY, color=FG),
+    vault_controls: list[ft.Control] = [
+        ft.Text("Vault 路径", size=18, font_family=FONT_DISPLAY, color=FG),
+    ]
+    if is_ios:
+        vault_controls.append(
+            ft.Text("“文件”App → 在我的 iPhone → keikeu → keikeu-vault", color=MUTED)
+        )
+        vault_controls.append(
+            ft.Text("可在“文件”中浏览 Vault；用「打开 / 导出」交给 Markdown 编辑器。", color=MUTED)
+        )
+    else:
+        vault_controls.append(
             ft.Row(
                 controls=[
                     ft.Text(
@@ -268,11 +304,9 @@ def build_library_page(ctx: "AppContext") -> ft.Control:
                 ],
                 wrap=True,
                 spacing=SPACE_3,
-            ),
-        ],
-        key="library-vault-card",
-        spacing=SPACE_3,
-    )
+            )
+        )
+    vault_card = paper_card(vault_controls, key="library-vault-card", spacing=SPACE_3)
     return ft.Column(
         controls=[
             page_header("本地文件库", "按代号、Summary 或 Tags 查找你的 Paper。", "VAULT · PAPER 资产"),

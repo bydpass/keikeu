@@ -94,6 +94,13 @@ def build_flashcard_page(ctx: "AppContext", code: str | None = None) -> ft.Contr
             spacing=SPACE_3,
         ),
     )
+    card_body = ft.Column(
+        controls=[card_text, summary_context],
+        key="flashcard-card-body",
+        expand=True,
+        scroll=ft.ScrollMode.AUTO,
+        spacing=SPACE_4,
+    )
     summary_button = ft.OutlinedButton(content=ft.Text("查看当前 Summary"), visible=False)
     previous_button = ft.OutlinedButton(content=ft.Text("上一张"))
     next_button = primary_button("下一张", lambda _e: None)
@@ -139,10 +146,9 @@ def build_flashcard_page(ctx: "AppContext", code: str | None = None) -> ft.Contr
                 [
                     ft.Text(paper.code, size=14, color=MUTED, selectable=True),
                     card_kind,
-                    card_text,
+                    card_body,
                     position_text,
                     summary_button,
-                    summary_context,
                     ft.Row(
                         controls=[
                             previous_button,
@@ -158,9 +164,9 @@ def build_flashcard_page(ctx: "AppContext", code: str | None = None) -> ft.Contr
                 ],
                 key="flashcard-card",
                 spacing=SPACE_4,
+                expand=True,
             ),
         ],
         spacing=SPACE_6,
-        scroll=ft.ScrollMode.AUTO,
         expand=True,
     )

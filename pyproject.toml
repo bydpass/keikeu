@@ -30,6 +30,10 @@ packages = ["src/keikeu_core", "src/keikeu_app"]
 [tool.flet.app]
 path = "src"
 
+[tool.flet.ios.info]
+UIFileSharingEnabled = true
+LSSupportsOpeningDocumentsInPlace = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
