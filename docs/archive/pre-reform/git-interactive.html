@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Git 工作机理与 keikeu 工作流</title>
+  <style>
+    :root {
+      --serif: Georgia, "Iowan Old Style", "Palatino Linotype", "Songti SC", "Noto Serif SC", serif;
+      --kai: "Kaiti SC", "KaiTi", "STKaiti", var(--serif);
+      --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    }
+
+    body[data-mode="dusk"] {
+      --bg: #151a20;
+      --bg-glow: #1c242c;
+      --outside: #c7bda6;
+      --outside-dim: #8f8874;
+      --paper: #e9dfc8;
+      --paper-2: #e0d3b4;
+      --ink: #2c251b;
+      --ink-soft: #5c5140;
+      --gold: #c9a24b;
+      --gold-dim: #8f7433;
+      --sea: #5f7d80;
+      --wine: #7e3140;
+      --stone: #33383a;
+      --carve: #202527;
+      --carve-hi: rgba(233, 223, 200, .10);
+      --carve-shadow: rgba(0, 0, 0, .62);
+      --shadow: rgba(0, 0, 0, .55);
+      --mote-opacity: .5;
+    }
+
+    body[data-mode="day"] {
+      --bg: #a9b8ba;
+      --bg-glow: #c2cecd;
+      --outside: #39434a;
+      --outside-dim: #5c676b;
+      --paper: #f3ecda;
+      --paper-2: #eadfc6;
+      --ink: #2c251b;
+      --ink-soft: #5c5140;
+      --gold: #9d7f33;
+      --gold-dim: #8a7031;
+      --sea: #4f6f73;
+      --wine: #7e3140;
+      --stone: #7f8688;
+      --carve: #565e60;
+      --carve-hi: rgba(255, 255, 255, .5);
+      --carve-shadow: rgba(0, 0, 0, .25);
+      --shadow: rgba(30, 40, 44, .35);
+      --mote-opacity: 0;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      color: var(--outside);
+      background: radial-gradient(1100px 700px at 50% -8%, var(--bg-glow), var(--bg) 70%);
+      font-family: var(--serif);
+      font-size: 16px;
+      line-height: 1.72;
+      transition: background 800ms ease, color 800ms ease;
+    }
+
+    button { font: inherit; }
+    code, .mono { font-family: var(--mono); }
+    code { font-size: .9em; color: var(--sea); overflow-wrap: anywhere; }
+    ::selection { color: #1b1508; background: var(--gold); }
+    :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+    .motes {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: var(--mote-opacity);
+      transition: opacity 1s;
+    }
+    .motes i {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #e8cf8f, transparent 70%);
+      animation: drift 26s linear infinite;
+    }
+    .motes i:nth-child(1) { left: 12%; top: 72%; }
+    .motes i:nth-child(2) { left: 28%; top: 42%; animation-delay: -7s; }
+    .motes i:nth-child(3) { left: 47%; top: 84%; animation-delay: -13s; }
+    .motes i:nth-child(4) { left: 65%; top: 38%; animation-delay: -3s; }
+    .motes i:nth-child(5) { left: 82%; top: 69%; animation-delay: -18s; }
+    .motes i:nth-child(6) { left: 91%; top: 49%; animation-delay: -10s; }
+    @keyframes drift {
+      0% { transform: translateY(0); opacity: 0; }
+      15% { opacity: .7; }
+      65% { opacity: .35; }
+      100% { transform: translate(14px, -90px); opacity: 0; }
+    }
+
+    #light {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 20;
+      width: 58px;
+      height: 58px;
+      border: 1px solid var(--gold-dim);
+      border-radius: 50%;
+      color: var(--gold);
+      background: radial-gradient(circle at 35% 30%, var(--stone), var(--carve));
+      box-shadow: 0 8px 22px -8px var(--shadow);
+      cursor: pointer;
+      font-size: 14px;
+      letter-spacing: .16em;
+      text-indent: .16em;
+      transition: transform 300ms ease, background 800ms ease, color 800ms ease;
+    }
+    #light:hover { transform: translateY(-2px); }
+
+    .lintel {
+      position: relative;
+      z-index: 1;
+      padding: 50px 84px 36px;
+      text-align: center;
+      background:
+        linear-gradient(180deg, rgba(0, 0, 0, .16), transparent 34%),
+        repeating-linear-gradient(94deg, rgba(255, 255, 255, .015) 0 2px, rgba(0, 0, 0, .03) 2px 5px),
+        var(--stone);
+      border-bottom: 1px solid rgba(0, 0, 0, .35);
+      box-shadow: 0 18px 44px -20px var(--shadow);
+    }
+    .carve-en {
+      margin: 0 0 20px;
+      color: var(--carve);
+      font-size: clamp(14px, 3vw, 22px);
+      letter-spacing: .32em;
+      text-indent: .32em;
+      text-shadow: 0 1px 0 var(--carve-hi), 0 -1px 1px var(--carve-shadow);
+    }
+    .branch-mark {
+      display: block;
+      width: min(430px, 90%);
+      height: 74px;
+      margin: 0 auto;
+      color: var(--carve);
+      filter: drop-shadow(0 1px 0 var(--carve-hi));
+    }
+    .branch-mark path, .branch-mark line, .branch-mark circle {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .branch-mark .filled { fill: currentColor; stroke: none; }
+    .lintel-note {
+      margin: 16px 0 0;
+      color: var(--carve);
+      font-size: 12px;
+      letter-spacing: .16em;
+      text-shadow: 0 1px 0 var(--carve-hi);
+    }
+
+    .codex {
+      position: relative;
+      z-index: 2;
+      width: min(1240px, calc(100% - 36px));
+      margin: 0 auto;
+      padding: 48px 0 84px;
+    }
+    .titleblock { margin: 0 auto 34px; text-align: center; }
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--gold);
+      font-size: 11px;
+      letter-spacing: .38em;
+      text-indent: .38em;
+    }
+    h1 {
+      margin: 0 0 10px;
+      color: var(--outside);
+      font-size: clamp(29px, 5vw, 44px);
+      font-weight: 600;
+      letter-spacing: .1em;
+    }
+    .sub {
+      max-width: 760px;
+      margin: 0 auto;
+      color: var(--outside-dim);
+      letter-spacing: .04em;
+    }
+
+    .paper {
+      position: relative;
+      color: var(--ink);
+      background: var(--paper);
+      border-radius: 4px;
+      box-shadow: 0 18px 46px -20px var(--shadow), inset 0 0 0 1px rgba(60, 45, 20, .09);
+      overflow: hidden;
+    }
+    .paper::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="140" height="140"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2"/></filter><rect width="140" height="140" filter="url(%23n)" opacity="0.045"/></svg>');
+      mix-blend-mode: multiply;
+    }
+    .paper > * { position: relative; }
+
+    .scenario-strip {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(132px, 1fr));
+      gap: 1px;
+      margin-bottom: 20px;
+      background: var(--gold-dim);
+      border: 1px solid var(--gold-dim);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .scenario {
+      min-height: 76px;
+      padding: 12px 14px;
+      border: 0;
+      color: var(--ink);
+      background: var(--paper);
+      cursor: pointer;
+      text-align: left;
+      transition: background 220ms ease, color 220ms ease;
+    }
+    .scenario:hover, .scenario:focus-visible { background: var(--paper-2); }
+    .scenario[aria-pressed="true"] { color: #efe6d0; background: var(--wine); }
+    .scenario strong { display: block; font-size: 14px; letter-spacing: .1em; }
+    .scenario small { display: block; margin-top: 3px; font: 11px/1.4 var(--mono); opacity: .78; }
+
+    .mechanism {
+      display: grid;
+      grid-template-columns: minmax(238px, .72fr) minmax(430px, 1.36fr) minmax(275px, .92fr);
+      gap: 20px;
+      align-items: start;
+    }
+    .section-head {
+      padding: 16px 18px 13px;
+      border-bottom: 1px solid rgba(60, 45, 20, .22);
+    }
+    .section-head h2 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: .12em; }
+    .section-head p { margin: 5px 0 0; color: var(--ink-soft); font-size: 12px; }
+
+    .flow-list { display: grid; gap: 8px; padding: 12px; }
+    .flow-step {
+      display: grid;
+      grid-template-columns: 32px 1fr;
+      gap: 10px;
+      align-items: start;
+      width: 100%;
+      min-height: 66px;
+      padding: 10px;
+      border: 1px solid rgba(60, 45, 20, .2);
+      border-radius: 3px;
+      color: var(--ink);
+      background: rgba(243, 236, 218, .34);
+      cursor: pointer;
+      text-align: left;
+      transition: transform 220ms ease, background 220ms ease, border-color 220ms ease;
+    }
+    .flow-step:hover, .flow-step:focus-visible { transform: translateY(-1px); border-color: var(--gold-dim); }
+    .flow-step.is-active, .flow-step.is-linked { border-color: var(--wine); background: var(--paper-2); }
+    .step-index {
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border: 1px solid var(--gold-dim);
+      border-radius: 50%;
+      color: var(--wine);
+      font-size: 12px;
+    }
+    .flow-step strong { display: block; font-size: 14px; letter-spacing: .06em; }
+    .flow-step small { display: block; margin-top: 2px; color: var(--ink-soft); font: 11px/1.45 var(--mono); }
+
+    .map-wrap { padding: 18px; }
+    .map-note {
+      margin: 0 0 16px;
+      color: var(--sea);
+      font-family: var(--kai);
+      font-size: 14px;
+      text-align: center;
+    }
+    .zones {
+      display: grid;
+      grid-template-columns: 1fr 54px 1fr;
+      grid-template-areas:
+        "work add stage"
+        "commit-arrow commit-arrow commit-arrow"
+        "local push remote";
+      gap: 12px 6px;
+      align-items: center;
+    }
+    .zone {
+      min-height: 112px;
+      padding: 13px;
+      border: 1px solid rgba(60, 45, 20, .27);
+      border-radius: 4px;
+      color: var(--ink);
+      background: var(--paper-2);
+      cursor: pointer;
+      text-align: left;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, .12);
+      transition: transform 280ms ease, border-color 280ms ease, box-shadow 280ms ease;
+    }
+    .zone:hover, .zone:focus-visible { transform: translateY(-2px); border-color: var(--gold); }
+    .zone.is-active, .zone.is-linked {
+      border-color: var(--wine);
+      box-shadow: inset 0 0 0 1px var(--wine), 0 8px 18px -12px var(--shadow);
+    }
+    .zone-work { grid-area: work; }
+    .zone-stage { grid-area: stage; }
+    .zone-local { grid-area: local; }
+    .zone-remote { grid-area: remote; }
+    .zone-kicker { display: block; color: var(--wine); font-size: 10px; letter-spacing: .22em; }
+    .zone strong { display: block; margin: 4px 0 3px; font-size: 17px; letter-spacing: .08em; }
+    .zone span:last-child { display: block; color: var(--ink-soft); font-size: 12px; }
+    .transfer {
+      display: grid;
+      place-items: center;
+      min-height: 42px;
+      color: var(--ink-soft);
+      font: 10px/1.35 var(--mono);
+      text-align: center;
+    }
+    .transfer::after { content: "→"; display: block; color: var(--gold-dim); font: 22px/1 var(--serif); }
+    .transfer-add { grid-area: add; }
+    .transfer-commit { grid-area: commit-arrow; }
+    .transfer-commit::after { content: "↓"; }
+    .transfer-push { grid-area: push; }
+    .transfer.is-linked { color: var(--wine); font-weight: 700; }
+    .transfer.is-linked::after { color: var(--wine); }
+
+    .history {
+      margin-top: 18px;
+      padding: 15px 15px 12px;
+      border-top: 1px solid rgba(60, 45, 20, .18);
+    }
+    .history-title { margin: 0 0 10px; color: var(--ink-soft); font-size: 11px; letter-spacing: .18em; }
+    .commit-row { position: relative; display: flex; align-items: center; min-height: 51px; padding-left: 2px; }
+    .commit-row::before {
+      content: "";
+      position: absolute;
+      left: 13px;
+      right: 13px;
+      top: 25px;
+      height: 2px;
+      background: var(--gold-dim);
+    }
+    .commit-dot {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      margin-right: clamp(23px, 8vw, 74px);
+      border: 2px solid var(--gold-dim);
+      border-radius: 50%;
+      color: var(--ink-soft);
+      background: var(--paper);
+      font: 9px/1 var(--mono);
+    }
+    .commit-dot:last-child { margin-right: 0; }
+    .commit-dot.current { border-color: var(--wine); color: var(--wine); }
+    .branch-label {
+      position: absolute;
+      right: 0;
+      top: -2px;
+      padding: 1px 6px;
+      border: 1px solid var(--wine);
+      border-radius: 2px;
+      color: var(--wine);
+      background: var(--paper);
+      font: 9px/1.4 var(--mono);
+    }
+    .history-caption { margin: 8px 0 0; color: var(--ink-soft); font-size: 12px; }
+
+    .detail { padding: 18px; }
+    .badges { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 13px; }
+    .badge {
+      padding: 3px 8px;
+      border: 1px solid var(--gold-dim);
+      border-radius: 2px;
+      color: var(--gold-dim);
+      font-size: 10px;
+      letter-spacing: .08em;
+    }
+    .badge.warn { border-color: var(--wine); color: var(--wine); }
+    .badge.cold { border-color: var(--sea); color: var(--sea); }
+    #detail-title { margin: 0 0 10px; font-size: 21px; font-weight: 600; line-height: 1.35; letter-spacing: .06em; }
+    #detail-summary { margin: 0; color: var(--ink-soft); }
+    .fact { margin-top: 20px; }
+    .fact h3 { margin: 0 0 7px; color: var(--ink-soft); font-size: 11px; letter-spacing: .2em; }
+    .fact p { margin: 0; font-size: 14px; }
+    .command-list { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
+    .command-list li { padding: 7px 9px; border-left: 2px solid var(--gold-dim); background: var(--paper-2); }
+    .danger-note { padding: 10px 12px; border-left: 3px solid var(--wine); background: var(--paper-2); }
+
+    .lower-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+    .chapter { padding: clamp(22px, 4vw, 36px); }
+    .chapter h2 {
+      margin: 0 0 19px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(60, 45, 20, .22);
+      font-size: 19px;
+      font-weight: 600;
+      letter-spacing: .13em;
+    }
+    .chapter h2 span { display: inline-block; min-width: 2.4em; color: var(--wine); }
+    .chapter h3 { margin: 24px 0 9px; color: var(--ink-soft); font-size: 13px; letter-spacing: .16em; }
+    .chapter p { margin: 0 0 1em; }
+
+    .object-model { display: grid; gap: 9px; margin-top: 16px; }
+    .object {
+      display: grid;
+      grid-template-columns: 70px 1fr;
+      gap: 12px;
+      padding: 10px 12px;
+      border: 1px solid rgba(60, 45, 20, .18);
+      background: var(--paper-2);
+    }
+    .object strong { color: var(--wine); font: 12px/1.7 var(--mono); }
+    .object span { font-size: 13px; }
+
+    .compare { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .compare th { padding: 6px 8px; color: var(--ink-soft); font-size: 10px; letter-spacing: .16em; text-align: left; }
+    .compare td { padding: 8px; border-top: 1px solid rgba(60, 45, 20, .17); vertical-align: top; }
+    .scroll-x { overflow-x: auto; }
+
+    .checklist { margin: 0; padding: 0; list-style: none; }
+    .checklist li { position: relative; margin-bottom: 9px; padding-left: 23px; }
+    .checklist li::before { content: "◇"; position: absolute; left: 0; color: var(--gold-dim); }
+    .do-not li::before { content: "✕"; color: var(--wine); font-size: 12px; }
+    .aside { color: var(--sea); font-family: var(--kai); font-size: 14px; }
+
+    .footer { margin-top: 30px; color: var(--outside-dim); font-size: 12px; letter-spacing: .08em; text-align: center; }
+    .footer .rune { color: var(--gold-dim); letter-spacing: .5em; }
+
+    @media (max-width: 1080px) {
+      .scenario-strip { grid-template-columns: repeat(3, 1fr); }
+      .mechanism { grid-template-columns: minmax(220px, .72fr) minmax(430px, 1.28fr); }
+      .detail-paper { grid-column: 1 / -1; }
+      .detail { display: grid; grid-template-columns: 1.25fr 1fr; gap: 0 28px; }
+      .detail > .badges, .detail > div:nth-child(2) { grid-column: 1; }
+      .detail > .fact { grid-column: 2; }
+      .detail > .fact:last-child { grid-column: 1 / -1; }
+    }
+    @media (max-width: 760px) {
+      .lintel { padding: 44px 72px 30px 22px; }
+      .codex { width: min(100% - 24px, 620px); padding-top: 38px; }
+      .scenario-strip, .mechanism, .lower-grid, .detail { grid-template-columns: 1fr; }
+      .scenario-strip { gap: 1px; }
+      .scenario { min-height: 62px; }
+      .detail > .badges, .detail > div:nth-child(2), .detail > .fact, .detail > .fact:last-child { grid-column: 1; }
+      .zones { grid-template-columns: 1fr 42px 1fr; }
+      .zone { min-height: 118px; padding: 11px; }
+      .zone strong { font-size: 15px; }
+      .object { grid-template-columns: 62px 1fr; }
+    }
+    @media (max-width: 460px) {
+      .scenario-strip { grid-template-columns: 1fr 1fr; }
+      .zones {
+        grid-template-columns: 1fr;
+        grid-template-areas: "work" "add" "stage" "commit-arrow" "local" "push" "remote";
+      }
+      .transfer::after { content: "↓"; }
+      .zone { min-height: 96px; }
+      .history { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; }
+      html { scroll-behavior: auto; }
+    }
+  </style>
+</head>
+<body data-mode="dusk">
+<div style="position:relative;z-index:9999;padding:12px 18px;background:#8c3b42;color:#fffdf8;font:700 13px/1.5 ui-monospace,monospace;text-align:center">ARCHIVED · READ ONLY · Historical Git explainer. Current rules live in docs/RULES.md.</div>
+  <div class="motes" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <button id="light" type="button" aria-label="开窗迎昼" aria-pressed="false">开窗</button>
+
+  <header class="lintel">
+    <p class="carve-en">A COMMIT IS A SNAPSHOT WITH A MEMORY</p>
+    <svg class="branch-mark" viewBox="0 0 430 74" role="img" aria-label="一条 Git 分支从主线分出，再合回主线">
+      <line x1="18" y1="48" x2="412" y2="48"></line>
+      <path d="M126 48 C164 48 162 18 202 18 H286 C326 18 326 48 362 48"></path>
+      <circle class="filled" cx="62" cy="48" r="5"></circle>
+      <circle class="filled" cx="126" cy="48" r="5"></circle>
+      <circle class="filled" cx="202" cy="18" r="5"></circle>
+      <circle class="filled" cx="286" cy="18" r="5"></circle>
+      <circle class="filled" cx="362" cy="48" r="5"></circle>
+      <circle class="filled" cx="406" cy="48" r="5"></circle>
+    </svg>
+    <p class="lintel-note">文件会变，分支会走，提交留下可查的来路。</p>
+  </header>
+
+  <main class="codex">
+    <header class="titleblock">
+      <p class="eyebrow">GIT · MECHANISM · WORKFLOW · SAFETY</p>
+      <h1>Git 工作机理与工作流</h1>
+      <p class="sub">把 Git 看成四个库位与一册不可变账簿。先理解每条命令搬动了什么，再决定是否执行。</p>
+    </header>
+
+    <nav class="scenario-strip" aria-label="选择 Git 场景">
+      <button class="scenario" type="button" data-key="edit" aria-pressed="true"><strong>修改</strong><small>working tree</small></button>
+      <button class="scenario" type="button" data-key="stage" aria-pressed="false"><strong>暂存</strong><small>git add</small></button>
+      <button class="scenario" type="button" data-key="commit" aria-pressed="false"><strong>提交</strong><small>git commit</small></button>
+      <button class="scenario" type="button" data-key="branch" aria-pressed="false"><strong>分支</strong><small>git switch -c</small></button>
+      <button class="scenario" type="button" data-key="merge" aria-pressed="false"><strong>合并</strong><small>git merge</small></button>
+      <button class="scenario" type="button" data-key="sync" aria-pressed="false"><strong>同步</strong><small>fetch / push</small></button>
+    </nav>
+
+    <section class="mechanism" aria-label="Git 交互机制图">
+      <article class="paper">
+        <header class="section-head">
+          <h2>keikeu 日常工作流</h2>
+          <p>点击一步，查看它改变的库位与检查方法。</p>
+        </header>
+        <div class="flow-list">
+          <button class="flow-step is-linked" type="button" data-key="observe">
+            <span class="step-index">1</span><span><strong>观察现场</strong><small>git status --short --branch</small></span>
+          </button>
+          <button class="flow-step" type="button" data-key="newbranch">
+            <span class="step-index">2</span><span><strong>开任务分支</strong><small>git switch -c feature/name</small></span>
+          </button>
+          <button class="flow-step is-active" type="button" data-key="edit">
+            <span class="step-index">3</span><span><strong>编辑小范围文件</strong><small>working tree changes</small></span>
+          </button>
+          <button class="flow-step" type="button" data-key="inspect">
+            <span class="step-index">4</span><span><strong>审查并测试</strong><small>git diff · pytest</small></span>
+          </button>
+          <button class="flow-step" type="button" data-key="stage">
+            <span class="step-index">5</span><span><strong>选择下次提交</strong><small>git add -p</small></span>
+          </button>
+          <button class="flow-step" type="button" data-key="commit">
+            <span class="step-index">6</span><span><strong>封存一个检查点</strong><small>git commit -m "type: ..."</small></span>
+          </button>
+          <button class="flow-step" type="button" data-key="merge">
+            <span class="step-index">7</span><span><strong>合回稳定分支</strong><small>git switch main · git merge</small></span>
+          </button>
+          <button class="flow-step" type="button" data-key="sync">
+            <span class="step-index">8</span><span><strong>明确授权后推送</strong><small>git push</small></span>
+          </button>
+        </div>
+      </article>
+
+      <article class="paper">
+        <header class="section-head">
+          <h2>四个库位</h2>
+          <p>Git 不会凭空“保存一切”；每条箭头都对应一次明确选择。</p>
+        </header>
+        <div class="map-wrap">
+          <p class="map-note">提交保存的是整个项目的一张快照；Git 在展示时才把两张快照比较成 diff。</p>
+          <div class="zones">
+            <button class="zone zone-work is-linked is-active" type="button" data-key="worktree">
+              <span class="zone-kicker">FILES ON DISK</span>
+              <strong>工作区</strong>
+              <span>你此刻实际看到、编辑和运行的文件。</span>
+            </button>
+            <div class="transfer transfer-add" data-flow="add"><span>git add</span></div>
+            <button class="zone zone-stage" type="button" data-key="index">
+              <span class="zone-kicker">PLANNED SNAPSHOT</span>
+              <strong>暂存区</strong>
+              <span>下一次提交要采用的精确内容，又叫 index。</span>
+            </button>
+            <div class="transfer transfer-commit" data-flow="commit"><span>git commit</span></div>
+            <button class="zone zone-local" type="button" data-key="local">
+              <span class="zone-kicker">.GIT OBJECTS + REFS</span>
+              <strong>本地历史</strong>
+              <span>提交对象、分支指针、HEAD 与对象库。</span>
+            </button>
+            <div class="transfer transfer-push" data-flow="push"><span>push →<br>← fetch</span></div>
+            <button class="zone zone-remote" type="button" data-key="remote">
+              <span class="zone-kicker">REMOTE REPOSITORY</span>
+              <strong>远端副本</strong>
+              <span>例如 GitHub；它不是本地编辑的自动镜像。</span>
+            </button>
+          </div>
+
+          <div class="history" aria-label="提交与分支指针示意">
+            <p class="history-title">提交图：分支只是指向某个提交的可移动标签</p>
+            <div class="commit-row">
+              <span class="commit-dot">a1</span>
+              <span class="commit-dot">b2</span>
+              <span class="commit-dot">c3</span>
+              <span class="commit-dot current">d4<span class="branch-label">HEAD → feature/git-guide</span></span>
+            </div>
+            <p class="history-caption"><code>HEAD</code> 表示你当前检出的分支；新提交会让该分支指针前移。</p>
+          </div>
+        </div>
+      </article>
+
+      <aside class="paper detail-paper" aria-live="polite">
+        <header class="section-head">
+          <h2>当前机制说明</h2>
+          <p>场景、步骤和库位都可以点击。</p>
+        </header>
+        <div class="detail">
+          <div class="badges" id="badges"></div>
+          <div>
+            <h2 id="detail-title">修改只先发生在工作区</h2>
+            <p id="detail-summary">编辑文件不会自动进入提交历史，也不会自动上传 GitHub。Git 只是把它识别为相对 HEAD 的未暂存变化。</p>
+          </div>
+          <div class="fact">
+            <h3>发生了什么</h3>
+            <p id="effect-text"></p>
+          </div>
+          <div class="fact">
+            <h3>检查命令</h3>
+            <ul class="command-list" id="command-list"></ul>
+          </div>
+          <div class="fact">
+            <h3>边界 / 风险</h3>
+            <p class="danger-note" id="risk-text"></p>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="lower-grid">
+      <article class="paper chapter">
+        <h2><span>I</span>Git 到底存什么</h2>
+        <p>Git 是一个按内容寻址的对象库，外加一组会移动的名字。它的核心对象很少：</p>
+        <div class="object-model">
+          <div class="object"><strong>blob</strong><span>一份文件内容；不带文件名。</span></div>
+          <div class="object"><strong>tree</strong><span>一次目录结构：文件名、模式，以及它们指向的 blob / tree。</span></div>
+          <div class="object"><strong>commit</strong><span>指向一棵 tree、父提交、作者与说明；因此形成历史图。</span></div>
+          <div class="object"><strong>ref</strong><span>分支或标签的名字。分支会移动，提交对象本身不改。</span></div>
+        </div>
+        <h3>为何哈希值重要</h3>
+        <p>对象内容决定对象 ID。文件、目录或提交内容不同，ID 就不同；所以 Git 能复用相同内容，也能发现历史中的精确差异。</p>
+        <p class="aside">要点：commit 不是“改了三行”的补丁包，而是一张带父指针的项目快照。</p>
+      </article>
+
+      <article class="paper chapter">
+        <h2><span>II</span>分支、HEAD 与合并</h2>
+        <p><strong>分支</strong>只是指向提交的标签。<strong>HEAD</strong>通常指向当前分支。提交一次，当前分支向新提交前进一步。</p>
+        <div class="scroll-x">
+          <table class="compare">
+            <thead><tr><th>动作</th><th>真实含义</th><th>历史形状</th></tr></thead>
+            <tbody>
+              <tr><td><code>switch -c</code></td><td>从当前提交创建新分支并切过去</td><td>暂时没有新提交</td></tr>
+              <tr><td>fast-forward</td><td>目标分支没有分叉，只把指针向前移</td><td>一条直线</td></tr>
+              <tr><td>merge commit</td><td>两边都有新提交，生成一个有两个父提交的新提交</td><td>分叉后汇合</td></tr>
+              <tr><td>conflict</td><td>Git 无法自动决定同一处内容应采用哪边</td><td>等待人类解决，不是数据已经丢失</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>冲突处理</h3>
+        <p><code>git status</code> → 逐个读冲突双方 → 手动保留正确意图 → <code>git add &lt;file&gt;</code> → 测试 → 完成合并。无法判断时用 <code>git merge --abort</code> 回到合并前。</p>
+      </article>
+
+      <article class="paper chapter">
+        <h2><span>III</span>本地与 GitHub 的边界</h2>
+        <div class="scroll-x">
+          <table class="compare">
+            <thead><tr><th>命令</th><th>方向</th><th>是否改工作区</th></tr></thead>
+            <tbody>
+              <tr><td><code>git fetch</code></td><td>远端 → 本地的远端跟踪引用</td><td>否</td></tr>
+              <tr><td><code>git pull</code></td><td>先 fetch，再把远端变化整合进当前分支</td><td>可能会</td></tr>
+              <tr><td><code>git push</code></td><td>本地提交 → 远端分支</td><td>否，但会改变共享远端</td></tr>
+              <tr><td><code>origin/main</code></td><td>上次 fetch 后，你本地记住的远端 main 位置</td><td>不是实时网络状态</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>keikeu 的稳妥习惯</h3>
+        <p>先 <code>git fetch</code> 与 <code>git status</code> 看清分歧，再决定 merge、pull 或 push。推送会改变 GitHub，agent 必须得到明确授权。</p>
+      </article>
+
+      <article class="paper chapter">
+        <h2><span>IV</span>安全操作册</h2>
+        <h3>先问：我要撤销哪一层？</h3>
+        <ul class="checklist">
+          <li>只想取消暂存、保留文件修改：<code>git restore --staged &lt;file&gt;</code></li>
+          <li>想丢弃某文件未暂存修改：先看 diff，再用 <code>git restore &lt;file&gt;</code></li>
+          <li>已推送的坏提交：用新提交 <code>git revert &lt;hash&gt;</code> 反向撤销</li>
+          <li>临时收起工作：<code>git stash push -m "说明"</code>，但 stash 不是仓库</li>
+        </ul>
+        <h3>不要凭感觉执行</h3>
+        <ul class="checklist do-not">
+          <li><code>git reset --hard</code>：会一起丢弃工作区修改</li>
+          <li><code>git clean -fd</code>：会删除未跟踪文件</li>
+          <li><code>git push --force</code>：会改写远端历史</li>
+          <li><code>git branch -D</code>：会强删尚未合并的分支</li>
+        </ul>
+        <p class="aside">紧急时先停手：<code>git status</code>、<code>git diff</code>、<code>git log --oneline --decorate --graph --all -n 20</code>。</p>
+      </article>
+    </section>
+
+    <footer class="footer">
+      <p class="rune">✦ ✦ ✦</p>
+      <p>为 keikeu 的本地开发流程所作。依据仓库内 <span class="mono">gitspec.md</span> 与 <span class="mono">gitagent.md</span> 整理；规则正文仍以源文件为准。</p>
+    </footer>
+  </main>
+
+  <script>
+    const knowledge = {
+      edit: {
+        title: "修改只先发生在工作区",
+        summary: "编辑文件不会自动进入提交历史，也不会自动上传 GitHub。Git 只是把它识别为相对 HEAD 的未暂存变化。",
+        effect: "工作区文件发生改变；暂存区仍保留上次 add 的内容，本地提交与远端均不变。",
+        commands: ["git status --short --branch", "git diff", "git diff -- <file>"],
+        risk: "未提交内容仍只在当前磁盘上。切换分支或撤销前先确认它是否需要保留。",
+        badges: [["本地", "cold"], ["未入历史", "warn"]],
+        zones: ["worktree"], flows: [], steps: ["edit", "observe"]
+      },
+      stage: {
+        title: "暂存区是一张待提交快照",
+        summary: "git add 把指定内容复制进 index。之后继续编辑同一文件，会同时出现 staged 与 unstaged 两个版本。",
+        effect: "工作区 → 暂存区。git add -p 可以逐块选择，适合把混杂修改拆成可解释的提交。",
+        commands: ["git add -p", "git diff --staged", "git restore --staged <file>"],
+        risk: "add 不是备份，也不是上传。只看 git diff 会漏掉已经暂存的内容。",
+        badges: [["选择提交边界", ""], ["仍在本地", "cold"]],
+        zones: ["worktree", "index"], flows: ["add"], steps: ["stage"]
+      },
+      commit: {
+        title: "commit 把暂存区封成不可变检查点",
+        summary: "新 commit 记录一棵项目目录树、父提交、作者、时间与说明；当前分支指针随后移到它。",
+        effect: "暂存区 → 本地对象库。没有暂存的变化不会进入这次提交；工作区也不会因此自动变干净。",
+        commands: ["git diff --staged", "git commit -m \"type: short summary\"", "git show --stat HEAD"],
+        risk: "提交说明应只描述一个目的。commit 只在本地存在，直到 push。",
+        badges: [["本地检查点", ""], ["快照", "cold"]],
+        zones: ["index", "local"], flows: ["commit"], steps: ["commit"]
+      },
+      branch: {
+        title: "分支是会移动的提交标签",
+        summary: "创建分支几乎不复制文件；Git 只创建一个指向当前提交的新 ref，再让 HEAD 指向它。",
+        effect: "后续 commit 推动新分支前移，main 留在原位。这样一个任务的历史和风险被限制在自己的线内。",
+        commands: ["git branch --show-current", "git switch -c feature/<task-name>", "git log --oneline --decorate --graph --all -n 20"],
+        risk: "切分支前检查工作区。未提交修改不属于任何分支，若冲突 Git 会拒绝切换。",
+        badges: [["轻量指针", "cold"], ["一任务一分支", ""]],
+        zones: ["local"], flows: [], steps: ["newbranch"]
+      },
+      merge: {
+        title: "merge 整合的是两段提交历史",
+        summary: "若 main 只是落后，Git 可 fast-forward 移动指针；若双方分叉，Git 尝试产生一个同时连接两边的结果。",
+        effect: "本地分支引用和历史图改变。冲突代表 Git 需要人来解释意图，不等于文件已经丢失。",
+        commands: ["git status", "git switch main", "git merge feature/<task-name>", "git merge --abort"],
+        risk: "合并前必须工作区干净；冲突解决后要重新检查 diff 并测试。",
+        badges: [["整合历史", ""], ["可能冲突", "warn"]],
+        zones: ["local"], flows: [], steps: ["merge"]
+      },
+      sync: {
+        title: "远端是另一座仓库，不是自动云盘",
+        summary: "fetch 只更新本地对远端状态的认识；push 才把本地提交写入远端；pull 是 fetch 加一次整合。",
+        effect: "push：本地 → 远端。fetch：远端 → 本地的 origin/* 引用。两者都不等于同步未提交文件。",
+        commands: ["git fetch", "git status", "git log --oneline --decorate --graph --all -n 20", "git push"],
+        risk: "push 改变共享 GitHub 状态，keikeu 工作流要求明确授权；不要默认 force push。",
+        badges: [["网络边界", "warn"], ["显式同步", "cold"]],
+        zones: ["local", "remote"], flows: ["push"], steps: ["sync"]
+      },
+      observe: {
+        title: "先看现场，再动文件",
+        summary: "status 同时告诉你当前分支、已暂存、未暂存、未跟踪，以及与上游分支的关系。",
+        effect: "只读，不改变任何库位。它是每次编辑、合并、提交和危险操作前的驾驶舱仪表。",
+        commands: ["git status --short --branch", "git branch --show-current", "git log --oneline --decorate -n 10"],
+        risk: "若工作区脏，先列出所有文件并判断是否与当前任务重叠；不要把别人的修改顺手装进自己的提交。",
+        badges: [["只读", "cold"], ["必做", ""]],
+        zones: ["worktree", "index", "local"], flows: [], steps: ["observe"]
+      },
+      newbranch: {
+        title: "为一个可审查任务开一条线",
+        summary: "从干净、正确的起点创建短命任务分支，让 main 保持稳定，让提交范围能被单独检查和合并。",
+        effect: "在本地创建一个新 ref 并切换 HEAD；不会自动在 GitHub 创建同名分支。",
+        commands: ["git status --short --branch", "git switch -c feature/<task-name>", "git branch --show-current"],
+        risk: "名字应表达一个具体任务。feature/mvp 这类巨型分支会把无关风险绑在一起。",
+        badges: [["本地 ref", "cold"], ["小范围", ""]],
+        zones: ["local"], flows: [], steps: ["newbranch"]
+      },
+      inspect: {
+        title: "diff 解释变化，测试检查行为",
+        summary: "diff 负责回答改了什么；测试负责回答关键行为是否仍成立。两者不能互相替代。",
+        effect: "通常只读。先看未暂存 diff；暂存后再看 --staged，确认提交边界与实际意图一致。",
+        commands: ["git diff", ".venv/bin/python -m pytest", "git diff --check", "git diff --staged"],
+        risk: "测试通过只证明覆盖到的行为；看不懂的 diff 不应提交。docs-only 也至少跑 git diff --check。",
+        badges: [["只读检查", "cold"], ["人类负责", ""]],
+        zones: ["worktree", "index"], flows: [], steps: ["inspect"]
+      },
+      worktree: {
+        title: "工作区：磁盘上真正的项目文件",
+        summary: "编辑器、测试和应用读取的是这里。它是某个提交快照的检出结果，再叠加你尚未提交的修改。",
+        effect: "tracked 文件会显示 modified/deleted；新文件先是 untracked。Git 不会自动把它们加入历史。",
+        commands: ["git status --short", "git diff", "git ls-files"],
+        risk: "git restore <file> 会覆盖这里的未暂存修改；执行前先看 diff。",
+        badges: [["实际文件", "cold"], ["可能未备份", "warn"]],
+        zones: ["worktree"], flows: [], steps: ["edit"]
+      },
+      index: {
+        title: "暂存区：下一次提交的装配台",
+        summary: "index 不是一个让文件暂住的普通文件夹，而是下一棵 tree 的候选内容。它可以和工作区、HEAD 都不同。",
+        effect: "git add 更新 index；git commit 读取 index；git restore --staged 让它回到 HEAD 对应内容。",
+        commands: ["git diff --staged", "git add -p", "git restore --staged <file>"],
+        risk: "同一文件可一半已暂存、一半未暂存。提交前必须看 --staged。",
+        badges: [["planned snapshot", "cold"], ["提交边界", ""]],
+        zones: ["index"], flows: ["add", "commit"], steps: ["stage"]
+      },
+      local: {
+        title: "本地仓库：对象库、提交图与引用",
+        summary: "项目的 .git 目录保存对象、refs、HEAD、配置和 reflog。正常情况下不要手工编辑它。",
+        effect: "commit、branch、merge、tag 等主要改变这里。即使离线，你仍能完整提交、切分支和查看历史。",
+        commands: ["git log --oneline --decorate --graph --all", "git show HEAD", "git reflog"],
+        risk: "本地提交尚未等于远端备份；但不要通过复制或手改 .git 来‘修复’历史。",
+        badges: [["完整仓库", "cold"], ["可离线", ""]],
+        zones: ["local"], flows: ["commit", "push"], steps: ["commit", "merge"]
+      },
+      remote: {
+        title: "远端仓库：通过名字连接的另一份 Git 历史",
+        summary: "origin 通常只是远端地址的别名。origin/main 是本地的远端跟踪引用，不是实时读取的 GitHub 分支。",
+        effect: "fetch 更新 origin/*；push 更新远端分支；两者都只传 Git 对象与 refs，不传工作区未提交修改。",
+        commands: ["git remote -v", "git fetch origin", "git log main..origin/main", "git log origin/main..main"],
+        risk: "远端可能被他人推进。推送前 fetch 并查看 ahead/behind；共享历史优先 revert，不改写。",
+        badges: [["另一座仓库", "cold"], ["共享状态", "warn"]],
+        zones: ["remote", "local"], flows: ["push"], steps: ["sync"]
+      }
+    };
+
+    const scenarios = [...document.querySelectorAll(".scenario")];
+    const steps = [...document.querySelectorAll(".flow-step")];
+    const zones = [...document.querySelectorAll(".zone")];
+    const transfers = [...document.querySelectorAll(".transfer")];
+    const badges = document.getElementById("badges");
+    const title = document.getElementById("detail-title");
+    const summary = document.getElementById("detail-summary");
+    const effect = document.getElementById("effect-text");
+    const commands = document.getElementById("command-list");
+    const risk = document.getElementById("risk-text");
+
+    function render(key, source) {
+      const entry = knowledge[key] || knowledge.edit;
+      title.textContent = entry.title;
+      summary.textContent = entry.summary;
+      effect.textContent = entry.effect;
+      risk.textContent = entry.risk;
+
+      badges.replaceChildren(...entry.badges.map(([label, tone]) => {
+        const badge = document.createElement("span");
+        badge.className = `badge ${tone}`;
+        badge.textContent = label;
+        return badge;
+      }));
+
+      commands.replaceChildren(...entry.commands.map((command) => {
+        const item = document.createElement("li");
+        const code = document.createElement("code");
+        code.textContent = command;
+        item.append(code);
+        return item;
+      }));
+
+      const activeZones = new Set(entry.zones);
+      const activeFlows = new Set(entry.flows);
+      const activeSteps = new Set(entry.steps);
+      zones.forEach((node) => node.classList.toggle("is-linked", activeZones.has(node.dataset.key)));
+      zones.forEach((node) => node.classList.toggle("is-active", source === "zone" && node.dataset.key === key));
+      transfers.forEach((node) => node.classList.toggle("is-linked", activeFlows.has(node.dataset.flow)));
+      steps.forEach((node) => node.classList.toggle("is-linked", activeSteps.has(node.dataset.key)));
+      steps.forEach((node) => node.classList.toggle("is-active", source === "step" && node.dataset.key === key));
+
+      if (source === "scenario") {
+        scenarios.forEach((node) => node.setAttribute("aria-pressed", String(node.dataset.key === key)));
+      }
+    }
+
+    scenarios.forEach((node) => node.addEventListener("click", () => render(node.dataset.key, "scenario")));
+    steps.forEach((node) => node.addEventListener("click", () => render(node.dataset.key, "step")));
+    zones.forEach((node) => node.addEventListener("click", () => render(node.dataset.key, "zone")));
+
+    const light = document.getElementById("light");
+    light.addEventListener("click", () => {
+      const dusk = document.body.dataset.mode === "dusk";
+      document.body.dataset.mode = dusk ? "day" : "dusk";
+      light.textContent = dusk ? "燃烛" : "开窗";
+      light.setAttribute("aria-label", dusk ? "燃烛入暮" : "开窗迎昼");
+      light.setAttribute("aria-pressed", String(dusk));
+    });
+
+    render("edit", "scenario");
+  </script>
+</body>
+</html>

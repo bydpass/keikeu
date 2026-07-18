@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>keikeu · Architecture Map</title>
+  <link rel="stylesheet" href="../assets/map.css">
+</head>
+<body data-theme="light">
+  <a class="skip-link" href="#content">跳到正文</a>
+  <div class="shell">
+    <aside class="rail" aria-label="页面目录">
+      <div class="rail-brand">KEIKEU / ARCH</div>
+      <div class="rail-meta">NORMATIVE SYSTEM MAP · 2026-07-18</div>
+      <nav>
+        <a href="#boundary">系统边界</a>
+        <a href="#modules">模块地图</a>
+        <a href="#save">Paper 保存</a>
+        <a href="#flashcard">Flashcard 状态</a>
+        <a href="#library">索引与恢复</a>
+        <a href="#migration">迁移事务</a>
+        <a href="#platforms">平台壳层</a>
+        <a href="#failure">失败与恢复</a>
+        <a href="#proof">规范 / 事实审计</a>
+      </nav>
+      <div class="rail-actions">
+        <button type="button" data-theme-toggle aria-label="切换明暗主题">夜</button>
+        <button type="button" onclick="window.print()" aria-label="打印页面">印</button>
+      </div>
+    </aside>
+
+    <main class="main" id="content">
+      <div class="toolbar">
+        <label class="search">
+          <span class="mono">SEARCH / </span>
+          <input type="search" data-doc-search placeholder="搜索模块、数据流、迁移或错误" aria-label="搜索本文">
+        </label>
+        <div class="toolbar-links">
+          <a href="../PROJECT.md">PROJECT</a>
+          <a href="../RULES.md">RULES</a>
+          <a href="../generated/graphify/README.md">OBSERVED</a>
+        </div>
+      </div>
+
+      <header class="hero">
+        <div class="eyebrow">Intended architecture / source anchored</div>
+        <h1>作者资产在中间，应用壳层在外面。</h1>
+        <p class="lede">这张图描述 keikeu 想要维持的模块边界、数据方向、文件生命周期和失败恢复。每个关键节点都链接真实源码；生成图只能观察现实，不能改写本页意图。</p>
+        <div class="status-row">
+          <span class="ticket ok">Core = pure Python</span>
+          <span class="ticket ok">Markdown = canonical</span>
+          <span class="ticket">Index = rebuildable</span>
+          <span class="ticket warn">Provider = external</span>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="no-results" data-no-results>没有匹配章节。试试“markdown_io”“迁移”“index”或“iOS”。</div>
+
+        <section class="section searchable" id="boundary" data-search="boundary local first author asset external editor provider network 系统 边界 本地 作者资产 外部编辑器">
+          <div class="section-head"><div class="section-number">01</div><div><h2>系统边界</h2><p>keikeu 管理自己能诚实负责的层；其余交还作者或操作系统。</p></div></div>
+          <div class="flow" style="--cols:5">
+            <div class="node" data-layer="external"><b>Author</b><small>决定内容、Vault、外部编辑器与是否同步</small></div>
+            <div class="node" data-layer="app"><b>keikeu_app</b><small>Flet 页面、路由、反馈、设备布局</small></div>
+            <div class="node" data-layer="core"><b>keikeu_core</b><small>模型、Markdown、索引、Vault、迁移</small></div>
+            <div class="node" data-layer="disk"><b>Local filesystem</b><small>Paper、trash、index；设备 config/state</small></div>
+            <div class="node" data-layer="external"><b>OS / provider / editor</b><small>同步、文件可用性、正文与冲突处理</small></div>
+          </div>
+          <div class="grid two" style="margin-top:14px">
+            <article class="callout ok"><strong>Inside:</strong> explicit local file operations, Paper validation, safe replacement, search metadata, disposable card position.</article>
+            <article class="callout warn"><strong>Outside:</strong> provider accounts/APIs, remote timing, conflict merges, external prose, authorship evaluation, telemetry.</article>
+          </div>
+        </section>
+
+        <section class="section searchable" id="modules" data-search="modules dependencies app core disk main pages models markdown index vault migration local state 模块 依赖">
+          <div class="section-head"><div class="section-number">02</div><div><h2>模块地图</h2><p>用筛选器突出一层；淡化不等于删除依赖。</p></div></div>
+          <div class="button-row" aria-label="模块层筛选">
+            <button type="button" class="filter-button active" data-layer-filter="all">全部</button>
+            <button type="button" class="filter-button" data-layer-filter="app">App</button>
+            <button type="button" class="filter-button" data-layer-filter="core">Core</button>
+            <button type="button" class="filter-button" data-layer-filter="disk">Disk</button>
+            <button type="button" class="filter-button" data-layer-filter="external">External</button>
+          </div>
+          <div class="diagram" style="margin-top:14px">
+            <div class="flow" style="--cols:4">
+              <div class="node" data-layer="app"><b><a href="../../src/keikeu_app/main.py">app/main.py</a></b><small>Vault gate、路由、NavigationRail / NavigationBar</small></div>
+              <div class="node" data-layer="app"><b><a href="../../src/keikeu_app/pages/paper_page.py">paper_page.py</a></b><small>组装 Paper；拒绝外部改动覆盖</small></div>
+              <div class="node" data-layer="app"><b><a href="../../src/keikeu_app/pages/flashcard_page.py">flashcard_page.py</a></b><small>只读卡片投影与位置</small></div>
+              <div class="node" data-layer="app"><b><a href="../../src/keikeu_app/pages/library_page.py">library_page.py</a></b><small>检索、系统打开、trash / restore</small></div>
+            </div>
+            <div class="flow" style="--cols:5">
+              <div class="node" data-layer="core"><b><a href="../../src/keikeu_core/models.py">models.py</a></b><small>Paper 不变量</small></div>
+              <div class="node" data-layer="core"><b><a href="../../src/keikeu_core/markdown_io.py">markdown_io.py</a></b><small>唯一 Markdown I/O</small></div>
+              <div class="node" data-layer="core"><b><a href="../../src/keikeu_core/indexer.py">indexer.py</a></b><small>可重建 JSON</small></div>
+              <div class="node" data-layer="core"><b><a href="../../src/keikeu_core/vault.py">vault.py</a></b><small>Vault / trash / config</small></div>
+              <div class="node" data-layer="core"><b><a href="../../src/keikeu_core/migration_v01.py">migration_v01.py</a></b><small>一次性安全迁移</small></div>
+            </div>
+            <div class="flow" style="--cols:5">
+              <div class="node" data-layer="disk"><b>cache/*.md</b><small>当前唯一活动创作资产</small></div>
+              <div class="node" data-layer="disk"><b>.trash/cache/</b><small>软删除字节</small></div>
+              <div class="node" data-layer="disk"><b>keikeu_index.json</b><small>搜索元数据 + errors</small></div>
+              <div class="node" data-layer="disk"><b>config</b><small>设备选择的 Vault</small></div>
+              <div class="node" data-layer="disk"><b>state</b><small>card_index；可丢弃</small></div>
+            </div>
+          </div>
+          <div class="callout danger" style="margin-top:14px"><strong>禁止反向依赖：</strong>`keikeu_core` 不 import Flet；Paper Markdown 不依赖 GUI 状态；索引与本地位置不成为作者事实。</div>
+        </section>
+
+        <section class="section searchable" id="save" data-search="save paper markdown render atomic temp replace rename external modification 保存 写入 临时文件 原子替换 重命名">
+          <div class="section-head"><div class="section-number">03</div><div><h2>Paper 保存生命周期</h2><p>一条路径覆盖新建、普通更新和显式 rename，但动作彼此不混淆。</p></div></div>
+          <div class="flow" style="--cols:6;grid-template-columns:repeat(6,minmax(0,1fr))">
+            <div class="node" data-layer="app"><b>Form values</b><small>代号 / Summary / Highlights / Tags</small></div>
+            <div class="node" data-layer="core"><b>Paper.normalize</b><small>必填与最小清理</small></div>
+            <div class="node" data-layer="app"><b>source bytes check</b><small>识别外删 / 外改</small></div>
+            <div class="node" data-layer="core"><b>render</b><small>结构由 markdown_io 独占</small></div>
+            <div class="node" data-layer="disk"><b>temp + replace</b><small>同目录安全替换</small></div>
+            <div class="node" data-layer="core"><b>rebuild index</b><small>磁盘事实 → JSON</small></div>
+          </div>
+          <div class="table-wrap" style="margin-top:14px"><table class="matrix">
+            <thead><tr><th>操作</th><th>入口</th><th>不可违反</th><th>测试</th></tr></thead>
+            <tbody>
+              <tr><td>新建</td><td><a href="../../src/keikeu_core/markdown_io.py">write_paper()</a></td><td>目标已存在则失败；初稿副本首次冻结</td><td><a href="../../tests/test_markdown_io.py">test_markdown_io.py</a></td></tr>
+              <tr><td>更新</td><td><a href="../../src/keikeu_core/markdown_io.py">update_paper()</a></td><td>保留初稿副本与未知 frontmatter</td><td><a href="../../tests/test_markdown_io.py">test_markdown_io.py</a></td></tr>
+              <tr><td>重命名</td><td><a href="../../src/keikeu_core/markdown_io.py">rename_paper()</a></td><td>不覆盖新代号；成功后迁移 card-state key</td><td><a href="../../tests/test_app_pages.py">test_app_pages.py</a></td></tr>
+            </tbody>
+          </table></div>
+        </section>
+
+        <section class="section searchable" id="flashcard" data-search="flashcard cards projection local state position clamp rename summary highlight 卡片 投影 本地状态 位置">
+          <div class="section-head"><div class="section-number">04</div><div><h2>Flashcard：资产与视图分离</h2><p>Paper 内容只读投影；位置保存在 Vault 外。</p></div></div>
+          <div class="flow" style="--cols:5">
+            <div class="node" data-layer="disk"><b>Paper Markdown</b><small>Summary + ordered Highlights</small></div>
+            <div class="node" data-layer="core"><b>read_paper()</b><small>解析作者资产</small></div>
+            <div class="node" data-layer="app"><b>project_cards()</b><small>[summary, *highlights]</small></div>
+            <div class="node" data-layer="app"><b>get_card_index()</b><small>缺失 / 损坏 / 越界安全夹取</small></div>
+            <div class="node" data-layer="disk"><b>device state</b><small>paper.code → index；可删</small></div>
+          </div>
+          <div class="callout ok" style="margin-top:14px">删除状态文件只重置视图；它不能改变 Paper、索引或作者在外部编辑器中的正文。</div>
+        </section>
+
+        <section class="section searchable" id="library" data-search="index rebuild damaged error library trash restore recovery search 索引 重建 损坏 恢复 回收站 搜索">
+          <div class="section-head"><div class="section-number">05</div><div><h2>索引、删除与恢复</h2><p>磁盘 Paper 是事实，索引是加速层，trash 是可恢复资产状态。</p></div></div>
+          <div class="grid two">
+            <article class="card">
+              <h3>Index rebuild</h3>
+              <div class="flow" style="--cols:3">
+                <div class="node" data-layer="disk"><b>cache/*.md</b><small>逐个枚举</small></div>
+                <div class="node" data-layer="core"><b>read_paper()</b><small>成功 entry；失败 error</small></div>
+                <div class="node" data-layer="disk"><b>index v2</b><small>papers[] + errors[]</small></div>
+              </div>
+            </article>
+            <article class="card">
+              <h3>Soft delete / restore</h3>
+              <div class="flow" style="--cols:3">
+                <div class="node" data-layer="disk"><b>active Paper</b><small>校验直接子路径</small></div>
+                <div class="node" data-layer="core"><b>move bytes</b><small>同名 trash 自动避让</small></div>
+                <div class="node" data-layer="disk"><b>trash Paper</b><small>恢复冲突时改代号或取消</small></div>
+              </div>
+            </article>
+          </div>
+          <p class="source-link">实现：<a href="../../src/keikeu_core/indexer.py">indexer.py</a> · <a href="../../src/keikeu_core/vault.py">vault.py</a></p>
+        </section>
+
+        <section class="section searchable" id="migration" data-search="migration transaction v01 backup staging swap report rollback outline 迁移 事务 备份 暂存 切换 报告 回滚">
+          <div class="section-head"><div class="section-number">06</div><div><h2>v0.1 → v0.2 事务</h2><p>唯一允许永久移除旧活动 Outline 的路径。</p></div></div>
+          <div class="stepper">
+            <div class="step"><div><strong><a href="../../src/keikeu_core/migration_v01.py">inspect_v01_vault()</a></strong><p class="muted">只读识别旧 cache、outline、trash 和阻断项。</p></div><span class="ticket">PREFLIGHT</span></div>
+            <div class="step"><div><strong>copy full Vault</strong><p class="muted">备份根位于活动 Vault 外；失败即停止。</p></div><span class="ticket">BACKUP</span></div>
+            <div class="step"><div><strong>convert in staging</strong><p class="muted">旧 raw → 初稿副本 + Summary；notes → 首条 Highlight；title → legacy_title。</p></div><span class="ticket">STAGE</span></div>
+            <div class="step"><div><strong>read every staged Paper</strong><p class="muted">数量、Summary、初稿副本和报告全部验证。</p></div><span class="ticket">VERIFY</span></div>
+            <div class="step"><div><strong>swap staged Vault</strong><p class="muted">全部成功后才替换活动 cache，并移除活动旧 Outline。</p></div><span class="ticket warn">SWAP</span></div>
+            <div class="step"><div><strong>rebuild index + retain report</strong><p class="muted">备份仍是人工回滚来源；应用不浏览旧 Outline。</p></div><span class="ticket ok">DONE</span></div>
+          </div>
+          <div class="callout danger" style="margin-top:14px">任何失败不得留下混合 schema。迁移测试使用 fixture 或复制 Vault，禁止把唯一真实 Vault 当首测。</div>
+        </section>
+
+        <section class="section searchable" id="platforms" data-search="platform macos ios iphone ipad flet shell safe area vault picker sandbox 平台 壳层 安全区 文件选择器 沙盒">
+          <div class="section-head"><div class="section-number">07</div><div><h2>平台壳层</h2><p>领域与文件模型共用，导航和 Vault 能力按平台明确降级。</p></div></div>
+          <div class="table-wrap"><table class="matrix">
+            <thead><tr><th>能力</th><th>macOS</th><th>iOS 7.5 当前</th><th>不应推断</th></tr></thead>
+            <tbody>
+              <tr><td>Navigation</td><td>NavigationRail</td><td>NavigationBar + SafeArea</td><td>同一布局在所有设备自然</td></tr>
+              <tr><td>Vault choice</td><td>系统目录选择 + 手工路径 fallback</td><td>创建应用沙盒本机 Vault</td><td>持久第三方 File Provider 权限已解决</td></tr>
+              <tr><td>Paper model</td><td colspan="2">同一 `keikeu_core` / Markdown v2</td><td>平台验证可互相替代</td></tr>
+              <tr><td>System open</td><td>默认程序 / Finder</td><td>Share 等平台服务</td><td>外部编辑器行为完全一致</td></tr>
+              <tr><td>Evidence</td><td>Road v0.2 主验收平台</td><td>独立设备工程轨道</td><td>iOS 修复完成 = macOS MVP accepted</td></tr>
+            </tbody>
+          </table></div>
+          <p class="source-link">壳层：<a href="../../src/keikeu_app/main.py">main.py</a> · 项目配置：<a href="../../pyproject.toml">pyproject.toml</a></p>
+        </section>
+
+        <section class="section searchable" id="failure" data-search="failure recovery external modification corrupt index state provider error failure matrix 失败 恢复 外部修改 损坏">
+          <div class="section-head"><div class="section-number">08</div><div><h2>失败与恢复矩阵</h2><p>先保护资产，再恢复便利层。</p></div></div>
+          <div class="table-wrap"><table class="matrix">
+            <thead><tr><th>失败层</th><th>检测</th><th>安全响应</th><th>恢复来源</th></tr></thead>
+            <tbody>
+              <tr><td>Paper 输入</td><td>模型验证</td><td>拒绝写入并保留表单</td><td>作者修正输入</td></tr>
+              <tr><td>外部文件改动</td><td>页面打开时保存的 source bytes</td><td>拒绝覆盖</td><td>磁盘外部版本 + 人工决定</td></tr>
+              <tr><td>单 Paper 损坏</td><td>index rebuild parse error</td><td>隔离 error，继续其余文件</td><td>Markdown 手工修复 / 备份</td></tr>
+              <tr><td>Index 丢失/坏</td><td>结构版本检查</td><td>从 cache 重建</td><td>Paper Markdown</td></tr>
+              <tr><td>Card state 丢失/坏</td><td>JSON/类型/范围检查</td><td>使用第 1 张或有效末张</td><td>无需恢复</td></tr>
+              <tr><td>迁移失败</td><td>checkpoint / staged verification</td><td>不切换活动 Vault</td><td>原 Vault + 外部完整备份</td></tr>
+              <tr><td>Provider 冲突</td><td>未知/重复文件</td><td>不自动合并</td><td>操作系统与作者判断</td></tr>
+            </tbody>
+          </table></div>
+        </section>
+
+        <section class="section searchable" id="proof" data-search="normative observed graphify drift audit tests generated 规范 事实 审计 漂移 测试 生成">
+          <div class="section-head"><div class="section-number">09</div><div><h2>规范与现实的对撞</h2><p>生成观察不拥有产品权力。</p></div></div>
+          <div class="flow" style="--cols:5">
+            <div class="node" data-layer="external"><b>SPEC / RULES / this map</b><small>人工维护的意图</small></div>
+            <div class="node" data-layer="core"><b>src/</b><small>当前实现</small></div>
+            <div class="node" data-layer="core"><b>tests/</b><small>已编码行为证据</small></div>
+            <div class="node" data-layer="external"><b>Graphify trial</b><small>可删除观察层</small></div>
+            <div class="node" data-layer="external"><b>drift decision</b><small>改代码 / 改规范 / 写 ADR</small></div>
+          </div>
+          <div class="grid two" style="margin-top:14px">
+            <article class="card flat"><h3>Normative</h3><p><a href="../SPEC.md">SPEC</a>、<a href="../RULES.md">RULES</a> 与本图表达目标和边界。</p></article>
+            <article class="card flat"><h3>Observed</h3><p><a href="../generated/graphify/README.md">Graphify trial</a> 与测试只能描述仓库实际连接和已验证行为。</p></article>
+          </div>
+          <div class="callout warn" style="margin-top:14px">冲突只允许三种处理：修实现、修规范、登记临时偏差。禁止两份答案悄悄长期共存。</div>
+          <p class="source-link">决策：<a href="decisions/0001-document-authority.md">ADR 0001</a> · 项目坐标：<a href="../PROJECT.md">PROJECT</a></p>
+        </section>
+      </div>
+
+      <footer class="footer">keikeu Architecture Map · intended system authority · source anchored / offline / no build</footer>
+    </main>
+  </div>
+  <script src="../assets/map.js"></script>
+</body>
+</html>

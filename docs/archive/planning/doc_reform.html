@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>keikeu · 文档重构计划书 · Phase 8.5</title>
+<style>
+:root{
+  --bg:#f2eee6;
+  --surface:#fffdf8;
+  --surface-2:#f7f1e8;
+  --ink:#2d2924;
+  --muted:#70685e;
+  --line:#d8cdbf;
+  --accent:#9a5737;
+  --accent-2:#315f65;
+  --gold:#a9873f;
+  --danger:#8c3b42;
+  --ok:#476750;
+  --shadow:0 18px 55px rgba(57,43,31,.10);
+  --mono:ui-monospace,"SFMono-Regular",Consolas,"Liberation Mono",monospace;
+  --serif:Georgia,"Iowan Old Style","Songti SC","Noto Serif CJK SC",serif;
+  --sans:Inter,"SF Pro Text","PingFang SC","Microsoft YaHei",sans-serif;
+}
+body[data-theme="night"]{
+  --bg:#171b1e;
+  --surface:#22272b;
+  --surface-2:#2b3034;
+  --ink:#eee4d3;
+  --muted:#b5aa9b;
+  --line:#424a4f;
+  --accent:#d1845c;
+  --accent-2:#79a6a9;
+  --gold:#d0ad61;
+  --danger:#d77980;
+  --ok:#87ad90;
+  --shadow:0 20px 60px rgba(0,0,0,.34);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:
+    radial-gradient(circle at 12% 0%, color-mix(in srgb,var(--accent) 8%,transparent), transparent 34rem),
+    radial-gradient(circle at 88% 6%, color-mix(in srgb,var(--accent-2) 9%,transparent), transparent 31rem),
+    var(--bg);
+  color:var(--ink);
+  font-family:var(--sans);
+  line-height:1.72;
+  transition:background .35s,color .35s;
+}
+a{color:var(--accent-2)}
+button,input{font:inherit}
+button{cursor:pointer}
+::selection{background:color-mix(in srgb,var(--gold) 55%,transparent)}
+.shell{display:grid;grid-template-columns:250px minmax(0,1fr);min-height:100vh}
+.sidebar{
+  position:sticky;top:0;height:100vh;padding:26px 20px;
+  border-right:1px solid var(--line);background:color-mix(in srgb,var(--surface) 87%,transparent);
+  backdrop-filter:blur(18px);overflow:auto;z-index:8
+}
+.brand{font-family:var(--serif);font-size:21px;letter-spacing:.08em;margin-bottom:4px}
+.edition{font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:24px}
+nav a{display:block;padding:8px 10px;margin:2px 0;border-radius:6px;color:var(--muted);text-decoration:none;font-size:13px}
+nav a:hover,nav a.active{background:var(--surface-2);color:var(--ink)}
+.side-actions{display:flex;gap:8px;margin-top:22px}
+.icon-btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:7px;padding:8px 10px}
+.main{min-width:0}
+.hero{padding:72px clamp(24px,6vw,92px) 38px;max-width:1280px;margin:auto}
+.kicker{font-family:var(--mono);font-size:12px;letter-spacing:.16em;color:var(--accent);text-transform:uppercase}
+h1{font-family:var(--serif);font-size:clamp(36px,6vw,70px);line-height:1.06;margin:14px 0 22px;letter-spacing:.02em;max-width:980px}
+.hero-copy{font-size:clamp(17px,2vw,21px);max-width:840px;color:var(--muted)}
+.hero-copy strong{color:var(--ink)}
+.status-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+.badge{padding:7px 11px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:12px;color:var(--muted)}
+.badge.hot{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.content{max-width:1280px;margin:auto;padding:0 clamp(24px,6vw,92px) 100px}
+.section{scroll-margin-top:26px;margin:34px 0 54px}
+.section-head{display:flex;align-items:flex-start;gap:16px;margin-bottom:20px}
+.num{font-family:var(--mono);font-size:12px;color:var(--accent);padding-top:8px;min-width:34px}
+h2{font-family:var(--serif);font-size:clamp(26px,3vw,38px);line-height:1.2;margin:0 0 7px}
+.section-lead{color:var(--muted);max-width:880px;margin:0}
+.grid{display:grid;gap:16px}
+.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:22px;box-shadow:var(--shadow)}
+.card.flat{box-shadow:none}
+.card h3{font-family:var(--serif);font-size:19px;margin:0 0 9px}
+.card p{margin:.45em 0;color:var(--muted)}
+.card strong{color:var(--ink)}
+.rule-card{border-top:3px solid var(--accent)}
+.rule-card:nth-child(2){border-top-color:var(--accent-2)}
+.rule-card:nth-child(3){border-top-color:var(--gold)}
+.rule-card:nth-child(4){border-top-color:var(--danger)}
+.callout{border-left:4px solid var(--accent);background:var(--surface-2);padding:17px 20px;border-radius:0 8px 8px 0;margin:18px 0}
+.callout strong{color:var(--accent)}
+.code,code{font-family:var(--mono)}
+.code{background:#1d2226;color:#e8dfd0;border-radius:9px;padding:18px 20px;overflow:auto;font-size:13px;line-height:1.65;white-space:pre}
+body[data-theme="night"] .code{background:#111517}
+.map{display:grid;grid-template-columns:1fr 68px 1fr;align-items:center;gap:10px}
+.map-col{display:grid;gap:10px}
+.node{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.node b{font-family:var(--mono);font-size:13px}
+.node small{display:block;color:var(--muted);margin-top:4px}
+.arrow{text-align:center;color:var(--gold);font-size:24px}
+.pipeline{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;align-items:stretch;margin-top:20px}
+.pipe{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:16px 13px;min-height:112px}
+.pipe b{font-size:13px}
+.pipe p{font-size:12px;color:var(--muted);margin:6px 0 0}
+.pipe:not(:last-child)::after{content:"→";position:absolute;right:-15px;top:42%;z-index:2;color:var(--gold);font-size:20px}
+table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;display:table}
+th,td{padding:13px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line);font-size:13px}
+th{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--muted);background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+.table-wrap{overflow:auto;border-radius:10px;box-shadow:var(--shadow)}
+.file{font-family:var(--mono);font-size:.92em;color:var(--accent-2)}
+.phase{position:relative;padding-left:56px;margin:0 0 22px}
+.phase::before{content:attr(data-step);position:absolute;left:0;top:0;width:36px;height:36px;border-radius:50%;border:1px solid var(--gold);color:var(--gold);display:grid;place-items:center;font-family:var(--mono);font-size:12px;background:var(--surface)}
+.phase h3{margin:0 0 7px;font-family:var(--serif);font-size:21px}
+.phase p{margin:.4em 0;color:var(--muted)}
+.deliverables{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.deliverables span{font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-radius:5px;padding:5px 8px;background:var(--surface-2)}
+.checklist{display:grid;gap:9px}
+.check{display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:13px 14px}
+.check input{width:18px;height:18px;margin-top:4px;accent-color:var(--accent)}
+.check span{display:block}
+.check small{display:block;color:var(--muted);margin-top:2px}
+.metric{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid var(--line)}
+.metric:last-child{border-bottom:0}
+.metric b{font-family:var(--mono);font-size:12px;color:var(--accent)}
+.tag{display:inline-block;font-size:10px;font-family:var(--mono);letter-spacing:.06em;border:1px solid var(--line);border-radius:4px;padding:2px 6px;margin-right:5px;color:var(--muted)}
+.tag.norm{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 42%,var(--line))}
+.tag.obs{color:var(--accent-2);border-color:color-mix(in srgb,var(--accent-2) 42%,var(--line))}
+.tag.gen{color:var(--gold);border-color:color-mix(in srgb,var(--gold) 42%,var(--line))}
+footer{padding:28px clamp(24px,6vw,92px) 70px;color:var(--muted);font-size:12px;max-width:1280px;margin:auto}
+.print-only{display:none}
+@media(max-width:940px){
+  .shell{display:block}.sidebar{position:relative;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:16px 20px}.sidebar nav{display:flex;overflow:auto;gap:4px}.sidebar nav a{white-space:nowrap}.side-actions{position:absolute;right:18px;top:8px}.edition{margin-bottom:10px}.grid.three{grid-template-columns:1fr}.pipeline{grid-template-columns:1fr}.pipe:not(:last-child)::after{content:"↓";right:50%;top:auto;bottom:-22px}.map{grid-template-columns:1fr}.arrow{transform:rotate(90deg)}
+}
+@media(max-width:680px){.grid.two{grid-template-columns:1fr}.hero{padding-top:48px}.table-wrap{margin-right:-10px}.status-row{gap:7px}}
+@media print{
+  .sidebar,.side-actions{display:none!important}.shell{display:block}.hero,.content,footer{max-width:none;padding-left:24px;padding-right:24px}.card,.table-wrap{box-shadow:none}.section{break-inside:avoid}.print-only{display:block}
+}
+</style>
+</head>
+<body data-theme="day">
+<div style="position:relative;z-index:9999;padding:12px 18px;background:#8c3b42;color:#fffdf8;font:700 13px/1.5 ui-monospace,monospace;text-align:center">ARCHIVED · READ ONLY · Phase 8.5 proposal, not current project status. Start from docs/PROJECT.md.</div>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">keikeu · 文档重构</div>
+    <div class="edition">PHASE 8.5 / DOC REFORM / 2026-07-17</div>
+    <nav id="nav">
+      <a href="#decision">总决策</a>
+      <a href="#principles">四条铁律</a>
+      <a href="#map">目标地图</a>
+      <a href="#authority">真相源</a>
+      <a href="#html-md">HTML / MD 分工</a>
+      <a href="#graphify">Graphify</a>
+      <a href="#migration">迁移手术</a>
+      <a href="#files">文件规格</a>
+      <a href="#gates">验收闸门</a>
+      <a href="#checklist">执行清单</a>
+    </nav>
+    <div class="side-actions">
+      <button class="icon-btn" id="themeBtn" aria-label="切换明暗">夜</button>
+      <button class="icon-btn" onclick="window.print()" aria-label="打印">印</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="hero">
+      <div class="kicker">Project Keikeu · Repository Cartography</div>
+      <h1>把文档堆，改造成一张能跑的项目地图。</h1>
+      <p class="hero-copy">
+        Phase 8 完成后，进入 <strong>Phase 8.5：文档重构</strong>。目标只有三个：
+        <strong>MD 瘦身、设计与架构具象化、Agent 冷启动不迷路</strong>。
+        这轮不扩产品功能，不重写业务代码，不让新工具反客为主。
+      </p>
+      <div class="status-row">
+        <span class="badge hot">主目标：项目地图化</span>
+        <span class="badge">HTML-first / MD-thin</span>
+        <span class="badge">AGENTS.md 单一职责</span>
+        <span class="badge">Graphify = 审计层</span>
+        <span class="badge">源码与测试 = 运行事实</span>
+      </div>
+    </header>
+
+    <div class="content">
+      <section class="section" id="decision">
+        <div class="section-head"><div class="num">00</div><div><h2>总决策</h2><p class="section-lead">这不是“换一种文档格式”。这是一次仓库权力重分配。</p></div></div>
+        <div class="callout"><strong>核心句：</strong>HTML 负责让系统可见、可点、可核验；MD 负责目标、边界、纪律和索引；源码与测试负责证明系统真实存在。</div>
+        <div class="grid two">
+          <article class="card rule-card"><h3>要删掉什么</h3><p>跨文件重复、长篇 UI 描述、目录考古、写给过去自己的流水账、混进 AGENTS.md 的产品百科。</p></article>
+          <article class="card rule-card"><h3>要留下什么</h3><p>唯一真相源、可执行视觉样张、可导航架构图、短而硬的产品契约、能直接用于审查的纪律。</p></article>
+          <article class="card rule-card"><h3>最终形态</h3><p>打开 README 能找到地图；打开地图能找到规范；打开规范能跳到源码；改完源码能跑测试验证。</p></article>
+          <article class="card rule-card"><h3>明确不做</h3><p>不把所有内容塞进一个超级 HTML；不让 Graphify 输出替代人工决策；不为“文档漂亮”拖慢 Phase 9。</p></article>
+        </div>
+      </section>
+
+      <section class="section" id="principles">
+        <div class="section-head"><div class="num">01</div><div><h2>四条铁律</h2><p class="section-lead">后续任何文档新增、删除、移动，都先过这四关。</p></div></div>
+        <div class="grid two">
+          <article class="card flat"><h3>一条信息，一个家</h3><p>同一事实只允许一个权威文件。其他地方只放链接和一句摘要，禁止复制粘贴形成多版本宇宙。</p></article>
+          <article class="card flat"><h3>能展示，就别描述</h3><p>颜色、间距、状态、响应式、交互结果进 HTML。MD 不再写“按钮大概浮起一点”这种概率云。</p></article>
+          <article class="card flat"><h3>规范与事实分层</h3><p><span class="tag norm">NORMATIVE</span>目标与纪律由人工维护；<span class="tag obs">OBSERVED</span>源码行为由测试与扫描工具观察。两者冲突时必须处理，不准装死。</p></article>
+          <article class="card flat"><h3>地图优先于篇幅</h3><p>文档入口先告诉 agent “去哪里找”，再讲内容。一个短地图胜过三份互相抄袭的长说明。</p></article>
+        </div>
+      </section>
+
+      <section class="section" id="map">
+        <div class="section-head"><div class="num">02</div><div><h2>目标仓库地图</h2><p class="section-lead">这是 Phase 8.5 的默认终局。文件名可以微调，职责不能漂移。</p></div></div>
+        <div class="code">/
+├── README.md                         # 入口、运行、项目地图
+├── AGENTS.md                         # Agent 纪律、作风、对话与验证规则
+├── src/                              # 运行事实
+├── tests/                            # 可验证事实
+└── docs/
+    ├── PROJECT.md                    # 当前坐标、阶段、模块入口、文档索引
+    ├── SPEC.md                       # 产品目标、范围、核心实体、验收
+    ├── RULES.md                      # 代码与交互纪律
+    ├── design/
+    │   ├── design.html               # 可执行视觉系统
+    │   └── interaction.html          # 核心流程与状态样张
+    ├── architecture/
+    │   ├── architecture.html         # 模块、数据流、生命周期、源码链接
+    │   └── decisions/                # ADR：为什么做出关键决策
+    ├── generated/
+    │   └── graphify/                 # 可重建的仓库观察图；非真相源
+    └── archive/                      # 只读历史，不参与冷启动</div>
+        <div class="callout"><strong>命名提醒：</strong>本计划使用社区常见的 <code>AGENTS.md</code>。若仓库当前是 <code>AGENT.md</code>，迁移时统一一次，随后禁止双文件并存。</div>
+      </section>
+
+      <section class="section" id="authority">
+        <div class="section-head"><div class="num">03</div><div><h2>唯一真相源矩阵</h2><p class="section-lead">任何问题先查表。查不到，说明地图缺口；查到两个答案，说明文档腐烂。</p></div></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>问题</th><th>唯一权威</th><th>允许出现的其他位置</th><th>禁区</th></tr></thead>
+          <tbody>
+            <tr><td>keikeu 为什么存在、服务谁</td><td><span class="file">docs/SPEC.md</span></td><td>README 一句话摘要</td><td>AGENTS.md 不得复述产品史</td></tr>
+            <tr><td>当前做到哪、下一步是什么</td><td><span class="file">docs/PROJECT.md</span></td><td>README 状态徽章</td><td>旧 roadmap 不得继续更新</td></tr>
+            <tr><td>模块边界与数据如何流动</td><td><span class="file">architecture.html</span></td><td>PROJECT.md 链接</td><td>SPEC.md 不展开实现细节</td></tr>
+            <tr><td>视觉 token 与组件状态</td><td><span class="file">design.html</span></td><td>代码 token 文件</td><td>MD 不手抄色号表</td></tr>
+            <tr><td>用户点一下后发生什么</td><td><span class="file">interaction.html</span></td><td>端到端测试</td><td>需求文档不写动画小说</td></tr>
+            <tr><td>工程与交互不可违反的规则</td><td><span class="file">docs/RULES.md</span></td><td>测试、lint、PR 模板</td><td>“保持优雅”一类空气话</td></tr>
+            <tr><td>Agent 怎么工作与说话</td><td><span class="file">AGENTS.md</span></td><td>无</td><td>产品、架构、UI 细节全部驱逐</td></tr>
+            <tr><td>为什么选了某架构</td><td><span class="file">decisions/*.md</span></td><td>architecture.html 链接</td><td>主文档保留历史辩论全文</td></tr>
+            <tr><td>程序现在真的怎么跑</td><td><span class="file">src/ + tests/</span></td><td>Graphify 观察图</td><td>任何文档凌驾于失败测试</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section class="section" id="html-md">
+        <div class="section-head"><div class="num">04</div><div><h2>HTML / MD 分工边界</h2><p class="section-lead">HTML-first 可行，HTML-only 会翻车。边界必须写死。</p></div></div>
+        <div class="map">
+          <div class="map-col">
+            <div class="node"><b>design.html</b><small>颜色、排版、间距、组件、状态、响应式、动效、无障碍、平台降级。</small></div>
+            <div class="node"><b>interaction.html</b><small>创建、编辑、关系选择、删除、封存、导出、错误与撤销。</small></div>
+            <div class="node"><b>architecture.html</b><small>模块、依赖、数据流、文件生命周期、错误恢复、源码锚点。</small></div>
+          </div>
+          <div class="arrow">⇄</div>
+          <div class="map-col">
+            <div class="node"><b>SPEC.md</b><small>用户、问题、范围、非目标、实体、产品验收。</small></div>
+            <div class="node"><b>RULES.md</b><small>local-first、无静默数据损失、Markdown canonical、明确删除等。</small></div>
+            <div class="node"><b>PROJECT.md</b><small>项目坐标与导航，不复制规范正文。</small></div>
+          </div>
+        </div>
+        <div class="grid two" style="margin-top:16px">
+          <article class="card flat"><h3>HTML 必须具备</h3><p>可离线打开；无需构建；有目录；可搜索；组件可操作；关键节点链接到真实源码；打印仍可读。</p></article>
+          <article class="card flat"><h3>HTML 不得承担</h3><p>完整产品历史、会议流水账、Agent 性格、每次迭代状态、无法验证的宏大愿景。</p></article>
+        </div>
+      </section>
+
+      <section class="section" id="graphify">
+        <div class="section-head"><div class="num">05</div><div><h2>Graphify 与这套思想的关系</h2><p class="section-lead">高度相关，但它处在“观察现实”这一侧，不能坐上产品总设计师的位置。</p></div></div>
+        <div class="grid three">
+          <article class="card"><span class="tag norm">人工规范图</span><h3>我们想让系统怎样存在</h3><p><span class="file">architecture.html</span>、<span class="file">design.html</span>、<span class="file">SPEC.md</span>表达目标、边界与判断。</p></article>
+          <article class="card"><span class="tag obs">Graphify 观察图</span><h3>仓库实际上怎样连接</h3><p>它从代码、文档和图像抽取节点与边，输出可查询图与交互 HTML，用来发现“嘴上说分层，代码里全耦合”这种事故。</p></article>
+          <article class="card"><span class="tag gen">差异审计</span><h3>两张图对撞</h3><p>期望图与现实图不一致时，只允许三种结论：改代码、改规范、登记临时偏差。禁止悄悄共存。</p></article>
+        </div>
+        <div class="pipeline">
+          <div class="pipe"><b>人工规范</b><p>SPEC / RULES / architecture.html</p></div>
+          <div class="pipe"><b>代码实现</b><p>src / tests / assets</p></div>
+          <div class="pipe"><b>Graphify 扫描</b><p>AST + docs links + inferred edges</p></div>
+          <div class="pipe"><b>生成观察图</b><p>graph.html / graph.json / report</p></div>
+          <div class="pipe"><b>漂移审计</b><p>修代码、修图或写 ADR</p></div>
+        </div>
+        <div class="callout"><strong>关键冲突：</strong>Graphify 提供面向 Codex 的安装方式，会写入 <code>AGENTS.md</code>。本项目禁止让插件长期占领 AGENTS。优先使用用户级 skill 或手动 CLI；生成物隔离到 <code>docs/generated/graphify/</code>。</div>
+        <div class="grid two">
+          <article class="card flat"><h3>试点规则</h3><p>先手动运行一次，只扫描 <code>src/</code>、<code>tests/</code> 与核心 docs。输出稳定、噪声可控后，再考虑 <code>--update</code> 或 git hook。</p></article>
+          <article class="card flat"><h3>权力限制</h3><p>Graphify 输出全部标为 generated。它可以证明关联、暴露孤岛、帮助查询；它无权修改产品目标、命名、交互纪律和架构意图。</p></article>
+        </div>
+        <div class="code"># 推荐：先全局安装能力，不向项目 AGENTS.md 注入内容
+uv tool install graphifyy
+graphify install
+
+# Phase 8.5 后期试点；输出再移动/配置到 docs/generated/graphify/
+/graphify . --update
+
+# 查询现实结构，而非重读全仓库
+graphify query "cache 到 outline 的保存链路是什么？"
+graphify path "OutlineEditor" "MarkdownRepository"</div>
+        <p style="color:var(--muted);font-size:12px">研究基线：Graphify 官方仓库在 2026-07-17 展示其输出包含交互 <code>graph.html</code>、<code>graph.json</code> 与 <code>GRAPH_REPORT.md</code>，并支持变更更新、watch 与 hooks。功能未来可能变动，采用前重新核对官方 README。</p>
+      </section>
+
+      <section class="section" id="migration">
+        <div class="section-head"><div class="num">06</div><div><h2>Phase 8.5 迁移手术</h2><p class="section-lead">按顺序走。提前搬 UI、顺手改架构、边重构边加功能，都会把手术室炸成夜店。</p></div></div>
+        <article class="phase" data-step="0"><h3>冻结与盘点</h3><p>Phase 8 通过后打基线 tag/commit。列出所有 MD/HTML，给每一段内容标记：保留、迁移、合并、归档、删除。</p><div class="deliverables"><span>docs_inventory.csv 或临时表</span><span>baseline commit</span><span>重复项清单</span></div></article>
+        <article class="phase" data-step="1"><h3>先建立地图骨架</h3><p>创建 README、PROJECT、SPEC、RULES、AGENTS 的空职责框架，以及 design / architecture / generated / archive 目录。先有房间，再搬家具。</p><div class="deliverables"><span>README.md</span><span>PROJECT.md</span><span>目录骨架</span></div></article>
+        <article class="phase" data-step="2"><h3>把“可见系统”迁入 HTML</h3><p>软件架构表述进入 <span class="file">architecture.html</span>；UI 规范进入 <span class="file">design.html</span>；核心操作和状态进入 <span class="file">interaction.html</span>。每个图块链接实际源码。</p><div class="deliverables"><span>architecture.html</span><span>design.html</span><span>interaction.html</span></div></article>
+        <article class="phase" data-step="3"><h3>MD 吸脂</h3><p>SPEC 只留产品契约，RULES 只留可审查纪律，PROJECT 只留坐标与索引。任何视觉描述和模块长解说改成链接。</p><div class="deliverables"><span>SPEC.md</span><span>RULES.md</span><span>PROJECT.md</span></div></article>
+        <article class="phase" data-step="4"><h3>重写 AGENTS.md</h3><p>只保留工作方法、修改纪律、验证要求、Git 行为、回答风格和不确定性处理。加入“修改前去哪个真相源”的导航，不复制内容。</p><div class="deliverables"><span>AGENTS.md ≤ 目标预算</span><span>无产品百科</span><span>无色号/Schema</span></div></article>
+        <article class="phase" data-step="5"><h3>归档与断链</h3><p>旧文档移入 archive 并加醒目的只读头。主地图不再链接历史文件。确认没有两个活跃 roadmap、两个 design spec、两个产品定义。</p><div class="deliverables"><span>archive/README.md</span><span>无双活文档</span><span>死链检查</span></div></article>
+        <article class="phase" data-step="6"><h3>Graphify 试点</h3><p>生成实际仓库图，检查核心链路、孤立文件、意外超级节点、文档引用断裂。先手动，后自动；先审计，后集成。</p><div class="deliverables"><span>generated/graphify/</span><span>漂移清单</span><span>采用/放弃决定</span></div></article>
+        <article class="phase" data-step="7"><h3>冷启动验收</h3><p>让一个未读过项目历史的新 agent，只靠仓库完成：解释项目、定位核心保存链、提出一个小改动计划、运行验证。它若四处考古，地图判负。</p><div class="deliverables"><span>cold_start_report.md</span><span>导航缺口修复</span><span>Phase 8.5 关闭</span></div></article>
+      </section>
+
+      <section class="section" id="files">
+        <div class="section-head"><div class="num">07</div><div><h2>文件规格与预算</h2><p class="section-lead">行数是报警器，不是宗教。超预算必须解释，不能靠缩写偷字数。</p></div></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>文件</th><th>职责</th><th>目标预算</th><th>必须包含</th><th>不得包含</th></tr></thead>
+          <tbody>
+            <tr><td class="file">README.md</td><td>外部入口</td><td>≤ 140 行</td><td>一句定位、运行、状态、地图</td><td>完整 roadmap、设计细则</td></tr>
+            <tr><td class="file">PROJECT.md</td><td>内部导航与当前坐标</td><td>≤ 200 行</td><td>阶段、模块、真相源、下一闸门</td><td>历史长叙事</td></tr>
+            <tr><td class="file">SPEC.md</td><td>产品契约</td><td>≤ 280 行</td><td>用户、问题、范围、实体、验收</td><td>CSS、类图、开发日志</td></tr>
+            <tr><td class="file">RULES.md</td><td>工程与交互纪律</td><td>≤ 140 行</td><td>可判定规则、例外机制</td><td>审美散文、对话风格</td></tr>
+            <tr><td class="file">AGENTS.md</td><td>Agent 操作系统</td><td>≤ 120 行</td><td>读图顺序、改动纪律、验证、语气</td><td>产品定义、数据模型、UI 规范</td></tr>
+            <tr><td class="file">architecture.html</td><td>结构地图</td><td>不设硬上限</td><td>模块、数据流、生命周期、源码链接</td><td>纯装饰流程图</td></tr>
+            <tr><td class="file">design.html</td><td>视觉系统</td><td>不设硬上限</td><td>tokens、组件、状态、响应式、降级</td><td>产品范围争论</td></tr>
+            <tr><td class="file">interaction.html</td><td>流程原型</td><td>按核心流程控制</td><td>成功/错误/空/撤销路径</td><td>无结果的炫技动画</td></tr>
+            <tr><td class="file">decisions/*.md</td><td>关键决定历史</td><td>每篇 ≤ 100 行</td><td>背景、决定、后果、状态</td><td>会议逐字稿</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section class="section" id="gates">
+        <div class="section-head"><div class="num">08</div><div><h2>验收闸门</h2><p class="section-lead">全部通过，Phase 8.5 才算结束。做出三个漂亮 HTML 不算胜利。</p></div></div>
+        <div class="grid two">
+          <article class="card flat"><h3>结构闸门</h3>
+            <div class="metric"><span>活跃项目定义</span><b>恰好 1 份</b></div>
+            <div class="metric"><span>活跃 UI 规范</span><b>恰好 1 份</b></div>
+            <div class="metric"><span>活跃 roadmap / 当前坐标</span><b>恰好 1 份</b></div>
+            <div class="metric"><span>孤儿文档</span><b>0</b></div>
+          </article>
+          <article class="card flat"><h3>Agent 闸门</h3>
+            <div class="metric"><span>从 README 找到规范</span><b>无需全局搜索</b></div>
+            <div class="metric"><span>从架构节点找到源码</span><b>≤ 2 次点击</b></div>
+            <div class="metric"><span>完成小改动定位</span><b>无历史对话</b></div>
+            <div class="metric"><span>说明验证命令</span><b>一次命中</b></div>
+          </article>
+          <article class="card flat"><h3>内容闸门</h3>
+            <div class="metric"><span>跨文件重复规则</span><b>0 条</b></div>
+            <div class="metric"><span>AGENTS 产品/UI 细节</span><b>0 条</b></div>
+            <div class="metric"><span>HTML 关键状态覆盖</span><b>默认/空/错/禁用</b></div>
+            <div class="metric"><span>历史文件误导风险</span><b>已封存标记</b></div>
+          </article>
+          <article class="card flat"><h3>现实闸门</h3>
+            <div class="metric"><span>源码与架构图冲突</span><b>0 个未登记</b></div>
+            <div class="metric"><span>关键用户流测试</span><b>绿色</b></div>
+            <div class="metric"><span>Graphify 输出</span><b>可重建/可删除</b></div>
+            <div class="metric"><span>Phase 9 开发阻力</span><b>未增加</b></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="checklist">
+        <div class="section-head"><div class="num">09</div><div><h2>执行清单</h2><p class="section-lead">勾选状态保存在当前浏览器本地。它是施工清单，不是项目数据库。</p></div></div>
+        <div class="checklist" id="checks">
+          <label class="check"><input type="checkbox" data-key="freeze"><span>冻结 Phase 8 基线<small>建立 tag/commit，确认现有测试与真机状态。</small></span></label>
+          <label class="check"><input type="checkbox" data-key="inventory"><span>盘点全部活跃文档<small>每段内容标记唯一去向，不凭感觉搬家。</small></span></label>
+          <label class="check"><input type="checkbox" data-key="skeleton"><span>创建目标目录与职责头<small>每个文件先写 Purpose / Authority / Covers / Excludes。</small></span></label>
+          <label class="check"><input type="checkbox" data-key="arch"><span>完成 architecture.html<small>核心链路可视化，并链接到源码。</small></span></label>
+          <label class="check"><input type="checkbox" data-key="design"><span>完成 design.html 与 interaction.html<small>覆盖关键组件、状态、移动端和错误路径。</small></span></label>
+          <label class="check"><input type="checkbox" data-key="md"><span>完成 MD 瘦身<small>SPEC / RULES / PROJECT 无重复正文。</small></span></label>
+          <label class="check"><input type="checkbox" data-key="agents"><span>重写 AGENTS.md<small>只剩纪律、作风、导航和验证规则。</small></span></label>
+          <label class="check"><input type="checkbox" data-key="archive"><span>归档旧文件并清理链接<small>历史可查，冷启动不可误入。</small></span></label>
+          <label class="check"><input type="checkbox" data-key="graphify"><span>完成 Graphify 手动试点<small>记录信号、噪声、维护成本和 AGENTS 冲突。</small></span></label>
+          <label class="check"><input type="checkbox" data-key="cold"><span>通过全新 Agent 冷启动测试<small>无聊天历史完成定位、计划与验证。</small></span></label>
+        </div>
+      </section>
+
+      <section class="section" id="final">
+        <div class="section-head"><div class="num">10</div><div><h2>最终判断</h2><p class="section-lead">这轮重构的成功标准，和“文件变少”没直接关系。</p></div></div>
+        <div class="callout"><strong>成功：</strong>仓库中的每类知识都有唯一坐标；人和 agent 都能沿地图抵达源码；生成图能揭露现实漂移；下一阶段开发速度提升。</div>
+        <div class="callout" style="border-left-color:var(--danger)"><strong style="color:var(--danger)">失败：</strong>把三份肥 MD 换成三份肥 HTML；Graphify 又向 AGENTS 塞一套指令；地图很漂亮，改功能时仍靠 grep 和聊天记忆。</div>
+        <p style="font-family:var(--serif);font-size:24px;margin-top:28px">仓库要成为一座有门牌、有地图、有监控的建筑。别再当文档乱葬岗。</p>
+      </section>
+    </div>
+
+    <footer>
+      <p>文档：<span class="file">doc_reform.html</span> · 适用阶段：keikeu Phase 8 完成后 · 计划状态：Proposed</p>
+      <p>研究参考：Graphify-Labs/graphify 官方 README；现有 keikeu 项目回顾、设计原型与文档瘦身讨论。生成工具只能辅助导航，最终权威仍由项目明确指定。</p>
+    </footer>
+  </main>
+</div>
+<script>
+(function(){
+  const body=document.body;
+  const themeBtn=document.getElementById('themeBtn');
+  const savedTheme=localStorage.getItem('keikeu-doc-theme');
+  if(savedTheme){body.dataset.theme=savedTheme;themeBtn.textContent=savedTheme==='night'?'昼':'夜';}
+  themeBtn.addEventListener('click',()=>{
+    const next=body.dataset.theme==='night'?'day':'night';
+    body.dataset.theme=next;themeBtn.textContent=next==='night'?'昼':'夜';
+    localStorage.setItem('keikeu-doc-theme',next);
+  });
+
+  document.querySelectorAll('#checks input').forEach(box=>{
+    const key='doc-reform-'+box.dataset.key;
+    box.checked=localStorage.getItem(key)==='1';
+    box.addEventListener('change',()=>localStorage.setItem(key,box.checked?'1':'0'));
+  });
+
+  const links=[...document.querySelectorAll('#nav a')];
+  const sections=links.map(a=>document.querySelector(a.getAttribute('href'))).filter(Boolean);
+  const observer=new IntersectionObserver(entries=>{
+    const visible=entries.filter(e=>e.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];
+    if(!visible)return;
+    links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+visible.target.id));
+  },{rootMargin:'-18% 0px -68% 0px',threshold:[0,.2,.5]});
+  sections.forEach(s=>observer.observe(s));
+})();
+</script>
+</body>
+</html>

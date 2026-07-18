@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>keikeu · Interaction Map</title>
+  <link rel="stylesheet" href="../assets/map.css">
+</head>
+<body data-theme="light">
+  <a class="skip-link" href="#content">跳到正文</a>
+  <div class="shell">
+    <aside class="rail" aria-label="页面目录">
+      <div class="rail-brand">KEIKEU / FLOW</div>
+      <div class="rail-meta">NORMATIVE INTERACTION MAP · 2026-07-18</div>
+      <nav>
+        <a href="#contract">交互契约</a>
+        <a href="#paper">Paper</a>
+        <a href="#flashcard">Flashcard</a>
+        <a href="#library">Library</a>
+        <a href="#migration">迁移</a>
+        <a href="#errors">错误与恢复</a>
+        <a href="#handoff">外部编辑器交接</a>
+        <a href="#proof">源码锚点</a>
+      </nav>
+      <div class="rail-actions">
+        <button type="button" data-theme-toggle aria-label="切换明暗主题">夜</button>
+        <button type="button" onclick="window.print()" aria-label="打印页面">印</button>
+      </div>
+    </aside>
+
+    <main class="main" id="content">
+      <div class="toolbar">
+        <label class="search">
+          <span class="mono">SEARCH / </span>
+          <input type="search" data-doc-search placeholder="搜索保存、空状态、迁移或恢复" aria-label="搜索本文">
+        </label>
+        <div class="toolbar-links">
+          <a href="../SPEC.md">SPEC</a>
+          <a href="design.html">DESIGN</a>
+          <a href="../architecture/architecture.html">ARCH</a>
+        </div>
+      </div>
+
+      <header class="hero">
+        <div class="eyebrow">Core actions / state specimens</div>
+        <h1>每一次点击，都能说明磁盘上发生了什么。</h1>
+        <p class="lede">这页定义 Paper、Flashcard、Library、迁移与外部编辑器交接的成功、空、错误、禁用和恢复路径。样张只使用合成文字，不读取或保存任何 Vault。</p>
+        <div class="status-row">
+          <span class="ticket ok">Author-controlled</span>
+          <span class="ticket ok">No hidden writes</span>
+          <span class="ticket">Summary-first</span>
+          <span class="ticket warn">No prose editor</span>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="no-results" data-no-results>没有匹配章节。试试“保存”“迁移”“外部修改”或“恢复”。</div>
+
+        <section class="section searchable" id="contract" data-search="contract interaction rules explicit author control 交互 契约 明确 控制">
+          <div class="section-head"><div class="section-number">01</div><div><h2>交互契约</h2><p>所有核心操作共享的五条规则。</p></div></div>
+          <div class="grid five" style="grid-template-columns:repeat(5,minmax(0,1fr))">
+            <article class="card flat"><h3>显式</h3><p>保存、重命名、删除、恢复、迁移都有明确动作。</p></article>
+            <article class="card flat"><h3>可解释</h3><p>反馈说明文件、索引或设备状态中哪一层改变。</p></article>
+            <article class="card flat"><h3>保留输入</h3><p>错误不清空表单，不覆盖磁盘旧版本。</p></article>
+            <article class="card flat"><h3>可退出</h3><p>危险动作可取消；取消不产生副作用。</p></article>
+            <article class="card flat"><h3>有限</h3><p>keikeu 到外部编辑器为止，不继续追踪正文。</p></article>
+          </div>
+        </section>
+
+        <section class="section searchable" id="paper" data-search="paper create save update rename delete summary highlights tags empty error external modification 纸片 新建 保存 重命名 删除">
+          <div class="section-head"><div class="section-number">02</div><div><h2>Paper：从输入到磁盘</h2><p>先建立合成 Paper，再观察保存状态；本演示不写文件。</p></div></div>
+          <div class="grid two">
+            <article class="card">
+              <div class="eyebrow">INTERACTIVE SPECIMEN</div>
+              <h3 style="margin-top:10px">保存状态机</h3>
+              <div class="stepper" id="paper-stepper" aria-live="polite">
+                <div class="step current"><div><strong>编辑当前 Summary</strong><p class="muted">Highlights / Tags 可以为空。</p></div><span class="ticket">INPUT</span></div>
+                <div class="step"><div><strong>验证内存模型</strong><p class="muted">空 Summary 在任何磁盘写入前停止。</p></div><span class="ticket">MODEL</span></div>
+                <div class="step"><div><strong>安全写入</strong><p class="muted">新建或同目录临时文件 + 原子替换。</p></div><span class="ticket">DISK</span></div>
+                <div class="step"><div><strong>重建索引</strong><p class="muted">JSON 可由 Paper 再生。</p></div><span class="ticket">INDEX</span></div>
+              </div>
+              <div class="button-row" style="margin-top:14px">
+                <button class="ui-button primary" type="button" id="paper-next">下一步</button>
+                <button class="ui-button" type="button" id="paper-reset">重置</button>
+              </div>
+            </article>
+            <article class="card">
+              <h3>状态结果</h3>
+              <div class="table-wrap"><table class="matrix">
+                <thead><tr><th>输入 / 事件</th><th>结果</th><th>磁盘保证</th></tr></thead>
+                <tbody>
+                  <tr><td>新 Paper + 有 Summary</td><td>保存；初稿副本 = 当前 Summary</td><td>目标不存在才创建</td></tr>
+                  <tr><td>已存 Paper + 编辑 Summary</td><td>更新当前值</td><td>初稿副本不变</td></tr>
+                  <tr><td>Highlights / Tags 空</td><td>成功 + 温和建议</td><td>保留空章节</td></tr>
+                  <tr><td>Summary 空</td><td>阻止 + 字段错误</td><td>零写入</td></tr>
+                  <tr><td>文件已外部修改</td><td>拒绝覆盖，要求重开</td><td>外部版本不变</td></tr>
+                </tbody>
+              </table></div>
+            </article>
+          </div>
+          <div class="flow" style="--cols:5;margin-top:14px">
+            <div class="node" data-layer="app"><b>Paper form</b><small>作者输入；不渲染 Markdown</small></div>
+            <div class="node" data-layer="core"><b>Paper()</b><small>验证 Summary、Tags、Highlights</small></div>
+            <div class="node" data-layer="core"><b>write / update</b><small>显式新建或更新</small></div>
+            <div class="node" data-layer="disk"><b>cache/&lt;code&gt;.md</b><small>作者资产</small></div>
+            <div class="node" data-layer="disk"><b>index rebuild</b><small>可删除元数据</small></div>
+          </div>
+        </section>
+
+        <section class="section searchable" id="flashcard" data-search="flashcard summary first highlight card position readonly return paper empty context 卡片 位置 返回 只读">
+          <div class="section-head"><div class="section-number">03</div><div><h2>Flashcard：有限上下文</h2><p>Summary 永远是第 1 张；每条 Highlight 增加一张。</p></div></div>
+          <div class="grid two">
+            <article class="card">
+              <div class="eyebrow">FLASHCARD · <span id="card-position">1 / 3</span></div>
+              <div class="demo-surface" style="min-height:260px;margin-top:12px;display:grid;align-content:center">
+                <p id="card-copy" style="font-size:24px;margin:0">合成 Summary：这里只展示整体火种。</p>
+              </div>
+              <div class="button-row" style="margin-top:12px">
+                <button class="ui-button" type="button" id="card-prev" disabled>上一张</button>
+                <button class="ui-button primary" type="button" id="card-next">下一张</button>
+                <button class="ui-button" type="button" id="summary-toggle" hidden>临时查看 Summary</button>
+              </div>
+              <div class="callout" id="summary-context" hidden style="margin-top:12px">合成 Summary：这里只展示整体火种。</div>
+            </article>
+            <article class="card">
+              <h3>只读边界</h3>
+              <ul>
+                <li>位置写入设备本地状态，不进入 Paper 或索引。</li>
+                <li>状态缺失、损坏或越界时安全回到有效卡片。</li>
+                <li>Highlight 卡可临时展开当前 Summary，但不预览相邻卡。</li>
+                <li>“返回 Paper”保留作品上下文；侧栏直接进入可能没有当前 Paper，这是已记录 P2。</li>
+              </ul>
+              <div class="callout warn"><strong>没有：</strong>编辑、完成、跳过、消费、正文输入、进度百分比。</div>
+            </article>
+          </div>
+        </section>
+
+        <section class="section searchable" id="library" data-search="library search index error trash restore open finder share 文件库 搜索 索引 回收站 恢复">
+          <div class="section-head"><div class="section-number">04</div><div><h2>Library：检索与恢复</h2><p>它是资产入口，不是项目管理器。</p></div></div>
+          <div class="flow" style="--cols:5">
+            <div class="node" data-layer="app"><b>search box</b><small>代号 / Summary / Tags</small></div>
+            <div class="node" data-layer="core"><b>list_papers()</b><small>读取本地 v2 index</small></div>
+            <div class="node" data-layer="app"><b>result row</b><small>编辑 / Flashcard / 系统打开</small></div>
+            <div class="node" data-layer="core"><b>soft_delete()</b><small>移动而非擦除</small></div>
+            <div class="node" data-layer="disk"><b>.trash/cache/</b><small>恢复时检查代号冲突</small></div>
+          </div>
+          <div class="grid three" style="margin-top:14px">
+            <article class="card flat"><h3>Empty</h3><p>没有 Paper：说明如何创建；搜索无结果：保留查询并允许清空。</p></article>
+            <article class="card flat"><h3>Damaged file</h3><p>错误列表显示相对路径与解析原因；健康 Paper 仍可检索。</p></article>
+            <article class="card flat"><h3>Restore conflict</h3><p>同代号存在时要求输入新代号或取消，永不覆盖活动文件。</p></article>
+          </div>
+        </section>
+
+        <section class="section searchable" id="migration" data-search="migration preflight backup staging validation swap outline destructive 迁移 预检 备份 验证 切换">
+          <div class="section-head"><div class="section-number">05</div><div><h2>v0.1 迁移：高风险手术</h2><p>确认页只描述动作；纯 Python core 执行全部资产变更。</p></div></div>
+          <div class="stepper">
+            <div class="step"><div><strong>只读预检</strong><p class="muted">列出 Cache 数量、旧 Outline 数量和阻断问题。</p></div><span class="ticket">NO WRITE</span></div>
+            <div class="step"><div><strong>作者显式确认</strong><p class="muted">取消即停止；未勾选时迁移按钮禁用。</p></div><span class="ticket warn">GATE</span></div>
+            <div class="step"><div><strong>Vault 外完整备份</strong><p class="muted">备份不进入活动索引或同步目录。</p></div><span class="ticket">BACKUP</span></div>
+            <div class="step"><div><strong>外部 staging 转换与逐个验证</strong><p class="muted">任何 Cache 失败都不切换活动 Vault。</p></div><span class="ticket">STAGE</span></div>
+            <div class="step"><div><strong>原子切换与报告</strong><p class="muted">全部 Paper 验证后才移除活动旧 Outline。</p></div><span class="ticket ok">COMMIT</span></div>
+          </div>
+          <div class="callout danger" style="margin-top:14px"><strong>P0 停止规则：</strong>疑似数据丢失、静默改写或半迁移时立即停止写入和重复实验；保护原 Vault，只记录脱敏步骤。</div>
+        </section>
+
+        <section class="section searchable" id="errors" data-search="error recovery external delete move modify code collision corrupt state provider 错误 恢复 外部删除 冲突 损坏">
+          <div class="section-head"><div class="section-number">06</div><div><h2>错误与恢复</h2><p>错误消息必须说明未发生什么，以及下一条安全路径。</p></div></div>
+          <div class="table-wrap"><table class="matrix">
+            <thead><tr><th>情况</th><th>立即行为</th><th>资产保证</th><th>下一步</th></tr></thead>
+            <tbody>
+              <tr><td>Summary 为空</td><td>字段旁阻止保存</td><td>旧文件不变</td><td>补 Summary 或离开</td></tr>
+              <tr><td>Paper 被外部删除/移动</td><td>拒绝保存</td><td>不重建假文件</td><td>回 Library 刷新</td></tr>
+              <tr><td>Paper 被外部修改</td><td>拒绝覆盖</td><td>外部字节不变</td><td>重新打开并人工决定</td></tr>
+              <tr><td>代号冲突</td><td>拒绝新建/rename/restore</td><td>两边都不覆盖</td><td>新代号或取消</td></tr>
+              <tr><td>单 Paper 损坏</td><td>索引记录 error</td><td>其他 Paper 继续</td><td>外部文本工具检查</td></tr>
+              <tr><td>本地 card state 损坏</td><td>忽略并回第 1 张</td><td>Paper 不变</td><td>继续使用</td></tr>
+              <tr><td>Provider 冲突副本</td><td>按未知文件处理</td><td>不自动合并文字</td><td>作者在系统层处理</td></tr>
+            </tbody>
+          </table></div>
+        </section>
+
+        <section class="section searchable" id="handoff" data-search="external editor handoff prose open system finder 外部 编辑器 正文 交接">
+          <div class="section-head"><div class="section-number">07</div><div><h2>外部编辑器交接</h2><p>这是产品边界，不是缺失功能。</p></div></div>
+          <div class="flow" style="--cols:4">
+            <div class="node" data-layer="app"><b>Paper</b><small>整理已有灵感</small></div>
+            <div class="node" data-layer="app"><b>Flashcard</b><small>只读聚焦锚点</small></div>
+            <div class="node" data-layer="external"><b>OS open / share</b><small>把 Markdown 交给系统</small></div>
+            <div class="node" data-layer="external"><b>Prose editor</b><small>正文留在外部；keikeu 不监控</small></div>
+          </div>
+          <div class="callout ok" style="margin-top:14px">成功不是 keikeu 生成正文文件，而是作者能清楚地从准备与聚焦转入自己选择的正文工具。</div>
+        </section>
+
+        <section class="section searchable" id="proof" data-search="source code tests proof 源码 测试 锚点">
+          <div class="section-head"><div class="section-number">08</div><div><h2>源码锚点</h2><p>样张对应到实现和直接测试。</p></div></div>
+          <div class="table-wrap"><table class="matrix">
+            <thead><tr><th>流程</th><th>实现</th><th>证据</th></tr></thead>
+            <tbody>
+              <tr><td>Paper create / update / rename / delete</td><td><a href="../../src/keikeu_app/pages/paper_page.py">paper_page.py</a> → <a href="../../src/keikeu_core/markdown_io.py">markdown_io.py</a></td><td><a href="../../tests/test_app_pages.py">test_app_pages.py</a> / <a href="../../tests/test_markdown_io.py">test_markdown_io.py</a></td></tr>
+              <tr><td>Summary-first card and position</td><td><a href="../../src/keikeu_app/pages/flashcard_page.py">flashcard_page.py</a> → <a href="../../src/keikeu_app/local_state.py">local_state.py</a></td><td><a href="../../tests/test_local_state.py">test_local_state.py</a></td></tr>
+              <tr><td>Search / damage / trash / restore</td><td><a href="../../src/keikeu_app/pages/library_page.py">library_page.py</a> → <a href="../../src/keikeu_core/indexer.py">indexer.py</a> / <a href="../../src/keikeu_core/vault.py">vault.py</a></td><td><a href="../../tests/test_indexer.py">test_indexer.py</a> / <a href="../../tests/test_vault.py">test_vault.py</a></td></tr>
+              <tr><td>Migration gate and transaction</td><td><a href="../../src/keikeu_app/pages/migration_page.py">migration_page.py</a> → <a href="../../src/keikeu_core/migration_v01.py">migration_v01.py</a></td><td><a href="../../tests/test_migration_page.py">test_migration_page.py</a> / <a href="../../tests/test_migration_v01.py">test_migration_v01.py</a></td></tr>
+            </tbody>
+          </table></div>
+        </section>
+      </div>
+
+      <footer class="footer">keikeu Interaction Map · active user-flow authority · examples are synthetic and non-persistent</footer>
+    </main>
+  </div>
+  <script src="../assets/map.js"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      const steps = Array.from(document.querySelectorAll("#paper-stepper .step"));
+      let stepIndex = 0;
+      function renderSteps() {
+        steps.forEach(function (step, index) {
+          step.classList.toggle("done", index < stepIndex);
+          step.classList.toggle("current", index === stepIndex && stepIndex < steps.length);
+        });
+        document.getElementById("paper-next").disabled = stepIndex >= steps.length;
+      }
+      document.getElementById("paper-next").addEventListener("click", function () {
+        stepIndex = Math.min(steps.length, stepIndex + 1);
+        renderSteps();
+      });
+      document.getElementById("paper-reset").addEventListener("click", function () {
+        stepIndex = 0;
+        renderSteps();
+      });
+
+      const cards = [
+        "合成 Summary：这里只展示整体火种。",
+        "合成 Highlight：一个可独立扩写的动作锚点。",
+        "合成 Highlight：一个收束场景的对白锚点。"
+      ];
+      let cardIndex = 0;
+      const position = document.getElementById("card-position");
+      const copy = document.getElementById("card-copy");
+      const previous = document.getElementById("card-prev");
+      const next = document.getElementById("card-next");
+      const summaryToggle = document.getElementById("summary-toggle");
+      const summaryContext = document.getElementById("summary-context");
+      function renderCard() {
+        position.textContent = (cardIndex + 1) + " / " + cards.length;
+        copy.textContent = cards[cardIndex];
+        previous.disabled = cardIndex === 0;
+        next.disabled = cardIndex === cards.length - 1;
+        summaryToggle.hidden = cardIndex === 0;
+        summaryContext.hidden = true;
+      }
+      previous.addEventListener("click", function () { cardIndex -= 1; renderCard(); });
+      next.addEventListener("click", function () { cardIndex += 1; renderCard(); });
+      summaryToggle.addEventListener("click", function () { summaryContext.hidden = !summaryContext.hidden; });
+    })();
+  </script>
+</body>
+</html>

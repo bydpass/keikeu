@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>keikeu · Design System</title>
+  <link rel="stylesheet" href="../assets/map.css">
+</head>
+<body data-theme="light">
+  <a class="skip-link" href="#content">跳到正文</a>
+  <div class="shell">
+    <aside class="rail" aria-label="页面目录">
+      <div class="rail-brand">KEIKEU / DESIGN</div>
+      <div class="rail-meta">NORMATIVE VISUAL MAP · 2026-07-18</div>
+      <nav>
+        <a href="#direction">设计方向</a>
+        <a href="#tokens">Token</a>
+        <a href="#type">排版与间距</a>
+        <a href="#components">组件</a>
+        <a href="#states">状态</a>
+        <a href="#devices">设备</a>
+        <a href="#accessibility">无障碍与降级</a>
+        <a href="#sources">源码锚点</a>
+      </nav>
+      <div class="rail-actions">
+        <button type="button" data-theme-toggle aria-label="切换明暗主题">夜</button>
+        <button type="button" onclick="window.print()" aria-label="打印页面">印</button>
+      </div>
+    </aside>
+
+    <main class="main" id="content">
+      <div class="toolbar">
+        <label class="search">
+          <span class="mono">SEARCH / </span>
+          <input type="search" data-doc-search placeholder="搜索 token、组件、状态或设备" aria-label="搜索本文">
+        </label>
+        <div class="toolbar-links">
+          <a href="../PROJECT.md">PROJECT</a>
+          <a href="../RULES.md">RULES</a>
+          <a href="interaction.html">INTERACTION</a>
+        </div>
+      </div>
+
+      <header class="hero">
+        <div class="eyebrow">Visual authority / executable specimen</div>
+        <h1>像一台安静的旧文字处理机，而不是一间催更办公室。</h1>
+        <p class="lede">这页定义 keikeu 的视觉 token、组件形态、关键状态、响应式分配与无障碍底线。真实实现以链接到的 Flet 源码为准；若样张与源码冲突，必须修一边并记录原因。</p>
+        <div class="status-row">
+          <span class="ticket ok">离线可用</span>
+          <span class="ticket ok">无外部资产</span>
+          <span class="ticket">Showa stationery</span>
+          <span class="ticket warn">不是营销页</span>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="no-results" data-no-results>没有匹配的章节。试试“错误”“iPhone”或“Summary”。</div>
+
+        <section class="section searchable" id="direction" data-search="direction purpose audience tone 原则 作者控制">
+          <div class="section-head"><div class="section-number">01</div><div><h2>设计方向</h2><p>目的、受众、语气和唯一记忆点。</p></div></div>
+          <div class="grid four">
+            <article class="card flat"><h3>Purpose</h3><p>把已有灵感稳稳递到作者眼前，减少维护软件本身的负担。</p></article>
+            <article class="card flat"><h3>Audience</h3><p>反复使用同一私密流程的单作者；先扫 Summary、当前位置和安全动作。</p></article>
+            <article class="card flat"><h3>Tone</h3><p>安静、耐久、技术编辑式。信息密度高，但不制造仪表盘焦虑。</p></article>
+            <article class="card flat"><h3>Memorable detail</h3><p>标签机标题、氧化橙动作键、磷光绿文字与微黄纸张。</p></article>
+          </div>
+          <div class="callout warn" style="margin-top:14px"><strong>不做：</strong>紫色渐变、巨大英雄卡、嵌套卡片、装饰图片、完成率、连续签到、社交证明或“AI 魔法”语汇。</div>
+        </section>
+
+        <section class="section searchable" id="tokens" data-search="tokens color palette 颜色 背景 纸张 墨绿 橙色 error success warning">
+          <div class="section-head"><div class="section-number">02</div><div><h2>颜色 Token</h2><p>取自 <a href="../../src/keikeu_app/theme.py">theme.py</a>；页面样张直接使用同一组值。</p></div></div>
+          <div class="grid four">
+            <article class="card flat token"><span class="swatch" style="--swatch:#e5dcc4"></span><div><b>BG · #e5dcc4</b><small>卡其机壳 / 页面背景</small></div></article>
+            <article class="card flat token"><span class="swatch" style="--swatch:#fff8e7"></span><div><b>SURFACE · #fff8e7</b><small>微黄纸张 / 主内容面</small></div></article>
+            <article class="card flat token"><span class="swatch" style="--swatch:#ded0aa"></span><div><b>SURFACE_WARM · #ded0aa</b><small>次级票据 / 分组底</small></div></article>
+            <article class="card flat token"><span class="swatch" style="--swatch:#253d34"></span><div><b>FG · #253d34</b><small>磷光墨绿 / 主文字</small></div></article>
+            <article class="card flat token"><span class="swatch" style="--swatch:#647168"></span><div><b>MUTED · #647168</b><small>辅助信息，不承担关键动作</small></div></article>
+            <article class="card flat token"><span class="swatch" style="--swatch:#ad5e2f"></span><div><b>ACCENT · #ad5e2f</b><small>氧化橙 / 主动作</small></div></article>
+            <article class="card flat token"><span class="swatch" style="--swatch:#3f745d"></span><div><b>SUCCESS · #3f745d</b><small>完成、健康、可恢复</small></div></article>
+            <article class="card flat token"><span class="swatch" style="--swatch:#a94b3f"></span><div><b>DANGER · #a94b3f</b><small>错误与破坏性边界</small></div></article>
+          </div>
+          <div class="callout" style="margin-top:14px">颜色必须同时有文字、图标或结构信号。绿色不单独代表成功，红色不单独代表失败。</div>
+        </section>
+
+        <section class="section searchable" id="type" data-search="typography spacing font text size radius 排版 字号 间距 圆角">
+          <div class="section-head"><div class="section-number">03</div><div><h2>排版、间距与形状</h2><p>系统字体优先，不携带网络字体或图片依赖。</p></div></div>
+          <div class="grid two">
+            <article class="card">
+              <div class="eyebrow">◆ PAPER / FLASHCARD</div>
+              <h3 style="font:700 28px var(--mono);margin-top:14px">纸片编辑器</h3>
+              <p style="font-size:17px">正文输入使用 17px 基准字号与 1.5 行高，长文本不为了“整齐”被截断。</p>
+              <p class="muted" style="font-size:14px">辅助说明 14px；机器标签 12px；标题使用系统等宽字体。</p>
+            </article>
+            <article class="card">
+              <h3>尺度表</h3>
+              <div class="table-wrap"><table class="matrix">
+                <thead><tr><th>类型</th><th>值</th><th>用途</th></tr></thead>
+                <tbody>
+                  <tr><td>Spacing</td><td class="mono">4 / 8 / 12 / 16 / 20 / 24 / 32 / 48</td><td>只用离散步进</td></tr>
+                  <tr><td>Radius</td><td class="mono">2 / 4 / 6</td><td>纸张与机器键，避免胶囊化</td></tr>
+                  <tr><td>Content</td><td class="mono">max 1180px</td><td>桌面保持可扫描行长</td></tr>
+                  <tr><td>Sidebar</td><td class="mono">248px</td><td>macOS 导航；移动端改底栏</td></tr>
+                </tbody>
+              </table></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="section searchable" id="components" data-search="components button field card badge input 组件 按钮 输入框 卡片 状态标签">
+          <div class="section-head"><div class="section-number">04</div><div><h2>组件样张</h2><p>示例展示视觉与状态，不保存输入，也不模拟真实 Vault。</p></div></div>
+          <div class="grid two">
+            <article class="card">
+              <h3>动作键</h3>
+              <div class="demo-surface button-row">
+                <button class="ui-button primary" type="button">保存 Paper</button>
+                <button class="ui-button" type="button">打开 Flashcard</button>
+                <button class="ui-button danger" type="button">删除 Paper</button>
+                <button class="ui-button" type="button" disabled>迁移中…</button>
+              </div>
+              <p class="muted">每个页面只突出一个当前主动作；删除保持低强调但语义清楚。</p>
+            </article>
+            <article class="card">
+              <h3>机器标签</h3>
+              <div class="demo-surface status-row">
+                <span class="ticket ok">已保存</span>
+                <span class="ticket">3 / 5</span>
+                <span class="ticket warn">索引需重建</span>
+                <span class="ticket" style="color:var(--danger)">文件已外部修改</span>
+              </div>
+              <p class="muted">标签是状态证据，不是装饰贴纸；避免在一屏铺满徽章。</p>
+            </article>
+            <article class="card">
+              <h3>自由文本字段</h3>
+              <div class="demo-surface demo-field">
+                <label for="summary-demo">Summary（必填）</label>
+                <textarea id="summary-demo" rows="4">一个不包含真实作者内容的合成 Summary。</textarea>
+                <small class="muted">保存时冻结首次副本；当前 Summary 仍可编辑。</small>
+              </div>
+            </article>
+            <article class="card">
+              <h3>错误字段</h3>
+              <div class="demo-surface demo-field error">
+                <label for="summary-error">Summary（必填）</label>
+                <textarea id="summary-error" rows="4" aria-describedby="summary-error-text"></textarea>
+                <small class="error-text" id="summary-error-text">Summary 不能为空；磁盘上的上一版本未改变。</small>
+              </div>
+            </article>
+          </div>
+          <p class="source-link">实现：<a href="../../src/keikeu_app/widgets/__init__.py">widgets/__init__.py</a> · <a href="../../src/keikeu_app/pages/paper_page.py">paper_page.py</a></p>
+        </section>
+
+        <section class="section searchable" id="states" data-search="states default empty error disabled loading recovery 状态 默认 空 错误 禁用 恢复">
+          <div class="section-head"><div class="section-number">05</div><div><h2>状态矩阵</h2><p>任何核心页面或动作至少审查适用的五类状态。</p></div></div>
+          <div class="table-wrap"><table class="matrix">
+            <thead><tr><th>状态</th><th>视觉信号</th><th>行为</th><th>禁止</th></tr></thead>
+            <tbody>
+              <tr><td>Default</td><td>纸张面、清晰标题、一个主动作</td><td>完成正常任务</td><td>隐藏必要出口</td></tr>
+              <tr><td>Empty</td><td>解释缺少什么，保留上下文</td><td>提供最短下一步</td><td>用错误色惩罚空可选字段</td></tr>
+              <tr><td>Error</td><td>字段旁说明 + 页面级可恢复路径</td><td>保留输入与旧磁盘版本</td><td>只弹“失败”或静默重试写入</td></tr>
+              <tr><td>Disabled / busy</td><td>按钮禁用且标签说明原因</td><td>防止重复危险动作</td><td>靠动画阻断用户理解</td></tr>
+              <tr><td>Recovery</td><td>资产位置、冲突原因、显式选项</td><td>恢复、改代号或取消</td><td>覆盖同名 Paper</td></tr>
+            </tbody>
+          </table></div>
+        </section>
+
+        <section class="section searchable" id="devices" data-search="responsive mac iphone ipad mobile desktop tablet 响应式 手机 电脑 平板 safe area">
+          <div class="section-head"><div class="section-number">06</div><div><h2>设备分配</h2><p>同一 Paper 模型，不把桌面布局硬塞进窄屏。</p></div></div>
+          <div class="tabs" data-panel-group="device" role="tablist" aria-label="设备样张">
+            <button class="active" type="button" role="tab" aria-selected="true" data-panel-target="mac">macOS</button>
+            <button type="button" role="tab" aria-selected="false" data-panel-target="phone">iPhone</button>
+            <button type="button" role="tab" aria-selected="false" data-panel-target="tablet">iPad</button>
+          </div>
+          <div class="device-stage">
+            <div class="device mac active" data-panel="device" data-panel-id="mac">
+              <div class="device-nav">◆ PAPER<br><br>FLASHCARD<br><br>本地文件库</div>
+              <div class="device-body"><div class="eyebrow">Paper / K-20260718-001</div><h3 style="margin-top:10px">纸片编辑器</h3><div class="mini-card">Summary<br><br><span class="muted">主编辑面 + 侧栏导航 + 外部编辑器并列</span></div></div>
+            </div>
+            <div class="device phone" data-panel="device" data-panel-id="phone">
+              <div class="device-body"><div class="eyebrow">Flashcard · 2 / 4</div><div class="mini-card" style="margin-top:18px;min-height:290px">合成 Highlight 样张<br><br><span class="muted">全屏、SafeArea、触控目标、无固定桌面宽度</span></div></div>
+              <div class="device-nav">纸片　Flashcard　文件库</div>
+            </div>
+            <div class="device tablet" data-panel="device" data-panel-id="tablet">
+              <div class="device-body"><div class="eyebrow">KEIKEU</div><div class="mini-card" style="margin-top:18px;min-height:320px">Flashcard<br><br><span class="muted">只读聚焦视图</span></div></div>
+              <div class="device-body" style="background:var(--paper-2)"><div class="eyebrow">EXTERNAL EDITOR</div><div class="mini-card" style="margin-top:18px;min-height:320px">正文属于外部应用<br><br><span class="muted">keikeu 不读取这一侧</span></div></div>
+            </div>
+          </div>
+          <p class="source-link">实现：<a href="../../src/keikeu_app/main.py">main.py</a> · <a href="../../src/keikeu_app/pages/library_page.py">library_page.py</a></p>
+        </section>
+
+        <section class="section searchable" id="accessibility" data-search="accessibility a11y keyboard focus contrast motion print offline 无障碍 键盘 焦点 对比度 降级">
+          <div class="section-head"><div class="section-number">07</div><div><h2>无障碍与降级</h2><p>这些是最低要求，不是后期润色。</p></div></div>
+          <div class="grid three">
+            <article class="card flat"><h3>Keyboard</h3><p>交互控件使用原生按钮/字段；焦点始终可见；顺序与视觉阅读顺序一致。</p></article>
+            <article class="card flat"><h3>Contrast</h3><p>关键状态不只靠颜色；正文不使用 muted 色；错误信息与字段建立可读关联。</p></article>
+            <article class="card flat"><h3>Motion</h3><p>尊重 reduced-motion；没有动效也能理解状态和完成任务。</p></article>
+            <article class="card flat"><h3>Text</h3><p>长代号、中文、英文和系统字号放大后必须换行，不与按钮或计数器重叠。</p></article>
+            <article class="card flat"><h3>Responsive</h3><p>移动端使用 SafeArea、底部导航和单滚动区；桌面保留侧栏与内容宽度。</p></article>
+            <article class="card flat"><h3>Offline / print</h3><p>无网络、无构建可打开；打印隐藏交互控件但保留全部规范文字。</p></article>
+          </div>
+        </section>
+
+        <section class="section searchable" id="sources" data-search="source code links implementation 源码 锚点 truth">
+          <div class="section-head"><div class="section-number">08</div><div><h2>源码锚点</h2><p>从视觉规范到实现最多两次点击。</p></div></div>
+          <div class="table-wrap"><table class="matrix">
+            <thead><tr><th>事实</th><th>源码</th><th>验证</th></tr></thead>
+            <tbody>
+              <tr><td>颜色、字号、间距、圆角、侧栏宽度</td><td><a href="../../src/keikeu_app/theme.py">theme.py</a></td><td><a href="../../tests/test_app_pages.py">test_app_pages.py</a></td></tr>
+              <tr><td>标题、纸张卡、字段、按钮、状态票据</td><td><a href="../../src/keikeu_app/widgets/__init__.py">widgets</a></td><td><a href="../../tests/test_app_pages.py">test_app_pages.py</a></td></tr>
+              <tr><td>桌面侧栏、移动底栏、安全区</td><td><a href="../../src/keikeu_app/main.py">main.py</a></td><td><a href="../../tests/test_app_pages.py">test_app_pages.py</a></td></tr>
+              <tr><td>字段错误与外部修改反馈</td><td><a href="../../src/keikeu_app/pages/paper_page.py">paper_page.py</a></td><td><a href="../../tests/test_app_pages.py">test_app_pages.py</a></td></tr>
+            </tbody>
+          </table></div>
+          <div class="callout ok" style="margin-top:14px">样张与实现冲突时：先判断哪边符合 <a href="../SPEC.md">SPEC</a> 和 <a href="../RULES.md">RULES</a>，再修源码或本页；不允许双活。</div>
+        </section>
+      </div>
+
+      <footer class="footer">keikeu Design System · active visual authority · offline / no build / no external assets</footer>
+    </main>
+  </div>
+  <script src="../assets/map.js"></script>
+</body>
+</html>

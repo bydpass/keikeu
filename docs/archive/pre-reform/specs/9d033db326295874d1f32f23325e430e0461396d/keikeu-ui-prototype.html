@@ -1,0 +1,1126 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>keikeu — design prototype</title>
+<style>
+:root {
+  /* Storytelling design system — warm paper palette */
+  --bg: #fbf6ee;
+  --surface: #fffdf8;
+  --surface-warm: #f1e3cf;
+  --fg: #201914;
+  --fg-2: #4c4037;
+  --muted: #7a6d63;
+  --meta: #9b5b32;
+  --border: #ded2c3;
+  --border-soft: #eee4d7;
+  --accent: #9b5b32;
+  --accent-on: #ffffff;
+  --accent-hover: color-mix(in oklab, var(--accent), black 8%);
+  --success: #4f8a4f;
+  --warn: #c9822f;
+  --danger: #b33a3a;
+  --font-display: Georgia, "Times New Roman", serif;
+  --font-body: Inter, system-ui, -apple-system, sans-serif;
+  --font-mono: "SF Mono", ui-monospace, Menlo, monospace;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 17px;
+  --text-lg: 20px;
+  --text-xl: 28px;
+  --text-2xl: 42px;
+  --text-3xl: 64px;
+  --leading-body: 1.62;
+  --leading-tight: 1;
+  --tracking-display: -0.025em;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-pill: 9999px;
+  --elev-flat: none;
+  --elev-ring: 0 0 0 1px var(--border);
+  --elev-raised: 0 20px 52px rgba(32, 25, 20, 0.12);
+  --focus-ring: 0 0 0 4px rgba(155, 91, 50, 0.24);
+  --motion-fast: 150ms;
+  --motion-base: 240ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --container-max: 1180px;
+  --container-gutter: 36px;
+  --sidebar-w: 220px;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+}
+
+/* ========================================
+   Layout shell
+   ======================================== */
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ---- sidebar / nav ---- */
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  width: var(--sidebar-w);
+  min-height: 100vh;
+  padding: var(--space-6) var(--space-4);
+  background: var(--surface);
+  border-right: 1px solid var(--border-soft);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 var(--space-3);
+}
+
+.sidebar-brand-mark {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-on);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 16px;
+  letter-spacing: var(--tracking-display);
+}
+
+.sidebar-brand-name {
+  font-family: var(--font-display);
+  font-size: 20px;
+  color: var(--fg);
+  letter-spacing: var(--tracking-display);
+  line-height: var(--leading-tight);
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-3);
+  border: none;
+  background: transparent;
+  color: var(--fg-2);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--motion-fast) var(--ease-standard),
+              color var(--motion-fast) var(--ease-standard);
+  text-align: left;
+  width: 100%;
+}
+
+.nav-btn:hover {
+  background: var(--border-soft);
+  color: var(--fg);
+}
+
+.nav-btn.active {
+  background: var(--surface-warm);
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.nav-btn .nav-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.nav-btn.active .nav-icon { opacity: 1; }
+
+.sidebar-divider {
+  height: 1px;
+  background: var(--border-soft);
+  margin: var(--space-2) 0;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ---- main content ---- */
+
+.main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.page-header {
+  padding: var(--space-8) var(--container-gutter) 0;
+}
+
+.page-header h1 {
+  margin: 0 0 var(--space-1);
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 400;
+  letter-spacing: var(--tracking-display);
+  color: var(--fg);
+  line-height: var(--leading-tight);
+}
+
+.page-header .page-sub {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.page-body {
+  flex: 1;
+  padding: var(--space-6) var(--container-gutter) var(--space-8);
+  overflow-y: auto;
+}
+
+/* ========================================
+   Cards & sections
+   ======================================== */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
+}
+
+.card + .card { margin-top: var(--space-4); }
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-5);
+}
+
+.card-header h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: var(--tracking-display);
+  color: var(--fg);
+  line-height: var(--leading-tight);
+}
+
+.card-header .card-action {
+  font-size: var(--text-sm);
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  transition: background var(--motion-fast) var(--ease-standard);
+}
+
+.card-header .card-action:hover {
+  background: var(--surface-warm);
+}
+
+/* ========================================
+   Form fields
+   ======================================== */
+
+.field-group + .field-group { margin-top: var(--space-4); }
+
+.field-group label {
+  display: block;
+  margin-bottom: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--fg-2);
+  font-weight: 500;
+}
+
+.field-group .field-hint {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.field-input {
+  display: block;
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  transition: border-color var(--motion-fast) var(--ease-standard),
+              box-shadow var(--motion-fast) var(--ease-standard);
+}
+
+.field-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--focus-ring);
+}
+
+.field-input::placeholder {
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+textarea.field-input {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.select-wrap {
+  position: relative;
+}
+
+.select-wrap select {
+  appearance: none;
+  padding: var(--space-3) var(--space-8) var(--space-3) var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  cursor: pointer;
+  width: 100%;
+  transition: border-color var(--motion-fast) var(--ease-standard);
+}
+
+.select-wrap select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--focus-ring);
+}
+
+.select-wrap::after {
+  content: "▾";
+  position: absolute;
+  right: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 12px;
+  pointer-events: none;
+}
+
+/* ========================================
+   Buttons
+   ======================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background var(--motion-fast) var(--ease-standard),
+              border-color var(--motion-fast) var(--ease-standard);
+}
+
+.btn:hover { background: var(--border-soft); }
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-on);
+  border-color: var(--accent);
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.btn-ghost {
+  border: none;
+  background: transparent;
+  color: var(--fg-2);
+}
+
+.btn-ghost:hover { background: var(--border-soft); }
+
+.btn-sm {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.btn-group {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-top: var(--space-5);
+}
+
+/* ========================================
+   Cache cards grid
+   ======================================== */
+
+.cache-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-4);
+  margin-top: var(--space-5);
+}
+
+.cache-card {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  cursor: pointer;
+  transition: border-color var(--motion-fast) var(--ease-standard),
+              box-shadow var(--motion-fast) var(--ease-standard);
+}
+
+.cache-card:hover {
+  border-color: var(--border);
+  box-shadow: var(--elev-raised);
+}
+
+.cache-card-title {
+  margin: 0 0 var(--space-1);
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--fg);
+  line-height: var(--leading-tight);
+}
+
+.cache-card-preview {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--fg-2);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cache-card-meta {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.status-badge.raw { background: var(--surface-warm); color: var(--muted); }
+.status-badge.drafting { background: color-mix(in oklab, var(--surface-warm), var(--accent) 15%); color: var(--fg-2); }
+.status-badge.outlined { background: color-mix(in oklab, var(--surface), var(--success) 12%); color: var(--success); }
+.status-badge.archived { background: var(--border-soft); color: var(--muted); }
+
+.cache-card-time {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+/* ========================================
+   Library table
+   ======================================== */
+
+.library-header {
+  display: flex;
+  gap: var(--space-4);
+  align-items: end;
+  margin-bottom: var(--space-5);
+}
+
+.library-header .field-group {
+  flex: 1;
+}
+
+.library-section-title {
+  margin: var(--space-6) 0 var(--space-3);
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--fg);
+}
+
+.entry-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.entry-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--motion-fast) var(--ease-standard);
+}
+
+.entry-item:hover { background: var(--border-soft); }
+
+.entry-item + .entry-item { border-top: 1px solid var(--border-soft); }
+
+.entry-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--surface-warm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.entry-icon.outline-icon { background: var(--surface-warm); }
+
+.entry-info { flex: 1; min-width: 0; }
+
+.entry-title {
+  font-size: var(--text-base);
+  color: var(--fg);
+  font-weight: 500;
+  line-height: var(--leading-tight);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.entry-sub {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.entry-open {
+  color: var(--accent);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+
+/* ========================================
+   Relation row
+   ======================================== */
+
+.relation-row {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-3);
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-2);
+}
+
+.relation-row .field-group { margin: 0; flex: 1; }
+.relation-row .field-group select,
+.relation-row .field-group input { font-size: 14px; }
+.relation-row .btn { flex-shrink: 0; }
+
+/* ========================================
+   Soft hint
+   ======================================== */
+
+.soft-hint {
+  margin: var(--space-4) 0 0;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* ========================================
+   Empty state
+   ======================================== */
+
+.empty-state {
+  text-align: center;
+  padding: var(--space-12) var(--space-6);
+  color: var(--muted);
+}
+
+.empty-state-icon {
+  font-size: 48px;
+  margin-bottom: var(--space-4);
+  opacity: 0.4;
+}
+
+.empty-state h3 {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 400;
+  color: var(--fg-2);
+  margin: 0 0 var(--space-2);
+}
+
+.empty-state p {
+  margin: 0 0 var(--space-5);
+  font-size: var(--text-sm);
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ========================================
+   Screen visibility
+   ======================================== */
+
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ========================================
+   Responsive
+   ======================================== */
+
+@media (max-width: 800px) {
+  .sidebar {
+    width: 60px;
+    padding: var(--space-4) var(--space-2);
+  }
+  .sidebar-brand-name,
+  .nav-btn .nav-label,
+  .sidebar-divider,
+  .sidebar-footer { display: none; }
+  .nav-btn { justify-content: center; padding: var(--space-3); }
+  .page-header { padding: var(--space-5) var(--space-4) 0; }
+  .page-body { padding: var(--space-4) var(--space-4) var(--space-6); }
+  .field-row { grid-template-columns: 1fr; }
+  .cache-grid { grid-template-columns: 1fr; }
+  :root { --container-gutter: 16px; }
+  .library-header { flex-direction: column; align-items: stretch; }
+}
+
+@media (max-width: 480px) {
+  :root { --text-2xl: 30px; }
+}
+</style>
+</head>
+<body>
+<div style="position:relative;z-index:9999;padding:12px 18px;background:#8c3b42;color:#fffdf8;font:700 13px/1.5 ui-monospace,monospace;text-align:center">ARCHIVED · READ ONLY · Road v0.1 prototype. Current visual authority lives in docs/design/design.html.</div>
+
+<div class="app-shell" data-od-id="app-shell">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" data-od-id="sidebar">
+    <div class="sidebar-brand" data-od-id="sidebar-brand">
+      <div class="sidebar-brand-mark" data-od-id="brand-mark">k</div>
+      <span class="sidebar-brand-name" data-od-id="brand-name">keikeu</span>
+    </div>
+
+    <nav class="sidebar-nav" data-od-id="sidebar-nav">
+      <button class="nav-btn active" data-screen="cache" data-od-id="nav-cache">
+        <span class="nav-icon">✎</span>
+        <span class="nav-label">灵感缓存</span>
+      </button>
+      <button class="nav-btn" data-screen="outline" data-od-id="nav-outline">
+        <span class="nav-icon">◇</span>
+        <span class="nav-label">配方票编辑</span>
+      </button>
+      <button class="nav-btn" data-screen="library" data-od-id="nav-library">
+        <span class="nav-icon">☰</span>
+        <span class="nav-label">本地文件库</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-divider" data-od-id="sidebar-divider"></div>
+
+    <div class="sidebar-footer" data-od-id="sidebar-footer">
+      存住一瞬的灵光<br>
+      v0.1 · 本地优先
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main-area" data-od-id="main-area">
+
+    <!-- ========================================
+         SCREEN 1: 灵感缓存 (Cache)
+         ======================================== -->
+    <section class="screen active" id="screen-cache" data-od-id="screen-cache">
+      <div class="page-header" data-od-id="cache-page-header">
+        <h1 data-od-id="cache-title">灵感缓存</h1>
+        <p class="page-sub" data-od-id="cache-subtitle">收住火星子，等待被炼成大纲</p>
+      </div>
+
+      <div class="page-body" data-od-id="cache-body">
+
+        <!-- New cache form -->
+        <div class="card" data-od-id="cache-new-card">
+          <div class="card-header" data-od-id="cache-new-header">
+            <h2 data-od-id="cache-new-heading">新灵感</h2>
+          </div>
+
+          <div class="field-group" data-od-id="cache-title-group">
+            <label for="cache-title-input">标题</label>
+            <input type="text" id="cache-title-input" class="field-input" placeholder="给这个灵感起个名字……">
+          </div>
+
+          <div class="field-group" data-od-id="cache-raw-group">
+            <label for="cache-raw-input">原始灵感</label>
+            <textarea id="cache-raw-input" class="field-input" rows="5" placeholder="把脑中的口嗨、火星子、场面执念原样写下来——不会被改动"></textarea>
+            <p class="field-hint">原文保留，不会被整理改写</p>
+          </div>
+
+          <div class="field-group" data-od-id="cache-notes-group">
+            <label for="cache-notes-input">临时备注</label>
+            <textarea id="cache-notes-input" class="field-input" rows="3" placeholder="场景氛围、CP 倾向、色调、任何随手的标注……"></textarea>
+          </div>
+
+          <div class="field-row" data-od-id="cache-meta-row">
+            <div class="field-group" data-od-id="cache-status-group">
+              <label for="cache-status-select">状态</label>
+              <div class="select-wrap">
+                <select id="cache-status-select">
+                  <option value="raw">raw — 刚存，未处理</option>
+                  <option value="drafting">drafting — 已开始转配方票</option>
+                  <option value="outlined">outlined — 已生成大纲</option>
+                  <option value="archived">archived — 封存</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="btn-group" data-od-id="cache-actions">
+            <button class="btn btn-primary" data-od-id="cache-save-btn">保存</button>
+            <button class="btn" data-od-id="cache-convert-btn">炼成大纲</button>
+            <button class="btn btn-ghost" data-od-id="cache-archive-btn">先放着</button>
+          </div>
+        </div>
+
+        <!-- Existing caches -->
+        <div class="card" data-od-id="cache-list-card">
+          <div class="card-header" data-od-id="cache-list-header">
+            <h2 data-od-id="cache-list-heading">已有灵感</h2>
+            <button class="card-action" data-od-id="cache-sort-btn">按更新时间排序 ▾</button>
+          </div>
+
+          <div class="cache-grid" data-od-id="cache-grid">
+            <div class="cache-card" data-od-id="cache-card-1">
+              <h3 class="cache-card-title" data-od-id="cache-card-1-title">黄光床边灵感</h3>
+              <p class="cache-card-preview" data-od-id="cache-card-1-preview">黄昏的光从百叶窗缝隙漏进来，她靠在床边，手指沿着他的脊椎一节节往下数。窗外的蝉鸣，空调的嗡声，她的呼吸频率。</p>
+              <div class="cache-card-meta" data-od-id="cache-card-1-meta">
+                <span class="status-badge raw" data-od-id="cache-card-1-status">raw</span>
+                <span class="cache-card-time" data-od-id="cache-card-1-time">2026-06-19</span>
+              </div>
+            </div>
+
+            <div class="cache-card" data-od-id="cache-card-2">
+              <h3 class="cache-card-title" data-od-id="cache-card-2-title">阿德琳等着姐姐</h3>
+              <p class="cache-card-preview" data-od-id="cache-card-2-preview">阿德琳在车站等了她三年。每年雨季，她都会在那个褪色的站牌下站一会儿。</p>
+              <div class="cache-card-meta" data-od-id="cache-card-2-meta">
+                <span class="status-badge drafting" data-od-id="cache-card-2-status">drafting</span>
+                <span class="cache-card-time" data-od-id="cache-card-2-time">2026-06-18</span>
+              </div>
+            </div>
+
+            <div class="cache-card" data-od-id="cache-card-3">
+              <h3 class="cache-card-title" data-od-id="cache-card-3-title">琴房雨声</h3>
+              <p class="cache-card-preview" data-od-id="cache-card-3-preview">雨天的排练室，贝多芬第七交响第二乐章。她拉小提琴，他弹钢琴。弓弦摩擦声。</p>
+              <div class="cache-card-meta" data-od-id="cache-card-3-meta">
+                <span class="status-badge outlined" data-od-id="cache-card-3-status">outlined</span>
+                <span class="cache-card-time" data-od-id="cache-card-3-time">2026-06-15</span>
+              </div>
+            </div>
+
+            <div class="empty-state cache-card" data-od-id="cache-card-new-placeholder" style="border:1px dashed var(--border);background:transparent;cursor:pointer;">
+              <div style="font-size:24px;opacity:0.3;margin-bottom:8px;">+</div>
+              <p style="margin:0;font-size:var(--text-sm);color:var(--muted);">新建灵感</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================
+         SCREEN 2: 配方票编辑 (Outline Editor)
+         ======================================== -->
+    <section class="screen" id="screen-outline" data-od-id="screen-outline">
+      <div class="page-header" data-od-id="outline-page-header">
+        <h1 data-od-id="outline-title">配方票编辑</h1>
+        <p class="page-sub" data-od-id="outline-subtitle">从灵感炼成可写作的 Markdown 大纲</p>
+      </div>
+
+      <div class="page-body" data-od-id="outline-body">
+        <div class="card" data-od-id="outline-card">
+          <div class="card-header" data-od-id="outline-card-header">
+            <h2 data-od-id="outline-card-heading">阿德琳等着姐姐</h2>
+            <button class="card-action" data-od-id="outline-export-btn">导出 Markdown</button>
+          </div>
+
+          <div class="field-group" data-od-id="outline-title-group">
+            <label for="outline-title-input">标题</label>
+            <input type="text" id="outline-title-input" class="field-input" value="阿德琳等着姐姐">
+          </div>
+
+          <div class="field-group" data-od-id="outline-raw-group">
+            <label for="outline-raw-input">原始灵感</label>
+            <textarea id="outline-raw-input" class="field-input" rows="4">阿德琳在车站等了她三年。每年雨季，她都会在那个褪色的站牌下站一会儿。今年雨季，那个人回来了。</textarea>
+            <p class="field-hint">保持原文，不修改。摘自灵感 "阿德琳等着姐姐"</p>
+          </div>
+
+          <div class="field-group" data-od-id="outline-summary-group">
+            <label for="outline-summary-input">整理后摘要</label>
+            <textarea id="outline-summary-input" class="field-input" rows="3" placeholder="这篇大概讲什么……">久别重逢的雨季车站，两个人在等待与错过的三年后重新找到彼此。</textarea>
+          </div>
+
+          <div class="field-row" data-od-id="outline-fandom-row">
+            <div class="field-group" data-od-id="outline-fandom-group">
+              <label for="outline-fandom-input">Fandom</label>
+              <input type="text" id="outline-fandom-input" class="field-input" placeholder="原创" value="原创">
+            </div>
+            <div class="field-group" data-od-id="outline-cp-group">
+              <label for="outline-cp-input">CP</label>
+              <input type="text" id="outline-cp-input" class="field-input" placeholder="可选">
+            </div>
+          </div>
+
+          <div class="field-group" data-od-id="outline-characters-group">
+            <label for="outline-characters-input">人物（逗号分隔）</label>
+            <input type="text" id="outline-characters-input" class="field-input" value="阿德琳, 姐姐（未命名）">
+          </div>
+
+          <div class="field-group" data-od-id="outline-warnings-group">
+            <label for="outline-warnings-input">观前提醒</label>
+            <textarea id="outline-warnings-input" class="field-input" rows="2" placeholder="AU / IF / PA、情节元素提醒……"></textarea>
+          </div>
+
+          <div class="field-group" data-od-id="outline-plot-group">
+            <label for="outline-plot-input">流水账</label>
+            <textarea id="outline-plot-input" class="field-input" rows="6" placeholder="故事大概怎么走……">雨季开场，阿德琳在车站 → 记忆闪回：三年前的告别 → 站台上看见那个熟悉的身影 → 并肩走 → 车站旁的小餐馆，一个人说了第一句什么话 → 开放式结尾</textarea>
+          </div>
+
+          <div class="field-row" data-od-id="outline-ending-row">
+            <div class="field-group" data-od-id="outline-ending-group">
+              <label for="outline-ending-select">Ending Type</label>
+              <div class="select-wrap">
+                <select id="outline-ending-select">
+                  <option value="he">HE</option>
+                  <option value="be">BE</option>
+                  <option value="oe" selected>OE — 开放式</option>
+                  <option value="custom">自定义</option>
+                </select>
+              </div>
+            </div>
+            <div class="field-group" data-od-id="outline-custom-ending-group">
+              <label for="outline-custom-ending-input">自定义 Ending</label>
+              <input type="text" id="outline-custom-ending-input" class="field-input" placeholder="可选">
+            </div>
+          </div>
+
+          <!-- Relations -->
+          <div style="margin-top:var(--space-6);" data-od-id="outline-relations-section">
+            <div class="card-header" data-od-id="outline-relations-header">
+              <h2 style="font-size:18px;">逻辑关联</h2>
+              <button class="card-action" data-od-id="outline-add-relation-btn">+ 添加关联</button>
+            </div>
+
+            <div class="relation-row" data-od-id="outline-relation-1">
+              <div class="field-group" style="max-width:140px;">
+                <div class="select-wrap">
+                  <select>
+                    <option>前作</option>
+                    <option selected>续作</option>
+                    <option>IF</option>
+                    <option>外传</option>
+                    <option>同系列</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field-group">
+                <input type="text" class="field-input" value="琴房雨声" placeholder="目标笔记……">
+              </div>
+              <div class="field-group">
+                <input type="text" class="field-input" placeholder="备注……">
+              </div>
+              <button class="btn btn-ghost btn-sm" data-od-id="outline-relation-remove">✕</button>
+            </div>
+          </div>
+
+          <!-- Soft hint -->
+          <p class="soft-hint" data-od-id="outline-hint">Optional，还有空白字段：整理后摘要 · 流水账</p>
+
+          <div class="btn-group" data-od-id="outline-actions">
+            <button class="btn btn-primary" data-od-id="outline-save-btn">保存大纲</button>
+            <button class="btn" data-od-id="outline-check-btn">检查缺什么</button>
+            <button class="btn btn-ghost" data-od-id="outline-discard-btn">先放着</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================
+         SCREEN 3: 本地文件库 (Library)
+         ======================================== -->
+    <section class="screen" id="screen-library" data-od-id="screen-library">
+      <div class="page-header" data-od-id="library-page-header">
+        <h1 data-od-id="library-title">本地文件库</h1>
+        <p class="page-sub" data-od-id="library-subtitle">所有灵感与大纲，都在你的 keikeu vault 里</p>
+      </div>
+
+      <div class="page-body" data-od-id="library-body">
+        <div class="card" data-od-id="library-card">
+          <div class="library-header" data-od-id="library-search-section">
+            <div class="field-group" data-od-id="library-search-group">
+              <label for="library-search-input">搜索标题</label>
+              <input type="text" id="library-search-input" class="field-input" placeholder="输入关键词……">
+            </div>
+            <div class="field-group" style="max-width:220px;" data-od-id="library-filter-group">
+              <label for="library-status-select">状态筛选</label>
+              <div class="select-wrap">
+                <select id="library-status-select">
+                  <option value="all">全部</option>
+                  <option value="raw">raw</option>
+                  <option value="drafting">drafting</option>
+                  <option value="outlined">outlined</option>
+                  <option value="archived">archived</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn" data-od-id="library-refresh-btn">刷新</button>
+          </div>
+
+          <!-- Cache entries -->
+          <h3 class="library-section-title" data-od-id="library-caches-title">灵感缓存 · 3</h3>
+          <ul class="entry-list" data-od-id="library-cache-list">
+            <li class="entry-item" data-od-id="library-cache-1">
+              <span class="entry-icon" data-od-id="library-cache-1-icon">✎</span>
+              <div class="entry-info" data-od-id="library-cache-1-info">
+                <div class="entry-title" data-od-id="library-cache-1-title">黄光床边灵感</div>
+                <div class="entry-sub" data-od-id="library-cache-1-sub">cache · raw · 2026-06-19</div>
+              </div>
+              <span class="entry-open" data-od-id="library-cache-1-open">打开</span>
+            </li>
+            <li class="entry-item" data-od-id="library-cache-2">
+              <span class="entry-icon" data-od-id="library-cache-2-icon">✎</span>
+              <div class="entry-info" data-od-id="library-cache-2-info">
+                <div class="entry-title" data-od-id="library-cache-2-title">阿德琳等着姐姐</div>
+                <div class="entry-sub" data-od-id="library-cache-2-sub">cache · drafting · 2026-06-18</div>
+              </div>
+              <span class="entry-open" data-od-id="library-cache-2-open">打开</span>
+            </li>
+            <li class="entry-item" data-od-id="library-cache-3">
+              <span class="entry-icon" data-od-id="library-cache-3-icon">✎</span>
+              <div class="entry-info" data-od-id="library-cache-3-info">
+                <div class="entry-title" data-od-id="library-cache-3-title">琴房雨声</div>
+                <div class="entry-sub" data-od-id="library-cache-3-sub">cache · outlined · 2026-06-15</div>
+              </div>
+              <span class="entry-open" data-od-id="library-cache-3-open">打开</span>
+            </li>
+          </ul>
+
+          <!-- Outline entries -->
+          <h3 class="library-section-title" data-od-id="library-outlines-title">大纲 · 1</h3>
+          <ul class="entry-list" data-od-id="library-outline-list">
+            <li class="entry-item" data-od-id="library-outline-1">
+              <span class="entry-icon outline-icon" data-od-id="library-outline-1-icon">◇</span>
+              <div class="entry-info" data-od-id="library-outline-1-info">
+                <div class="entry-title" data-od-id="library-outline-1-title">阿德琳等着姐姐</div>
+                <div class="entry-sub" data-od-id="library-outline-1-sub">outline · OE · 2026-06-20</div>
+              </div>
+              <span class="entry-open" data-od-id="library-outline-1-open">打开</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Vault info -->
+        <div class="card" style="margin-top:var(--space-4);" data-od-id="library-vault-card">
+          <div class="card-header" data-od-id="library-vault-header">
+            <h2 style="font-size:18px;" data-od-id="library-vault-heading">Vault</h2>
+          </div>
+          <p style="font-size:var(--text-sm);color:var(--fg-2);margin:0;" data-od-id="library-vault-path">
+            <span style="color:var(--muted);font-family:var(--font-mono);font-size:13px;">~/keikeu-vault/</span>
+            <span style="display:inline-flex;gap:var(--space-2);margin-left:var(--space-4);">
+              <button class="btn btn-ghost btn-sm" data-od-id="library-vault-open-folder">在文件夹中显示</button>
+            </span>
+          </p>
+          <div style="display:flex;gap:var(--space-4);margin-top:var(--space-4);font-size:var(--text-sm);color:var(--muted);" data-od-id="library-vault-stats">
+            <span data-od-id="library-stat-caches">灵感缓存 · 3</span>
+            <span data-od-id="library-stat-outlines">大纲 · 1</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // Screen navigation
+  var navBtns = document.querySelectorAll('.nav-btn');
+  var screens = document.querySelectorAll('.screen');
+
+  function showScreen(id) {
+    screens.forEach(function(s) { s.classList.remove('active'); });
+    navBtns.forEach(function(b) { b.classList.remove('active'); });
+    var target = document.getElementById('screen-' + id);
+    if (target) target.classList.add('active');
+    navBtns.forEach(function(b) {
+      if (b.getAttribute('data-screen') === id) b.classList.add('active');
+    });
+  }
+
+  navBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      showScreen(btn.getAttribute('data-screen'));
+    });
+  });
+
+  // Quick actions
+  var exportBtn = document.querySelector('[data-od-id="outline-export-btn"]');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', function() {
+      alert('导出 Markdown 文件到 ~/keikeu-vault/outlines/');
+    });
+  }
+
+  var convertBtns = document.querySelectorAll('[data-od-id="cache-convert-btn"]');
+  convertBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      showScreen('outline');
+    });
+  });
+
+  var saveBtns = document.querySelectorAll('[data-od-id="cache-save-btn"]');
+  saveBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      alert('灵感已保存到 ~/keikeu-vault/cache/');
+    });
+  });
+
+  var outlineSaveBtn = document.querySelector('[data-od-id="outline-save-btn"]');
+  if (outlineSaveBtn) {
+    outlineSaveBtn.addEventListener('click', function() {
+      alert('大纲已保存到 ~/keikeu-vault/outlines/\n关联 cache 已标记为 outlined');
+    });
+  }
+
+  var archiveBtns = document.querySelectorAll('[data-od-id="cache-archive-btn"]');
+  archiveBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      alert('灵感已封存');
+    });
+  });
+
+  var libraryItems = document.querySelectorAll('.entry-item');
+  libraryItems.forEach(function(item) {
+    item.addEventListener('click', function() {
+      var title = item.querySelector('.entry-title');
+      var sub = item.querySelector('.entry-sub');
+      if (sub && sub.textContent.indexOf('cache') > -1) {
+        showScreen('cache');
+      } else if (sub && sub.textContent.indexOf('outline') > -1) {
+        showScreen('outline');
+      }
+    });
+  });
+
+  // Relation remove
+  var removeBtns = document.querySelectorAll('[data-od-id="outline-relation-remove"]');
+  removeBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var row = btn.closest('.relation-row');
+      if (row) row.remove();
+    });
+  });
+
+  // Soft hint refresh simulation
+  var hintEl = document.querySelector('[data-od-id="outline-hint"]');
+  if (hintEl) {
+    var plotInput = document.getElementById('outline-plot-input');
+    var summaryInput = document.getElementById('outline-summary-input');
+    function refreshHint() {
+      var missing = [];
+      if (!(summaryInput && summaryInput.value.trim())) missing.push('整理后摘要');
+      if (!(plotInput && plotInput.value.trim())) missing.push('流水账');
+      hintEl.textContent = missing.length
+        ? 'Optional，还有空白字段：' + missing.join(' · ')
+        : 'Looks complete.';
+    }
+    if (summaryInput) summaryInput.addEventListener('input', refreshHint);
+    if (plotInput) plotInput.addEventListener('input', refreshHint);
+  }
+
+  // Open in folder
+  var openFolderBtn = document.querySelector('[data-od-id="library-vault-open-folder"]');
+  if (openFolderBtn) {
+    openFolderBtn.addEventListener('click', function() {
+      alert('在系统文件夹中打开 ~/keikeu-vault/');
+    });
+  }
+})();
+</script>
+</body>
+</html>
