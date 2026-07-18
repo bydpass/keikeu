@@ -6,8 +6,7 @@ tests/test-vault/
 tests/test-vault-bak/
 tests/keikeu-backups/
 
-statusv02.html
-statusv025.html
+status*.html
 
 # Python
 .venv/
