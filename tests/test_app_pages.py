@@ -296,7 +296,7 @@ def test_flashcard_is_summary_first_read_only_and_remembers_position(tmp_path):
     assert read_paper(path).summary == "Current Summary."
 
 
-def test_flashcard_card_uses_the_available_screen_height(tmp_path):
+def test_flashcard_desktop_card_uses_the_available_screen_height(tmp_path):
     init_vault(tmp_path)
     paper = _paper("K-20260714-001", "A long Summary.")
     write_paper(tmp_path, paper)
@@ -309,6 +309,33 @@ def test_flashcard_card_uses_the_available_screen_height(tmp_path):
     body = _control_by_key(root, "flashcard-card-body")
     assert body.expand is True
     assert body.scroll == ft.ScrollMode.AUTO
+
+
+def test_flashcard_ios_card_uses_screen_width_and_content_height(tmp_path):
+    init_vault(tmp_path)
+    long_highlight = "Long writing anchor. " * 100
+    paper = _paper(
+        "K-20260714-001",
+        "Summary.",
+        highlights=[long_highlight],
+    )
+    write_paper(tmp_path, paper)
+    state_path = tmp_path / "device-state.json"
+    set_card_index(paper.code, 1, 2, state_path)
+
+    root = build_flashcard_page(
+        _ctx(FakePage(platform=ft.PagePlatform.IOS), tmp_path, state_path),
+        paper.code,
+    )
+
+    assert root.expand is True
+    assert root.scroll == ft.ScrollMode.AUTO
+    assert root.horizontal_alignment == ft.CrossAxisAlignment.STRETCH
+    assert _control_by_key(root, "flashcard-card").expand is False
+    body = _control_by_key(root, "flashcard-card-body")
+    assert body.expand is False
+    assert body.scroll is None
+    assert _control_by_key(root, "flashcard-current-card").value == long_highlight
 
 
 def test_library_opens_flashcard_with_the_selected_paper_code(tmp_path):

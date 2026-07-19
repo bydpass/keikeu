@@ -76,6 +76,7 @@ def build_flashcard_page(ctx: "AppContext", code: str | None = None) -> ft.Contr
     cards = project_cards(paper)
     index = get_card_index(paper.code, len(cards), ctx.state_path)
     page = ctx.page
+    is_ios = page.platform == ft.PagePlatform.IOS
     state: dict[str, int | bool] = {"index": index, "show_summary": False}
 
     card_kind = ft.Text("", size=12, color=MUTED, weight=ft.FontWeight.W_600)
@@ -97,8 +98,8 @@ def build_flashcard_page(ctx: "AppContext", code: str | None = None) -> ft.Contr
     card_body = ft.Column(
         controls=[card_text, summary_context],
         key="flashcard-card-body",
-        expand=True,
-        scroll=ft.ScrollMode.AUTO,
+        expand=not is_ios,
+        scroll=None if is_ios else ft.ScrollMode.AUTO,
         spacing=SPACE_4,
     )
     summary_button = ft.OutlinedButton(content=ft.Text("查看当前 Summary"), visible=False)
@@ -164,9 +165,13 @@ def build_flashcard_page(ctx: "AppContext", code: str | None = None) -> ft.Contr
                 ],
                 key="flashcard-card",
                 spacing=SPACE_4,
-                expand=True,
+                expand=not is_ios,
             ),
         ],
         spacing=SPACE_6,
+        scroll=ft.ScrollMode.AUTO if is_ios else None,
         expand=True,
+        horizontal_alignment=(
+            ft.CrossAxisAlignment.STRETCH if is_ios else ft.CrossAxisAlignment.START
+        ),
     )
