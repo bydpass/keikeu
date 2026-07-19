@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>96567d2 · Phase 8.5 文档改革交接</title>
+  <link rel="stylesheet" href="../../assets/map.css">
+  <style>code { overflow-wrap: anywhere; word-break: break-word; }</style>
+</head>
+<body data-theme="light">
+  <a class="skip-link" href="#summary">跳到摘要</a>
+  <div class="shell">
+    <aside class="rail">
+      <div class="rail-brand">DOC REFORM</div>
+      <p class="rail-meta">ARCHIVE · READ ONLY · 96567d2 · 2026-07-19</p>
+      <nav aria-label="报告章节">
+        <a href="#summary">摘要</a>
+        <a href="#timeline">对话轨迹</a>
+        <a href="#map">文档地图</a>
+        <a href="#migration">文件处置</a>
+        <a href="#manuals">手册重构</a>
+        <a href="#evidence">检查证据</a>
+        <a href="#git">Git 坐标</a>
+        <a href="#open">未完成项</a>
+      </nav>
+      <div class="rail-actions">
+        <button type="button" data-theme-toggle aria-label="切换明暗主题">夜</button>
+      </div>
+    </aside>
+
+    <div class="main">
+      <div class="toolbar">
+        <label class="search">
+          <span class="skip-link">搜索报告</span>
+          <input type="search" placeholder="搜索文件、决策或检查…" data-doc-search aria-label="搜索报告">
+        </label>
+        <div class="toolbar-links">
+          <a href="../README.md">Archive</a>
+          <a href="../../PROJECT.md">PROJECT</a>
+          <a href="../../cold_start_report.md">Cold-start audit</a>
+        </div>
+      </div>
+
+      <header class="hero">
+        <p class="eyebrow">Phase 8.5 / documentation reform / commit snapshot</p>
+        <h1>从散落文档到单一入口</h1>
+        <p class="lede">本页冻结 commit <code>96567d268d4e58d7e054dc4af7f9affeafb42ce7</code> 的改动、对话进展和证据边界。它是只读历史，不覆盖任何活跃 truth。</p>
+        <div class="status-row">
+          <span class="ticket ok">docs-only</span>
+          <span class="ticket ok">links valid</span>
+          <span class="ticket ok">browser checked</span>
+          <span class="ticket warn">acceptance unchanged</span>
+        </div>
+      </header>
+
+      <main class="content">
+        <p class="no-results" data-no-results>没有匹配章节。</p>
+
+        <section class="section searchable" id="summary">
+          <div class="section-head">
+            <span class="section-number">01</span>
+            <div>
+              <h2>结论</h2>
+              <p>文档改革已实现并提交；产品验收结论没有变化。</p>
+            </div>
+          </div>
+          <div class="grid three">
+            <article class="card">
+              <h3>单一 truth</h3>
+              <p>产品、工程/Git、当前坐标、Agent 操作分别归入 <a href="../../SPEC.md">SPEC</a>、<a href="../../RULES.md">RULES</a>、<a href="../../PROJECT.md">PROJECT</a>、<a href="../../../AGENTS.md">AGENTS</a>。</p>
+            </article>
+            <article class="card">
+              <h3>历史退场</h3>
+              <p>pre-reform 内容被迁移、融合或删除；commit-bound 材料进入 <a href="../README.md">archive</a>，不再参与冷启动。</p>
+            </article>
+            <article class="card">
+              <h3>人类入口</h3>
+              <p>长篇设计、Git 教学与伦理说明进入 <a href="../../manual/README.md">manual</a>，全部明确为 non-normative。</p>
+            </article>
+          </div>
+          <div class="callout warn">
+            <strong>证据边界：</strong>文档结构、链接与离线 HTML 已检查；应用行为、Provider、真实作者流程和 Road v0.2 产品验收没有因此重新通过。
+          </div>
+        </section>
+
+        <section class="section searchable" id="timeline">
+          <div class="section-head">
+            <span class="section-number">02</span>
+            <div>
+              <h2>对话轨迹</h2>
+              <p>本轮对话包含 iOS 工程轨道和文档改革轨道；本 snapshot 对应后者。</p>
+            </div>
+          </div>
+          <div class="stepper">
+            <div class="step done">
+              <div><strong>iOS Flashcard 布局</strong><br><span class="muted">横向由屏幕宽度驱动，纵向由内容驱动，避免长 Highlight 被内部滚动条截断。</span></div>
+              <span class="ticket ok">a3eb7d2</span>
+            </div>
+            <div class="step done">
+              <div><strong>真机部署与目测</strong><br><span class="muted">连接真机部署后由开发者目测通过；这是设备 smoke，不是产品验收。</span></div>
+              <span class="ticket ok">observed</span>
+            </div>
+            <div class="step done">
+              <div><strong>iOS 分支汇合</strong><br><span class="muted"><code>codex/fix-ios-flashcard-content-height</code> 与 <code>codex/fix-ios-device-build-warnings</code> 均指向 <code>a3eb7d2</code>。</span></div>
+              <span class="ticket">parallel</span>
+            </div>
+            <div class="step done">
+              <div><strong>文档分支重定基线</strong><br><span class="muted"><code>codex/phase-8-5-doc-reform</code> 直接基于 main 的 <code>146cb74…</code>；iOS 提交不在文档提交内。</span></div>
+              <span class="ticket ok">verified</span>
+            </div>
+            <div class="step done">
+              <div><strong>pre-reform 去留执行</strong><br><span class="muted">manual、RULES、archive、CLAUDE 与路径引用按开发者决定收敛。</span></div>
+              <span class="ticket ok">docs-only</span>
+            </div>
+            <div class="step done">
+              <div><strong>地图与手册重构</strong><br><span class="muted">重新绘制文档地图；重写 Git 交互图与伦理手册，删除重复 truth。</span></div>
+              <span class="ticket ok">checked</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="section searchable" id="map">
+          <div class="section-head">
+            <span class="section-number">03</span>
+            <div>
+              <h2>新文档地图</h2>
+              <p>README 负责入口，PROJECT 负责坐标；其余文档按职责分层。</p>
+            </div>
+          </div>
+          <div class="diagram">
+            <div class="flow" style="--cols: 4">
+              <div class="node" data-layer="core"><b>AUTHORITY</b><small>SPEC · RULES · PROJECT · AGENTS</small></div>
+              <div class="node" data-layer="app"><b>VIEWS</b><small>design · interaction · architecture</small></div>
+              <div class="node" data-layer="disk"><b>EVIDENCE</b><small>tests · acceptance · generated · cold-start</small></div>
+              <div class="node" data-layer="external"><b>CONTEXT</b><small>manual · ADR · read-only archive</small></div>
+            </div>
+          </div>
+          <div class="callout ok">
+            <strong>冲突处理：</strong>runtime 与意图冲突时，修改实现、活跃 truth 或记录窄 ADR；manual、generated 与 archive 都不能抢答。
+          </div>
+        </section>
+
+        <section class="section searchable" id="migration">
+          <div class="section-head">
+            <span class="section-number">04</span>
+            <div>
+              <h2>pre-reform 文件处置</h2>
+              <p>每类文件只有一个明确归宿。</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="matrix">
+              <thead><tr><th>处置</th><th>对象</th><th>结果</th></tr></thead>
+              <tbody>
+                <tr><td>转移</td><td><code>appdesign.md</code>、<code>gitspec.md</code>、Git 交互页、伦理说明</td><td><a href="../../manual/README.md">docs/manual/</a></td></tr>
+                <tr><td>融合</td><td><code>techpolicy.md</code>、<code>gitagent.md</code></td><td><a href="../../RULES.md">RULES</a>；Git 原则以 §7 为唯一 truth</td></tr>
+                <tr><td>重构</td><td><code>CLAUDE.md</code></td><td>缩为 AGENTS 入口，不再复制规则</td></tr>
+                <tr><td>归档</td><td>Road v0.1 / v0.2 specs</td><td>进入以 <code>9d033db…</code>、<code>146cb74…</code> 命名的目录</td></tr>
+                <tr><td>快照重命名</td><td>三份 status HTML</td><td>改为对应 commit 的完整哈希文件名</td></tr>
+                <tr><td>删除</td><td><code>readmedesign.md</code>、旧导航记录、loose README 等</td><td>不保留未指定的 pre-reform 文件</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="muted">同时修复 README、PROJECT、acceptance、ADR、archive、cold-start audit 与历史材料中的必要路径指针。</p>
+        </section>
+
+        <section class="section searchable" id="manuals">
+          <div class="section-head">
+            <span class="section-number">05</span>
+            <div>
+              <h2>人工手册重构</h2>
+              <p>解释保留，第二套规则删除。</p>
+            </div>
+          </div>
+          <div class="grid two">
+            <article class="card">
+              <h3><a href="../../manual/git-interactive.html">Git 状态地图</a></h3>
+              <p>从 890 行重写为 482 行离线交互图，只保留四个位置、状态迁移、短工作流与权限边界。</p>
+              <ul>
+                <li>示例分支改为 <code>codex/</code>。</li>
+                <li>commit、merge、push 与 destructive 动作不暗示默认授权。</li>
+                <li>支持明暗主题、键盘操作、窄屏单列与 reduced motion。</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3><a href="../../manual/ethics.md">技术伦理手册</a></h3>
+              <p>从 620 行重写为 99 行评审手册，删除旧案例、情绪化措辞与重复“项目宪法”。</p>
+              <ul>
+                <li>保留授权、权力、风险、退出四问。</li>
+                <li>用 SPEC/RULES 实例解释当前边界。</li>
+                <li>明确本页解释为什么，不定义允许做什么。</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="section searchable" id="evidence">
+          <div class="section-head">
+            <span class="section-number">06</span>
+            <div>
+              <h2>实际检查</h2>
+              <p>只记录在目标 commit 状态真正运行过的证据。</p>
+            </div>
+          </div>
+          <div class="grid two">
+            <article class="card">
+              <h3>静态文档门</h3>
+              <ul>
+                <li><code>.venv/bin/python scripts/check_docs.py</code></li>
+                <li>24 个活跃文档、16 个 required 文件；预算和本地链接有效。</li>
+                <li><code>git diff --cached --check</code> 与 <code>git diff --check</code> 通过。</li>
+                <li>目标提交：41 files changed, 1312 insertions, 2666 deletions。</li>
+                <li>无 <code>src/</code>、<code>tests/</code> 或依赖文件变化。</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3>浏览器 QA</h3>
+              <ul>
+                <li>Git 手册在 1440×1000 与 375×812 无横向溢出。</li>
+                <li>6 个场景与 4 个状态节点完整；远端场景和主题切换正确。</li>
+                <li>Tab 焦点顺序可达，Enter 可激活提交场景。</li>
+                <li>未运行 axe 或完整屏幕阅读器审计。</li>
+              </ul>
+            </article>
+          </div>
+          <div class="callout warn">
+            <strong>未运行：</strong>应用 pytest、compileall、Flet smoke、iOS 重新部署、Provider smoke、真实作者 acceptance。目标提交只有文档变化。
+          </div>
+        </section>
+
+        <section class="section searchable" id="git">
+          <div class="section-head">
+            <span class="section-number">07</span>
+            <div>
+              <h2>Git 坐标</h2>
+              <p>这些坐标描述目标 commit，不代表当前远端实时状态。</p>
+            </div>
+          </div>
+          <div class="grid two">
+            <article class="card">
+              <h3>目标状态</h3>
+              <p><span class="mono">branch</span><br><code>codex/phase-8-5-doc-reform</code></p>
+              <p><span class="mono">commit</span><br><code>96567d268d4e58d7e054dc4af7f9affeafb42ce7</code></p>
+              <p><span class="mono">parent</span><br><code>846baafebb9c7e629db304dc6d57f48caf4fa742</code></p>
+              <p><span class="mono">main base</span><br><code>146cb74e81fb9a0b93aa232227b86b56ad7c5d08</code></p>
+            </article>
+            <article class="card">
+              <h3>远端边界</h3>
+              <p>目标 commit 后，分支相对 tracking remote 为 <code>ahead 2, behind 6</code>，工作树干净。</p>
+              <p>没有 push。若之后同步已重写的同名远端分支，需要开发者明确授权并使用 <code>--force-with-lease</code>；普通 <code>--force</code> 禁止。</p>
+              <p>本 snapshot 由后续归档提交加入，因此不属于目标 commit 本身。</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section searchable" id="open">
+          <div class="section-head">
+            <span class="section-number">08</span>
+            <div>
+              <h2>仍未完成</h2>
+              <p>文档实现完成，不等于全部证据闸门关闭。</p>
+            </div>
+          </div>
+          <div class="grid three">
+            <article class="card">
+              <h3>独立冷启动</h3>
+              <p>未运行独立 fresh-agent cold start；现有 <a href="../../cold_start_report.md">audit</a> 是结构检查，不是独立盲测。</p>
+            </article>
+            <article class="card">
+              <h3>无障碍深测</h3>
+              <p>Git 页已检查基本语义与键盘路径，但未跑 axe、VoiceOver 或完整 WCAG 审计。</p>
+            </article>
+            <article class="card">
+              <h3>产品验收</h3>
+              <p>Road v0.2 仍缺完整 one-shot 与两会话短/中篇真实作者证据；以 <a href="../../PROJECT.md">PROJECT</a> 为当前结论。</p>
+            </article>
+          </div>
+          <div class="callout">
+            <strong>记录规则：</strong>从本报告开始，状态与交接报告进入 <code>docs/archive/snapshots/</code>，并以它所描述的 commit 完整哈希命名。
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <p>ARCHIVE · READ ONLY · conversation handoff · no author content included</p>
+      </footer>
+    </div>
+  </div>
+  <script src="../../assets/map.js"></script>
+</body>
+</html>
