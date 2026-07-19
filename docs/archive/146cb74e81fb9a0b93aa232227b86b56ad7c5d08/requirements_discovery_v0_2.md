@@ -11,7 +11,7 @@
 
 后续 brainstorming 重新验证了目标用户、内容模型和大纲必要性。本文件中的候选路线已由以下活动文档取代：
 
-- [`../../appdesign.md`](../../appdesign.md)：当前产品事实来源。
+- [`docs/manual/appdesign.md`](../../manual/appdesign.md)：当时的产品设计来源，现为人工参考。
 - [`spec_road_v0_2.md`](spec_road_v0_2.md)：macOS Paper–Flashcard Core 行为规格。
 - [`planbook_road_v0_2.md`](planbook_road_v0_2.md)：Road v0.2 执行顺序。
 - [`road_pre_advance.md`](road_pre_advance.md)：可选 Outline 的后置候选池。
@@ -57,7 +57,7 @@
 - `.trash` 虽然安全，但目前不可见、不可恢复，是一个黑箱。
 
 这些问题已经记录在
-[`Road v0.1 Issue 复盘`](9d033db326295874d1f32f23325e430e0461396d/issue_retrospective_v0_1.md)
+[`Road v0.1 Issue 复盘`](../9d033db326295874d1f32f23325e430e0461396d/issue_retrospective_v0_1.md)
 的 O-01～O-05，应先于外部候选进入实施排序。
 
 ### 2.2 公开工作流证据

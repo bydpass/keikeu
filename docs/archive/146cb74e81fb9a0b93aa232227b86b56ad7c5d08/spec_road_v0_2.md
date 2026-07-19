@@ -4,7 +4,7 @@
 
 > Road：macOS Paper–Flashcard Core  
 > 状态：已审阅，Phase 7 完成（2026-07-15）
-> 产品真理：[`../../appdesign.md`](../../appdesign.md)  
+> 当时的产品真理：[`docs/manual/appdesign.md`](../../manual/appdesign.md)
 > 配套执行手册：[`planbook_road_v0_2.md`](planbook_road_v0_2.md)
 
 ## 0. Road 目标

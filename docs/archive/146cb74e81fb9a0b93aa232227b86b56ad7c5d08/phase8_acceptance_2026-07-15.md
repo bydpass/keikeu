@@ -1,4 +1,4 @@
-> **ARCHIVED — READ ONLY.** Historical copy; the active supporting record is [`docs/acceptance/phase8.md`](../../../acceptance/phase8.md).
+> **ARCHIVED — READ ONLY.** Historical copy; the active supporting record is [`docs/acceptance/phase8.md`](../../acceptance/phase8.md).
 
 # keikeu Road v0.2 — Phase 8 产品验收记录
 

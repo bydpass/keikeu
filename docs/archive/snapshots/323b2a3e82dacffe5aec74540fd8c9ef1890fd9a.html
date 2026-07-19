@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>keikeu v0.2.5 · iOS 模拟器快速部署记录</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f4ecd9;
+      --paper-deep: #e8dcc0;
+      --ink: #25231f;
+      --muted: #696258;
+      --accent: #b84f19;
+      --accent-soft: #f1d1b8;
+      --green: #2f6b4f;
+      --line: #cfc2a6;
+      --code: #2d2a26;
+      --code-ink: #f8f0df;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--paper-deep);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.65;
+    }
+
+    main {
+      width: min(1040px, calc(100% - 32px));
+      margin: 32px auto;
+      padding: clamp(24px, 5vw, 64px);
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 18px 50px rgb(56 45 26 / 14%);
+    }
+
+    h1, h2, h3 {
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+    }
+
+    h1 { margin: 0 0 12px; font-size: clamp(2rem, 5vw, 3.7rem); }
+    h2 { margin-top: 52px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+    h3 { margin-top: 28px; }
+
+    a { color: var(--accent); }
+    code, pre { font-family: "SFMono-Regular", Consolas, monospace; }
+    code { font-size: 0.92em; }
+    pre {
+      overflow-x: auto;
+      margin: 14px 0;
+      padding: 16px;
+      background: var(--code);
+      color: var(--code-ink);
+      border-radius: 10px;
+      line-height: 1.55;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 750;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .lede { max-width: 760px; color: var(--muted); font-size: 1.08rem; }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 14px;
+      padding: 7px 12px;
+      color: var(--green);
+      background: #dceadf;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+
+    .status::before {
+      width: 9px;
+      height: 9px;
+      content: "";
+      background: var(--green);
+      border-radius: 50%;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 14px;
+      margin: 18px 0;
+    }
+
+    .card {
+      padding: 18px;
+      background: rgb(255 255 255 / 34%);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+
+    .card strong { display: block; margin-bottom: 5px; }
+    .card p { margin: 0; color: var(--muted); }
+    .callout {
+      padding: 18px 20px;
+      background: var(--accent-soft);
+      border-left: 5px solid var(--accent);
+      border-radius: 8px;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px 10px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+    th { font-size: 0.82rem; letter-spacing: 0.04em; text-transform: uppercase; }
+    td:first-child { white-space: nowrap; font-weight: 700; }
+    ul, ol { padding-left: 1.3rem; }
+    li + li { margin-top: 8px; }
+    footer { margin-top: 56px; color: var(--muted); font-size: 0.9rem; }
+
+    @media (max-width: 620px) {
+      main { width: 100%; margin: 0; border: 0; border-radius: 0; }
+      table, tbody, tr, td { display: block; }
+      thead { display: none; }
+      tr { padding: 12px 0; border-bottom: 1px solid var(--line); }
+      td { padding: 4px 0; border: 0; white-space: normal !important; }
+    }
+  </style>
+</head>
+<body>
+<div style="position:relative;z-index:9999;padding:12px 18px;background:#8c3b42;color:#fffdf8;font:700 13px/1.5 ui-monospace,monospace;text-align:center">ARCHIVED · READ ONLY · Snapshot of 323b2a3e82dacffe5aec74540fd8c9ef1890fd9a. Current status lives in docs/PROJECT.md.</div>
+  <main>
+    <header>
+      <p class="eyebrow">keikeu · local engineering note · 2026-07-17</p>
+      <h1>Phase 7.5：iOS 模拟器快速部署</h1>
+      <p class="lede">
+        本轮目标不是发布 App Store 版本，而是在不影响 macOS 主开发路线的前提下，
+        把现有 Flet/Python 应用快速打包、安装到 iPhone 模拟器，并修复首次暴露出的移动端布局问题。
+      </p>
+      <span class="status">模拟器构建、安装与核心页面显示已验证</span>
+    </header>
+
+    <section>
+      <h2>最终结果</h2>
+      <div class="grid">
+        <article class="card">
+          <strong>工具链</strong>
+          <p>macOS 27、Xcode 27 beta、Flutter 3.41.7、Flet 0.85.3。</p>
+        </article>
+        <article class="card">
+          <strong>目标设备</strong>
+          <p>iPhone 17 Pro、iOS 26.5 模拟器。本轮没有验证真机签名与安装。</p>
+        </article>
+        <article class="card">
+          <strong>应用状态</strong>
+          <p>Paper、Flashcard、本地文件库可通过底部导航进入；安全区与窄屏布局正常。</p>
+        </article>
+        <article class="card">
+          <strong>自动检查</strong>
+          <p>完整测试集 81 项通过；Python 编译检查与工作区 diff 检查通过。</p>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <h2>我们依次解决了什么</h2>
+      <table>
+        <thead>
+          <tr><th>症状</th><th>原因</th><th>处理</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>找不到 <code>main.py</code></td>
+            <td>项目采用 <code>src/</code> 布局，Flet 默认在应用根目录寻找入口。</td>
+            <td>在 <code>pyproject.toml</code> 声明 <code>[tool.flet.app] path = "src"</code>，并增加薄入口 <code>src/main.py</code>。</td>
+          </tr>
+          <tr>
+            <td>构建后只有白屏</td>
+            <td>Python 包中的 Flet 0.86 与生成的 Flutter 客户端 0.85.3 协议不匹配；启动代码还无条件调用桌面窗口 API。</td>
+            <td>将 Flet 精确锁定为 0.85.3，并让窗口尺寸配置只在桌面平台执行。</td>
+          </tr>
+          <tr>
+            <td>红屏与黄黑溢出条</td>
+            <td><code>NavigationRail(elevation=0)</code> 触发 Flutter 断言；桌面侧栏宽度也不适合手机。</td>
+            <td>移除无效 elevation；桌面保留 NavigationRail，iOS 改用底部 NavigationBar。</td>
+          </tr>
+          <tr>
+            <td>内容顶到灵动岛</td>
+            <td>移动端正文没有纳入系统安全区。</td>
+            <td>使用 <code>SafeArea</code> 包裹移动端正文，同时保留系统底部导航区域。</td>
+          </tr>
+          <tr>
+            <td>文件库只有底栏、正文消失</td>
+            <td>外层滚动容器中嵌套了 <code>expand=True</code> 的卡片与内部滚动列表，在无界高度下无法正确布局。</td>
+            <td>移动端只保留一个外层滚动区，取消内部 expand/scroll，并移除 420/360 像素固定宽度。</td>
+          </tr>
+          <tr>
+            <td>Xcode 27 beta 构建兼容问题</td>
+            <td>生成工程的最低 iOS 版本和旧式 <code>lipo</code> 调用与 beta 工具链存在兼容摩擦。</td>
+            <td>在生成目录调整部署目标，并使用临时兼容 shim 完成本轮构建。</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>进入源码的持久改动</h2>
+      <ul>
+        <li><code>pyproject.toml</code>：锁定 Flet 0.85.3，并声明 Flet 应用目录为 <code>src</code>。</li>
+        <li><code>src/main.py</code>：提供打包工具可发现的最小启动入口。</li>
+        <li><code>src/keikeu_app/main.py</code>：区分桌面与移动平台；移动端使用底部导航、安全区和较小边距。</li>
+        <li><code>src/keikeu_app/pages/library_page.py</code>：移动端采用单滚动区域和自适应宽度。</li>
+        <li><code>tests/test_app_pages.py</code>、<code>tests/test_migration_page.py</code>：覆盖 iOS 导航、安全区、Vault 选择器与文件库布局。</li>
+      </ul>
+
+      <div class="callout">
+        <strong>重要边界：</strong>
+        <code>build/flutter/ios</code> 内的 Xcode 27 调整和临时 <code>lipo</code> shim 属于生成环境补丁，
+        没有进入 Git。删除 <code>build/</code>、重新生成工程或清理临时目录后，可能需要重新应用。
+      </div>
+    </section>
+
+    <section>
+      <h2>以后如何快速重建</h2>
+      <p>从仓库根目录执行。以下变量避免把个人路径写死在项目中：</p>
+      <pre><code>export KEIKEU_FLUTTER_BIN="$HOME/flutter/3.41.7/bin"
+export DEVELOPER_DIR="/Applications/Xcode-beta.app/Contents/Developer"
+
+PATH="$KEIKEU_FLUTTER_BIN:$PATH" \
+  .venv/bin/flet build ios-simulator --yes</code></pre>
+
+      <p>启动目标模拟器后，安装并运行生成的应用：</p>
+      <pre><code>export KEIKEU_SIMULATOR_UDID="&lt;目标模拟器 UDID&gt;"
+
+xcrun simctl install "$KEIKEU_SIMULATOR_UDID" \
+  build/ios-simulator/keikeu.app
+
+xcrun simctl launch "$KEIKEU_SIMULATOR_UDID" \
+  com.flet.keikeu</code></pre>
+
+      <p>查看可用模拟器 UDID：</p>
+      <pre><code>xcrun simctl list devices available</code></pre>
+    </section>
+
+    <section>
+      <h2>这是一次性部署吗？</h2>
+      <p><strong>不是一次性能力，但每次源码变化后需要重新构建和安装。</strong></p>
+      <ul>
+        <li>源码中的入口、Flet 版本锁定和响应式 UI 是持久的，提交后不会因重启消失。</li>
+        <li><code>keikeu.app</code> 是可丢弃构建产物；重新构建会产生新版本。</li>
+        <li>模拟器中的安装副本不会自动同步源码；重新安装同一 bundle ID 会覆盖旧副本。</li>
+        <li>模拟器应用的本地状态可能在覆盖安装时保留；需要全新状态时应谨慎卸载，先确认没有需要保留的测试数据。</li>
+        <li>生成工程补丁目前不耐 <code>build/</code> 重建，这是后续把部署流程脚本化时最值得消除的手工步骤。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>继续开发 macOS 本体怎么办？</h2>
+      <p>继续按原来的 macOS 开发方式运行即可。平台分支只改变壳层布局：</p>
+      <ul>
+        <li>macOS 仍使用宽屏 NavigationRail 和桌面窗口尺寸。</li>
+        <li>iOS 使用底部导航、自适应宽度与安全区。</li>
+        <li>核心 <code>keikeu_core</code>、Markdown Vault 和 Paper/Flashcard 数据流仍由两端共用。</li>
+        <li>日常开发优先在 macOS 快速迭代；达到一个可测试节点后，再重建模拟器检查窄屏与触控流程。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>仍未覆盖的风险</h2>
+      <ol>
+        <li>本轮只验证模拟器，没有验证 Apple 开发者签名、真机安装、后台恢复或 App Store 打包。</li>
+        <li>Xcode 27 与 macOS 27 均为 beta 环境，后续 beta 版本可能改变构建行为。</li>
+        <li>文件库仅验证了页面显示和导航，没有在真实作者 Vault 上重复破坏性操作。</li>
+        <li>自动测试证明已覆盖的代码行为，不等同于 Phase 8 的真实作者产品验收。</li>
+      </ol>
+    </section>
+
+    <footer>
+      <p>
+        原始施工记录当时由 <code>.gitignore</code> 排除；此副本现以对应 commit 名称只读归档。
+        Git 提交保留可复现的源码与测试；个人环境细节仍留在本机。
+      </p>
+    </footer>
+  </main>
+</body>
+</html>

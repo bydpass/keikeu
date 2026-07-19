@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Git 状态地图 · keikeu 人工手册</title>
+  <style>
+    :root {
+      --serif: Georgia, "Iowan Old Style", "Songti SC", "Noto Serif SC", serif;
+      --sans: Inter, -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+      --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      --page: #efe9de;
+      --paper: #fffdf8;
+      --paper-strong: #f6f0e5;
+      --ink: #252823;
+      --muted: #66695f;
+      --line: #cfc7b8;
+      --accent: #315f57;
+      --accent-soft: #dce9e4;
+      --warning: #a24e37;
+      --warning-soft: #f4dfd7;
+      --shadow: 0 16px 45px rgba(55, 48, 38, .12);
+    }
+
+    [data-theme="dark"] {
+      --page: #171b19;
+      --paper: #202522;
+      --paper-strong: #282e2a;
+      --ink: #edf0e9;
+      --muted: #b1b8ae;
+      --line: #444c46;
+      --accent: #94c8b9;
+      --accent-soft: #263f38;
+      --warning: #eca28d;
+      --warning-soft: #4b302a;
+      --shadow: 0 18px 50px rgba(0, 0, 0, .3);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      color: var(--ink);
+      background:
+        linear-gradient(rgba(49, 95, 87, .045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(49, 95, 87, .045) 1px, transparent 1px),
+        var(--page);
+      background-size: 28px 28px;
+      font: 16px/1.65 var(--sans);
+    }
+    a { color: var(--accent); text-underline-offset: .18em; }
+    button { font: inherit; }
+    code { color: var(--accent); font: .88em/1.55 var(--mono); overflow-wrap: anywhere; }
+    :focus-visible { outline: 3px solid var(--warning); outline-offset: 3px; }
+
+    .skip-link {
+      position: fixed;
+      left: 16px;
+      top: -80px;
+      z-index: 20;
+      padding: 9px 13px;
+      color: var(--paper);
+      background: var(--ink);
+    }
+    .skip-link:focus { top: 16px; }
+
+    .manual-bar {
+      display: flex;
+      justify-content: center;
+      gap: .45em;
+      padding: 9px 72px 9px 16px;
+      color: var(--muted);
+      background: var(--paper);
+      border-bottom: 1px solid var(--line);
+      font: 12px/1.5 var(--mono);
+      text-align: center;
+    }
+    .manual-bar strong { color: var(--warning); }
+    .theme-toggle {
+      position: absolute;
+      top: 7px;
+      right: 14px;
+      min-width: 48px;
+      padding: 5px 9px;
+      color: var(--ink);
+      background: transparent;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      cursor: pointer;
+    }
+
+    .hero {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: clamp(58px, 9vw, 110px) 0 42px;
+    }
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font: 700 12px/1.4 var(--mono);
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3 { font-family: var(--serif); }
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(40px, 8vw, 92px);
+      font-weight: 500;
+      letter-spacing: -.045em;
+      line-height: .98;
+    }
+    .hero p:last-child {
+      max-width: 720px;
+      margin: 28px 0 0;
+      color: var(--muted);
+      font-size: clamp(17px, 2.2vw, 22px);
+    }
+
+    main {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding-bottom: 90px;
+    }
+    .panel {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+    .section-title { margin: 0 0 10px; font-size: clamp(24px, 4vw, 38px); font-weight: 500; }
+    .section-note { margin: 0; color: var(--muted); }
+
+    .scenario-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 18px;
+      border-bottom: 1px solid var(--line);
+    }
+    .scenario {
+      padding: 8px 13px;
+      color: var(--muted);
+      background: transparent;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .scenario:hover { color: var(--ink); border-color: var(--accent); }
+    .scenario[aria-pressed="true"] { color: var(--paper); background: var(--accent); border-color: var(--accent); }
+
+    .map-area { padding: clamp(22px, 4vw, 42px); }
+    .state-map {
+      display: grid;
+      grid-template-columns: minmax(135px, 1fr) 52px minmax(135px, 1fr) 52px minmax(135px, 1fr) 64px minmax(135px, 1fr);
+      align-items: stretch;
+      margin-top: 28px;
+    }
+    .state {
+      position: relative;
+      min-height: 190px;
+      padding: 20px;
+      color: var(--ink);
+      background: var(--paper-strong);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 160ms ease, transform 160ms ease, background 160ms ease;
+    }
+    .state:hover { transform: translateY(-3px); border-color: var(--accent); }
+    .state.is-active { background: var(--accent-soft); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+    .state-number { display: block; color: var(--accent); font: 700 12px/1 var(--mono); }
+    .state strong { display: block; margin: 30px 0 8px; font: 500 clamp(19px, 2.2vw, 26px)/1.1 var(--serif); }
+    .state small { display: block; color: var(--muted); font-size: 13px; }
+    .state-tag { position: absolute; right: 14px; bottom: 13px; font: 10px/1.2 var(--mono); letter-spacing: .08em; }
+
+    .flow {
+      display: grid;
+      place-content: center;
+      gap: 5px;
+      color: var(--muted);
+      font: 10px/1.25 var(--mono);
+      text-align: center;
+    }
+    .flow::after { content: "→"; color: var(--line); font: 28px/1 var(--serif); }
+    .flow.is-active { color: var(--warning); font-weight: 700; }
+    .flow.is-active::after { color: var(--warning); }
+
+    .detail {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(220px, .65fr);
+      gap: 28px;
+      margin-top: 28px;
+      padding-top: 26px;
+      border-top: 1px solid var(--line);
+    }
+    .detail h3 { margin: 8px 0 9px; font-size: clamp(22px, 3vw, 30px); font-weight: 500; }
+    .detail p { margin: 0; color: var(--muted); }
+    .permission { display: inline-block; padding: 3px 8px; color: var(--warning); background: var(--warning-soft); border-radius: 4px; font: 700 11px/1.5 var(--mono); }
+    .command-list { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
+    .command-list li { padding: 8px 10px; background: var(--paper-strong); border-left: 3px solid var(--accent); }
+    .risk { grid-column: 1 / -1; padding: 13px 15px; color: var(--ink) !important; background: var(--warning-soft); border-left: 4px solid var(--warning); }
+
+    .below {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 18px;
+    }
+    .guide { padding: clamp(24px, 4vw, 38px); }
+    .guide ol { margin: 24px 0 0; padding: 0; list-style: none; counter-reset: route; }
+    .guide li { position: relative; padding: 14px 0 14px 48px; border-top: 1px solid var(--line); counter-increment: route; }
+    .guide li::before { content: counter(route, decimal-leading-zero); position: absolute; left: 0; color: var(--accent); font: 700 12px/1.7 var(--mono); }
+    .guide li strong { display: block; }
+    .guide li span { color: var(--muted); font-size: 14px; }
+
+    .boundary-grid { display: grid; gap: 10px; margin-top: 24px; }
+    .boundary { padding: 13px 15px; background: var(--paper-strong); border-radius: 8px; }
+    .boundary strong { display: block; font: 700 11px/1.5 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+    .boundary span { display: block; margin-top: 3px; color: var(--muted); font-size: 14px; }
+    .boundary.caution strong { color: var(--warning); }
+
+    footer { margin-top: 30px; color: var(--muted); font-size: 13px; text-align: center; }
+
+    @media (max-width: 900px) {
+      .state-map { grid-template-columns: 1fr; gap: 8px; }
+      .state { min-height: 132px; }
+      .state strong { margin-top: 18px; }
+      .flow { min-height: 42px; }
+      .flow::after { content: "↓"; }
+    }
+    @media (max-width: 680px) {
+      .manual-bar { justify-content: flex-start; text-align: left; }
+      .hero, main { width: min(100% - 22px, 1180px); }
+      .hero { padding-top: 54px; }
+      .scenario-nav { display: grid; grid-template-columns: 1fr 1fr; }
+      .scenario { text-align: left; }
+      .detail, .below { grid-template-columns: 1fr; }
+      .risk { grid-column: 1; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body data-theme="light">
+  <a class="skip-link" href="#content">跳到主要内容</a>
+  <div class="manual-bar">
+    <strong>HUMAN MANUAL · NON-NORMATIVE</strong>
+    <span>操作权限与 Git 规则只以 <a href="../RULES.md#7-git">RULES §7</a> 为准。</span>
+  </div>
+  <button class="theme-toggle" type="button" aria-label="切换深色主题" aria-pressed="false" data-theme-toggle>◐</button>
+
+  <header class="hero">
+    <p class="eyebrow">Git state map / keikeu</p>
+    <h1>先看状态，<br>再移动历史。</h1>
+    <p>Git 不是“保存按钮”。它把磁盘文件、待提交快照、本地历史和远端历史分开；每条命令只移动其中一部分。</p>
+  </header>
+
+  <main id="content">
+    <section class="panel" aria-labelledby="map-title">
+      <nav class="scenario-nav" aria-label="查看 Git 场景">
+        <button class="scenario" type="button" data-key="inspect" aria-pressed="true">观察</button>
+        <button class="scenario" type="button" data-key="edit" aria-pressed="false">编辑</button>
+        <button class="scenario" type="button" data-key="stage" aria-pressed="false">暂存</button>
+        <button class="scenario" type="button" data-key="commit" aria-pressed="false">提交</button>
+        <button class="scenario" type="button" data-key="integrate" aria-pressed="false">整合</button>
+        <button class="scenario" type="button" data-key="remote" aria-pressed="false">远端</button>
+      </nav>
+
+      <div class="map-area">
+        <h2 class="section-title" id="map-title">四个位置，一条可审查路径</h2>
+        <p class="section-note">点击场景或位置，查看它改变什么、需要什么权限。</p>
+
+        <div class="state-map" aria-label="从工作区到远端的 Git 状态地图">
+          <button class="state is-active" type="button" data-key="worktree">
+            <span class="state-number">01 / DISK</span>
+            <strong>工作区</strong>
+            <small>编辑器与测试实际读取的文件；可能包含未跟踪、未暂存变化。</small>
+            <span class="state-tag">working tree</span>
+          </button>
+          <div class="flow" data-flow="add"><span>git add</span></div>
+          <button class="state" type="button" data-key="index">
+            <span class="state-number">02 / PLAN</span>
+            <strong>暂存区</strong>
+            <small>下一次提交要采用的精确内容，不是备份，也不是上传。</small>
+            <span class="state-tag">index</span>
+          </button>
+          <div class="flow" data-flow="commit"><span>git commit</span></div>
+          <button class="state" type="button" data-key="local">
+            <span class="state-number">03 / HISTORY</span>
+            <strong>本地历史</strong>
+            <small>不可变提交对象与可移动分支指针；HEAD 标记当前位置。</small>
+            <span class="state-tag">.git</span>
+          </button>
+          <div class="flow" data-flow="sync"><span>push →<br>← fetch</span></div>
+          <button class="state" type="button" data-key="remote-state">
+            <span class="state-number">04 / SHARED</span>
+            <strong>远端历史</strong>
+            <small>另一座共享仓库；不会自动收到工作区里的未提交文件。</small>
+            <span class="state-tag">origin/*</span>
+          </button>
+        </div>
+
+        <div class="detail" aria-live="polite">
+          <div>
+            <span class="permission" id="permission">只读 · 可直接检查</span>
+            <h3 id="detail-title">观察不会改变仓库</h3>
+            <p id="detail-text">先确认分支、脏文件和 ahead/behind。看懂现场之前，不编辑、不暂存，也不整合历史。</p>
+          </div>
+          <ul class="command-list" id="commands" aria-label="相关命令"></ul>
+          <p class="risk" id="risk">脏工作树必须先列出所有文件、重叠和混入风险；本页不会替你授权后续写操作。</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="below">
+      <section class="panel guide" aria-labelledby="route-title">
+        <h2 class="section-title" id="route-title">keikeu 的短路径</h2>
+        <p class="section-note">每一步的输出，都是下一步的输入边界。</p>
+        <ol>
+          <li><strong>观察</strong><span>确认分支和全部脏文件；有未知修改就停下确认。</span></li>
+          <li><strong>限定</strong><span>一个 Phase、一条 `codex/` 分支、一个可独立审查的目标。</span></li>
+          <li><strong>实现与检查</strong><span>读调用者，做最小修改，运行与风险相称的检查。</span></li>
+          <li><strong>精确暂存</strong><span>只选已审查路径，再读 staged diff 与 status。</span></li>
+          <li><strong>交接</strong><span>报告 HEAD、状态、证据和风险；commit 与远端动作等待明确授权。</span></li>
+        </ol>
+      </section>
+
+      <section class="panel guide" aria-labelledby="boundary-title">
+        <h2 class="section-title" id="boundary-title">权限不是命令参数</h2>
+        <p class="section-note">命令是否可用，与当前任务是否授权，是两件事。</p>
+        <div class="boundary-grid">
+          <div class="boundary"><strong>Read</strong><span>status、diff、log、show 通常只读，用来收集证据。</span></div>
+          <div class="boundary"><strong>Local write</strong><span>编辑、add、commit、switch、merge 都会改变本地状态，必须符合任务范围。</span></div>
+          <div class="boundary caution"><strong>Shared write</strong><span>push 与 remote 修改会改变共享状态，必须得到明确批准。</span></div>
+          <div class="boundary caution"><strong>Destructive</strong><span>hard reset、clean、强删分支、破坏性 restore、改写历史都需要精确目标与明确批准。</span></div>
+        </div>
+      </section>
+    </div>
+
+    <footer>
+      <p>概念长解见 <a href="gitspec.md">gitspec.md</a>；返回 <a href="README.md">人工文档地图</a>。发生冲突时，始终以 <a href="../RULES.md#7-git">RULES §7</a> 为准。</p>
+    </footer>
+  </main>
+
+  <script>
+    const knowledge = {
+      inspect: {
+        permission: "只读 · 可直接检查",
+        title: "观察不会改变仓库",
+        text: "先确认分支、脏文件和 ahead/behind。看懂现场之前，不编辑、不暂存，也不整合历史。",
+        commands: ["git status --short --branch", "git branch --show-current", "git diff", "git diff --staged"],
+        risk: "脏工作树必须先列出所有文件、重叠和混入风险；本页不会替你授权后续写操作。",
+        zones: ["worktree", "index", "local"], flows: []
+      },
+      edit: {
+        permission: "本地写入 · 受任务范围约束",
+        title: "编辑只先改变工作区",
+        text: "磁盘文件改变后，暂存区、本地提交和远端都不会自动更新。未提交修改不属于任何分支历史。",
+        commands: ["git diff -- <file>", "git status --short"],
+        risk: "切换分支或撤销前先确认未提交内容是否需要保留；不要覆盖未知修改。",
+        zones: ["worktree"], flows: []
+      },
+      stage: {
+        permission: "本地写入 · 只选已审查内容",
+        title: "暂存区定义下一次提交",
+        text: "git add 把指定内容写入 index。同一文件可以同时拥有 staged 与 unstaged 两组变化。",
+        commands: ["git add -p", "git diff --staged", "git status --short"],
+        risk: "暂存不是备份。宽泛 add 容易把无关文件、缓存或敏感内容混入提交。",
+        zones: ["worktree", "index"], flows: ["add"]
+      },
+      commit: {
+        permission: "本地历史写入 · 需要明确要求",
+        title: "commit 封存暂存区快照",
+        text: "提交保存一棵目录树、父提交和说明，然后让当前分支指针前移；未暂存内容不会进入。",
+        commands: ["git diff --staged", "git show --stat HEAD"],
+        risk: "keikeu 规则不允许 agent 自行决定 commit。提交前必须确认 staged diff 只有一个目的。",
+        zones: ["index", "local"], flows: ["commit"]
+      },
+      integrate: {
+        permission: "本地历史写入 · 需要任务授权",
+        title: "分支和合并移动历史指针",
+        text: "分支只是提交标签。合并会 fast-forward 或生成连接两段历史的结果；冲突要求人类解释双方意图。",
+        commands: ["git log --oneline --decorate --graph --all -n 20", "git status"],
+        risk: "pull、merge 与 rebase 都会改变本地历史或文件。先保持工作树干净，并取得当前任务的明确权限。",
+        zones: ["local"], flows: []
+      },
+      remote: {
+        permission: "网络边界 · 写远端需明确批准",
+        title: "fetch 看远端，push 改远端",
+        text: "fetch 更新本地的 origin/* 引用；push 把本地提交写到共享仓库。两者都不会传输未提交文件。",
+        commands: ["git fetch", "git log main..origin/main", "git log origin/main..main"],
+        risk: "永远不要把 fetch 的只读性质误套到 push。共享历史不 rebase；force push 另有严格授权条件。",
+        zones: ["local", "remote-state"], flows: ["sync"]
+      },
+      worktree: {
+        permission: "磁盘状态",
+        title: "工作区是应用真正读取的文件",
+        text: "它由检出的提交快照，加上尚未提交的修改与新文件组成。Git 只报告差异，不自动保存它们。",
+        commands: ["git status --short", "git diff -- <file>"],
+        risk: "破坏性 restore 会覆盖未暂存修改；先读 diff，并按 RULES §7 取得精确授权。",
+        zones: ["worktree"], flows: []
+      },
+      index: {
+        permission: "待提交状态",
+        title: "index 是下一棵 tree 的装配台",
+        text: "它可以同时不同于 HEAD 和工作区。commit 读取的是 index，不是编辑器此刻显示的全部内容。",
+        commands: ["git diff --staged", "git status --short"],
+        risk: "只读 git diff 默认不展示 staged 内容；交接前必须分别检查两类 diff。",
+        zones: ["index"], flows: ["add", "commit"]
+      },
+      local: {
+        permission: "本地历史状态",
+        title: "提交不可变，分支标签会移动",
+        text: "commit 对象记录快照与父指针；HEAD 通常指向当前分支。新提交让该分支向前移动。",
+        commands: ["git show HEAD", "git log --oneline --decorate --graph --all -n 20", "git reflog"],
+        risk: "本地提交不是远端备份，但也不要通过手改 .git 或重写共享历史来修复问题。",
+        zones: ["local"], flows: ["commit"]
+      },
+      "remote-state": {
+        permission: "共享历史状态",
+        title: "origin/main 是上次 fetch 的本地记忆",
+        text: "它不是 GitHub 的实时读数。远端可能已被他人推进，所以写入前要先更新认识并比较分歧。",
+        commands: ["git remote -v", "git fetch origin", "git status --short --branch"],
+        risk: "push、remote 修改和任何远端历史改写都需要明确批准；普通 --force 被禁止。",
+        zones: ["remote-state", "local"], flows: ["sync"]
+      }
+    };
+
+    const scenarios = [...document.querySelectorAll(".scenario")];
+    const states = [...document.querySelectorAll(".state")];
+    const flows = [...document.querySelectorAll(".flow")];
+    const permission = document.getElementById("permission");
+    const detailTitle = document.getElementById("detail-title");
+    const detailText = document.getElementById("detail-text");
+    const commands = document.getElementById("commands");
+    const risk = document.getElementById("risk");
+
+    function render(key, source) {
+      const item = knowledge[key] || knowledge.inspect;
+      permission.textContent = item.permission;
+      detailTitle.textContent = item.title;
+      detailText.textContent = item.text;
+      risk.textContent = item.risk;
+      commands.replaceChildren(...item.commands.map((command) => {
+        const row = document.createElement("li");
+        const code = document.createElement("code");
+        code.textContent = command;
+        row.append(code);
+        return row;
+      }));
+
+      const activeZones = new Set(item.zones);
+      const activeFlows = new Set(item.flows);
+      states.forEach((node) => node.classList.toggle("is-active", activeZones.has(node.dataset.key)));
+      flows.forEach((node) => node.classList.toggle("is-active", activeFlows.has(node.dataset.flow)));
+      if (source === "scenario") {
+        scenarios.forEach((node) => node.setAttribute("aria-pressed", String(node.dataset.key === key)));
+      } else {
+        scenarios.forEach((node) => node.setAttribute("aria-pressed", "false"));
+      }
+    }
+
+    scenarios.forEach((node) => node.addEventListener("click", () => render(node.dataset.key, "scenario")));
+    states.forEach((node) => node.addEventListener("click", () => render(node.dataset.key, "state")));
+
+    const themeToggle = document.querySelector("[data-theme-toggle]");
+    themeToggle.addEventListener("click", () => {
+      const dark = document.body.dataset.theme === "dark";
+      document.body.dataset.theme = dark ? "light" : "dark";
+      themeToggle.setAttribute("aria-pressed", String(!dark));
+      themeToggle.setAttribute("aria-label", dark ? "切换深色主题" : "切换浅色主题");
+    });
+
+    render("inspect", "scenario");
+  </script>
+</body>
+</html>

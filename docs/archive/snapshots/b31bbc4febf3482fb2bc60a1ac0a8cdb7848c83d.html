@@ -191,6 +191,7 @@
   </style>
 </head>
 <body>
+<div style="position:relative;z-index:9999;padding:12px 18px;background:#8c3b42;color:#fffdf8;font:700 13px/1.5 ui-monospace,monospace;text-align:center">ARCHIVED · READ ONLY · Snapshot of b31bbc4febf3482fb2bc60a1ac0a8cdb7848c83d. Current status lives in docs/PROJECT.md.</div>
   <main class="shell">
     <header class="hero">
       <p class="eyebrow">keikeu · Road v0.2 status snapshot</p>
@@ -220,7 +221,7 @@
         <article class="status-card">
           <span class="label good">已完成</span>
           <strong>工程功能</strong>
-          <p>Phase 0–7 已按独立分支与提交完成：Paper v2、迁移、索引恢复、UI、Flashcard、Outline 退休和 macOS 文件服务 smoke 都有实现与记录。</p>
+          <p>Phase 0–7 已按独立分支与提交完成：Paper v2、迁移、索引恢复、UI、Flashcard、旧 v0.1 Outline 工作流退役和 macOS 文件服务 smoke 都有实现与记录。</p>
         </article>
         <article class="status-card">
           <span class="label warn">进行中</span>
@@ -237,15 +238,15 @@
         <div class="mark">!</div>
         <div>
           <h3>当前阻塞不是代码故障，而是缺少真实使用证据</h3>
-          <p>剩余验收需要作者在不暴露正文的前提下，确认 Summary-first 是否自然、是否频繁离开 Flashcard，以及短/中篇的跨会话位置和 Paper/Flashcard 往返。已记录的“侧栏 Flashcard 未保留当前 Paper 上下文”按作者分级为 P2 候选，不是 Phase 8 要修的 P0/P1 阻塞。</p>
+          <p>剩余验收需要作者在不暴露正文的前提下，确认以 Summary 作为 Flashcard 封面是否自然、是否频繁离开 Flashcard，以及短/中篇的跨会话位置和 Paper/Flashcard 往返。已记录的“侧栏 Flashcard 未保留当前 Paper 上下文”按作者分级为 P2 候选，不是 Phase 8 要修的 P0/P1 阻塞。</p>
         </div>
       </div>
     </section>
 
     <section id="architecture">
       <p class="kicker">02 · old → new architecture</p>
-      <h2>从 Cache / Outline 双主角，收敛成 Paper 为唯一资产</h2>
-      <p class="section-intro">目录名 <code>cache/</code> 为了兼容 Vault 路径而保留；其中的内容已不再是 v0.1 Cache，而是带 <code>type: paper</code> 与 <code>schema_version: 2</code> 的 Paper Markdown。</p>
+      <h2>从 Cache / Outline 双主角，收敛成 v0.2 的 Paper–Flashcard 核心</h2>
+      <p class="section-intro">目录名 <code>cache/</code> 为了兼容 Vault 路径而保留；其中的内容已不再是 v0.1 Cache，而是带 <code>type: paper</code> 与 <code>schema_version: 2</code> 的 Paper Markdown。产品架构仍保留可选 Markdown Outline 支路，但它不属于 Road v0.2 的实现范围；本轮退役的是旧 v0.1 Outline schema、编辑器与关系工作流。</p>
       <div class="grid grid-2 architecture">
         <article class="arch-card old">
           <h3>v0.1 · 双 schema 工作流</h3>
@@ -261,12 +262,12 @@
 
         <article class="arch-card new">
           <h3>v0.2 · Paper–Flashcard Core</h3>
-          <p>Markdown Paper 是唯一活动创作资产；JSON 与设备状态都可丢弃、可重建。</p>
+          <p>Markdown Paper 是 v0.2 当前唯一活动创作资产；可选 Markdown Outline 作为未来支路保留，尚未实现。JSON 与设备状态都可丢弃、可重建。</p>
           <div class="node new-node"><strong>Vault 资产</strong><span><code>cache/*.md</code>（Paper v2）＋ <code>.trash/cache/</code> ＋ 可重建 <code>keikeu_index.json</code></span></div>
           <span class="flow">↓</span>
           <div class="node new-node"><strong>纯 Python Core（零 Flet import）</strong><span>Paper 模型 / Markdown I/O / Index rebuild / 回收站恢复 / 一次性 v0.1 迁移器。</span></div>
           <span class="flow">↓</span>
-          <div class="node new-node"><strong>Flet App</strong><span>Paper 编辑、Summary-first Flashcard、本地文件库、v0.1 迁移确认门。</span></div>
+          <div class="node new-node"><strong>Flet App</strong><span>Paper 编辑、以 Summary 为封面且以 Highlights 为内容卡的 Flashcard、本地文件库、v0.1 迁移确认门。</span></div>
           <span class="flow">↓</span>
           <div class="node new-node"><strong>设备外状态</strong><span><code>~/.keikeu_state.json</code> 只保存卡片位置；正文仍用系统外部编辑器。</span></div>
         </article>
@@ -276,13 +277,14 @@
         <table>
           <thead><tr><th>维度</th><th>v0.1</th><th>v0.2 当前实现</th><th>意义</th></tr></thead>
           <tbody>
-            <tr><td>主资产</td><td>Cache + Outline</td><td>Paper v2 Markdown</td><td>单一可手工修复的作者资产协议。</td></tr>
+            <tr><td>主资产</td><td>Cache + Outline</td><td>Paper v2 Markdown</td><td>Paper 是 v0.2 当前唯一活动资产；未来可选 Outline 不在本轮资产协议内。</td></tr>
             <tr><td>创作内容</td><td>标题、原始灵感、临时备注、状态</td><td>代号、冻结初稿副本、可编辑 Summary、Highlights、Tags</td><td>把准备工作与正文写作明确分开。</td></tr>
-            <tr><td>卡片体验</td><td>没有</td><td>Summary-first，只读投影；当前卡位在设备本地</td><td>不制造第三份正文或“完成状态”。</td></tr>
+            <tr><td>卡片体验</td><td>没有</td><td>Summary 封面 + Highlights 内容卡；只读投影；当前卡位在设备本地</td><td>封面交代整体，高光逐张举到眼前；不制造第三份正文或“完成状态”。</td></tr>
             <tr><td>索引</td><td>Cache / Outline 双索引</td><td>v2 <code>papers</code> + <code>errors</code></td><td>坏文件隔离，不阻断其他 Paper；可由 Markdown 重建。</td></tr>
             <tr><td>删除与恢复</td><td>旧双目录</td><td>只处理 Paper 的 <code>.trash/cache</code></td><td>软删除保持字节；代号冲突必须显式改名或取消。</td></tr>
-            <tr><td>迁移</td><td>不适用</td><td>v0.1 只读预检 → Vault 外完整备份 → staging 转换 → 原子切换</td><td>先保护原资产，再退休 Outline。</td></tr>
-            <tr><td>UI 导航</td><td>Cache / Outline / Library</td><td>Paper / Flashcard / 本地文件库</td><td>Outline 与关系 picker 已从正常路径退休。</td></tr>
+            <tr><td>迁移</td><td>不适用</td><td>v0.1 只读预检 → Vault 外完整备份 → staging 转换 → 原子切换</td><td>先保护原资产，再退役旧 v0.1 Outline 实现。</td></tr>
+            <tr><td>UI 导航</td><td>Cache / Outline / Library</td><td>Paper / Flashcard / 本地文件库</td><td>旧 v0.1 Outline UI 与关系 picker 已从正常路径退役；新版可选 Outline 未纳入 v0.2。</td></tr>
+            <tr><td>可选 Outline</td><td>旧 schema 是活动主流程的一部分</td><td>产品架构保留，Road v0.2 暂不实现</td><td>不把旧实现带回主流程，也不永久封死长篇与混合型作者的未来支路。</td></tr>
             <tr><td>文件服务</td><td>路径输入</td><td>系统目录选择 + 手工路径 fallback</td><td>普通目录与已挂载 iCloud Drive 均被当作本地路径。</td></tr>
             <tr><td>非目标</td><td>—</td><td>无云端、帐号、遥测、provider API、AI 代写或内置正文编辑器</td><td>保留作者控制和 local-first 边界。</td></tr>
           </tbody>
@@ -300,8 +302,8 @@
         <article class="phase"><div class="phase-number">PHASE 2</div><div><strong>一次性迁移器</strong><p><code>codex/road-v0.2-phase-2-migration</code></p></div><div><p>预检、Vault 外备份、staging 转换、失败回滚与报告。</p></div><div><p><code>bd0142c</code><br>road-v0.2: add phase 2 vault migration</p></div></article>
         <article class="phase"><div class="phase-number">PHASE 3</div><div><strong>Vault / Index / Recovery</strong><p><code>feature/paper-vault-index</code></p></div><div><p>Paper-only v2 index、坏文件隔离、外删重建、软删除与恢复冲突处理。</p></div><div><p><code>aa380ee</code><br>feat: rebuild Paper vault index and recovery</p></div></article>
         <article class="phase"><div class="phase-number">PHASE 4</div><div><strong>Paper 编辑器与 Library</strong><p><code>feature/macos-paper-library</code></p></div><div><p>Paper 录入、搜索、回收站、默认程序打开和 Finder 定位；旧主流程下线。</p></div><div><p><code>a0f10a1</code><br>feat: add Paper editor and library</p></div></article>
-        <article class="phase"><div class="phase-number">PHASE 5</div><div><strong>Flashcard 本地状态</strong><p><code>feature/flashcard-local-state</code></p></div><div><p>Summary-first 卡组、前后切换、返回 Paper、设备本地位置及 rename 迁移。</p></div><div><p><code>70029e6</code><br>feat: add Flashcard local state</p></div></article>
-        <article class="phase"><div class="phase-number">PHASE 6</div><div><strong>迁移 UI 与 Outline 退休</strong><p><code>feature/migration-ui-outline-retirement</code></p></div><div><p>迁移确认门、备份/报告提示；旧页面和正常运行时 Outline 路径移除。</p></div><div><p><code>56b8ea5</code><br>feat: add migration gate and retire Outline</p></div></article>
+        <article class="phase"><div class="phase-number">PHASE 5</div><div><strong>Flashcard 本地状态</strong><p><code>feature/flashcard-local-state</code></p></div><div><p>Summary 作为封面、Highlights 作为内容卡；支持前后切换、返回 Paper、设备本地位置及 rename 迁移。</p></div><div><p><code>70029e6</code><br>feat: add Flashcard local state</p></div></article>
+        <article class="phase"><div class="phase-number">PHASE 6</div><div><strong>迁移 UI 与旧 Outline 工作流退役</strong><p><code>feature/migration-ui-outline-retirement</code></p></div><div><p>迁移确认门、备份/报告提示；旧 v0.1 Outline 页面、关系工作流与正常运行时路径移除。新版可选 Outline 不在本 Phase 范围内。</p></div><div><p><code>56b8ea5</code><br>feat: add migration gate and retire Outline</p></div></article>
         <article class="phase"><div class="phase-number">PHASE 7</div><div><strong>macOS 文件服务 smoke</strong><p><code>feature/macos-file-provider-smoke</code></p></div><div><p>系统目录选择、外部改动拒绝覆盖、冲突副本隔离、普通目录/iCloud 合成 smoke。</p></div><div><p><code>a4e0781</code><br>feat: validate macOS file provider workflow</p></div></article>
         <article class="phase pending"><div class="phase-number">PHASE 8</div><div><strong>产品验收与归档</strong><p><code>feature/road-v02-acceptance</code></p></div><div><p>已写脱敏协议并记录部分真实简测；仍待 one-shot 与短/中篇完整结果。</p></div><div><p><code>f6d1e43</code> / <code>a9df7c8</code><br>验收协议 / 部分证据</p></div></article>
       </div>
@@ -316,7 +318,7 @@
           <ul class="checklist">
             <li class="yes">最后一次完整自动化测试记录为 <strong>78 passed</strong>；随后 Phase 8 为文档变更。</li>
             <li class="yes">所有 Core 保持零 Flet import；扫描未见第三方网络请求、帐号或后台同步实现。</li>
-            <li class="yes">以用户提供的、已备份的 v0.1 Vault 副本演练迁移：2 个 Cache 转为 Paper，Outline 从活动 Vault 移除，外置备份和迁移报告存在。</li>
+            <li class="yes">以用户提供的、已备份的 v0.1 Vault 副本演练迁移：2 个 Cache 转为 Paper，旧 v0.1 Outline 从 v0.2 活动 Vault 移除，外置备份和迁移报告存在。</li>
             <li class="yes">在合成的普通目录和 iCloud Drive Vault 完成可见 Flet smoke：目录选择、Paper、Flashcard、恢复和冲突隔离。</li>
             <li class="yes">作者简测已确认：可从 Flashcard 返回 Paper、可由系统默认程序打开 Markdown，未观察到 P0/P1。</li>
           </ul>
@@ -324,7 +326,7 @@
         <aside class="card">
           <h3>还不能声称的事</h3>
           <ul class="checklist">
-            <li class="wait">未完整确认真实 one-shot 的 Summary-first 感受与频繁离开 Flashcard 的情况。</li>
+            <li class="wait">未完整确认真实 one-shot 中以 Summary 作为 Flashcard 封面的感受，以及是否频繁离开 Flashcard。</li>
             <li class="wait">未完整确认真实短/中篇在至少两个会话中的位置恢复和来回流程。</li>
             <li class="wait">iCloud smoke 不证明远端上传、跨设备时序、离线占位文件或冲突副本到达时机。</li>
           </ul>
@@ -358,8 +360,8 @@
         <div class="when">核心契约</div><div class="what">实现 Paper v2 的模型、验证与 Markdown 原子读写：首次保存冻结初稿副本，后续更新不允许改写它；显式 rename 不覆盖同代号 Paper。</div>
         <div class="when">安全迁移</div><div class="what">实现一次性 v0.1 迁移器：先只读预检，再建 Vault 外完整备份，在 staging 中转换和验证，最后原子切换；测试受控失败和恢复路径。</div>
         <div class="when">Vault 与恢复</div><div class="what">把 index 收敛成可重建的 Paper 投影，隔离坏 Markdown；实现字节保持的软删除与显式冲突恢复。</div>
-        <div class="when">新 UI 闭环</div><div class="what">用 Paper 编辑器、本地文件库和 Summary-first Flashcard 替换旧 Cache / Outline 主交互；正文仍交由用户的系统默认外部编辑器。</div>
-        <div class="when">状态与退休</div><div class="what">把 Flashcard 位置放在 Vault 外的设备本地 JSON；添加 v0.1 迁移确认页，移除正常运行路径中的 Outline 页面、关系 picker 与旧 schema I/O。</div>
+        <div class="when">新 UI 闭环</div><div class="what">用 Paper 编辑器、本地文件库和“Summary 封面 + Highlights 内容卡”的 Flashcard 替换旧 Cache / Outline 主交互；正文仍交由用户的系统默认外部编辑器。</div>
+        <div class="when">状态与旧实现退役</div><div class="what">把 Flashcard 位置放在 Vault 外的设备本地 JSON；添加 v0.1 迁移确认页，移除正常运行路径中的旧 v0.1 Outline 页面、关系 picker 与旧 schema I/O。可选 Markdown Outline 仍保留在产品架构中，但未进入 Road v0.2。</div>
         <div class="when">macOS 文件行为</div><div class="what">接入系统目录选择与路径 fallback；阻止外部修改、删除或移动后的静默覆盖；以合成普通目录与 iCloud Drive Vault 做可见 smoke，不读取作者正文。</div>
         <div class="when">真实副本演练</div><div class="what">仅使用你明确提供的、已备份的 v0.1 Vault 副本完成迁移演练；该副本和备份目录已 gitignore，未被提交。</div>
         <div class="when">Phase 8 管理</div><div class="what">建立脱敏验收模板，录入你的部分简测结果；把“侧栏没有保留当前 Paper 的 Flashcard 上下文”定位为 P2 候选，没有越过授权在验收阶段擅自改 UI。</div>

@@ -54,6 +54,7 @@ docs/RULES.md             工程、交互、数据与证据规则
 docs/design/              可执行视觉系统与交互样张
 docs/architecture/        模块、数据流、生命周期与 ADR
 docs/acceptance/          支持性验收记录；不独立定义状态
+docs/manual/              面向人的补充说明；不定义规范
 docs/generated/           可重建、可删除的观察输出
 docs/archive/             只读历史；不参与冷启动
 src/keikeu_core/          纯 Python 领域与文件逻辑
@@ -74,6 +75,7 @@ tests/                    可验证的实现事实
 | 视觉 token 与组件状态 | [Design system](docs/design/design.html) |
 | 用户操作及成功/错误路径 | [Interaction map](docs/design/interaction.html) |
 | Agent 如何工作 | [AGENTS](AGENTS.md) |
+| 人工阅读的设计、Git 与伦理说明 | [Human manuals](docs/manual/README.md) |
 | 历史为何这样演变 | [Archive](docs/archive/README.md) |
 
 ## 路线

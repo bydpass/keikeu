@@ -23,7 +23,9 @@ Use one authority per question:
 - `src/` and `tests/` — observed runtime facts; and
 - `docs/generated/` — rebuildable observations that never define intent.
 
-Superseded sources move to `docs/archive/` and are excluded from cold-start navigation.
+Human-facing explanations live under `docs/manual/`. They may provide fuller narrative or teaching material, but must point back to the active authority and never redefine it.
+
+Commit-bound records and frozen status pages move to `docs/archive/` and are excluded from cold-start navigation.
 
 ## Consequences
 
@@ -32,6 +34,7 @@ Superseded sources move to `docs/archive/` and are excluded from cold-start navi
 - Visual states can be inspected offline without adding a build system.
 - Architecture claims link to actual source and tests.
 - Generated tools may expose drift but cannot modify active authorities.
+- Human manuals remain readable without becoming a second product, Git, or agent truth.
 - Historical internal links may remain stale inside the read-only archive; active links must stay valid.
 
 ## Revisit when

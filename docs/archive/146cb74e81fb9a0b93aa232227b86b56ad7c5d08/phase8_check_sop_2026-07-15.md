@@ -1,4 +1,4 @@
-> **ARCHIVED — READ ONLY.** Historical copy; the active SOP is [`docs/acceptance/phase8-sop.md`](../../../acceptance/phase8-sop.md).
+> **ARCHIVED — READ ONLY.** Historical copy; the active SOP is [`docs/acceptance/phase8-sop.md`](../../acceptance/phase8-sop.md).
 
 # keikeu Road v0.2 — Phase 8 检查 SOP
 

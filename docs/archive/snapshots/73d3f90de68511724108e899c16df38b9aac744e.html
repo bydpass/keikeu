@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>keikeu · 07.18 iOS 部署状态</title>
+  <style>
+    :root {
+      --ink: #20352f;
+      --muted: #60716b;
+      --paper: #f5f0e3;
+      --card: #fffdf8;
+      --line: #cfd8d1;
+      --pine: #1f6055;
+      --pine-soft: #dff0e9;
+      --clay: #a7502b;
+      --clay-soft: #fae9de;
+      --slate: #45586e;
+      --slate-soft: #e8eef3;
+      --shadow: 0 14px 34px rgba(34, 53, 47, .09);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, rgba(31, 96, 85, .035) 1px, transparent 1px) 0 0 / 28px 28px,
+        linear-gradient(rgba(31, 96, 85, .035) 1px, transparent 1px) 0 0 / 28px 28px,
+        var(--paper);
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      line-height: 1.65;
+    }
+
+    a { color: var(--pine); }
+    code { padding: 2px 5px; border-radius: 5px; color: #235a50; background: #e8f3ee; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .88em; }
+    .shell { max-width: 1120px; margin: 0 auto; padding: 32px 22px 58px; }
+
+    .hero {
+      padding: clamp(26px, 5vw, 52px);
+      border: 1px solid rgba(255, 255, 255, .65);
+      border-radius: 26px;
+      color: #f7fcf8;
+      background: radial-gradient(circle at 90% 0%, #4b9d8e 0, transparent 28%), linear-gradient(128deg, #17372f, #1f6055 65%, #155147);
+      box-shadow: var(--shadow);
+    }
+    .eyebrow, .kicker { margin: 0 0 8px; font-size: .74rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    .eyebrow { color: #bce0d5; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { max-width: 820px; margin-bottom: 14px; font-size: clamp(2.1rem, 5.4vw, 4.4rem); line-height: 1.05; letter-spacing: -.05em; }
+    h2 { margin-bottom: 10px; font-size: clamp(1.45rem, 2.8vw, 2.15rem); line-height: 1.18; letter-spacing: -.03em; }
+    h3 { margin-bottom: 7px; font-size: 1.05rem; }
+    .hero .summary { max-width: 730px; margin-bottom: 0; color: #d9ebe4; font-size: 1.08rem; }
+    .meta, .jump { display: flex; flex-wrap: wrap; gap: 8px; }
+    .meta { margin-top: 25px; }
+    .pill { padding: 4px 10px; border: 1px solid rgba(255,255,255,.25); border-radius: 999px; color: #edf8f4; background: rgba(13, 45, 38, .22); font-size: .83rem; }
+    .jump { margin: 17px 0 0; }
+    .jump a { padding: 5px 10px; border-radius: 999px; color: var(--pine); background: rgba(255,255,255,.7); font-size: .84rem; font-weight: 700; text-decoration: none; }
+    .jump a:hover { background: white; }
+
+    section { margin-top: 38px; }
+    .kicker { color: var(--pine); }
+    .intro { max-width: 800px; color: var(--muted); }
+    .grid { display: grid; gap: 15px; }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .panel { padding: 21px; border: 1px solid var(--line); border-radius: 17px; background: rgba(255,253,248,.9); box-shadow: 0 7px 18px rgba(34,53,47,.05); }
+    .label { display: inline-block; margin-bottom: 9px; padding: 2px 8px; border-radius: 999px; font-size: .72rem; font-weight: 800; letter-spacing: .04em; }
+    .good { color: #17613e; background: var(--pine-soft); }
+    .changed { color: #93431f; background: var(--clay-soft); }
+    .quiet { color: var(--slate); background: var(--slate-soft); }
+    .panel strong { display: block; margin-bottom: 5px; font-size: 1.22rem; line-height: 1.25; }
+    .panel p { margin-bottom: 0; color: var(--muted); font-size: .93rem; }
+
+    .split-note { display: grid; grid-template-columns: 42px 1fr; gap: 14px; margin-top: 16px; padding: 18px 20px; border-left: 5px solid var(--clay); border-radius: 12px 16px 16px 12px; background: var(--clay-soft); }
+    .split-note .mark { color: var(--clay); font-size: 1.75rem; font-weight: 900; line-height: 1; }
+    .split-note p { margin-bottom: 0; }
+
+    .branch-map { display: grid; grid-template-columns: 1fr 70px 1fr; gap: 14px; align-items: stretch; }
+    .branch { padding: 22px; border: 1px solid var(--line); border-radius: 18px; background: var(--card); }
+    .branch.phase7 { border-color: #a9d1c3; background: linear-gradient(150deg, #fffefa, #edf8f3); }
+    .branch.phase75 { border-color: #e2b8a3; background: linear-gradient(150deg, #fffefa, #fcf0e9); }
+    .branch-name { margin-bottom: 13px; color: var(--muted); font-size: .82rem; font-weight: 800; }
+    .commit { margin-top: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 11px; background: rgba(255,255,255,.72); }
+    .commit:first-of-type { margin-top: 0; }
+    .commit b { display: block; font-size: .93rem; }
+    .commit span { display: block; margin-top: 2px; color: var(--muted); font-size: .84rem; }
+    .spine { display: grid; place-items: center; min-height: 100%; color: var(--pine); }
+    .spine::before { width: 2px; height: 100%; content: ""; background: repeating-linear-gradient(to bottom, var(--pine) 0 8px, transparent 8px 15px); }
+    .spine strong { position: absolute; padding: 4px 8px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); background: var(--paper); font-size: .72rem; white-space: nowrap; transform: rotate(-90deg); }
+
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 17px; background: var(--card); }
+    table { width: 100%; min-width: 720px; border-collapse: collapse; }
+    th, td { padding: 14px 15px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { color: #40534c; background: #eef5f0; font-size: .79rem; letter-spacing: .04em; text-transform: uppercase; }
+    td { font-size: .91rem; }
+    tr:last-child td { border-bottom: 0; }
+
+    .ledger { display: grid; gap: 10px; }
+    .row { display: grid; grid-template-columns: 155px 1fr 185px; gap: 18px; align-items: start; padding: 15px 17px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,253,248,.86); }
+    .row .term { color: var(--pine); font-size: .82rem; font-weight: 900; letter-spacing: .05em; }
+    .row p { margin: 0; color: var(--muted); font-size: .9rem; }
+
+    .checklist { margin: 0; padding: 0; list-style: none; }
+    .checklist li { position: relative; margin: 9px 0; padding-left: 25px; }
+    .checklist li::before { position: absolute; left: 0; font-weight: 900; }
+    .checklist .yes::before { content: "✓"; color: #1c7549; }
+    .checklist .wait::before { content: "!"; color: var(--clay); }
+    .note { margin-top: 14px; padding: 14px; border-radius: 11px; color: #53645d; background: #edf2ef; font-size: .9rem; }
+    footer { margin-top: 42px; padding: 18px 2px 0; border-top: 1px solid var(--line); color: var(--muted); font-size: .86rem; }
+
+    @media (max-width: 760px) {
+      .shell { padding: 18px 13px 42px; }
+      .hero { border-radius: 20px; }
+      .grid-3, .grid-2, .branch-map { grid-template-columns: 1fr; }
+      .spine { display: none; }
+      .row { grid-template-columns: 1fr; gap: 5px; }
+    }
+  </style>
+</head>
+<body>
+<div style="position:relative;z-index:9999;padding:12px 18px;background:#8c3b42;color:#fffdf8;font:700 13px/1.5 ui-monospace,monospace;text-align:center">ARCHIVED · READ ONLY · Snapshot of 73d3f90de68511724108e899c16df38b9aac744e. Current status lives in docs/PROJECT.md.</div>
+  <main class="shell">
+    <header class="hero">
+      <p class="eyebrow">keikeu · 2026-07-18 · status snapshot</p>
+      <h1>Phase 7 留在原位。<br>iOS 改动已独立成 7.5。</h1>
+      <p class="summary">这是一份 Git 与部署状态快照：macOS 文件服务验收历史不再包含 iOS 部署代码；iOS 项目配置、手机界面适配和本机 Vault 修复都已在当前分支形成可追踪提交。</p>
+      <div class="meta" aria-label="状态元数据">
+        <span class="pill">Phase 7：远端已更新</span>
+        <span class="pill">Phase 7.5：本地 2 commits</span>
+        <span class="pill">当前测试：81 passed</span>
+        <span class="pill">当前分支尚未推送</span>
+      </div>
+    </header>
+
+    <nav class="jump" aria-label="页面导航">
+      <a href="#result">结果</a>
+      <a href="#branches">分支图</a>
+      <a href="#changes">改动清单</a>
+      <a href="#boundary">边界</a>
+      <a href="#checks">验证</a>
+    </nav>
+
+    <section id="result">
+      <p class="kicker">01 · result</p>
+      <h2>这次实际完成了什么</h2>
+      <div class="grid grid-3">
+        <article class="panel">
+          <span class="label good">已分离</span>
+          <strong>Phase 7 历史</strong>
+          <p><code>feature/road-v02-acceptance</code> 与远端都指向 <code>146cb74</code>。它保留 Phase 7 及此前的验收文档，不再含 iOS 部署提交。</p>
+        </article>
+        <article class="panel">
+          <span class="label changed">已固定</span>
+          <strong>Phase 7.5 工程</strong>
+          <p>当前 <code>codex/fix-ios-device-build-warnings</code> 包含 iOS 部署提交和后续的沙盒 Vault 修复，各自是独立 commit。</p>
+        </article>
+        <article class="panel">
+          <span class="label quiet">没有发生</span>
+          <strong>没有删除用户资产</strong>
+          <p>没有读取、迁移或修改真实作者 Vault；没有删除 Xcode 生成目录；已经安装在手机上的 App 不受 Git 引用变动影响。</p>
+        </article>
+      </div>
+      <div class="split-note">
+        <div class="mark">↯</div>
+        <div>
+          <h3>“分离”指的是 Git 提交归属，不是搬动磁盘文件</h3>
+          <p>原先 iOS 代码已在当前分支的 <code>323b2a3</code> 中，因此只需让 Phase 7 分支退出这个提交。生成的 Xcode 工程和签名仍留在本机 <code>build/</code>，因为它们从一开始就被 Git 忽略。</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="branches">
+      <p class="kicker">02 · branch ownership</p>
+      <h2>现在的提交边界</h2>
+      <p class="intro">两条分支共享 <code>146cb74</code> 之前的历史；从 iOS 部署开始，只有 Phase 7.5 分支继续向前。远端 Phase 7 分支已通过 <code>--force-with-lease</code> 同步到正确位置。</p>
+      <div class="branch-map" aria-label="Phase 7 与 Phase 7.5 的提交图">
+        <article class="branch phase7">
+          <div class="branch-name">PHASE 7 · feature/road-v02-acceptance</div>
+          <div class="commit"><b><code>146cb74</code> · docs: AGENTS.md update</b><span>当前本地与远端分支头；此前包含 Phase 7 macOS 文件服务 smoke。</span></div>
+          <div class="commit"><b><code>a4e0781</code> · macOS file provider smoke</b><span>Phase 7 工程提交仍是该分支祖先，未被改写或删除。</span></div>
+        </article>
+        <div class="spine" aria-hidden="true"><strong>从此处分叉</strong></div>
+        <article class="branch phase75">
+          <div class="branch-name">PHASE 7.5 · codex/fix-ios-device-build-warnings</div>
+          <div class="commit"><b><code>323b2a3</code> · support iOS simulator deployment</b><span>打包入口、iOS 布局与底部导航、测试适配。</span></div>
+          <div class="commit"><b><code>73d3f90</code> · create sandbox vault on device</b><span>iOS 不再尝试直开文件提供商目录，改为创建应用内 Vault。</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="changes">
+      <p class="kicker">03 · change ledger</p>
+      <h2>Phase 7.5 具体改了什么</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>提交</th><th>改动</th><th>原因</th><th>验证</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>323b2a3</code><br>iOS 部署</td>
+              <td><code>pyproject.toml</code> 固定 Flet 版本并声明 app 路径；新增 <code>src/main.py</code> 作为打包入口。</td>
+              <td>让 Flet/iOS 打包拥有明确、可重复的应用入口与依赖版本。</td>
+              <td>iOS Release 构建、安装和启动曾在真机执行；本次 Git 拆分没有重建 App。</td>
+            </tr>
+            <tr>
+              <td><code>323b2a3</code><br>iOS 界面</td>
+              <td>桌面仍用侧边栏；iOS 改用底部导航和 SafeArea。窗口尺寸、库列表宽度与滚动行为仅在桌面配置。</td>
+              <td>桌面布局不能直接套进窄屏设备，且 iOS 不应访问桌面窗口属性。</td>
+              <td>新增 iOS 页面构建测试；Release 已在真机安装并启动，三个主页面仍待用新本机 Vault 手动回归。</td>
+            </tr>
+            <tr>
+              <td><code>73d3f90</code><br>本机 Vault</td>
+              <td>iOS Vault 页不再使用系统文件夹选择器或手填 File Provider 路径；“创建本机 Vault”写入应用沙盒的 <code>keikeu-vault</code>。</td>
+              <td>文件提供商返回的路径没有持久 security-scoped 权限，Python 直接打开会报 <code>Operation not permitted</code>。</td>
+              <td>单元测试点击按钮后确认 Vault 被创建并进入主界面。</td>
+            </tr>
+            <tr>
+              <td><code>73d3f90</code><br>保持 macOS</td>
+              <td>桌面系统目录选择和手输路径 fallback 保留原样；只在 <code>IOS</code> 平台提前返回本机 Vault 页面。</td>
+              <td>修真机问题不能回归破坏已验收的 macOS 文件服务流。</td>
+              <td>完整测试套件覆盖桌面与 iOS builder 路径。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="boundary">
+      <p class="kicker">04 · what lives where</p>
+      <h2>代码、生成物和设备状态不是同一件事</h2>
+      <div class="ledger">
+        <div class="row"><div class="term">Git · Phase 7</div><div><p><code>feature/road-v02-acceptance</code> 记录 macOS Phase 7 与其前置历史；远端已经无 <code>323b2a3</code>。</p></div><div><code>146cb74</code></div></div>
+        <div class="row"><div class="term">Git · Phase 7.5</div><div><p>可审查的 iOS 源码、测试和项目配置；当前仅在本地分支，未 push。</p></div><div><code>323b2a3</code> → <code>73d3f90</code></div></div>
+        <div class="row"><div class="term">本机生成物</div><div><p><code>build/flutter/ios/Runner.xcworkspace</code>、<code>build/flutter/app/app.zip</code> 及 Personal Team 签名配置保留在本机，受 <code>.gitignore</code> 排除。</p></div><div>不属于 Git</div></div>
+        <div class="row"><div class="term">iPhone 状态</div><div><p>已安装的 Release App 与其沙盒数据由设备管理；改 Git 分支既不会卸载 App，也不会触碰其中的本机 Vault。</p></div><div>不属于 Git</div></div>
+      </div>
+    </section>
+
+    <section id="checks">
+      <p class="kicker">05 · evidence and limits</p>
+      <h2>当前可作出的结论</h2>
+      <div class="grid grid-2">
+        <article class="panel">
+          <h3>已经检查</h3>
+          <ul class="checklist">
+            <li class="yes"><code>.venv/bin/python -m pytest</code>：81 passed。</li>
+            <li class="yes"><code>compileall -q src</code> 与 <code>git diff --check</code> 通过。</li>
+            <li class="yes">本地与远端 Phase 7 均为 <code>146cb74</code>；Phase 7.5 当前头为 <code>73d3f90</code>。</li>
+            <li class="yes">本次提交后工作区干净，没有暂存内容或隐藏的生成物提交。</li>
+          </ul>
+        </article>
+        <article class="panel">
+          <h3>刻意保留的边界</h3>
+          <ul class="checklist">
+            <li class="wait">iOS 本机 Vault 不自动同步 Mac 或 iCloud；这是之后单独评估的文件服务能力，不在本次修复范围。</li>
+            <li class="wait">Phase 7.5 当前没有推送远端；只有你明确要求才会 push。</li>
+            <li class="wait">这份 HTML 是 07.18 的静态快照，不会自动反映后续 commit、打包或设备状态。</li>
+          </ul>
+          <div class="note">最安全的下一步：在 iPhone 点击“创建本机 Vault”，确认三个主页面可进；随后再用这个已分离的分支继续做 iOS 特有问题。</div>
+        </article>
+      </div>
+    </section>
+
+    <footer>
+      <p><strong>范围：</strong>本页仅记录 2026-07-18 的 Phase 7 / 7.5 分支拆分与 iOS 部署修复。未包含作者正文、Vault 路径、签名身份或设备标识。</p>
+      <p><strong>文件：</strong><code>73d3f90de68511724108e899c16df38b9aac744e.html</code> · 纯静态 HTML，无外部依赖、无网络请求。</p>
+    </footer>
+  </main>
+</body>
+</html>

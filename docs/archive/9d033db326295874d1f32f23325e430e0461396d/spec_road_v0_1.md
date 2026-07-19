@@ -1,4 +1,4 @@
-> **ARCHIVED — READ ONLY.** Road v0.1 contract; current product authority is [`docs/SPEC.md`](../../../../SPEC.md).
+> **ARCHIVED — READ ONLY.** Road v0.1 contract; current product authority is [`docs/SPEC.md`](../../SPEC.md).
 
 # keikeu Road v0.1 执行 Spec
 

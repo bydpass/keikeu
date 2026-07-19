@@ -1,6 +1,6 @@
 # keikeu Rules
 
-> Authority: reviewable engineering, interaction, data, Git, and evidence constraints. Product definitions live in [SPEC](SPEC.md); agent operating procedure lives in [AGENTS](../AGENTS.md).
+> Authority: reviewable stack, engineering, interaction, data, Git, and evidence constraints. Product definitions live in [SPEC](SPEC.md); agent operating procedure lives in [AGENTS](../AGENTS.md).
 
 ## 1. Authority order
 
@@ -15,6 +15,8 @@ When intent and runtime differ, change code, change the active specification, or
 
 ## 2. Architecture
 
+- The fixed runtime stack is Python `>=3.11,<3.14`, Flet, author-owned Markdown, and rebuildable JSON metadata.
+- The developer owns architecture, dependencies, data models, build commands, and release artifacts; agent output must remain explainable and reviewable.
 - `keikeu_core` is pure Python and never imports Flet or another GUI toolkit.
 - `markdown_io.py` exclusively owns Paper Markdown parsing and serialization.
 - GUI code calls public core APIs; it never renders Markdown or edits index JSON.
@@ -62,13 +64,22 @@ When intent and runtime differ, change code, change the active specification, or
 
 No feature enters an acceptance or bug-fix Phase by being adjacent, attractive, or convenient.
 
+- Default release order is macOS core, iPhone/iPad capability, Android, then Windows; optional Outline work never blocks the core.
+- Before MVP, do not add a plugin architecture, complex graph system, AI-required workflow, social system, external fandom database, or premature Windows/Linux parity.
+
 ## 7. Git
 
-- Check status and branch before editing. Dirty work requires a named-file overlap and mixing-risk review plus human confirmation.
-- One implementation Phase uses one branch and one focused capability group.
-- Inspect before staging; stage exact files only. Never stage secrets, caches, environments, `.DS_Store`, logs, build output, or signing data.
-- Do not commit unless asked. Never push, merge, rebase public history, force-push, hard-reset, clean, delete branches, or overwrite files without explicit approval.
-- A commit should have one purpose, be explainable in one sentence, and remain safe to review or revert.
+- The human owns the diff and repository history. Agent speed never replaces human review or grants architecture or remote authority.
+- Before editing, run `git status --short --branch` and `git branch --show-current`. Dirty work requires every dirty file, overlap, and mixing risk to be named, then human confirmation.
+- Start implementation from a clean tree unless the human explicitly accepts named existing changes. One implementation Phase uses one branch and one focused capability group.
+- After editing, inspect status and both unstaged and staged diffs. Stage exact files only; never use broad staging before reviewing every included path.
+- Never stage secrets, environments, caches, `.DS_Store`, logs, build outputs, generated app bundles, or signing data.
+- Do not commit unless explicitly asked. A commit has one purpose, an accurate message, and remains safe to review or revert.
+- Never push or change remotes without explicit approval. Fetch is inspection; pull, merge, and rebase change local history or files and require a clean tree plus explicit task authority.
+- Never rebase shared or public history. Force-push requires explicit approval and `--force-with-lease`; plain `--force` is forbidden.
+- Resolve conflicts by reading both sides, preserving intent, limiting edits to the conflict, inspecting the result, and rerunning relevant checks. Never blindly choose ours or theirs.
+- Hard reset, clean, forced branch deletion, branch deletion, destructive restore, and history overwrite require explicit approval and exact targets. Prefer revert or other recoverable operations when they fit.
+- Before handoff, report branch, HEAD, worktree, staged/committed/pushed state, checks, risks, and the safest next command.
 
 ## 8. Evidence
 

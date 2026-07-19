@@ -16,6 +16,7 @@ BUDGETS = {
     ROOT / "README.md": 140,
     ROOT / "README_EN.md": 140,
     ROOT / "AGENTS.md": 120,
+    ROOT / "CLAUDE.md": 20,
     ROOT / "docs" / "PROJECT.md": 200,
     ROOT / "docs" / "SPEC.md": 280,
     ROOT / "docs" / "RULES.md": 140,
@@ -30,6 +31,12 @@ REQUIRED = {
     ROOT / "docs" / "acceptance" / "README.md",
     ROOT / "docs" / "generated" / "README.md",
     ROOT / "docs" / "archive" / "README.md",
+    ROOT / "docs" / "manual" / "README.md",
+}
+INTERACTIVE_MAPS = {
+    ROOT / "docs" / "design" / "design.html",
+    ROOT / "docs" / "design" / "interaction.html",
+    ROOT / "docs" / "architecture" / "architecture.html",
 }
 MARKDOWN_LINK = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
 DOCUMENT_SUFFIXES = {".md", ".html", ".css", ".js"}
@@ -52,7 +59,12 @@ class LinkParser(HTMLParser):
 
 
 def active_documents() -> list[Path]:
-    roots = [ROOT / "README.md", ROOT / "README_EN.md", ROOT / "AGENTS.md"]
+    roots = [
+        ROOT / "README.md",
+        ROOT / "README_EN.md",
+        ROOT / "AGENTS.md",
+        ROOT / "CLAUDE.md",
+    ]
     docs = [
         path
         for path in (ROOT / "docs").rglob("*")
@@ -86,9 +98,10 @@ def html_links(path: Path, errors: list[str]) -> list[tuple[str, str]]:
     duplicate_ids = sorted({value for value in parser.ids if parser.ids.count(value) > 1})
     for value in duplicate_ids:
         errors.append(f"{path.relative_to(ROOT)}: duplicate HTML id #{value}")
-    for marker in ("data-doc-search", "data-theme-toggle"):
-        if marker not in text:
-            errors.append(f"{path.relative_to(ROOT)}: missing {marker}")
+    if path in INTERACTIVE_MAPS:
+        for marker in ("data-doc-search", "data-theme-toggle"):
+            if marker not in text:
+                errors.append(f"{path.relative_to(ROOT)}: missing {marker}")
     return parser.links
 
 
@@ -130,7 +143,7 @@ def main() -> int:
             else:
                 inbound.add(target)
 
-    allowed_orphans = {ROOT / "README.md"}
+    allowed_orphans = {ROOT / "README.md", ROOT / "CLAUDE.md"}
     for path in documents:
         if path not in inbound and path not in allowed_orphans:
             errors.append(f"orphan active document: {path.relative_to(ROOT)}")

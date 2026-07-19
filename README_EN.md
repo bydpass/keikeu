@@ -54,6 +54,7 @@ docs/RULES.md             engineering, interaction, data, and evidence rules
 docs/design/              executable visual system and interaction specimen
 docs/architecture/        modules, data flow, lifecycle, and ADRs
 docs/acceptance/          supporting evidence; not an independent status source
+docs/manual/              supplementary human guides; never normative
 docs/generated/           rebuildable and disposable observations
 docs/archive/             read-only history; excluded from cold starts
 src/keikeu_core/          pure-Python domain and file logic
@@ -74,6 +75,7 @@ Hard rule: `keikeu_core` must not import Flet. Only the core layer owns Markdown
 | Visual tokens and component states | [Design system](docs/design/design.html) |
 | User actions and success/error paths | [Interaction map](docs/design/interaction.html) |
 | How agents work | [AGENTS](AGENTS.md) |
+| Human-facing design, Git, and ethics guides | [Human manuals](docs/manual/README.md) |
 | Historical rationale and snapshots | [Archive](docs/archive/README.md) |
 
 ## Route

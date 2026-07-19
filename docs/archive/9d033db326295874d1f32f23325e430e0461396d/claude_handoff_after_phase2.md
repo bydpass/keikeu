@@ -1,4 +1,4 @@
-> **ARCHIVED — READ ONLY.** Road v0.1 handoff; current agent entry is [`AGENTS.md`](../../../../../AGENTS.md).
+> **ARCHIVED — READ ONLY.** Road v0.1 handoff; current agent entry is [`AGENTS.md`](../../../AGENTS.md).
 
 # Claude Handoff After Road v0.1 Phase 2
 

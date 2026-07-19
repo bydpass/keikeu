@@ -18,18 +18,18 @@ Protect author control, local durability, privacy, and beginner-maintainability.
 | User flows and states | `docs/design/interaction.html` |
 | Why a key decision exists | `docs/architecture/decisions/` |
 
-`src/` and `tests/` are runtime facts. `docs/generated/` is observation only. `docs/archive/` is read-only history and must not drive a cold start.
+`src/` and `tests/` are runtime facts. `docs/generated/` is observation only. `docs/manual/` is non-normative human explanation, and `docs/archive/` is read-only history; neither drives an agent cold start.
 
 ## Before editing
 
-Run:
+Apply the Git gate in [`docs/RULES.md` §7](docs/RULES.md#7-git). At minimum, run:
 
 ```bash
 git status --short --branch
 git branch --show-current
 ```
 
-If dirty, list every dirty file, say whether it overlaps, explain the mixing risk, and ask before continuing. Read the authority and every caller touched by a behavior change.
+Read the authority and every caller touched by a behavior change.
 
 For non-obvious scope, state:
 
@@ -54,11 +54,7 @@ Will not edit:
 
 ## Phase and Git discipline
 
-- One implementation Phase gets one branch and one independently reviewable capability group.
-- Start from a clean tree unless the human explicitly accepts named existing changes.
-- Do not commit unless explicitly asked. Stage exact files only after inspection.
-- Never push, merge, rebase public history, force-push, reset hard, clean, delete branches, or overwrite files without explicit approval.
-- Never stage environments, caches, `.DS_Store`, secrets, logs, build outputs, signing data, or generated app bundles.
+[`docs/RULES.md` §7](docs/RULES.md#7-git) is the only Git policy authority. This guide adds no Git permissions or exceptions.
 
 ## Evidence and testing
 

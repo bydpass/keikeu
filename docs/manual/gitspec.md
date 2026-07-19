@@ -1,4 +1,4 @@
-> **ARCHIVED — READ ONLY.** Historical Git manual; current repository rules live in [`docs/RULES.md`](../RULES.md).
+> **HUMAN MANUAL — NON-NORMATIVE.** Practical Git explanation for people. Repository permissions and policy live only in [`docs/RULES.md` §7](../RULES.md#7-git); examples below never grant authority to commit, merge, rewrite history, or push.
 
 # gitspec.md
 
@@ -119,6 +119,8 @@ If you do not understand the diff, do not commit it.
 ---
 
 ## 3. First Repo Setup
+
+This repository is already initialized. Use this section only as a learning example or when creating a separate repository.
 
 Inside project folder:
 
@@ -661,12 +663,12 @@ Agent writes code. Human owns the diff.
 
 ## 16. keikeu First Commit Plan
 
-After repo reset, make these commits.
+Historical bootstrap example only; it is not a current keikeu task list.
 
 ### Commit 1: project docs
 
 ```bash
-git add README.md pyproject.toml docs/appdesign.md docs/techpolicy.md docs/gitspec.md docs/gitagent.md
+git add README.md README_EN.md AGENTS.md pyproject.toml docs/PROJECT.md docs/SPEC.md docs/RULES.md docs/manual/
 git commit -m "init: create keikeu project baseline"
 ```
 

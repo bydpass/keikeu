@@ -2,7 +2,7 @@
 
 > Authority: current coordinates, module entry points, documentation index, and next gate. Product behavior belongs in [SPEC](SPEC.md); rules belong in [RULES](RULES.md).
 
-Updated: 2026-07-18
+Updated: 2026-07-19
 
 ## Current coordinates
 
@@ -40,22 +40,21 @@ See [SPEC](SPEC.md) for the contract and [interaction.html](design/interaction.h
 
 The visual dependency and lifecycle view is [architecture.html](architecture/architecture.html).
 
-## Documentation authority
+## Documentation map
 
-| Question | One home |
-| --- | --- |
-| Who keikeu serves, objects, scope, non-goals, product acceptance | [SPEC](SPEC.md) |
-| Current state, module map, next gate | this file |
-| Engineering, UX, privacy, Git, evidence constraints | [RULES](RULES.md) |
-| Agent behavior and read order | [AGENTS](../AGENTS.md) |
-| Visual tokens and component states | [design.html](design/design.html) |
-| User actions and all key states | [interaction.html](design/interaction.html) |
-| Modules, dependencies, data lifecycle, source anchors | [architecture.html](architecture/architecture.html) |
-| Key decision rationale | [ADR 0001](architecture/decisions/0001-document-authority.md) |
-| Phase 8 supporting evidence and SOP | [acceptance](acceptance/README.md) |
-| Rebuildable repository observations | [generated](generated/README.md) |
-| Phase 8.5 cold-start evidence boundary | [cold-start audit](cold_start_report.md) |
-| Superseded documents and dated snapshots | [archive](archive/README.md) |
+```text
+README
+  └─ PROJECT ── current coordinates and the next gate
+       ├─ AUTHORITY ── product / rules / agent procedure
+       ├─ VIEWS ────── design / interaction / architecture
+       ├─ EVIDENCE ─── tests / acceptance / generated observations
+       └─ CONTEXT ──── human manuals / ADRs / read-only archive
+```
+
+- **Authority:** [SPEC](SPEC.md) owns product behavior and acceptance; [RULES](RULES.md) owns engineering, interaction, data, Git, and evidence constraints; [AGENTS](../AGENTS.md) owns agent procedure. Runtime facts come from [`src/`](../src/) and [`tests/`](../tests/).
+- **Views:** [design](design/design.html) shows visual tokens and component states; [interaction](design/interaction.html) shows user paths and states; [architecture](architecture/architecture.html) shows modules, dependencies, and data lifecycles.
+- **Evidence:** [acceptance](acceptance/README.md) holds Phase 8 evidence and SOP; [generated](generated/README.md) holds rebuildable observations; the [cold-start audit](cold_start_report.md) records the Phase 8.5 evidence boundary. None defines intent by itself.
+- **Context:** [ADR 0001](architecture/decisions/0001-document-authority.md) explains this split; [manual](manual/README.md) teaches people; [archive](archive/README.md) preserves superseded records. Manual and archive never override authority.
 
 ## Commands
 
@@ -81,4 +80,4 @@ The side navigation's Flashcard destination does not retain the current Paper co
 
 ## History boundary
 
-Road v0.1 Cache/Outline behavior, old planning debates, frozen status pages, and the Phase 8.5 proposal live under [archive](archive/README.md). They explain history but do not define current behavior.
+Road v0.1 Cache/Outline behavior, old planning debates, frozen status pages, and the Phase 8.5 proposal live under [archive](archive/README.md). Human explanations live under [manual](manual/README.md). Neither defines current behavior.

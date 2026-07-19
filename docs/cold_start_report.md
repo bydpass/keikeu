@@ -8,7 +8,7 @@
 
 This report does not pretend the implementing agent is new to the repository. It records deterministic navigation and browser checks using only active entry points. A formal independent-agent pass remains optional follow-up requiring explicit subagent authorization.
 
-Archive files, conversation memory, and the pre-reform documents were excluded from the route below.
+Archive files, supplementary human manuals, and conversation memory were excluded from the authority route below.
 
 ## Task 1: explain the project
 
@@ -87,7 +87,9 @@ Verdict: structural pass.
 - HTML has no duplicate IDs or external runtime assets; and
 - every archived Markdown/HTML file carries a read-only marker.
 
-The final run reported 18 active files and remained green.
+Manual documents are link-checked but remain non-normative and unnecessary for the four cold-start tasks.
+
+The final run reported 24 active files and 16 required files and remained green.
 
 ## Browser evidence
 
