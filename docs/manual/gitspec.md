@@ -1,812 +1,313 @@
-> **HUMAN MANUAL — NON-NORMATIVE.** Practical Git explanation for people. Repository permissions and policy live only in [`docs/RULES.md` §7](../RULES.md#7-git); examples below never grant authority to commit, merge, rewrite history, or push.
+> **HUMAN MANUAL — NON-NORMATIVE.** 这是给人看的入门说明。仓库权限与正式规则只看 [`docs/RULES.md` §7](../RULES.md#7-git)；下面的命令示例不会自动授权 agent 提交、合并或推送。
 
-# gitspec.md
+# Git 手册
 
-> FILE FOR HUMAN  
-> Scope: practical Git operation manual for keikeu development.  
-> Goal: build complete operation thinking, not memorize random commands.
+> 目标：知道自己在哪、改了什么、保存到哪。别炸历史。
 
----
-
-## 0. Git Mental Model
-
-Git is three things:
+## 1. 先懂四个地方
 
 ```text
-time machine
-safety lock
-incident recorder
+工作区 ──git add──> 暂存区 ──git commit──> 本地历史 ──git push──> GitHub
+  文件               下次提交             已保存提交            共享副本
 ```
 
-It is not just a GitHub upload button.
+只记四句：
 
-Core idea:
+- `git add` 是“选进下一次提交”，不是上传。
+- `git commit` 是“保存到本机历史”，不是上传。
+- `git push` 才会改 GitHub。
+- 未提交的修改不在历史里，也不在 GitHub。
 
-```text
-working tree → staging area → commit history → remote
-```
+## 2. 第一反应：看现场
 
-Meaning:
-
-```text
-working tree:
-  your current files
-
-staging area:
-  the exact changes you choose for the next commit
-
-commit:
-  a named checkpoint
-
-remote:
-  GitHub copy of your repo
-```
-
-Your daily loop is:
-
-```text
-observe → branch → edit → inspect → test → stage → commit → merge → push
-```
-
-No blind commits. No black-box agent diffs.
-
----
-
-## 1. Status First
-
-Use this constantly:
+每次开工先敲：
 
 ```bash
-git status
+git status --short --branch
+git branch --show-current
 ```
 
-It tells you:
+常见输出：
 
-- current branch;
-- changed files;
-- staged files;
-- untracked files;
-- whether you are ahead/behind remote.
-
-Before any important command, run:
-
-```bash
-git status
+```text
+ M file.py    改了，未暂存
+M  file.py    已暂存
+MM file.py    暂存后又改了
+?? file.py    Git 还不认识的新文件
+ D file.py    删除了，未暂存
+## main...origin/main [ahead 1]    本地多一个提交
 ```
 
-This is your cockpit display. Do not fly blind.
+两列记法：左边是暂存区，右边是工作区。
 
----
+看到不认识的修改：停。那可能是自己、同伴或 agent 留下的工作。
 
-## 2. Inspect Changes
-
-Show unstaged changes:
+## 3. 第二反应：看差异
 
 ```bash
 git diff
-```
-
-Show staged changes:
-
-```bash
 git diff --staged
-```
-
-Show recent commits:
-
-```bash
 git log --oneline --decorate -n 10
 ```
 
-Show branch graph:
+- `git diff`：还没暂存的改动。
+- `git diff --staged`：下一次 commit 真正会收进去的内容。
+- `git log`：最近保存过什么。
+
+看不懂 diff，就不 commit。
+
+## 4. 每天只走这条路
+
+### 开一条小分支
+
+先确认工作树干净，再开分支：
 
 ```bash
+git switch -c codex/<short-task>
+```
+
+例子：
+
+```bash
+git switch -c codex/fix-vault-picker
+```
+
+一条分支只做一件事。
+
+### 改文件，跑检查
+
+```bash
+git status --short
+git diff
+```
+
+keikeu 代码改动：
+
+```bash
+.venv/bin/python -m pytest
+.venv/bin/python -m compileall -q src
+```
+
+只有文档改动：
+
+```bash
+.venv/bin/python scripts/check_docs.py
+git diff --check
+```
+
+没有运行的检查，要明说。
+
+### 精确暂存
+
+```bash
+git add path/to/file1 path/to/file2
+git diff --staged
+git status --short
+```
+
+别上来就 `git add .`。先选明确文件。
+
+一个文件里混了两件事时，再用：
+
+```bash
+git add -p
+```
+
+### 提交
+
+```bash
+git commit -m "fix: keep vault selection after restart"
+```
+
+常用开头够了：
+
+```text
+docs: 文档
+fix:  修 bug
+feat: 新行为
+test: 测试
+```
+
+好消息说明“做了什么”。`update`、`changes`、`final` 都等于没说。
+
+### 合进 main
+
+```bash
+git switch main
+git merge --ff-only codex/<short-task>
+```
+
+`--ff-only` 合不了就会停，不会自作聪明制造复杂历史。此时先看：
+
+```bash
+git status
 git log --oneline --decorate --graph --all -n 20
 ```
 
-Show one commit:
+不要条件反射地 rebase。
+
+### 推送
 
 ```bash
-git show <commit-hash>
+git push origin main
 ```
 
-Rule:
+这一步会改共享仓库。先确认 main、commit 和测试都对。Agent 必须得到明确授权才能 push。
+
+## 5. 分支、commit、tag 到底是什么
 
 ```text
-If you do not understand the diff, do not commit it.
+commit = 一张保存好的快照
+branch = 会随着新 commit 前进的路标
+HEAD   = 你现在站的位置
+tag    = 钉死在某个 commit 上的里程碑
 ```
 
----
-
-## 3. First Repo Setup
-
-This repository is already initialized. Use this section only as a learning example or when creating a separate repository.
-
-Inside project folder:
+创建 annotated tag：
 
 ```bash
-git init
-git branch -M main
-git status
+git tag -a v0.2.0 -m "keikeu Road v0.2 complete"
 ```
 
-Create baseline:
+它先只存在本机。要让 GitHub 看见，单独推送：
 
 ```bash
-mkdir -p docs src tests
-touch README.md pyproject.toml
+git push origin v0.2.0
 ```
 
-Add and commit:
+## 6. 远端：先看，再动
 
 ```bash
-git add README.md pyproject.toml docs/
-git commit -m "init: create keikeu project baseline"
+git fetch origin
+git status --short --branch
+git log --oneline main..origin/main
+git log --oneline origin/main..main
 ```
 
-Connect GitHub:
+- `fetch`：更新你对远端的认识。
+- `origin/main`：上次 fetch 后的本地记录，不是实时网页。
+- `pull`：会改本地文件或历史，不是“看看”。
+- `push`：会改远端。
+
+## 7. 安全撤销
+
+暂存错了，但想保留文件修改：
 
 ```bash
-git remote add origin <repo-url>
-git push -u origin main
+git restore --staged path/to/file
 ```
 
-Check remote:
-
-```bash
-git remote -v
-```
-
----
-
-## 4. keikeu Standard Work Loop
-
-Use this for almost every task:
-
-```bash
-git status
-git switch -c feature/<task-name>
-
-# edit files
-
-git status
-git diff
-
-# run tests if code changed
-pytest
-
-git add -p
-git diff --staged
-git commit -m "type: short summary"
-
-git switch main
-git merge feature/<task-name>
-git branch -d feature/<task-name>
-git push
-```
-
-This looks slow. It is not.  
-It prevents repo rot.
-
----
-
-## 5. Branch Thinking
-
-`main` should be stable.
-
-Use feature branches for scoped work:
-
-```bash
-git switch -c feature/vault-init
-git switch -c feature/cache-markdown
-git switch -c feature/outline-schema
-git switch -c feature/flet-cache-page
-```
-
-Use fix branches for bugs:
-
-```bash
-git switch -c fix/index-rebuild
-```
-
-Use docs branches for documentation:
-
-```bash
-git switch -c docs/git-workflow
-```
-
-Branch rule:
-
-```text
-one task, one branch
-```
-
-Bad branch:
-
-```text
-feature/mvp
-```
-
-Good branch:
-
-```text
-feature/vault-init
-```
-
-A giant branch is just a corpse pile with a name tag.
-
----
-
-## 6. Commit Thinking
-
-A commit is a clean checkpoint.
-
-Good commit:
-
-- has one purpose;
-- can be explained in one sentence;
-- can be reverted safely;
-- leaves the repo in a runnable or at least understandable state.
-
-Commit format:
-
-```text
-type: short imperative summary
-```
-
-Types:
-
-```text
-init      repo/project setup
-docs      documentation
-feat      new behavior
-fix       bug fix
-refactor  cleanup without behavior change
-test      tests
-chore     maintenance/config
-build     packaging/build config
-ci        automation
-```
-
-Examples:
-
-```bash
-git commit -m "init: create python package skeleton"
-git commit -m "docs: add git workflow guides"
-git commit -m "feat: initialize local vault"
-git commit -m "feat: write cache markdown file"
-git commit -m "test: cover outline schema"
-git commit -m "fix: rebuild index from markdown files"
-```
-
-Bad:
-
-```bash
-git commit -m "update"
-git commit -m "fix"
-git commit -m "final"
-git commit -m "changes"
-```
-
----
-
-## 7. Staging
-
-Stage a file:
-
-```bash
-git add <file>
-```
-
-Stage interactively:
-
-```bash
-git add -p
-```
-
-Stage all:
-
-```bash
-git add .
-```
-
-Recommended:
-
-```bash
-git add -p
-```
-
-Why: it lets you commit only the hunks you understand.
-
-Unstage one file:
-
-```bash
-git restore --staged <file>
-```
-
-Unstage all:
-
-```bash
-git restore --staged .
-```
-
----
-
-## 8. Undo Commands
-
-### Undo unstaged edits in one file
-
-```bash
-git restore <file>
-```
-
-Danger: destroys current edits in that file.
-
-### Unstage but keep edits
-
-```bash
-git restore --staged <file>
-```
-
-### Fix last commit message
-
-```bash
-git commit --amend -m "docs: add git workflow guides"
-```
-
-Use before push.
-
-### Undo last commit but keep changes staged
-
-```bash
-git reset --soft HEAD~1
-```
-
-### Undo last commit and keep changes unstaged
-
-```bash
-git reset --mixed HEAD~1
-```
-
-### Destroy last commit and changes
-
-```bash
-git reset --hard HEAD~1
-```
-
-`--hard` is a chainsaw. Do not use while tired.
-
-### Safe rollback after push
+已经提交了坏改动，尤其是已经 push：
 
 ```bash
 git revert <commit-hash>
 ```
 
-Prefer `revert` on `main`.
+`revert` 会增加一个反向提交，历史仍看得懂。
 
----
-
-## 9. Stash
-
-Use stash for temporary storage.
-
-Save:
-
-```bash
-git stash push -m "wip outline editor"
-```
-
-List:
-
-```bash
-git stash list
-```
-
-Restore and remove latest stash:
-
-```bash
-git stash pop
-```
-
-Restore but keep stash:
-
-```bash
-git stash apply
-```
-
-Drop stash:
-
-```bash
-git stash drop stash@{0}
-```
-
-Rule:
-
-```text
-stash is a pocket, not a warehouse
-```
-
-Do not stack ten mystery stashes.
-
----
-
-## 10. Remote / GitHub
-
-Show remote:
-
-```bash
-git remote -v
-```
-
-Add remote:
-
-```bash
-git remote add origin <repo-url>
-```
-
-Push first time:
-
-```bash
-git push -u origin main
-```
-
-Push later:
-
-```bash
-git push
-```
-
-Fetch remote state:
-
-```bash
-git fetch
-```
-
-Pull:
-
-```bash
-git pull
-```
-
-Safer habit:
-
-```bash
-git fetch
-git status
-```
-
-Then decide what to do.
-
----
-
-## 11. Merge
-
-Merge feature branch:
-
-```bash
-git switch main
-git merge feature/<task-name>
-```
-
-Delete merged branch:
-
-```bash
-git branch -d feature/<task-name>
-```
-
-Force delete:
-
-```bash
-git branch -D feature/<task-name>
-```
-
-Use `-D` only when intentionally discarding branch work.
-
-Abort merge:
+合并冲突，不想继续：
 
 ```bash
 git merge --abort
 ```
 
----
+想丢弃未提交修改时，先复制文件，再确认精确路径。`git restore <file>` 会直接吃掉该文件的未暂存修改。
 
-## 12. Rebase
+## 8. 红色按钮
 
-Rebase rewrites history.
-
-Beginner rule:
-
-```text
-Avoid rebase until merge workflow feels boring.
-```
-
-Allowed later for your own unpushed feature branch:
-
-```bash
-git switch feature/<task-name>
-git rebase main
-```
-
-Never rebase public/shared `main`.
-
-Abort:
-
-```bash
-git rebase --abort
-```
-
----
-
-## 13. Conflict Handling
-
-Conflict marker:
-
-```text
-<<<<<<< HEAD
-current branch version
-=======
-incoming version
->>>>>>> feature/name
-```
-
-Workflow:
-
-```bash
-git status
-# open conflicted files
-# edit manually
-git add <resolved-file>
-git commit
-```
-
-Rules:
-- read both sides;
-- preserve intent;
-- do not blindly choose ours/theirs;
-- run tests after resolving.
-
----
-
-## 14. `.gitignore` Baseline
-
-Create `.gitignore`:
-
-```gitignore
-# Python
-__pycache__/
-*.py[cod]
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.coverage
-htmlcov/
-
-# Virtual environments
-.venv/
-venv/
-env/
-
-# Secrets
-.env
-.env.*
-*.pem
-*.key
-
-# OS
-.DS_Store
-Thumbs.db
-
-# IDE
-.vscode/
-.idea/
-
-# Build outputs
-build/
-dist/
-*.apk
-*.aab
-*.ipa
-*.app
-*.exe
-*.dmg
-
-# Logs
-*.log
-```
-
-Do not ignore source code, docs, tests, or important config.
-
----
-
-## 15. Agentic Coding Workflow
-
-Before asking agent to code:
-
-```bash
-git status
-git switch -c feature/<task-name>
-```
-
-Give scoped instruction:
-
-```text
-Task: implement vault initialization.
-Scope:
-- create cache/ and .trash/cache/
-- create keikeu_index.json
-- add tests
-
-Do not:
-- touch UI
-- add dependencies
-- change product docs
-```
-
-After agent edits:
-
-```bash
-git status
-git diff
-pytest
-git add -p
-git diff --staged
-git commit -m "feat: initialize local vault"
-```
-
-Rule:
-
-```text
-Agent writes code. Human owns the diff.
-```
-
----
-
-## 16. keikeu First Commit Plan
-
-Historical bootstrap example only; it is not a current keikeu task list.
-
-### Commit 1: project docs
-
-```bash
-git add README.md README_EN.md AGENTS.md pyproject.toml docs/PROJECT.md docs/SPEC.md docs/RULES.md docs/manual/
-git commit -m "init: create keikeu project baseline"
-```
-
-### Commit 2: package skeleton
-
-```bash
-mkdir -p src/keikeu_core src/keikeu_app tests
-touch src/keikeu_core/__init__.py
-touch src/keikeu_app/__init__.py
-touch tests/__init__.py
-git add src tests
-git commit -m "init: create python package skeleton"
-```
-
-### Commit 3: gitignore
-
-```bash
-touch .gitignore
-# paste ignore rules
-git add .gitignore
-git commit -m "chore: add gitignore"
-```
-
-### Commit 4: first feature branch
-
-```bash
-git switch -c feature/vault-init
-# implement vault init
-pytest
-git add -p
-git commit -m "feat: initialize local vault"
-git switch main
-git merge feature/vault-init
-git branch -d feature/vault-init
-```
-
----
-
-## 17. Emergency Protocol
-
-When something feels wrong:
-
-```bash
-git status
-git log --oneline --decorate -n 10
-git diff
-```
-
-Do not panic-run:
+初学阶段不要独自运行：
 
 ```bash
 git reset --hard
 git clean -fd
 git push --force
+git branch -D <branch>
+git rebase <branch>
 ```
 
-If current uncommitted work matters:
+它们不是邪术，但会丢工作或改写历史。需要时先说清目标、影响和恢复办法。共享历史禁止普通 `--force`。
+
+## 9. 冲突时别猜
+
+你会看到：
+
+```text
+[七个 <] HEAD
+这一边
+[七个 =]
+另一边
+[七个 >] branch-name
+```
+
+做法：
 
 ```bash
-git stash push -m "emergency backup"
+git status
+# 人工读懂两边，编辑文件，删除冲突标记
+git add path/to/resolved-file
+# 跑测试，再完成 merge commit
 ```
 
-If a committed change broke `main`:
+不要盲选 ours 或 theirs。两边都可能有用，也可能都错。
+
+## 10. 出事协议
+
+感觉不对，只运行只读命令：
 
 ```bash
-git revert <commit-hash>
+git status --short --branch
+git diff
+git diff --staged
+git log --oneline --decorate --graph --all -n 20
 ```
 
-If you are confused:
+然后停手，保存终端输出，问人。不要用破坏命令“试试看”。
+
+## 11. 和 coding agent 合作
+
+开工前告诉它：
 
 ```text
-stop, copy terminal output, ask
+任务是什么
+允许改哪些文件
+明确不改什么
+是否允许 commit / merge / push
 ```
 
----
-
-## 18. Version Tags
-
-Use tags for release checkpoints.
-
-Create tag:
-
-```bash
-git tag -a v0.1.0 -m "v0.1.0 macOS dev preview"
-```
-
-Push tag:
-
-```bash
-git push origin v0.1.0
-```
-
-Suggested route:
+交接时必须拿到：
 
 ```text
-v0.1.0  archived macOS Cache / Outline pre-alpha
-v0.2.0  macOS Paper / Flashcard Core
-later   iPhone / iPad file-service parity
-later   Android / Windows
+当前 branch 和 HEAD
+修改与未跟踪文件
+跑过和没跑的检查
+是否 staged / committed / pushed
+剩余风险与下一条安全命令
 ```
 
----
+Agent 写代码。人拥有 diff 和历史。
 
-## 19. Operation Checklist
+## 12. 一分钟命令表
 
-Before coding:
+| 想做什么 | 命令 |
+| --- | --- |
+| 我在哪、脏不脏 | `git status --short --branch` |
+| 看未暂存改动 | `git diff` |
+| 看下次提交内容 | `git diff --staged` |
+| 看最近历史 | `git log --oneline --decorate -n 10` |
+| 开小分支 | `git switch -c codex/<task>` |
+| 选文件 | `git add <exact-paths>` |
+| 保存到本地历史 | `git commit -m "type: summary"` |
+| 看远端 | `git fetch origin` |
+| 改远端 | `git push origin <branch-or-tag>` |
+| 标记版本 | `git tag -a <version> -m "message"` |
+
+最后只记：
 
 ```text
-[ ] git status clean
-[ ] correct branch
-[ ] task is small
-[ ] no unnecessary dependency
+先 status。
+再 diff。
+小分支，小 commit。
+看不懂就停。
 ```
 
-Before commit:
-
-```text
-[ ] git diff reviewed
-[ ] tests run or docs-only noted
-[ ] staged changes checked
-[ ] commit message specific
-```
-
-Before push:
-
-```text
-[ ] main is stable
-[ ] latest commits make sense
-[ ] no secrets/build junk staged
-```
-
----
-
-## 20. Final Rule
-
-Small branches.  
-Small commits.  
-Readable history.  
-No blind agent diffs.
-
-This is how keikeu avoids becoming another corpse pile.
+想看四个区域如何移动，打开 [`git-interactive.html`](git-interactive.html)。正式权限永远回到 [`RULES §7`](../RULES.md#7-git)。

@@ -12,7 +12,7 @@ Git 入门 ── git-interactive ── gitspec ───→ RULES §7
 | --- | --- | --- |
 | [appdesign.md](appdesign.md) | Road v0.2 的产品设计来路与长篇解释 | [SPEC](../SPEC.md) |
 | [git-interactive.html](git-interactive.html) | 工作区、暂存区、本地历史与远端的状态地图 | [RULES §7](../RULES.md#7-git) |
-| [gitspec.md](gitspec.md) | Git 对象、分支与操作的概念长解 | [RULES §7](../RULES.md#7-git) |
+| [gitspec.md](gitspec.md) | Caveman 风格的 Git 最短安全路径 | [RULES §7](../RULES.md#7-git) |
 | [ethics.md](ethics.md) | 作者控制、数据边界与功能评审方法 | [SPEC](../SPEC.md) 与 [RULES](../RULES.md) |
 
 若 manual 与 truth 冲突，manual 错；修 manual，不复制一份新规则。

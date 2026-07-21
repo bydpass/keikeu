@@ -5,7 +5,7 @@
 tests/test-vault/
 tests/test-vault-bak/
 tests/keikeu-backups/
-
+.superpowers/
 # Python
 .venv/
 __pycache__/

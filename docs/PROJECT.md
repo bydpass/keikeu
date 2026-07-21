@@ -12,10 +12,13 @@ Updated: 2026-07-21
 | Road v0.2 Phase 8 product acceptance | Complete | The author completed the real one-shot and two-session short/medium scenarios; no P0/P1 was reported. P2/P3 observations are recorded separately. |
 | Phase 7.5 lightweight iOS | Quick-test build complete on an independent branch | Responsive shell and app-sandbox Vault were exercised on `codex/fix-ios-device-readiness`. This is a lightweight iOS version for rapid testing, not a step in the macOS Road sequence. |
 | Phase 8.5 / Road v0.3 preparation | Documentation reform implemented; review pending | This is the precursor to the next macOS version. Current evidence covers the authority map, HTML maps, archive, link gate, browser QA, and bounded Graphify trial; independent fresh-agent cold start was not run. |
+| Road v0.3 planning | Scope frozen; Planbook review in progress (CP0) | [`planbook_road_v0_3.md`](planbook_road_v0_3.md) records the proposed architecture, phases, gates, risks, and explicit non-goals. Runtime implementation has not started. |
 
 Phase 8 product acceptance is complete. Road archival or tagging remains a separate developer decision after final checks against the candidate commit. Automated tests, platform smoke, and author acceptance remain distinct evidence.
 
 Phase 7.5 and Phase 8.5 are separate tracks: Phase 7.5 is the independent lightweight iOS test version; Phase 8.5 prepares Road v0.3 and the next macOS version. Phase 7.5 is not a merge gate for Phase 8.5.
+
+Road v0.3 product decisions are frozen, but its Planbook is still under developer review. Until CP0 is approved and Phase 0 updates the active authorities, Road v0.2 behavior in SPEC and runtime remains current.
 
 ## Product flow
 
@@ -71,10 +74,9 @@ Application tests must not be inferred from documentation checks. Platform smoke
 
 ## Open gates
 
-1. Review the Phase 8.5 documentation diff; optionally authorize an independent fresh-agent run to strengthen the structural [cold-start audit](cold_start_report.md).
-2. Run final tests, compile, documentation checks, diff checks, and a macOS candidate-build smoke.
-3. Review the Phase 8 [P2/P3 candidates](acceptance/phase8.md#issue-分级) as Road v0.3 inputs without widening v0.2, then decide whether to archive/tag the Road.
-4. Define the minimum Phase 8.5 scope for the next macOS version; keep the independent Phase 7.5 iOS test build outside that gate.
+1. Review and approve the [Road v0.3 Planbook](planbook_road_v0_3.md) at CP0.
+2. After approval, begin Planbook Phase 0 by updating SPEC, RULES, design, interaction, architecture decisions, and fixtures before implementation.
+3. Keep the independent Phase 7.5 iOS test build outside every Road v0.3 macOS implementation and acceptance gate.
 
 ## Known candidate, not active scope
 
