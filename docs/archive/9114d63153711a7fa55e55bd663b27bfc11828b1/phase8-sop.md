@@ -1,3 +1,5 @@
+> **ARCHIVED — READ ONLY.** This is the Phase 8 SOP at commit `9114d63153711a7fa55e55bd663b27bfc11828b1`. Phase 8 is complete; current evidence lives in [`docs/acceptance/phase8.md`](../../acceptance/phase8.md).
+
 # keikeu Road v0.2 — Phase 8 检查 SOP
 
 > 用途：在作者有精力时，完成 Phase 8 的真实创作工作流检查。

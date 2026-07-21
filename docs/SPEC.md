@@ -155,10 +155,12 @@ Soft-deleted current Papers move under `.trash/cache/`. Restore cannot overwrite
 ## 9. Platform allocation
 
 - **macOS:** primary v0.2 acceptance platform; Paper, Library, Flashcard, migration, recovery, and OS file-service folders.
-- **iPhone:** capture/edit Paper and full-screen Flashcard; current 7.5 work uses an app-sandbox local Vault while file-service access remains a later capability.
+- **iPhone:** Phase 7.5 is an independent lightweight build for rapid testing of Paper editing and full-screen Flashcard. It uses an app-sandbox local Vault; file-service access remains a later capability and Phase 7.5 is not a gate in the macOS Road.
 - **iPad:** future Paper/Library plus Flashcard beside an external editor using system multitasking.
 
 All platforms use the same Paper model. keikeu never reads the external prose document.
+
+Phase 8.5 is the preparation version before Road v0.3 and the precursor to the next macOS version. It is not a continuation of Phase 7.5.
 
 ## 10. Outline position
 

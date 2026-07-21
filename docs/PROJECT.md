@@ -2,18 +2,20 @@
 
 > Authority: current coordinates, module entry points, documentation index, and next gate. Product behavior belongs in [SPEC](SPEC.md); rules belong in [RULES](RULES.md).
 
-Updated: 2026-07-19
+Updated: 2026-07-21
 
 ## Current coordinates
 
 | Track | State | Evidence boundary |
 | --- | --- | --- |
 | Road v0.2 engineering Phases 0–7 | Complete | Paper v2, migration, recovery, macOS UI, Flashcard, Outline retirement, and macOS file-service smoke are implemented and recorded. |
-| Road v0.2 Phase 8 product acceptance | In progress | Some real-author feedback exists; full one-shot and two-session short/medium evidence is still missing. |
-| iOS 7.5 engineering | On-device fixes complete | Responsive shell and app-sandbox Vault were exercised; this is not full iOS file-service or product acceptance. |
-| Phase 8.5 documentation reform | Implementation complete; review pending | Authority map, HTML maps, archive, link gate, browser QA, and bounded Graphify trial are present; independent fresh-agent cold start was not run. |
+| Road v0.2 Phase 8 product acceptance | Complete | The author completed the real one-shot and two-session short/medium scenarios; no P0/P1 was reported. P2/P3 observations are recorded separately. |
+| Phase 7.5 lightweight iOS | Quick-test build complete on an independent branch | Responsive shell and app-sandbox Vault were exercised on `codex/fix-ios-device-readiness`. This is a lightweight iOS version for rapid testing, not a step in the macOS Road sequence. |
+| Phase 8.5 / Road v0.3 preparation | Documentation reform implemented; review pending | This is the precursor to the next macOS version. Current evidence covers the authority map, HTML maps, archive, link gate, browser QA, and bounded Graphify trial; independent fresh-agent cold start was not run. |
 
-Do not call Road v0.2, the macOS MVP, or the archive accepted while Phase 8 evidence is incomplete. Automated tests and synthetic Vault smoke prove only their covered behavior.
+Phase 8 product acceptance is complete. Road archival or tagging remains a separate developer decision after final checks against the candidate commit. Automated tests, platform smoke, and author acceptance remain distinct evidence.
+
+Phase 7.5 and Phase 8.5 are separate tracks: Phase 7.5 is the independent lightweight iOS test version; Phase 8.5 prepares Road v0.3 and the next macOS version. Phase 7.5 is not a merge gate for Phase 8.5.
 
 ## Product flow
 
@@ -53,7 +55,7 @@ README
 
 - **Authority:** [SPEC](SPEC.md) owns product behavior and acceptance; [RULES](RULES.md) owns engineering, interaction, data, Git, and evidence constraints; [AGENTS](../AGENTS.md) owns agent procedure. Runtime facts come from [`src/`](../src/) and [`tests/`](../tests/).
 - **Views:** [design](design/design.html) shows visual tokens and component states; [interaction](design/interaction.html) shows user paths and states; [architecture](architecture/architecture.html) shows modules, dependencies, and data lifecycles.
-- **Evidence:** [acceptance](acceptance/README.md) holds Phase 8 evidence and SOP; [generated](generated/README.md) holds rebuildable observations; the [cold-start audit](cold_start_report.md) records the Phase 8.5 evidence boundary. None defines intent by itself.
+- **Evidence:** [acceptance](acceptance/README.md) holds the completed Phase 8 evidence; the used SOP is archived at its commit baseline. [generated](generated/README.md) holds rebuildable observations; the [cold-start audit](cold_start_report.md) records the Phase 8.5 evidence boundary. None defines intent by itself.
 - **Context:** [ADR 0001](architecture/decisions/0001-document-authority.md) explains this split; [manual](manual/README.md) teaches people; [archive](archive/README.md) preserves superseded records. Manual and archive never override authority.
 
 ## Commands
@@ -70,13 +72,13 @@ Application tests must not be inferred from documentation checks. Platform smoke
 ## Open gates
 
 1. Review the Phase 8.5 documentation diff; optionally authorize an independent fresh-agent run to strengthen the structural [cold-start audit](cold_start_report.md).
-2. Complete a real one-shot and two-session short/medium author workflow using the privacy-safe [Phase 8 SOP](acceptance/phase8-sop.md).
-3. If a P0/P1 appears, fix and re-verify it. Keep P2/P3 ideas outside the active acceptance scope.
-4. Only after evidence is complete may the developer decide whether to archive/tag Road v0.2.
+2. Run final tests, compile, documentation checks, diff checks, and a macOS candidate-build smoke.
+3. Review the Phase 8 [P2/P3 candidates](acceptance/phase8.md#issue-分级) as Road v0.3 inputs without widening v0.2, then decide whether to archive/tag the Road.
+4. Define the minimum Phase 8.5 scope for the next macOS version; keep the independent Phase 7.5 iOS test build outside that gate.
 
 ## Known candidate, not active scope
 
-The side navigation's Flashcard destination does not retain the current Paper context. Existing evidence classifies this as P2: usable but awkward. It remains a next-Road candidate unless real use demonstrates P1 severity.
+The Phase 8 [issue classification](acceptance/phase8.md#issue-分级) records the next-Road candidates. The side navigation's Flashcard destination not retaining the current Paper context remains P2: usable but awkward.
 
 ## History boundary
 

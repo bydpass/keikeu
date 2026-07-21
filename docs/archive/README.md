@@ -4,7 +4,7 @@
 
 ## Why this exists
 
-Phase 8.5 replaced overlapping root documents, Road notebooks, prototypes, and status pages with explicit active authorities and non-normative [human manuals](../manual/README.md):
+As part of the Road v0.3 preparation and next-Mac precursor, Phase 8.5 replaced overlapping root documents, Road notebooks, prototypes, and status pages with explicit active authorities and non-normative [human manuals](../manual/README.md):
 
 - product contract → [`docs/SPEC.md`](../SPEC.md)
 - current coordinates → [`docs/PROJECT.md`](../PROJECT.md)
@@ -21,6 +21,7 @@ Archive files retain historical reasoning and evidence. Their internal links may
 | --- | --- | --- |
 | [`9d033db326295874d1f32f23325e430e0461396d/`](9d033db326295874d1f32f23325e430e0461396d/) | Road v0.1 records at that commit | historical comparison only |
 | [`146cb74e81fb9a0b93aa232227b86b56ad7c5d08/`](146cb74e81fb9a0b93aa232227b86b56ad7c5d08/) | Road v0.2 records at that commit | historical comparison only |
+| [`9114d63153711a7fa55e55bd663b27bfc11828b1/`](9114d63153711a7fa55e55bd663b27bfc11828b1/) | Phase 8 record and SOP before final author confirmation | historical acceptance evidence only |
 | [`snapshots/`](snapshots/) | status HTML named for the commit whose state each page records | frozen evidence only |
 | [`planning/`](planning/) | Phase 8.5 reform proposal supplied on 2026-07-18 | understand the migration decision, not current status |
 

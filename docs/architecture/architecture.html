@@ -178,13 +178,13 @@
         <section class="section searchable" id="platforms" data-search="platform macos ios iphone ipad flet shell safe area vault picker sandbox 平台 壳层 安全区 文件选择器 沙盒">
           <div class="section-head"><div class="section-number">07</div><div><h2>平台壳层</h2><p>领域与文件模型共用，导航和 Vault 能力按平台明确降级。</p></div></div>
           <div class="table-wrap"><table class="matrix">
-            <thead><tr><th>能力</th><th>macOS</th><th>iOS 7.5 当前</th><th>不应推断</th></tr></thead>
+            <thead><tr><th>能力</th><th>macOS</th><th>Phase 7.5 独立轻量 iOS 版</th><th>不应推断</th></tr></thead>
             <tbody>
               <tr><td>Navigation</td><td>NavigationRail</td><td>NavigationBar + SafeArea</td><td>同一布局在所有设备自然</td></tr>
               <tr><td>Vault choice</td><td>系统目录选择 + 手工路径 fallback</td><td>创建应用沙盒本机 Vault</td><td>持久第三方 File Provider 权限已解决</td></tr>
               <tr><td>Paper model</td><td colspan="2">同一 `keikeu_core` / Markdown v2</td><td>平台验证可互相替代</td></tr>
               <tr><td>System open</td><td>默认程序 / Finder</td><td>Share 等平台服务</td><td>外部编辑器行为完全一致</td></tr>
-              <tr><td>Evidence</td><td>Road v0.2 主验收平台</td><td>独立设备工程轨道</td><td>iOS 修复完成 = macOS MVP accepted</td></tr>
+              <tr><td>Evidence</td><td>Road v0.2 主验收平台；Phase 8.5 准备下一版 Mac</td><td>独立快速测试轨道</td><td>Phase 7.5 是 Phase 8.5 的合入闸门</td></tr>
             </tbody>
           </table></div>
           <p class="source-link">壳层：<a href="../../src/keikeu_app/main.py">main.py</a> · 项目配置：<a href="../../pyproject.toml">pyproject.toml</a></p>

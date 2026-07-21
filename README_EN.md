@@ -6,9 +6,9 @@
 
 ## Current status
 
-The code implements the `Paper Markdown → Flashcard → external prose editor` core. Road v0.2 Phases 0–7 engineering and macOS file-service smoke work are recorded. Phase 8 still lacks complete real-author evidence for a one-shot and a two-session short/medium workflow, so the macOS MVP is not yet product-accepted and the Road is not archived.
+The code implements the `Paper Markdown → Flashcard → external prose editor` core. Road v0.2 Phases 0–7 engineering, macOS file-service smoke, and Phase 8 real-author one-shot and two-session short/medium acceptance are complete. Road archival or tagging remains a developer decision after final checks.
 
-iOS 7.5 has responsive UI, an app-sandbox Vault, and on-device fix evidence. It is a separate platform-engineering track, not a substitute for macOS product acceptance. See [PROJECT](docs/PROJECT.md) for the live coordinates.
+Phase 7.5 is an independent lightweight iOS build for rapid testing. Its responsive UI, app-sandbox Vault, and on-device fixes are complete on a separate branch; it is not a merge gate in the macOS Road. Phase 8.5 prepares Road v0.3 and is the precursor to the next Mac version. See [PROJECT](docs/PROJECT.md) for the live coordinates.
 
 ## Core flow
 
@@ -82,8 +82,9 @@ Hard rule: `keikeu_core` must not import Flet. Only the core layer owns Markdown
 
 ```text
 v0.1        archived macOS Cache / Outline pre-alpha
-v0.2        macOS Paper / Flashcard Core; product acceptance in progress
-iOS 7.5     device shell and local-Vault engineering validation
+v0.2        macOS Paper / Flashcard Core; product acceptance complete, Road closeout pending
+Phase 7.5   independent lightweight iOS rapid-test build
+Phase 8.5   Road v0.3 preparation; precursor to the next Mac version
 Pre-Advance optional Markdown Outline; never blocks the core flow
 later       iPhone/iPad file-service capability, Android, Windows
 ```
