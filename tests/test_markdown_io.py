@@ -1,4 +1,4 @@
-"""Paper v2 Markdown read/write contracts."""
+"""Paper v2/v3 Markdown read/write contracts."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ from keikeu_core.markdown_io import (
     update_paper,
     write_paper,
 )
-from keikeu_core.models import Paper
+from keikeu_core.models import Highlight, Paper
 from keikeu_core.vault import init_vault
 
 
@@ -37,7 +37,15 @@ def test_paper_complete_cjk_and_multiline_round_trip(tmp_path):
         code="K-20260714-001",
         initial_summary="not persisted before the first save",
         summary="深夜的末班公交上，两个人隔着一个空位假装睡着。\nA 明早离开。",
-        highlights=["旧打火机被塞回手里。\n谁也没有解释。", "", "公交驶过平时下车的站。"],
+        display_name="雪夜巴士 🌙",
+        highlights=[
+            Highlight(
+                display_name="旧打火机",
+                content="旧打火机被塞回手里。\n\n2. 谁也没有解释。",
+            ),
+            Highlight(display_name="会被删除", content=""),
+            Highlight(content="公交驶过平时下车的站。"),
+        ],
         tags=["  末班车 ", "离别", "末班车", "离别 ", "暧昧"],
         created=created,
         updated=created,
@@ -48,9 +56,61 @@ def test_paper_complete_cjk_and_multiline_round_trip(tmp_path):
     back = read_paper(path)
     assert back.initial_summary == paper.summary
     assert back.summary == paper.summary
-    assert back.highlights == ["旧打火机被塞回手里。\n谁也没有解释。", "公交驶过平时下车的站。"]
+    assert back.display_name == "雪夜巴士 🌙"
+    assert back.highlights == [
+        Highlight(
+            display_name="旧打火机",
+            content="旧打火机被塞回手里。\n\n2. 谁也没有解释。",
+        ),
+        Highlight(content="公交驶过平时下车的站。"),
+    ]
     assert back.tags == ["末班车", "离别", "暧昧"]
     assert back.legacy_title == "旧 Cache 标题"
+    text = path.read_text(encoding="utf-8")
+    assert "schema_version: 3" in text
+    assert "display_name: 雪夜巴士 🌙" in text
+    assert "   2. 谁也没有解释。" in text
+
+
+def test_v2_read_then_successful_save_writes_v3_and_preserves_unknown_frontmatter(
+    tmp_path,
+):
+    fixture = (
+        Path(__file__).parent
+        / "fixtures/v03-vault/mixed-vault/cache/K-20260720-001.md"
+    )
+    path = tmp_path / "cache" / fixture.name
+    path.write_bytes(
+        fixture.read_bytes().replace(
+            b"fixture: synthetic-road-v03",
+            b"fixture: synthetic-road-v03\nsource: C:\\drafts\\story",
+        )
+    )
+
+    paper, source_bytes = read_paper_snapshot(path)
+    assert paper.display_name is None
+    assert paper.highlights == [
+        Highlight(content="末班车的灯在雨中熄灭。"),
+        Highlight(content="站台时钟比广播慢一分钟。"),
+    ]
+    assert paper.extra_frontmatter == {
+        "fixture": "synthetic-road-v03",
+        "source": r"C:\drafts\story",
+    }
+
+    paper.display_name = "蓝伞"
+    paper.highlights[0].display_name = "熄灯"
+    update_paper(tmp_path, path, paper, expected_source_bytes=source_bytes)
+
+    saved = path.read_text(encoding="utf-8")
+    assert "schema_version: 3" in saved
+    assert "display_name: 蓝伞" in saved
+    assert "fixture: synthetic-road-v03" in saved
+    assert read_paper(path).extra_frontmatter["source"] == r"C:\drafts\story"
+    assert read_paper(path).highlights[0] == Highlight(
+        content="末班车的灯在雨中熄灭。",
+        display_name="熄灯",
+    )
 
 
 def test_minimal_paper_keeps_empty_optional_sections(tmp_path):
@@ -451,7 +511,7 @@ def test_explicit_rename_preserves_content_without_overwrite(tmp_path):
             code="K-20260714-001",
             initial_summary="",
             summary="first summary",
-            highlights=["anchor"],
+            highlights=[Highlight(content="anchor")],
             tags=["tag"],
         ),
     )
@@ -468,7 +528,7 @@ def test_explicit_rename_preserves_content_without_overwrite(tmp_path):
     assert not source.exists()
     assert back.code == "K-20260714-003"
     assert back.initial_summary == "first summary"
-    assert back.highlights == ["anchor"]
+    assert back.highlights == [Highlight(content="anchor")]
 
 
 def test_rename_refuses_a_byte_identical_ordinary_vault_root_replacement(

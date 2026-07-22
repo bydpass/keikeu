@@ -13,7 +13,9 @@ import flet as ft
 from keikeu_app import main as app_main
 from keikeu_app.pages import migration_page as migration_page_mod
 from keikeu_app.pages.migration_page import build_migration_page
+from keikeu_core.markdown_io import write_paper
 from keikeu_core.migration_v01 import MigrationResult
+from keikeu_core.models import Highlight, Paper
 from keikeu_core.vault import (
     capture_vault_selection_token,
     get_vault,
@@ -477,7 +479,7 @@ def test_valid_v2_preview_reclassifies_before_rebuild_or_switch(tmp_path, monkey
 
     assert not (vault / "keikeu_index.json").exists()
     assert (vault / ".trash" / "cache-moved").is_dir()
-    assert any("不是受支持的 v0.1 或当前 v2 Vault" in text for text in _texts(root))
+    assert any("不是受支持的 v0.1 或 Paper v2/v3 Vault" in text for text in _texts(root))
 
 
 def test_valid_home_v2_with_a_damaged_paper_switches_and_exposes_index_error(
@@ -513,22 +515,34 @@ def test_valid_home_v2_with_a_damaged_paper_switches_and_exposes_index_error(
     assert len(index["errors"]) == 1
 
 
-def test_stale_v2_index_with_a_v3_paper_reports_phase_2_and_does_not_switch(
-    tmp_path, monkeypatch
-):
+def test_v2_index_with_a_v3_paper_rebuilds_v3_and_switches(tmp_path, monkeypatch):
     vault = tmp_path / "mixed-vault"
     init_vault(vault)
-    (vault / "cache" / "K-20260722-001.md").write_text(
-        "---\ntype: paper\nschema_version: 3\ncode: K-20260722-001\n---\n",
+    write_paper(
+        vault,
+        Paper(
+            code="K-20260722-001",
+            initial_summary="",
+            summary="mixed schema fixture",
+            display_name="v3 Paper",
+            highlights=[Highlight(content="保留内容", display_name="锚点")],
+        ),
+    )
+    (vault / "keikeu_index.json").write_text(
+        '{"version": 2, "papers": [], "errors": []}\n',
         encoding="utf-8",
     )
     page = FakePage()
+    order: list[str] = []
     monkeypatch.setattr(
         app_main,
         "set_vault",
-        lambda _vault, _config, _selection: (_ for _ in ()).throw(
-            AssertionError("v3 must not be selected before Phase 2")
-        ),
+        lambda _vault, _config, _selection: order.append("set"),
+    )
+    monkeypatch.setattr(
+        app_main,
+        "_build_shell",
+        lambda _page, _vault: order.append("shell"),
     )
 
     app_main._build_vault_picker(page, show_configured=False)  # type: ignore[attr-defined, arg-type]
@@ -537,7 +551,8 @@ def test_stale_v2_index_with_a_v3_paper_reports_phase_2_and_does_not_switch(
     _button(root, "检查 Vault").on_click(None)
     _button(root, "确认切换并打开").on_click(None)
 
-    assert any("Paper schema" in text and "Phase 2" in text for text in _texts(root))
+    assert order == ["set", "shell"]
+    assert vault_index_version(vault) == 3
 
 
 def test_nonempty_non_vault_is_rejected_without_mutation(tmp_path, monkeypatch):
@@ -568,7 +583,7 @@ def test_nonempty_non_vault_is_rejected_without_mutation(tmp_path, monkeypatch):
     _text_field(root, "Vault 文件夹路径").value = str(candidate)
     _button(root, "检查 Vault").on_click(None)
 
-    assert any("不是受支持的 v0.1 或当前 v2 Vault" in text for text in _texts(root))
+    assert any("不是受支持的 v0.1 或 Paper v2/v3 Vault" in text for text in _texts(root))
     assert note.read_text(encoding="utf-8") == "keep me"
 
 
@@ -674,7 +689,10 @@ def test_startup_unsafe_non_vault_is_classified_and_rejected_before_copy(
     app_main.main(page)  # type: ignore[arg-type]
 
     assert calls == [source.absolute()]
-    assert any("不是受支持的 v0.1 或当前 v2 Vault" in text for text in _texts(page.controls[0]))
+    assert any(
+        "不是受支持的 v0.1 或 Paper v2/v3 Vault" in text
+        for text in _texts(page.controls[0])
+    )
     assert not any(
         getattr(control, "key", None) == "vault-relocation-confirm"
         for control in _walk(page.controls[0])
@@ -682,9 +700,7 @@ def test_startup_unsafe_non_vault_is_classified_and_rejected_before_copy(
     assert note.read_text(encoding="utf-8") == "do not copy"
 
 
-def test_picker_reports_v3_as_unsupported_until_phase_2_before_copy(
-    tmp_path, monkeypatch
-):
+def test_picker_offers_relocation_for_unsafe_v3(tmp_path, monkeypatch):
     source = tmp_path / "unsafe-v3"
     init_vault(source)
     (source / "outlines").mkdir()
@@ -701,24 +717,14 @@ def test_picker_reports_v3_as_unsupported_until_phase_2_before_copy(
         return real_guard(path)
 
     monkeypatch.setattr(app_main, "require_home_path", simulated_guard)
-    monkeypatch.setattr(
-        app_main,
-        "copy_vault_no_follow",
-        lambda _source, _destination: (_ for _ in ()).throw(
-            AssertionError("v3 must not be copied before Phase 2")
-        ),
-    )
-
     app_main._build_vault_picker(page, show_configured=False)  # type: ignore[attr-defined, arg-type]
     root = page.controls[0]
     _text_field(root, "Vault 文件夹路径").value = str(source)
     _button(root, "检查 Vault").on_click(None)
 
-    assert any("v3 Vault" in text and "Phase 2" in text for text in _texts(root))
-    assert not any(
-        getattr(control, "key", None) == "vault-relocation-confirm"
-        for control in _walk(root)
-    )
+    assert any("Paper v2/v3 Vault" in text for text in _texts(root))
+    assert _by_key(root, "vault-relocation-confirm")
+    assert _button(root, "复制、验证并切换")
 
 
 def test_v2_index_wins_over_leftover_outlines_during_classification(tmp_path):
@@ -761,7 +767,7 @@ def test_unsupported_readable_index_wins_over_leftover_outlines(tmp_path):
     )
 
 
-def test_corrupt_structural_v2_is_rebuilt_after_picker_confirmation(
+def test_corrupt_structural_index_is_rebuilt_after_picker_confirmation(
     tmp_path, monkeypatch
 ):
     vault = tmp_path / "corrupt-index-vault"
@@ -787,7 +793,7 @@ def test_corrupt_structural_v2_is_rebuilt_after_picker_confirmation(
     _button(root, "确认切换并打开").on_click(None)
 
     assert order == ["set", "shell"]
-    assert vault_index_version(vault) == 2
+    assert vault_index_version(vault) == 3
 
 
 def test_missing_disposable_index_is_rebuilt_after_picker_confirmation(
@@ -816,10 +822,10 @@ def test_missing_disposable_index_is_rebuilt_after_picker_confirmation(
     _button(root, "确认切换并打开").on_click(None)
 
     assert order == ["set", "shell"]
-    assert vault_index_version(vault) == 2
+    assert vault_index_version(vault) == 3
 
 
-def test_configured_corrupt_structural_v2_rebuilds_during_normal_open(
+def test_configured_corrupt_structural_index_rebuilds_during_normal_open(
     tmp_path, monkeypatch
 ):
     vault = tmp_path / "configured-corrupt-index"
@@ -830,7 +836,7 @@ def test_configured_corrupt_structural_v2_rebuilds_during_normal_open(
 
     app_main.main(page)  # type: ignore[arg-type]
 
-    assert vault_index_version(vault) == 2
+    assert vault_index_version(vault) == 3
     assert next(control for control in _walk(page.controls[0]) if isinstance(control, ft.NavigationRail))
 
 

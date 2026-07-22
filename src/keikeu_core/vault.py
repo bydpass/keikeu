@@ -1,4 +1,4 @@
-"""Paper v2 vault layout, recovery bin, and local config resolution.
+"""Paper Vault layout, recovery bin, and local config resolution.
 
 The user-selected vault holds only durable Paper Markdown and a disposable
 index.  Recovery moves a file under ``.trash/cache``; it never copies or
@@ -51,7 +51,7 @@ __all__ = [
 
 _TreeSnapshot = tuple[tuple[Path, ...], tuple[tuple[Path, str], ...]]
 
-_EMPTY_INDEX: dict[str, object] = {"version": 2, "papers": [], "errors": []}
+_EMPTY_INDEX: dict[str, object] = {"version": 3, "papers": [], "errors": []}
 _ATOMIC_EXCHANGE_FLAG = 0x00000002
 _RESERVED_FOLDER_NAMES = {
     unicodedata.normalize("NFC", name).casefold()
@@ -347,7 +347,7 @@ def _require_directory_path_identity(path: Path, expected_fd: int) -> None:
 
 
 def _open_pinned_vault(vault: Path) -> tuple[Path, int]:
-    """Validate and pin one Home-contained v2 Vault root; caller closes."""
+    """Validate and pin one Home-contained Paper Vault root; caller closes."""
     vault = _require_lexical_home_path(_lexical_absolute_path(vault))
     root_fd = open_directory_no_follow(vault)
     try:
@@ -1341,9 +1341,9 @@ def copy_vault_no_follow(source: Path, destination: Path) -> Path:
 
 
 def init_vault(path: Path) -> None:
-    """Create the v2 Paper layout without changing existing user data.
+    """Create the current Paper layout without changing existing user data.
 
-    New vaults contain ``cache/``, ``.trash/cache/``, and a v2 empty index.
+    New vaults contain ``cache/``, ``.trash/cache/``, and a v3 empty index.
     Existing Outline directories and an existing index are left untouched so
     this helper cannot damage a vault that still needs migration.
     """
@@ -1387,7 +1387,7 @@ def init_vault(path: Path) -> None:
 
 
 def is_vault(path: Path) -> bool:
-    """Return whether ``path`` is structurally v2 or safely rebuildable as v2."""
+    """Return whether ``path`` is a supported Paper Vault or rebuildable."""
     try:
         path = _lexical_absolute_path(path)
         validate_regular_tree_no_follow(path)
@@ -1427,7 +1427,7 @@ def is_vault(path: Path) -> bool:
                     return True
             version = data.get("version") if isinstance(data, dict) else None
             if type(version) is int:
-                return version == 2
+                return version in {2, 3}
             return True
         finally:
             os.close(root_fd)
@@ -1469,7 +1469,7 @@ def validate_vault_papers(vault: Path) -> None:
     raw_vault = _lexical_absolute_path(vault)
     validate_vault_tree_no_follow(raw_vault)
     if not is_vault(raw_vault):
-        raise ValueError(f"Vault is not structurally v2: {raw_vault}")
+        raise ValueError(f"Vault is not structurally supported: {raw_vault}")
     for relative_parent, require_filename_code in (
         (Path("cache"), True),
         (Path(".trash/cache"), False),
@@ -1552,7 +1552,7 @@ def resolve_active_paper_path(
     *,
     must_exist: bool = True,
 ) -> Path:
-    """Resolve one current-v2 direct ``cache/*.md`` Paper safely."""
+    """Resolve one direct ``cache/*.md`` Paper safely."""
     return _resolve_direct_paper_path(
         vault,
         candidate,

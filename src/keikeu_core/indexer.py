@@ -1,4 +1,4 @@
-"""Rebuildable v2 Paper metadata index.
+"""Rebuildable v3 Paper metadata index.
 
 The index is only a local projection of active ``cache/*.md`` Papers.  Every
 file is read independently so one malformed asset becomes an ``errors`` entry
@@ -196,9 +196,16 @@ def _paper_entry(vault: Path, path: Path, paper: Paper) -> dict[str, object]:
         raise ValueError("Paper filename must match frontmatter code")
     return {
         "code": paper.code,
+        "display_name": paper.display_name,
         "path": str(path.relative_to(vault)),
+        "folder": None,
         "summary": paper.summary,
         "tags": paper.tags,
+        "highlight_names": [
+            highlight.display_name
+            for highlight in paper.highlights
+            if highlight.display_name is not None
+        ],
         "created": paper.created.isoformat(),
         "updated": paper.updated.isoformat(),
     }
@@ -225,7 +232,7 @@ def _rebuild_index_at(vault: Path, root_fd: int) -> dict[str, object]:
                 )
     finally:
         os.close(cache_fd)
-    index: dict[str, object] = {"version": 2, "papers": papers, "errors": errors}
+    index: dict[str, object] = {"version": 3, "papers": papers, "errors": errors}
     _write_json_at(
         root_fd,
         "keikeu_index.json",
@@ -237,7 +244,7 @@ def _rebuild_index_at(vault: Path, root_fd: int) -> dict[str, object]:
 
 
 def rebuild_index(vault: Path) -> dict[str, object]:
-    """Rebuild and return the v2 index from active Paper Markdown only."""
+    """Rebuild and return the v3 index from active Paper Markdown only."""
     vault, root_fd = _open_pinned_vault(vault)
     try:
         return _rebuild_index_at(vault, root_fd)
@@ -249,7 +256,7 @@ def _is_valid_index(data: object) -> bool:
     return (
         isinstance(data, dict)
         and type(data.get("version")) is int
-        and data.get("version") == 2
+        and data.get("version") == 3
         and isinstance(data.get("papers"), list)
         and isinstance(data.get("errors"), list)
     )
@@ -267,9 +274,18 @@ def _entry_is_current_at(
     if not isinstance(code, str) or not isinstance(candidate, str):
         return False
     if (
+        entry.get("display_name") is not None
+        and not isinstance(entry.get("display_name"), str)
+    ):
+        return False
+    if entry.get("folder") is not None and not isinstance(entry.get("folder"), str):
+        return False
+    if (
         not isinstance(entry.get("summary"), str)
         or not isinstance(entry.get("tags"), list)
         or not all(isinstance(tag, str) for tag in entry["tags"])
+        or not isinstance(entry.get("highlight_names"), list)
+        or not all(isinstance(name, str) for name in entry["highlight_names"])
         or not isinstance(entry.get("created"), str)
         or not isinstance(entry.get("updated"), str)
     ):
@@ -309,7 +325,7 @@ def _index_entries_are_safe_at(
 
 
 def load_index(vault: Path) -> dict[str, object]:
-    """Load v2 metadata, rebuilding only when its JSON is missing or invalid."""
+    """Load v3 metadata, rebuilding when JSON or entries are stale."""
     vault, root_fd = _open_pinned_vault(vault)
     cache_fd: int | None = None
     try:

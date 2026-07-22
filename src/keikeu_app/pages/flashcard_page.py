@@ -30,7 +30,7 @@ __all__ = ["build_flashcard_page", "project_cards"]
 
 def project_cards(paper: Paper) -> list[str]:
     """Project a Paper into its immutable Summary-first read-only card order."""
-    return [paper.summary, *paper.highlights]
+    return [paper.summary, *[highlight.content for highlight in paper.highlights]]
 
 
 def _unavailable_page(ctx: "AppContext", message: str) -> ft.Control:
@@ -73,6 +73,13 @@ def build_flashcard_page(ctx: "AppContext", code: str | None = None) -> ft.Contr
         return _unavailable_page(ctx, "找不到可读取的 Paper；它可能已被删除、移动或损坏。")
 
     cards = project_cards(paper)
+    card_titles = [
+        "Summary",
+        *[
+            highlight.display_name or f"Highlight {index}"
+            for index, highlight in enumerate(paper.highlights, start=1)
+        ],
+    ]
     index = get_card_index(paper.code, len(cards), ctx.state_path)
     page = ctx.page
     state: dict[str, int | bool] = {"index": index, "show_summary": False}
@@ -101,7 +108,7 @@ def build_flashcard_page(ctx: "AppContext", code: str | None = None) -> ft.Contr
         current_index = int(state["index"])
         is_highlight = current_index > 0
         state["show_summary"] = bool(state["show_summary"]) and is_highlight
-        card_kind.value = "Summary" if not is_highlight else f"Highlight {current_index}"
+        card_kind.value = card_titles[current_index]
         card_text.value = cards[current_index]
         position_text.value = f"{current_index + 1} / {len(cards)}"
         previous_button.disabled = current_index == 0
@@ -136,7 +143,14 @@ def build_flashcard_page(ctx: "AppContext", code: str | None = None) -> ft.Contr
             ),
             paper_card(
                 [
-                    ft.Text(paper.code, size=14, color=MUTED, selectable=True),
+                    ft.Text(
+                        f"{paper.display_name} ({paper.code})"
+                        if paper.display_name is not None
+                        else paper.code,
+                        size=14,
+                        color=MUTED,
+                        selectable=True,
+                    ),
                     card_kind,
                     card_text,
                     position_text,

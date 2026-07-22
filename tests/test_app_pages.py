@@ -1,4 +1,4 @@
-"""Headless Flet contracts for the Paper v2 editor and Library."""
+"""Headless Flet contracts for the Paper v3 editor and Library."""
 
 from __future__ import annotations
 
@@ -9,9 +9,10 @@ from types import SimpleNamespace
 from typing import Iterable
 
 import flet as ft
+import pytest
 
 from keikeu_app import main as app_main
-from keikeu_app.local_state import get_card_index, load_card_positions, set_card_index
+from keikeu_app.local_state import get_card_index
 from keikeu_app.main import AppContext
 from keikeu_app.pages import flashcard_page as flashcard_page_mod
 from keikeu_app.pages import library_page as library_page_mod
@@ -20,7 +21,7 @@ from keikeu_app.pages.library_page import build_library_page
 from keikeu_app.pages.paper_page import build_paper_page
 from keikeu_core.indexer import rebuild_index
 from keikeu_core.markdown_io import read_paper, update_paper, write_paper
-from keikeu_core.models import Paper
+from keikeu_core.models import Highlight, Paper
 from keikeu_core.vault import init_vault, soft_delete
 
 
@@ -52,6 +53,8 @@ def _walk(control: object) -> Iterable[object]:
         if child is not None:
             yield from _walk(child)
     for child in getattr(control, "actions", []) or []:
+        yield from _walk(child)
+    for child in getattr(control, "items", []) or []:
         yield from _walk(child)
     for child in getattr(control, "controls", []) or []:
         yield from _walk(child)
@@ -91,13 +94,18 @@ def _paper(
     code: str,
     summary: str,
     tags: list[str] | None = None,
-    highlights: list[str] | None = None,
+    highlights: list[str | Highlight] | None = None,
+    display_name: str | None = None,
 ) -> Paper:
     return Paper(
         code=code,
         initial_summary="",
         summary=summary,
-        highlights=highlights or [],
+        display_name=display_name,
+        highlights=[
+            item if isinstance(item, Highlight) else Highlight(content=item)
+            for item in highlights or []
+        ],
         tags=tags or [],
         created=datetime(2026, 7, 14, 9, 0),
         updated=datetime(2026, 7, 14, 9, 0),
@@ -121,11 +129,13 @@ def test_shell_uses_paper_flashcard_and_library_navigation(tmp_path):
     assert "配方票编辑" not in labels
 
 
-def test_paper_page_exposes_only_v2_fields(tmp_path):
+def test_paper_page_exposes_v3_names_and_an_immutable_system_code(tmp_path):
     init_vault(tmp_path)
     root = build_paper_page(_ctx(FakePage(), tmp_path))
 
-    assert _text_field(root, "Paper 代号").value.startswith("K-")
+    assert _text_field(root, "系统编号").value.startswith("K-")
+    assert _text_field(root, "系统编号").read_only is True
+    assert _text_field(root, "Paper 名称（可选）")
     assert _text_field(root, "Summary")
     assert _text_field(root, "Tags（用逗号分隔）")
     assert "初稿副本会在首次保存后冻结，只读保留。" in _texts(root)
@@ -133,6 +143,7 @@ def test_paper_page_exposes_only_v2_fields(tmp_path):
         field.label for field in _walk(root) if isinstance(field, ft.TextField)
     ])
     assert _control_by_key(root, "paper-editor-card")
+    assert not any(text in {"新代号", "重命名"} for text in _texts(root))
 
 
 def test_empty_summary_does_not_create_a_paper(tmp_path):
@@ -140,7 +151,6 @@ def test_empty_summary_does_not_create_a_paper(tmp_path):
     page = FakePage()
     root = build_paper_page(_ctx(page, tmp_path))
 
-    _text_field(root, "Paper 代号").value = "K-20260714-001"
     _button(root, "保存").on_click(None)
 
     assert list((tmp_path / "cache").glob("*.md")) == []
@@ -151,22 +161,31 @@ def test_save_reopen_and_update_preserves_first_draft(tmp_path):
     init_vault(tmp_path)
     page = FakePage()
     root = build_paper_page(_ctx(page, tmp_path))
-    _text_field(root, "Paper 代号").value = "K-20260714-001"
+    code = _text_field(root, "系统编号").value
+    _text_field(root, "Paper 名称（可选）").value = "  Night Bus  "
     _text_field(root, "Summary").value = "First draft summary."
     _text_field(root, "Tags（用逗号分隔）").value = "rain, station, rain"
     _button(root, "+ 添加 Highlight").on_click(None)
-    _text_field(root, "Highlight 1").value = "A held breath."
+    _text_field(root, "Highlight 1 命名（可选）").value = "  Breath  "
+    _text_field(root, "Highlight 1 内容").value = "A held breath."
+    _button(root, "+ 添加 Highlight").on_click(None)
+    _text_field(root, "Highlight 2 命名（可选）").value = "Discard me"
+    _text_field(root, "Highlight 2 内容").value = "  \n "
 
     _button(root, "保存").on_click(None)
-    path = tmp_path / "cache" / "K-20260714-001.md"
+    path = tmp_path / "cache" / f"{code}.md"
     paper = read_paper(path)
     assert paper.initial_summary == "First draft summary."
-    assert paper.highlights == ["A held breath."]
+    assert paper.display_name == "Night Bus"
+    assert paper.highlights == [
+        Highlight(content="A held breath.", display_name="Breath")
+    ]
     assert paper.tags == ["rain", "station"]
     assert _text_field(root, "Tags（用逗号分隔）").value == "rain, station"
 
     reopened = build_paper_page(_ctx(page, tmp_path), path)
-    assert _text_field(reopened, "Paper 代号").read_only is True
+    assert _text_field(reopened, "系统编号").read_only is True
+    assert _text_field(reopened, "Paper 名称（可选）").value == "Night Bus"
     _text_field(reopened, "Summary").value = "Edited current summary."
     _button(reopened, "保存").on_click(None)
 
@@ -237,36 +256,37 @@ def test_editor_refuses_mutation_after_cache_is_swapped_for_a_symlink(tmp_path):
 def test_highlight_reorder_is_saved_in_the_visible_order(tmp_path):
     init_vault(tmp_path)
     root = build_paper_page(_ctx(FakePage(), tmp_path))
-    _text_field(root, "Paper 代号").value = "K-20260714-001"
+    code = _text_field(root, "系统编号").value
     _text_field(root, "Summary").value = "Summary."
     _button(root, "+ 添加 Highlight").on_click(None)
     _button(root, "+ 添加 Highlight").on_click(None)
-    _text_field(root, "Highlight 1").value = "First anchor."
-    _text_field(root, "Highlight 2").value = "Second anchor."
+    _text_field(root, "Highlight 1 命名（可选）").value = "First"
+    _text_field(root, "Highlight 1 内容").value = "First anchor."
+    _text_field(root, "Highlight 2 命名（可选）").value = "Second"
+    _text_field(root, "Highlight 2 内容").value = "Second anchor."
 
     _control_by_key(root, "highlight-move-up-1").on_click(None)
     _button(root, "保存").on_click(None)
 
-    paper = read_paper(tmp_path / "cache" / "K-20260714-001.md")
-    assert paper.highlights == ["Second anchor.", "First anchor."]
+    paper = read_paper(tmp_path / "cache" / f"{code}.md")
+    assert paper.highlights == [
+        Highlight(content="Second anchor.", display_name="Second"),
+        Highlight(content="First anchor.", display_name="First"),
+    ]
 
 
-def test_rename_is_explicit_and_rebuilds_the_library_index(tmp_path):
+def test_saved_paper_keeps_its_immutable_code_and_has_no_rename_action(tmp_path):
     init_vault(tmp_path)
     source = write_paper(tmp_path, _paper("K-20260714-001", "Summary."))
-    rebuild_index(tmp_path)
-    state_path = tmp_path / "device-state.json"
-    set_card_index("K-20260714-001", 1, 3, state_path)
-    root = build_paper_page(_ctx(FakePage(), tmp_path, state_path), source)
+    root = build_paper_page(_ctx(FakePage(), tmp_path), source)
 
-    _text_field(root, "新代号").value = "K-20260714-002"
-    _button(root, "重命名").on_click(None)
-
-    target = tmp_path / "cache" / "K-20260714-002.md"
-    assert not source.exists()
-    assert read_paper(target).code == "K-20260714-002"
-    assert "K-20260714-002" in [entry["code"] for entry in rebuild_index(tmp_path)["papers"]]
-    assert load_card_positions(state_path) == {"K-20260714-002": 1}
+    assert _text_field(root, "系统编号").value == "K-20260714-001"
+    assert _text_field(root, "系统编号").read_only is True
+    assert source.exists()
+    with pytest.raises(AssertionError, match="TextField not found"):
+        _text_field(root, "新代号")
+    with pytest.raises(AssertionError, match="Button not found"):
+        _button(root, "重命名")
 
 
 def test_flashcard_is_summary_first_read_only_and_remembers_position(tmp_path):
@@ -274,7 +294,11 @@ def test_flashcard_is_summary_first_read_only_and_remembers_position(tmp_path):
     paper = _paper(
         "K-20260714-001",
         "Current Summary.",
-        highlights=["First writing anchor.", "Second writing anchor."],
+        display_name="Night Train",
+        highlights=[
+            Highlight(content="First writing anchor.", display_name="Window"),
+            Highlight(content="Second writing anchor."),
+        ],
     )
     path = write_paper(tmp_path, paper)
     state_path = tmp_path / "device-state.json"
@@ -290,6 +314,8 @@ def test_flashcard_is_summary_first_read_only_and_remembers_position(tmp_path):
 
     _button(root, "下一张").on_click(None)
     assert "First writing anchor." in _texts(root)
+    assert "Window" in _texts(root)
+    assert f"Night Train ({paper.code})" in _texts(root)
     assert "2 / 3" in _texts(root)
     assert _control_by_key(root, "flashcard-summary-context").visible is False
 

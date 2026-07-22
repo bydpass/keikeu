@@ -1,4 +1,4 @@
-"""Paper editor page for the Road v0.2 macOS flow.
+"""Paper editor page for the Road v0.3 macOS flow.
 
 The page only gathers author input and calls public core APIs.  It never
 renders Markdown, builds JSON, or decides how a Paper is serialized.
@@ -12,7 +12,6 @@ from typing import TYPE_CHECKING
 
 import flet as ft
 
-from keikeu_app.local_state import move_card_position
 from keikeu_app.theme import (
     BORDER_SOFT,
     FG,
@@ -37,11 +36,10 @@ from keikeu_core.indexer import list_papers, rebuild_index
 from keikeu_core.markdown_io import (
     next_paper_code,
     read_paper_snapshot,
-    rename_paper,
     update_paper,
     write_paper,
 )
-from keikeu_core.models import Paper
+from keikeu_core.models import Highlight, Paper
 from keikeu_core.vault import (
     resolve_active_paper_path,
     soft_delete,
@@ -98,9 +96,13 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
         rebuild_index(ctx.vault)
 
     code_field = single_line_field(
-        "Paper 代号", existing.code if existing is not None else next_paper_code(ctx.vault)
+        "系统编号", existing.code if existing is not None else next_paper_code(ctx.vault)
     )
-    code_field.read_only = existing is not None
+    code_field.read_only = True
+    display_name_field = single_line_field(
+        "Paper 名称（可选）",
+        (existing.display_name or "") if existing is not None else "",
+    )
     summary_field = section_field(
         "Summary", existing.summary if existing is not None else "", min_lines=4, max_lines=12
     )
@@ -119,24 +121,20 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
         selectable=True,
     )
     save_error = ft.Text("", color=ft.Colors.ERROR)
-    highlight_fields: list[ft.TextField] = []
+    highlight_fields: list[tuple[ft.TextField, ft.TextField]] = []
     highlights_box = ft.Column(controls=[], key="highlights-container", spacing=SPACE_3)
-    rename_field = single_line_field("新代号")
-    rename_area = ft.Container(
-        visible=existing is not None,
-        content=ft.Row(
-            controls=[rename_field, ft.OutlinedButton(content=ft.Text("重命名"))],
-            wrap=True,
-            spacing=SPACE_3,
-        ),
-    )
 
     def _render_highlights() -> None:
         highlights_box.controls.clear()
-        for index, field in enumerate(highlight_fields):
-            field.label = f"Highlight {index + 1}"
+        for index, fields in enumerate(highlight_fields):
+            name_field, content_field = fields
+            name_field.label = f"Highlight {index + 1} 命名（可选）"
+            content_field.label = f"Highlight {index + 1} 内容"
 
-            def move_up(_: ft.ControlEvent, item: ft.TextField = field) -> None:
+            def move_up(
+                _: ft.ControlEvent,
+                item: tuple[ft.TextField, ft.TextField] = fields,
+            ) -> None:
                 position = highlight_fields.index(item)
                 if position:
                     highlight_fields[position - 1], highlight_fields[position] = (
@@ -146,7 +144,10 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
                     _render_highlights()
                     page.update()
 
-            def move_down(_: ft.ControlEvent, item: ft.TextField = field) -> None:
+            def move_down(
+                _: ft.ControlEvent,
+                item: tuple[ft.TextField, ft.TextField] = fields,
+            ) -> None:
                 position = highlight_fields.index(item)
                 if position < len(highlight_fields) - 1:
                     highlight_fields[position + 1], highlight_fields[position] = (
@@ -156,7 +157,10 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
                     _render_highlights()
                     page.update()
 
-            def remove(_: ft.ControlEvent, item: ft.TextField = field) -> None:
+            def remove(
+                _: ft.ControlEvent,
+                item: tuple[ft.TextField, ft.TextField] = fields,
+            ) -> None:
                 highlight_fields.remove(item)
                 _render_highlights()
                 page.update()
@@ -165,25 +169,46 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
                 ft.Container(
                     content=ft.Column(
                         controls=[
-                            field,
                             ft.Row(
                                 controls=[
-                                    ft.IconButton(
-                                        icon=ft.Icons.ARROW_UPWARD,
-                                        tooltip="上移",
-                                        key=f"highlight-move-up-{index}",
-                                        on_click=move_up,
+                                    ft.Icon(
+                                        ft.Icons.DRAG_INDICATOR,
+                                        color=MUTED,
+                                        tooltip="拖放排序手柄",
                                     ),
-                                    ft.IconButton(
-                                        icon=ft.Icons.ARROW_DOWNWARD,
-                                        tooltip="下移",
-                                        key=f"highlight-move-down-{index}",
-                                        on_click=move_down,
+                                    ft.Text(
+                                        f"Highlight {index + 1}",
+                                        weight=ft.FontWeight.W_600,
                                     ),
-                                    ft.OutlinedButton(content=ft.Text("删除 Highlight"), on_click=remove),
+                                    ft.PopupMenuButton(
+                                        icon=ft.Icons.MORE_HORIZ,
+                                        tooltip=f"Highlight {index + 1} 排序菜单",
+                                        key=f"highlight-menu-{index}",
+                                        items=[
+                                            ft.PopupMenuItem(
+                                                content="上移",
+                                                key=f"highlight-move-up-{index}",
+                                                disabled=index == 0,
+                                                on_click=move_up,
+                                            ),
+                                            ft.PopupMenuItem(
+                                                content="下移",
+                                                key=f"highlight-move-down-{index}",
+                                                disabled=index == len(highlight_fields) - 1,
+                                                on_click=move_down,
+                                            ),
+                                            ft.PopupMenuItem(
+                                                content="删除 Highlight",
+                                                key=f"highlight-remove-{index}",
+                                                on_click=remove,
+                                            ),
+                                        ],
+                                    ),
                                 ],
                                 spacing=SPACE_3,
                             ),
+                            name_field,
+                            content_field,
                         ],
                         spacing=SPACE_3,
                     ),
@@ -192,8 +217,17 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
                 )
             )
 
-    def add_highlight(_: ft.ControlEvent | None = None, value: str = "") -> None:
-        highlight_fields.append(section_field("", value, min_lines=2, max_lines=6))
+    def add_highlight(
+        _: ft.ControlEvent | None = None,
+        value: Highlight | None = None,
+    ) -> None:
+        highlight = value or Highlight(content="")
+        highlight_fields.append(
+            (
+                single_line_field("", highlight.display_name or ""),
+                section_field("", highlight.content, min_lines=2, max_lines=6),
+            )
+        )
         _render_highlights()
         if _ is not None:
             page.update()
@@ -207,15 +241,18 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
         state["source_bytes"] = source_bytes
         code_field.value = paper.code
         code_field.read_only = True
+        display_name_field.value = paper.display_name or ""
         summary_field.value = paper.summary
         tags_field.value = ", ".join(paper.tags)
         initial_copy.value = paper.initial_summary
         highlight_fields[:] = [
-            section_field("", value, min_lines=2, max_lines=6)
-            for value in paper.highlights
+            (
+                single_line_field("", highlight.display_name or ""),
+                section_field("", highlight.content, min_lines=2, max_lines=6),
+            )
+            for highlight in paper.highlights
         ]
         _render_highlights()
-        rename_area.visible = True
 
     def _build_paper() -> Paper:
         stored = state["paper"]
@@ -224,7 +261,14 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
             code=code_field.value or "",
             initial_summary=paper.initial_summary if paper is not None else "",
             summary=summary_field.value or "",
-            highlights=[field.value or "" for field in highlight_fields],
+            display_name=display_name_field.value,
+            highlights=[
+                Highlight(
+                    display_name=name_field.value,
+                    content=content_field.value or "",
+                )
+                for name_field, content_field in highlight_fields
+            ],
             tags=(tags_field.value or "").split(","),
             created=paper.created if paper is not None else datetime.now(),
             updated=datetime.now(),
@@ -282,37 +326,6 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
             save_error.value = f"无法保存 Paper：{ex}"
             page.update()
 
-    def on_rename(_: ft.ControlEvent) -> None:
-        path = state["path"]
-        stored = state["paper"]
-        if not isinstance(path, Path) or not isinstance(stored, Paper):
-            save_error.value = "请先保存 Paper，再进行重命名。"
-            page.update()
-            return
-        try:
-            path = validated_path(path)
-            old_code = stored.code
-            target = rename_paper(ctx.vault, old_code, rename_field.value or "")
-            target = validated_path(target)
-            renamed, source_bytes = read_paper_snapshot(target)
-            apply_snapshot(target, renamed, source_bytes)
-            rename_field.value = ""
-            save_error.value = ""
-            rebuild_after_mutation(target)
-            try:
-                move_card_position(old_code, renamed.code, ctx.state_path)
-                status = "Paper 已重命名"
-            except OSError:
-                status = "Paper 已重命名；Flashcard 位置未能保存，下次将从 Summary 开始"
-            notify(page, status)
-            page.update()
-        except (OSError, ValueError, FileExistsError) as ex:
-            save_error.value = f"无法重命名 Paper：{ex}"
-            page.update()
-
-    rename_button = rename_area.content.controls[1]  # type: ignore[union-attr]
-    rename_button.on_click = on_rename  # type: ignore[attr-defined]
-
     def on_delete(_: ft.ControlEvent) -> None:
         path = state["path"]
         if not isinstance(path, Path):
@@ -341,6 +354,7 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
         [
             ft.Text("新 Paper" if existing is None else "编辑 Paper", size=TEXT_LG, font_family=FONT_DISPLAY),
             code_field,
+            display_name_field,
             summary_field,
             ft.Container(
                 content=ft.Column(
@@ -358,7 +372,6 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
             ft.OutlinedButton(content=ft.Text("+ 添加 Highlight"), on_click=add_highlight),
             tags_field,
             tag_hint,
-            rename_area,
             save_error,
             ft.Row(
                 controls=[

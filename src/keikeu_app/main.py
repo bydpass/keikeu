@@ -1,4 +1,4 @@
-"""keikeu Flet shell for the Paper v2 macOS flow.
+"""keikeu Flet shell for the current macOS Paper flow.
 
 The GUI only routes user actions to public ``keikeu_core`` APIs.  Markdown,
 JSON, migration, and asset recovery remain in the pure-Python core layer.
@@ -62,19 +62,17 @@ _NAV_FLASHCARD = 1
 _NAV_LIBRARY = 2
 
 _SOURCE_V01 = "v0.1"
-_SOURCE_V2 = "v2"
+_SOURCE_PAPER = "Paper v2/v3"
 
 
 def _classify_vault_source_no_follow(source: Path) -> str:
     """Return the supported source format after a read-only regular-tree scan."""
     validate_regular_tree_no_follow(source)
     version = vault_index_version(source)
-    if version == 3:
-        raise ValueError("检测到 v3 Vault；需完成 Road v0.3 Phase 2 后才能打开或搬迁")
-    if version == 2:
+    if version in {2, 3}:
         if not is_vault(source):
-            raise ValueError("index v2 的 Vault 结构不完整")
-        return _SOURCE_V2
+            raise ValueError(f"index v{version} 的 Vault 结构不完整")
+        return _SOURCE_PAPER
     if version == 1:
         if not is_v01_vault(source):
             raise ValueError("index v1 未匹配可迁移的 v0.1 Vault")
@@ -84,15 +82,15 @@ def _classify_vault_source_no_follow(source: Path) -> str:
     if is_v01_vault(source):
         return _SOURCE_V01
     if is_vault(source):
-        return _SOURCE_V2
-    raise ValueError("该文件夹不是受支持的 v0.1 或当前 v2 Vault")
+        return _SOURCE_PAPER
+    raise ValueError("该文件夹不是受支持的 v0.1 或 Paper v2/v3 Vault")
 
 
 def _has_unsupported_paper_schema(index: dict[str, object]) -> bool:
     errors = index.get("errors")
     return isinstance(errors, list) and any(
         isinstance(error, dict)
-        and "schema_version: 2" in str(error.get("reason", ""))
+        and "schema_version: 2 or 3" in str(error.get("reason", ""))
         for error in errors
     )
 
@@ -116,9 +114,9 @@ def _validated_rebuild(
     *,
     require_clean_papers: bool = True,
 ) -> VaultSelectionToken:
-    """Strictly validate one unchanged v2 candidate and bind its final bytes."""
+    """Strictly validate one unchanged Paper candidate and bind its final bytes."""
     before = capture_vault_selection_token(vault)
-    if _classify_vault_source_no_follow(vault) != _SOURCE_V2:
+    if _classify_vault_source_no_follow(vault) != _SOURCE_PAPER:
         raise ValueError("Vault 状态已变化；请重新检查后再确认")
     validate_vault_tree_no_follow(vault)
     if require_clean_papers:
@@ -129,10 +127,10 @@ def _validated_rebuild(
         raise ValueError("索引重建没有返回可验证的 errors 列表")
     if errors:
         if _has_unsupported_paper_schema(index):
-            raise ValueError("检测到当前运行时尚不支持的 Paper schema；需完成 Phase 2 后再试")
+            raise ValueError("检测到当前运行时不支持的 Paper schema；未切换")
         if require_clean_papers:
             raise ValueError(f"Vault 有 {len(errors)} 个无法验证的 Paper")
-    if _classify_vault_source_no_follow(vault) != _SOURCE_V2:
+    if _classify_vault_source_no_follow(vault) != _SOURCE_PAPER:
         raise ValueError("Vault 在索引重建期间发生变化；未切换")
     final = capture_vault_selection_token(vault)
     if final.path != before.path or final.root_identity != before.root_identity:
@@ -296,7 +294,7 @@ def _build_migration_gate(
     configured: bool = False,
     on_cancel: Callable[[], None] | None = None,
 ) -> None:
-    """Show a no-write v0.1 preflight before allowing any v2 vault action."""
+    """Show a no-write v0.1 preflight before allowing Paper Vault actions."""
     validate_vault_tree_no_follow(vault)
     vault = require_home_path(vault)
     apply_theme(page)
@@ -689,7 +687,7 @@ def _build_vault_picker(
 
 
 def main(page: ft.Page) -> None:
-    """Flet view builder: show the selected v2 vault or the local picker."""
+    """Flet view builder: show the selected Paper Vault or the local picker."""
     page.title = "keikeu"
     _configure_window(page)
     apply_theme(page)

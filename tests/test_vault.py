@@ -1,4 +1,4 @@
-"""Filesystem contracts for the Paper v2 vault and its recovery bin."""
+"""Filesystem contracts for the Paper Vault and its recovery bin."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from keikeu_core import indexer as indexer_mod
 from keikeu_core import markdown_io as markdown_mod
 from keikeu_core import vault as vault_mod
 from keikeu_core.markdown_io import read_paper, update_paper, write_paper
-from keikeu_core.models import Paper
+from keikeu_core.models import Highlight, Paper
 from keikeu_core.vault import (
     atomic_exchange_at_no_follow,
     atomic_exchange_no_follow,
@@ -49,14 +49,14 @@ def _paper(code: str, summary: str = "A writing-ready summary.") -> Paper:
         code=code,
         initial_summary="",
         summary=summary,
-        highlights=["Keep this beat."],
+        highlights=[Highlight(content="Keep this beat.")],
         tags=["rain"],
         created=datetime(2026, 7, 14, 9, 0),
         updated=datetime(2026, 7, 14, 9, 0),
     )
 
 
-def test_init_vault_creates_only_the_v2_layout_and_empty_index(tmp_path):
+def test_init_vault_creates_only_the_current_layout_and_empty_v3_index(tmp_path):
     vault = tmp_path / "vault"
 
     init_vault(vault)
@@ -66,7 +66,7 @@ def test_init_vault_creates_only_the_v2_layout_and_empty_index(tmp_path):
     assert not (vault / "outlines").exists()
     assert not (vault / ".trash" / "outlines").exists()
     assert json.loads((vault / "keikeu_index.json").read_text(encoding="utf-8")) == {
-        "version": 2,
+        "version": 3,
         "papers": [],
         "errors": [],
     }
@@ -154,7 +154,7 @@ def test_is_vault_requires_only_cache_and_index_not_trash_or_outlines(tmp_path):
     assert is_vault(tmp_path) is False
 
 
-def test_is_vault_accepts_rebuildable_v2_but_rejects_readable_newer_versions(
+def test_is_vault_accepts_rebuildable_v2_v3_but_rejects_newer_versions(
     tmp_path,
 ):
     vault = tmp_path / "vault"
@@ -168,6 +168,9 @@ def test_is_vault_accepts_rebuildable_v2_but_rejects_readable_newer_versions(
     assert is_vault(vault) is True
 
     index.write_text('{"version": 3}\n', encoding="utf-8")
+    assert is_vault(vault) is True
+
+    index.write_text('{"version": 4}\n', encoding="utf-8")
     assert is_vault(vault) is False
 
     index.unlink()
@@ -241,6 +244,12 @@ def test_outside_regular_tree_can_be_classified_read_only(tmp_path, monkeypatch)
         encoding="utf-8",
     )
     assert vault_index_version(source) == 3
+    assert is_vault(source) is True
+
+    (source / "keikeu_index.json").write_text(
+        '{"version": 4, "papers": [], "errors": []}\n',
+        encoding="utf-8",
+    )
     assert is_vault(source) is False
 
 

@@ -1,4 +1,4 @@
-"""Paper v2 Markdown serialization.
+"""Paper v2/v3 Markdown serialization.
 
 Paper Markdown is the active durable asset contract.  v0.1 Cache parsing is
 kept separately in ``legacy_v01.py`` for the explicit one-way migrator; this
@@ -17,7 +17,7 @@ import re
 import secrets
 import stat
 
-from keikeu_core.models import Paper, validate_paper_code
+from keikeu_core.models import Highlight, Paper, validate_paper_code
 from keikeu_core.vault import (
     _create_regular_bytes_at,
     _direct_paper_relative_path,
@@ -49,6 +49,7 @@ __all__ = [
 _FENCE = "---"
 _PAPER_HEADERS = ("## 初稿副本", "## Summary", "## Highlights", "## Tags")
 _PAPER_NUMBERED_ITEM_RE = re.compile(r"^([1-9]\d*)\. (.*)$")
+_PAPER_V3_HIGHLIGHT_RE = re.compile(r"^([1-9]\d*)\. 名称：(.*)$")
 _PAPER_CODE_FILENAME_RE = re.compile(r"^K-\d{8}-(\d{3})$")
 
 
@@ -61,7 +62,12 @@ def _unescape_scalar(value: str) -> str:
     index = 0
     while index < len(value):
         if value[index] == "\\" and index + 1 < len(value):
-            out.append({"n": "\n", "r": "\r", "\\": "\\"}.get(value[index + 1], value[index + 1]))
+            escaped = value[index + 1]
+            decoded = {"n": "\n", "r": "\r", "\\": "\\"}.get(escaped)
+            if decoded is None:
+                out.extend(("\\", escaped))
+            else:
+                out.append(decoded)
             index += 2
         else:
             out.append(value[index])
@@ -152,18 +158,20 @@ def next_paper_code(vault: Path, on_date: date | datetime | None = None) -> str:
 def _render_paper(paper: Paper) -> str:
     paper = replace(
         paper,
-        highlights=list(paper.highlights),
+        highlights=[replace(highlight) for highlight in paper.highlights],
         tags=list(paper.tags),
         extra_frontmatter=paper.extra_frontmatter.copy(),
     )
     paper.normalize()
     frontmatter: list[tuple[str, str]] = [
         ("type", "paper"),
-        ("schema_version", "2"),
+        ("schema_version", "3"),
         ("code", paper.code),
         ("created", paper.created.isoformat()),
         ("updated", paper.updated.isoformat()),
     ]
+    if paper.display_name is not None:
+        frontmatter.append(("display_name", paper.display_name))
     if paper.legacy_title is not None:
         frontmatter.append(("legacy_title", paper.legacy_title))
     known_fields = {key for key, _ in frontmatter}
@@ -172,9 +180,18 @@ def _render_paper(paper: Paper) -> str:
         for key, value in paper.extra_frontmatter.items()
         if key not in known_fields
     )
-    highlights = "\n".join(
-        f"{index}. {highlight}" for index, highlight in enumerate(paper.highlights, start=1)
-    )
+    rendered_highlights: list[str] = []
+    for index, highlight in enumerate(paper.highlights, start=1):
+        rendered_highlights.extend(
+            [
+                f"{index}. 名称：{highlight.display_name or ''}",
+                "   内容：",
+                *[f"   {line}" for line in highlight.content.split("\n")],
+            ]
+        )
+        if index < len(paper.highlights):
+            rendered_highlights.append("")
+    highlights = "\n".join(rendered_highlights)
     tags = "\n".join(f"- {tag}" for tag in paper.tags)
 
     def section(header: str, content: str) -> str:
@@ -208,6 +225,44 @@ def _parse_numbered_items(content: str) -> list[str]:
     if current is not None:
         items.append(current)
     return items or [content]
+
+
+def _parse_v3_highlights(content: str) -> list[Highlight]:
+    if not content:
+        return []
+    lines = content.split("\n")
+    highlights: list[Highlight] = []
+    index = 0
+    while index < len(lines):
+        match = _PAPER_V3_HIGHLIGHT_RE.fullmatch(lines[index])
+        if match is None:
+            raise ValueError("Paper v3 Highlight must start with 'n. 名称：'")
+        display_name = match.group(2)
+        index += 1
+        if index >= len(lines) or lines[index] != "   内容：":
+            raise ValueError("Paper v3 Highlight must include an indented 内容： line")
+        index += 1
+        content_lines: list[str] = []
+        while index < len(lines) and _PAPER_V3_HIGHLIGHT_RE.fullmatch(lines[index]) is None:
+            line = lines[index]
+            if (
+                line == ""
+                and index + 1 < len(lines)
+                and _PAPER_V3_HIGHLIGHT_RE.fullmatch(lines[index + 1]) is not None
+            ):
+                index += 1
+                break
+            if not line.startswith("   "):
+                raise ValueError("Paper v3 Highlight content must keep its structural indent")
+            content_lines.append(line[3:])
+            index += 1
+        highlights.append(
+            Highlight(
+                display_name=display_name,
+                content="\n".join(content_lines),
+            )
+        )
+    return highlights
 
 
 def _parse_bullet_items(content: str) -> list[str]:
@@ -648,8 +703,9 @@ def _parse_paper_text(text: str) -> Paper:
     frontmatter, body_lines = _split_document(text)
     if frontmatter.get("type") != "paper":
         raise ValueError("Paper must declare type: paper")
-    if frontmatter.get("schema_version") != "2":
-        raise ValueError("Paper must declare schema_version: 2")
+    schema_version = frontmatter.get("schema_version")
+    if schema_version not in {"2", "3"}:
+        raise ValueError("Paper must declare schema_version: 2 or 3")
     try:
         code = frontmatter["code"]
         created = datetime.fromisoformat(frontmatter["created"])
@@ -662,12 +718,27 @@ def _parse_paper_text(text: str) -> Paper:
     initial_summary = sections.get("## 初稿副本", "")
     if not initial_summary.strip():
         raise ValueError("Paper initial_summary must not be blank")
-    known_fields = {"type", "schema_version", "code", "created", "updated", "legacy_title"}
+    highlight_content = sections.get("## Highlights", "")
+    highlights = (
+        [Highlight(content=item) for item in _parse_numbered_items(highlight_content)]
+        if schema_version == "2"
+        else _parse_v3_highlights(highlight_content)
+    )
+    known_fields = {
+        "type",
+        "schema_version",
+        "code",
+        "display_name",
+        "created",
+        "updated",
+        "legacy_title",
+    }
     return Paper(
         code=code,
         initial_summary=initial_summary,
         summary=sections.get("## Summary", ""),
-        highlights=_parse_numbered_items(sections.get("## Highlights", "")),
+        display_name=frontmatter.get("display_name"),
+        highlights=highlights,
         tags=_parse_bullet_items(sections.get("## Tags", "")),
         created=created,
         updated=updated,
@@ -697,7 +768,7 @@ def read_paper_snapshot(path: Path) -> tuple[Paper, bytes]:
 
 
 def read_paper(path: Path) -> Paper:
-    """Read a Paper v2 Markdown file and preserve unknown frontmatter fields."""
+    """Read a Paper v2/v3 Markdown file and preserve unknown frontmatter fields."""
     paper, _data = read_paper_snapshot(path)
     return paper
 

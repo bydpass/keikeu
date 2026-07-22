@@ -1,9 +1,9 @@
 # keikeu Road v0.3 Planbook
 
 > Road：macOS Paper Library / Retrieval Quality  
-> 状态：**APPROVED — Phase 1 complete / Phase 2 next**
+> 状态：**APPROVED — Phase 2 complete / Phase 3 next**
 > 基线：`d0feac0269a5619f5dbf27c04347ba69c5665b42`（Road v0.2 已验收，local annotated tag `v0.2.0`）  
-> 当前 checkpoint：**CP1 complete / Phase 2 Paper v3 naming next**
+> 当前 checkpoint：**CP2 complete / Phase 3 folder-aware core next**
 > 日期：2026-07-22
 > 权限：本文件是 Road v0.3 的已批准执行计划。[`SPEC.md`](SPEC.md)、[`RULES.md`](RULES.md) 与三个 HTML map 描述 v0.3 目标；当前实现进度与 v0.2 runtime 事实分别见 [`PROJECT.md`](PROJECT.md)、`src/` 和 `tests/`。
 
@@ -435,6 +435,8 @@ Gate：所有白名单与迁移失败测试证明无外部写入、无配置提�
 
 Gate：v2→read→save v3、200 字符边界、Unicode、重复名称、多行内容、空内容删除、未知 frontmatter、CJK round trip 全部有直接测试。
 
+**完成证据（2026-07-22）**：Paper/Highlight 名称、v2/v3 双读与 v3 单写、index v3、v0.1→Paper v3 migration、不可变 code UI 与 Flashcard 名称投影已接通；unsafe v3 relocation 也已解除 Phase 1 的临时阻断。独立复核额外发现并修复未知 frontmatter 反斜杠静默丢失和空白 legacy notes 阻断迁移两项问题。最终 212 项自动测试、compile、文档检查与 diff 检查通过；未运行手动 Flet smoke。`architecture.html` 继续保留 Road v0.3 target 标记，等待 Phase 7 按最终代码校准。
+
 ### Phase 3 — Folder-aware filesystem core
 
 **目标**：在不先堆 UI 的情况下建立一层真实目录与全局 code 规则。
@@ -543,7 +545,7 @@ Gate：没有 P0/P1；所有高风险文件操作有证据；未验证项明确�
 | --- | --- | --- |
 | CP0 | 范围冻结、Planbook approved | **Complete** |
 | CP1 | Authority + path safety 合入 | **Complete** |
-| CP2 | Paper v3 与 mixed-schema round trip | Pending |
+| CP2 | Paper v3 与 mixed-schema round trip | **Complete** |
 | CP3 | Folder/Trash core 完成，UI 尚未成为证据 | Pending |
 | CP4 | Paper/Library/Flashcard UI engineering complete | Pending |
 | CP5 | macOS candidate smoke complete | Pending |
@@ -611,4 +613,4 @@ flet run src/keikeu_app/main.py
 - legacy duplicate code 保留、报告并阻断 mutation，不自动改号；以及
 - unsafe Vault 先只读分类，不跟随 symlink，仅将普通目录/regular files byte-copy/verify 到 Home；v2/v3 再解析并重建 index，v0.1 改走安全副本上的现有 preflight 与 migration gate，不写原件也不以真实唯一 Vault 首测。
 
-Phase 0 权威/fixture 与 Phase 1 路径安全/Vault 切换 gate 已完成；下一步是 Phase 2 Paper v3 naming vertical slice，不能提前混入 folder 或最终 UI scope。
+Phase 0 权威/fixture、Phase 1 路径安全/Vault 切换与 Phase 2 Paper v3 naming gate 已完成；下一步是 Phase 3 folder-aware filesystem core，不能提前混入 Trash mutation 或最终 Library UI scope。

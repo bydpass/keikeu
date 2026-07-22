@@ -1,4 +1,4 @@
-"""Rebuildable v2 Paper index contracts."""
+"""Rebuildable v3 Paper index contracts."""
 
 from __future__ import annotations
 
@@ -21,16 +21,28 @@ from keikeu_core.indexer import (
     save_index,
 )
 from keikeu_core.markdown_io import write_paper
-from keikeu_core.models import Paper
+from keikeu_core.models import Highlight, Paper
 from keikeu_core.vault import init_vault, soft_delete
 
 
-def _paper(code: str, summary: str, tags: list[str] | None = None) -> Paper:
+def _paper(
+    code: str,
+    summary: str,
+    tags: list[str] | None = None,
+    *,
+    display_name: str | None = None,
+    highlight_name: str | None = None,
+) -> Paper:
     return Paper(
         code=code,
         initial_summary="",
         summary=summary,
-        highlights=[],
+        display_name=display_name,
+        highlights=(
+            [Highlight(content="private anchor content", display_name=highlight_name)]
+            if highlight_name is not None
+            else []
+        ),
         tags=tags or [],
         created=datetime(2026, 7, 14, 9, 0),
         updated=datetime(2026, 7, 14, 9, 30),
@@ -43,29 +55,46 @@ def _fresh_vault(tmp_path: Path) -> Path:
     return vault
 
 
-def test_rebuild_indexes_only_papers_in_a_deterministic_v2_shape(tmp_path):
+def test_rebuild_indexes_paper_and_highlight_names_in_a_deterministic_v3_shape(
+    tmp_path,
+):
     vault = _fresh_vault(tmp_path)
     second = write_paper(vault, _paper("K-20260714-002", "Second summary.", ["two"]))
-    first = write_paper(vault, _paper("K-20260714-001", "First summary.", ["one", "two"]))
+    first = write_paper(
+        vault,
+        _paper(
+            "K-20260714-001",
+            "First summary.",
+            ["one", "two"],
+            display_name="蓝伞",
+            highlight_name="末班车",
+        ),
+    )
 
     index = rebuild_index(vault)
 
     assert index == {
-        "version": 2,
+        "version": 3,
         "papers": [
             {
                 "code": "K-20260714-001",
+                "display_name": "蓝伞",
                 "path": str(first.relative_to(vault)),
+                "folder": None,
                 "summary": "First summary.",
                 "tags": ["one", "two"],
+                "highlight_names": ["末班车"],
                 "created": "2026-07-14T09:00:00",
                 "updated": "2026-07-14T09:30:00",
             },
             {
                 "code": "K-20260714-002",
+                "display_name": None,
                 "path": str(second.relative_to(vault)),
+                "folder": None,
                 "summary": "Second summary.",
                 "tags": ["two"],
+                "highlight_names": [],
                 "created": "2026-07-14T09:00:00",
                 "updated": "2026-07-14T09:30:00",
             },
@@ -75,6 +104,7 @@ def test_rebuild_indexes_only_papers_in_a_deterministic_v2_shape(tmp_path):
     assert json.loads((vault / "keikeu_index.json").read_text(encoding="utf-8")) == index
     assert list_papers(vault) == index["papers"]
     assert list_index_errors(vault) == []
+    assert "private anchor content" not in json.dumps(index, ensure_ascii=False)
 
 
 def test_rebuild_quarantines_one_broken_paper_and_keeps_other_assets(tmp_path):
@@ -143,7 +173,7 @@ def test_rebuild_excludes_trashed_papers_and_syncs_after_external_deletion(tmp_p
 
     refreshed = rebuild_index(vault)
 
-    assert refreshed == {"version": 2, "papers": [], "errors": []}
+    assert refreshed == {"version": 3, "papers": [], "errors": []}
     assert (vault / ".trash" / "cache" / second.name).exists()
 
 
@@ -157,7 +187,13 @@ def test_load_index_rebuilds_missing_or_invalid_metadata_without_touching_papers
     assert [entry["code"] for entry in load_index(vault)["papers"]] == ["K-20260714-001"]
     assert paper_path.read_bytes() == original_bytes
 
-    for payload in ("not json", "[]", '{"version": 1, "caches": []}', '{"version": 2, "papers": []}'):
+    for payload in (
+        "not json",
+        "[]",
+        '{"version": 1, "caches": []}',
+        '{"version": 2, "papers": []}',
+        '{"version": 3, "papers": []}',
+    ):
         index_path.write_text(payload, encoding="utf-8")
         assert [entry["code"] for entry in load_index(vault)["papers"]] == ["K-20260714-001"]
         assert paper_path.read_bytes() == original_bytes
@@ -171,13 +207,16 @@ def test_malicious_absolute_index_path_rebuilds_without_outside_access(
     outside = tmp_path / "outside.md"
     outside.write_bytes(b"outside bytes")
     malicious = {
-        "version": 2,
+        "version": 3,
         "papers": [
             {
                 "code": "K-20260714-999",
+                "display_name": None,
                 "path": str(outside),
+                "folder": None,
                 "summary": "Outside",
                 "tags": [],
+                "highlight_names": [],
                 "created": "2026-07-14T09:00:00",
                 "updated": "2026-07-14T09:30:00",
             }
@@ -209,7 +248,7 @@ def test_index_mutations_reject_symlink_index_without_touching_outside(tmp_path)
     for action in (
         lambda: load_index(vault),
         lambda: rebuild_index(vault),
-        lambda: save_index(vault, {"version": 2, "papers": [], "errors": []}),
+        lambda: save_index(vault, {"version": 3, "papers": [], "errors": []}),
     ):
         with pytest.raises(ValueError, match="symlink"):
             action()
@@ -230,7 +269,7 @@ def test_index_write_rejects_a_symlink_ancestor_without_touching_target(tmp_path
     with pytest.raises(ValueError, match="symlink"):
         save_index(
             linked_parent / "vault",
-            {"version": 2, "papers": [], "errors": []},
+            {"version": 3, "papers": [], "errors": []},
         )
 
     assert index.read_bytes() == before
@@ -268,7 +307,7 @@ def test_index_mutation_refuses_a_byte_identical_ordinary_root_replacement(
     )
     with pytest.raises(ValueError, match="directory path changed"):
         if operation == "save":
-            save_index(vault, {"version": 2, "papers": [], "errors": []})
+            save_index(vault, {"version": 3, "papers": [], "errors": []})
         else:
             rebuild_index(vault)
 

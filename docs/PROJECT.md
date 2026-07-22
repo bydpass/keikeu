@@ -12,13 +12,13 @@ Updated: 2026-07-22
 | Road v0.2 Phase 8 product acceptance | Complete | The author completed the real one-shot and two-session short/medium scenarios; no P0/P1 was reported. P2/P3 observations are recorded separately. |
 | Phase 7.5 lightweight iOS | Quick-test build complete on an independent branch | Responsive shell and app-sandbox Vault were exercised on `codex/fix-ios-device-readiness`. This is a lightweight iOS version for rapid testing, not a step in the macOS Road sequence. |
 | Phase 8.5 / Road v0.3 preparation | Documentation reform implemented; review pending | This is the precursor to the next macOS version. Current evidence covers the authority map, HTML maps, archive, link gate, browser QA, and bounded Graphify trial; independent fresh-agent cold start was not run. |
-| Road v0.3 Phase 1 | Complete; Phase 2 next | The approved [Planbook](planbook_road_v0_3.md), Phase 0 authority/fixtures, and Phase 1 Home/path/Vault-switch boundaries are implemented and independently verified. The runtime still uses Paper/index schema v2 until Phase 2. |
+| Road v0.3 Phase 2 | Complete; Phase 3 next | The approved [Planbook](planbook_road_v0_3.md), Phase 0 authority/fixtures, Phase 1 Home/path/Vault-switch boundaries, and Phase 2 Paper v3 naming are implemented and independently verified. The runtime reads Paper v2/v3 and writes Paper/index v3; folders remain a Phase 3 target. |
 
 Phase 8 product acceptance is complete. Road v0.2 is marked by local annotated tag `v0.2.0` at `d0feac0269a5619f5dbf27c04347ba69c5665b42`; archival remains a separate developer decision. Automated tests, platform smoke, and author acceptance remain distinct evidence.
 
 Phase 7.5 and Phase 8.5 are separate tracks: Phase 7.5 is the independent lightweight iOS test version; Phase 8.5 prepares Road v0.3 and the next macOS version. Phase 7.5 is not a merge gate for Phase 8.5.
 
-Road v0.3 product decisions and Planbook are approved. Phase 0 authority/fixtures and Phase 1 path safety/Vault switching are complete; Phase 2 Paper v3 naming is next. Phase 1 supports v0.1/v2 safe relocation, while v3 relocation stays blocked until the Phase 2 reader/index upgrade. Native atomic directory exchange is available on Darwin/Linux; unsupported platforms fail before destructive mutation. `architecture.html` remains the explicitly marked Road v0.3 target until Phase 7 recalibrates it against verified code.
+Road v0.3 product decisions and Planbook are approved. Phase 0 authority/fixtures, Phase 1 path safety/Vault switching, and Phase 2 Paper v3 naming are complete; Phase 3 folder-aware filesystem core is next. Safe relocation supports v0.1 and mixed Paper v2/v3 Vaults. Native atomic directory exchange is available on Darwin/Linux; unsupported platforms fail before destructive mutation. `architecture.html` remains the explicitly marked Road v0.3 target until Phase 7 recalibrates it against verified code.
 
 ## Product flow
 
@@ -28,18 +28,18 @@ Paper Markdown → Flashcard → external prose editor
 
 See [SPEC](SPEC.md) for the contract and [interaction.html](design/interaction.html) for executable state examples.
 
-## Current runtime map (Paper v2 + Road v0.3 Phase 1 safety)
+## Current runtime map (Paper v3 naming + Road v0.3 Phase 1 safety)
 
 | Area | Responsibility | Source | Direct evidence |
 | --- | --- | --- | --- |
-| Domain model | Paper validation and normalization | [`models.py`](../src/keikeu_core/models.py) | [`test_models.py`](../tests/test_models.py) |
-| Markdown | Paper parse, render, safe update, rename | [`markdown_io.py`](../src/keikeu_core/markdown_io.py) | [`test_markdown_io.py`](../tests/test_markdown_io.py) |
-| Vault | Home/path validation, initialization, copy verification, soft delete, restore, atomic config | [`vault.py`](../src/keikeu_core/vault.py) | [`test_vault.py`](../tests/test_vault.py) |
-| Index | rebuildable Paper search metadata and errors | [`indexer.py`](../src/keikeu_core/indexer.py) | [`test_indexer.py`](../tests/test_indexer.py) |
-| v0.1 migration | preflight, external backup, staging, swap | [`migration_v01.py`](../src/keikeu_core/migration_v01.py) | [`test_migration_v01.py`](../tests/test_migration_v01.py) |
+| Domain model | Paper v3/Highlight naming validation and normalization | [`models.py`](../src/keikeu_core/models.py) | [`test_models.py`](../tests/test_models.py) |
+| Markdown | Paper v2/v3 parse, v3 render, safe update | [`markdown_io.py`](../src/keikeu_core/markdown_io.py) | [`test_markdown_io.py`](../tests/test_markdown_io.py) |
+| Vault | Home/path validation, v3 initialization, copy verification, soft delete, restore, atomic config | [`vault.py`](../src/keikeu_core/vault.py) | [`test_vault.py`](../tests/test_vault.py) |
+| Index | rebuildable Paper/index v3 names, search metadata, and errors | [`indexer.py`](../src/keikeu_core/indexer.py) | [`test_indexer.py`](../tests/test_indexer.py) |
+| v0.1 migration | preflight, external backup, Paper v3 staging, swap | [`migration_v01.py`](../src/keikeu_core/migration_v01.py) | [`test_migration_v01.py`](../tests/test_migration_v01.py) |
 | App shell | Vault gate, routing, desktop/mobile navigation | [`main.py`](../src/keikeu_app/main.py) | [`test_app_pages.py`](../tests/test_app_pages.py) |
-| Paper UI | create, update, rename, delete, handoff | [`paper_page.py`](../src/keikeu_app/pages/paper_page.py) | [`test_app_pages.py`](../tests/test_app_pages.py) |
-| Flashcard UI | Summary-first projection and navigation | [`flashcard_page.py`](../src/keikeu_app/pages/flashcard_page.py) | [`test_app_pages.py`](../tests/test_app_pages.py) |
+| Paper UI | create/update with Paper and Highlight names, immutable code, delete, handoff | [`paper_page.py`](../src/keikeu_app/pages/paper_page.py) | [`test_app_pages.py`](../tests/test_app_pages.py) |
+| Flashcard UI | named Summary-first projection and navigation | [`flashcard_page.py`](../src/keikeu_app/pages/flashcard_page.py) | [`test_app_pages.py`](../tests/test_app_pages.py) |
 | Device state | disposable per-device card position | [`local_state.py`](../src/keikeu_app/local_state.py) | [`test_local_state.py`](../tests/test_local_state.py) |
 | Library UI | search, health, system open, trash restore | [`library_page.py`](../src/keikeu_app/pages/library_page.py) | [`test_app_pages.py`](../tests/test_app_pages.py) |
 
@@ -74,8 +74,8 @@ Application tests must not be inferred from documentation checks. Platform smoke
 
 ## Open gates
 
-1. Create the focused local Phase 1 commit from the reviewed implementation and evidence; do not push or tag.
-2. Begin Phase 2 Paper v3 naming without mixing in folder/Trash UI scope; keep all writes on synthetic/copied Vaults.
+1. Create the focused local Phase 2 commit from the reviewed implementation and evidence; do not push or tag.
+2. Begin Phase 3 folder-aware filesystem core without mixing in Trash mutations or final Library UI scope; keep all writes on synthetic/copied Vaults.
 3. Keep the independent Phase 7.5 iOS test build outside every Road v0.3 macOS implementation and acceptance gate.
 
 ## Known candidate, not active scope

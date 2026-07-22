@@ -1,4 +1,4 @@
-"""Explicit, one-shot migration from a v0.1 Cache/Outline vault to Paper v2.
+"""Explicit, one-shot migration from a v0.1 Cache/Outline vault to Paper v3.
 
 This module is deliberately isolated from the normal vault path. It only reads
 the v0.1 parser while preparing a complete staged vault, moves the untouched
@@ -21,7 +21,7 @@ from typing import Callable
 
 from keikeu_core.legacy_v01 import LegacyCache, read_v01_cache
 from keikeu_core.markdown_io import parse_paper_bytes, render_paper_bytes
-from keikeu_core.models import Paper
+from keikeu_core.models import Highlight, Paper
 from keikeu_core.vault import (
     atomic_exchange_at_no_follow,
     copy_vault_no_follow,
@@ -786,9 +786,16 @@ def _copy_full_vault(source: Path, destination: Path) -> None:
 def _paper_index_entry(vault: Path, path: Path, paper: Paper) -> dict[str, object]:
     return {
         "code": paper.code,
+        "display_name": paper.display_name,
         "path": str(path.relative_to(vault)),
+        "folder": None,
         "summary": paper.summary,
         "tags": paper.tags,
+        "highlight_names": [
+            highlight.display_name
+            for highlight in paper.highlights
+            if highlight.display_name is not None
+        ],
         "created": paper.created.isoformat(),
         "updated": paper.updated.isoformat(),
     }
@@ -805,7 +812,7 @@ def _convert_to_staged_vault(
     migration_time: datetime,
     backup_path: Path,
 ) -> tuple[dict[str, object], tuple[Path, ...]]:
-    """Build and verify an isolated v2 replacement vault without touching live data."""
+    """Build and verify an isolated v3 replacement vault without touching live data."""
     trash_fd: int | None = None
     cache_fd: int | None = None
     trash_cache_fd: int | None = None
@@ -862,7 +869,7 @@ def _convert_to_staged_vault(
                 code=code,
                 initial_summary=cache.raw,
                 summary=cache.raw,
-                highlights=[cache.notes] if cache.notes != "" else [],
+                highlights=[Highlight(content=cache.notes)] if cache.notes != "" else [],
                 tags=[],
                 created=cache.created,
                 updated=cache.updated,
@@ -871,11 +878,10 @@ def _convert_to_staged_vault(
             name = f"{code}.md"
             _write_new_bytes_at(cache_fd, name, render_paper_bytes(paper))
             verified = parse_paper_bytes(_read_regular_bytes_at(cache_fd, name))
-            expected_highlights = [cache.notes] if cache.notes != "" else []
             if (
                 verified.initial_summary != cache.raw
                 or verified.summary != cache.raw
-                or verified.highlights != expected_highlights
+                or verified.highlights != paper.highlights
                 or verified.tags != []
                 or verified.created != cache.created
                 or verified.updated != cache.updated
@@ -917,7 +923,7 @@ def _convert_to_staged_vault(
         _replace_bytes_at(
             stage_fd,
             "keikeu_index.json",
-            _json_bytes({"version": 2, "papers": index_entries, "errors": []}),
+            _json_bytes({"version": 3, "papers": index_entries, "errors": []}),
         )
 
         report: dict[str, object] = {
@@ -1108,7 +1114,7 @@ def migrate_v01_vault(
     now: datetime | None = None,
     failure_hook: Callable[[str], None] | None = None,
 ) -> MigrationResult:
-    """Explicitly migrate a preflight-clean v0.1 vault to Paper v2.
+    """Explicitly migrate a preflight-clean v0.1 vault to Paper v3.
 
     This is intentionally not called from normal vault I/O. A UI must show the
     preflight and irreversible Outline removal before asking the user to invoke

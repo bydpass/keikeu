@@ -1,4 +1,4 @@
-"""Safety tests for the explicit one-shot v0.1 to Paper v2 migration."""
+"""Safety tests for the explicit one-shot v0.1 to Paper v3 migration."""
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ import shutil
 import pytest
 
 from keikeu_core.markdown_io import read_paper
+from keikeu_core.models import Highlight
 from keikeu_core import migration_v01
 from keikeu_core.migration_v01 import (
     MigrationPreflightError,
@@ -272,7 +273,9 @@ def test_successful_migration_backs_up_every_byte_and_replaces_legacy_assets(
     assert first.code == "K-20260714-001"
     assert first.initial_summary == "Two strangers share an umbrella on an empty platform."
     assert first.summary == first.initial_summary
-    assert first.highlights == ["Keep the train announcement as the last line."]
+    assert first.highlights == [
+        Highlight(content="Keep the train announcement as the last line.")
+    ]
     assert first.tags == []
     assert first.legacy_title == "Rain Platform"
     assert second.initial_summary == "A complete sentence is enough to migrate."
@@ -280,7 +283,10 @@ def test_successful_migration_backs_up_every_byte_and_replaces_legacy_assets(
 
     with (vault / "keikeu_index.json").open(encoding="utf-8") as fh:
         index = json.load(fh)
-    assert index["version"] == 2
+    assert index["version"] == 3
+    assert index["papers"][0]["display_name"] is None
+    assert index["papers"][0]["folder"] is None
+    assert index["papers"][0]["highlight_names"] == []
     assert [entry["code"] for entry in index["papers"]] == [
         "K-20260714-001",
         "K-20260714-002",
@@ -301,6 +307,29 @@ def test_successful_migration_backs_up_every_byte_and_replaces_legacy_assets(
         "outlines/2026-07-01-091000-b101-rain-platform-outline.md"
     )
     assert not list(vault.parent.glob(f".{vault.name}.v01-rollback-*"))
+
+
+def test_migration_accepts_whitespace_only_legacy_notes(tmp_path):
+    vault = _copy_fixture(tmp_path)
+    _remove_preflight_failures(vault)
+    source = vault / "cache" / "2026-07-02-090000-a102-blank-optional.md"
+    source.write_text(
+        source.read_text(encoding="utf-8").replace(
+            "## 临时备注\n",
+            "## 临时备注\n\n   \n",
+        ),
+        encoding="utf-8",
+    )
+
+    result = migrate_v01_vault(
+        vault,
+        backup_root=tmp_path / "backups",
+        now=datetime(2026, 7, 14, 12, 0),
+    )
+
+    papers = sorted((vault / "cache").glob("*.md"))
+    assert result.converted_count == 2
+    assert read_paper(papers[1]).highlights == []
 
 
 def test_migration_ignores_macos_metadata_but_preserves_it_in_backup(tmp_path):
