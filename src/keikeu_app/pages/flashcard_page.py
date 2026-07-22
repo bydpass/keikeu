@@ -19,7 +19,7 @@ from keikeu_app.theme import (
 )
 from keikeu_app.widgets import page_header, paper_card, primary_button
 from keikeu_core.markdown_io import read_paper
-from keikeu_core.models import Paper, validate_paper_code
+from keikeu_core.models import Paper
 from keikeu_core.vault import resolve_active_paper_path
 
 if TYPE_CHECKING:
@@ -55,19 +55,18 @@ def _unavailable_page(ctx: "AppContext", message: str) -> ft.Control:
     )
 
 
-def build_flashcard_page(ctx: "AppContext", code: str | None = None) -> ft.Control:
+def build_flashcard_page(
+    ctx: "AppContext",
+    open_path: Path | None = None,
+) -> ft.Control:
     """Build one read-only Paper card deck and remember its local position."""
-    if not code:
+    if open_path is None:
         return _unavailable_page(ctx, "请从 Paper 或本地文件库打开一张 Paper。")
 
     try:
-        code = validate_paper_code(code)
-        path = resolve_active_paper_path(
-            ctx.vault,
-            Path("cache") / f"{code}.md",
-        )
+        path = resolve_active_paper_path(ctx.vault, open_path)
         paper = read_paper(path)
-        if paper.code != code:
+        if path.stem != paper.code:
             raise ValueError("Paper filename and frontmatter code do not match")
     except (OSError, ValueError):
         return _unavailable_page(ctx, "找不到可读取的 Paper；它可能已被删除、移动或损坏。")
@@ -162,7 +161,9 @@ def build_flashcard_page(ctx: "AppContext", code: str | None = None) -> ft.Contr
                             next_button,
                             ft.OutlinedButton(
                                 content=ft.Text("返回 Paper"),
-                                on_click=lambda _e: ctx.open_paper(path),
+                                on_click=lambda _e: ctx.open_paper(
+                                    path.relative_to(ctx.vault)
+                                ),
                             ),
                         ],
                         wrap=True,

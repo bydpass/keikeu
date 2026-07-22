@@ -99,7 +99,7 @@ def build_library_page(ctx: "AppContext") -> ft.Control:
             except (OSError, ValueError) as ex:
                 notify(page, f"无法打开 Paper：{ex}")
                 return
-            ctx.open_paper(path)
+            ctx.open_paper(path.relative_to(ctx.vault))
 
         def on_open_system(_: ft.ControlEvent) -> None:
             try:
@@ -143,7 +143,7 @@ def build_library_page(ctx: "AppContext") -> ft.Control:
                             ft.OutlinedButton(content=ft.Text("编辑"), on_click=on_edit),
                             ft.OutlinedButton(
                                 content=ft.Text("打开 Flashcard"),
-                                on_click=lambda _e: ctx.open_flashcards(code),
+                                on_click=lambda _e: ctx.open_flashcards(Path(rel_path)),
                             ),
                             ft.OutlinedButton(
                                 content=ft.Text("打开"),
@@ -256,7 +256,7 @@ def build_library_page(ctx: "AppContext") -> ft.Control:
         page.update()
 
     search_field.on_change = refresh
-    refresh()
+    refresh(rebuild=True)
 
     library_card = paper_card(
         [

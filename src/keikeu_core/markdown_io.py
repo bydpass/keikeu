@@ -23,13 +23,16 @@ from keikeu_core.vault import (
     _direct_paper_relative_path,
     _move_regular_no_overwrite_at,
     _open_pinned_vault,
+    _open_pinned_vault_root,
     _open_relative_directory_no_follow,
+    _paper_code_exists_at,
     _read_regular_bytes_at,
     _require_directory_path_identity,
     _unlink_owned_file_at,
+    _supported_paper_relative_path,
     atomic_exchange_at_no_follow,
-    open_directory_no_follow,
     open_regular_no_follow,
+    next_paper_code as _next_paper_code,
     require_atomic_exchange,
 )
 
@@ -50,7 +53,6 @@ _FENCE = "---"
 _PAPER_HEADERS = ("## 初稿副本", "## Summary", "## Highlights", "## Tags")
 _PAPER_NUMBERED_ITEM_RE = re.compile(r"^([1-9]\d*)\. (.*)$")
 _PAPER_V3_HIGHLIGHT_RE = re.compile(r"^([1-9]\d*)\. 名称：(.*)$")
-_PAPER_CODE_FILENAME_RE = re.compile(r"^K-\d{8}-(\d{3})$")
 
 
 def _escape_scalar(value: str) -> str:
@@ -120,39 +122,16 @@ def _split_sections(body_lines: list[str]) -> dict[str, str]:
 
 
 def next_paper_code(vault: Path, on_date: date | datetime | None = None) -> str:
-    """Return the next unused neutral Paper code without reserving it."""
-    if on_date is None:
-        day = datetime.now().date()
-    elif isinstance(on_date, datetime):
-        day = on_date.date()
-    elif isinstance(on_date, date):
-        day = on_date
-    else:
-        raise ValueError("on_date must be a date or datetime")
-    prefix = f"K-{day.strftime('%Y%m%d')}-"
-    used_sequences: set[int] = set()
-    cache_dir = vault / "cache"
-    try:
-        directory_fd = open_directory_no_follow(cache_dir)
-    except FileNotFoundError:
-        directory_fd = None
-    if directory_fd is not None:
-        try:
-            with os.scandir(directory_fd) as entries:
-                names = [entry.name for entry in entries]
-        finally:
-            os.close(directory_fd)
-        for name in names:
-            path = Path(name)
-            if not name.startswith(prefix) or path.suffix != ".md":
-                continue
-            match = _PAPER_CODE_FILENAME_RE.fullmatch(path.stem)
-            if match is not None:
-                used_sequences.add(int(match.group(1)))
-    for sequence in range(1, 1000):
-        if sequence not in used_sequences:
-            return f"{prefix}{sequence:03d}"
-    raise ValueError(f"all Paper codes for {day.isoformat()} are in use")
+    """Compatibility entry point for Vault-owned cross-path allocation."""
+    return _next_paper_code(
+        vault,
+        on_date,
+        parse_code=_paper_code_from_bytes,
+    )
+
+
+def _paper_code_from_bytes(data: bytes) -> str:
+    return parse_paper_bytes(data).code
 
 
 def _render_paper(paper: Paper) -> str:
@@ -347,16 +326,16 @@ def _rollback_paper_update_at(
 
 
 def _atomic_compare_exchange_bytes_at(
-    root_fd: int,
-    vault: Path,
     directory_fd: int,
+    target: Path,
     target_name: str,
     proposed_bytes: bytes,
     *,
     expected_bytes: bytes,
     expected_identity: tuple[int, int],
+    guard_path: Path,
+    guard_fd: int,
 ) -> None:
-    target = vault / "cache" / target_name
     while True:
         temporary_name = f".{target_name}.{secrets.token_hex(8)}.tmp"
         temporary = target.with_name(temporary_name)
@@ -372,7 +351,7 @@ def _atomic_compare_exchange_bytes_at(
         break
 
     try:
-        _require_directory_path_identity(vault, root_fd)
+        _require_directory_path_identity(guard_path, guard_fd)
         atomic_exchange_at_no_follow(
             directory_fd,
             temporary_name,
@@ -397,7 +376,7 @@ def _atomic_compare_exchange_bytes_at(
         )
         if previous_bytes != expected_bytes or previous_identity != expected_identity:
             raise ValueError("Paper changed externally; update refused")
-        _require_directory_path_identity(vault, root_fd)
+        _require_directory_path_identity(guard_path, guard_fd)
     except Exception as verification_error:
         try:
             rollback_identity = _entry_identity(directory_fd, temporary_name)
@@ -644,23 +623,53 @@ def copy_paper_with_code(
         os.close(root_fd)
 
 
-def write_paper(vault: Path, paper: Paper) -> Path:
+def write_paper(
+    vault: Path,
+    paper: Paper,
+    *,
+    destination: str | Path,
+) -> Path:
     """Persist a new Paper and freeze its initial Summary on first save."""
     paper.normalize()
-    vault, root_fd = _open_pinned_vault(vault)
+    vault, root_fd = _open_pinned_vault_root(vault)
     name = f"{validate_paper_code(paper.code)}.md"
-    path = vault / "cache" / name
+    relative = _supported_paper_relative_path(vault, destination, ("cache",))
+    if relative.name != name:
+        raise ValueError("Paper destination filename must match its code")
+    path = vault / relative
     stored = replace(paper, initial_summary=paper.summary)
     data = render_paper_bytes(stored)
     cache_fd: int | None = None
     identity: tuple[int, int] | None = None
     try:
-        cache_fd = _open_relative_directory_no_follow(root_fd, Path("cache"), vault)
+        cache_fd = _open_relative_directory_no_follow(root_fd, relative.parent, vault)
         _require_new_regular_name_at(cache_fd, name, path)
-        _require_directory_path_identity(vault, root_fd)
+        _require_directory_path_identity(path.parent, cache_fd)
+        if _paper_code_exists_at(
+            root_fd,
+            vault,
+            paper.code,
+            parse_code=_paper_code_from_bytes,
+        ):
+            raise FileExistsError(
+                f"Paper code already exists in active/Trash: {paper.code}"
+            )
         identity = _create_regular_bytes_at(cache_fd, name, data, path)
         try:
-            _require_directory_path_identity(vault, root_fd)
+            stored_bytes, stored_identity = _read_regular_bytes_at(cache_fd, name, path)
+            if stored_identity != identity or stored_bytes != data:
+                raise ValueError(f"Paper changed while creating: {path}")
+            _require_directory_path_identity(path.parent, cache_fd)
+            if _paper_code_exists_at(
+                root_fd,
+                vault,
+                paper.code,
+                parse_code=_paper_code_from_bytes,
+                excluding=relative,
+            ):
+                raise FileExistsError(
+                    f"Paper code concurrently created in active/Trash: {paper.code}"
+                )
         except Exception:
             if not _unlink_owned_bytes_at(cache_fd, name, identity, data):
                 raise OSError(
@@ -784,12 +793,12 @@ def update_paper(
     if not isinstance(expected_source_bytes, bytes):
         raise TypeError("expected_source_bytes must be bytes")
     require_atomic_exchange()
-    vault, root_fd = _open_pinned_vault(vault)
-    relative = _direct_paper_relative_path(vault, path, ("cache",))
+    vault, root_fd = _open_pinned_vault_root(vault)
+    relative = _supported_paper_relative_path(vault, path, ("cache",))
     target = vault / relative
     cache_fd: int | None = None
     try:
-        cache_fd = _open_relative_directory_no_follow(root_fd, Path("cache"), vault)
+        cache_fd = _open_relative_directory_no_follow(root_fd, relative.parent, vault)
         source_bytes, source_identity = _read_regular_bytes_at(
             cache_fd,
             relative.name,
@@ -800,18 +809,29 @@ def update_paper(
         existing = parse_paper_bytes(source_bytes)
         if paper.code != existing.code:
             raise ValueError("Paper code changes require rename_paper")
+        if _paper_code_exists_at(
+            root_fd,
+            vault,
+            paper.code,
+            parse_code=_paper_code_from_bytes,
+            excluding=relative,
+        ):
+            raise ValueError(
+                f"duplicate Paper code blocks mutation: {paper.code}"
+            )
         paper.initial_summary = existing.initial_summary
         paper.legacy_title = existing.legacy_title
         paper.extra_frontmatter = existing.extra_frontmatter.copy()
         paper.normalize()
         _atomic_compare_exchange_bytes_at(
-            root_fd,
-            vault,
             cache_fd,
+            target,
             relative.name,
             render_paper_bytes(paper),
             expected_bytes=expected_source_bytes,
             expected_identity=source_identity,
+            guard_path=target.parent,
+            guard_fd=cache_fd,
         )
     finally:
         if cache_fd is not None:
@@ -849,8 +869,8 @@ def rename_paper(vault: Path, old_code: str, new_code: str) -> Path:
                 target,
                 new_code,
                 expected_source_bytes=source_bytes,
-                guard_path=vault,
-                guard_fd=root_fd,
+                guard_path=target.parent,
+                guard_fd=cache_fd,
             )
         except ValueError as exc:
             if "changed" in str(exc):

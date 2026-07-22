@@ -1,9 +1,9 @@
 # keikeu Road v0.3 Planbook
 
 > Road：macOS Paper Library / Retrieval Quality  
-> 状态：**APPROVED — Phase 2 complete / Phase 3 next**
+> 状态：**APPROVED — Phase 3 complete / Phase 4 next**
 > 基线：`d0feac0269a5619f5dbf27c04347ba69c5665b42`（Road v0.2 已验收，local annotated tag `v0.2.0`）  
-> 当前 checkpoint：**CP2 complete / Phase 3 folder-aware core next**
+> 当前 checkpoint：**CP2 complete / Phase 3 engineering complete / CP3 pending**
 > 日期：2026-07-22
 > 权限：本文件是 Road v0.3 的已批准执行计划。[`SPEC.md`](SPEC.md)、[`RULES.md`](RULES.md) 与三个 HTML map 描述 v0.3 目标；当前实现进度与 v0.2 runtime 事实分别见 [`PROJECT.md`](PROJECT.md)、`src/` 和 `tests/`。
 
@@ -460,6 +460,8 @@ Gate：v2→read→save v3、200 字符边界、Unicode、重复名称、多行�
 
 Gate：root/folder/trash 全局 code、外部移动、深层目录、symlink、损坏 Paper 和 deterministic index 有直接测试。
 
+**完成证据（2026-07-22）**：`vault.py` 已统一一层 active/Trash 枚举、受限路径解析与跨支持路径编号分配；Markdown 写入接收准确 destination，index 保存准确相对 path/folder，App 页面之间只传经过验证的 vault-relative path。外部移动、深层目录、symlink、损坏 Paper、legacy/provider 重复 code、普通目录替换与并发创建回滚均有直接回归。最终 229 项自动测试、compile、文档检查与 diff 检查通过；未运行手动 Flet smoke。`architecture.html` 继续保留 Road v0.3 target 标记，等待 Phase 7 按最终代码校准。
+
 ### Phase 4 — Folder, Trash and branch operations
 
 **目标**：先把所有破坏性与批量操作做成可单测 core API。
@@ -613,4 +615,4 @@ flet run src/keikeu_app/main.py
 - legacy duplicate code 保留、报告并阻断 mutation，不自动改号；以及
 - unsafe Vault 先只读分类，不跟随 symlink，仅将普通目录/regular files byte-copy/verify 到 Home；v2/v3 再解析并重建 index，v0.1 改走安全副本上的现有 preflight 与 migration gate，不写原件也不以真实唯一 Vault 首测。
 
-Phase 0 权威/fixture、Phase 1 路径安全/Vault 切换与 Phase 2 Paper v3 naming gate 已完成；下一步是 Phase 3 folder-aware filesystem core，不能提前混入 Trash mutation 或最终 Library UI scope。
+Phase 0 权威/fixture、Phase 1 路径安全/Vault 切换、Phase 2 Paper v3 naming 与 Phase 3 folder-aware filesystem core gate 已完成；下一步是 Phase 4 folder/Trash/branch core operations，不能提前混入最终 Library UI scope。

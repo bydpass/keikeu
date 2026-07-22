@@ -43,7 +43,6 @@ from keikeu_core.models import Highlight, Paper
 from keikeu_core.vault import (
     resolve_active_paper_path,
     soft_delete,
-    validate_vault_tree_no_follow,
 )
 
 if TYPE_CHECKING:
@@ -72,7 +71,6 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
     existing: Paper | None = None
     existing_bytes: bytes | None = None
     if open_path is not None:
-        validate_vault_tree_no_follow(ctx.vault)
         open_path = resolve_active_paper_path(ctx.vault, open_path)
         existing, existing_bytes = read_paper_snapshot(open_path)
     state: dict[str, object] = {
@@ -82,7 +80,6 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
     }
 
     def validated_path(path: Path, *, must_exist: bool = True) -> Path:
-        validate_vault_tree_no_follow(ctx.vault)
         return resolve_active_paper_path(
             ctx.vault,
             path,
@@ -90,7 +87,6 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
         )
 
     def rebuild_after_mutation(path: Path | None = None) -> None:
-        validate_vault_tree_no_follow(ctx.vault)
         if path is not None:
             resolve_active_paper_path(ctx.vault, path)
         rebuild_index(ctx.vault)
@@ -309,12 +305,13 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
                     page.update()
                     return
             else:
-                validate_vault_tree_no_follow(ctx.vault)
-                validated_path(
-                    ctx.vault / "cache" / f"{paper.code}.md",
-                    must_exist=False,
+                destination = Path("cache") / f"{paper.code}.md"
+                validated_path(destination, must_exist=False)
+                path = write_paper(
+                    ctx.vault,
+                    paper,
+                    destination=destination,
                 )
-                path = write_paper(ctx.vault, paper)
             path = validated_path(path)
             stored, source_bytes = read_paper_snapshot(path)
             apply_snapshot(path, stored, source_bytes)
@@ -348,7 +345,12 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
             save_error.value = "请先保存 Paper，再打开 Flashcard。"
             page.update()
             return
-        ctx.open_flashcards(stored.code)
+        path = state["path"]
+        if not isinstance(path, Path):
+            save_error.value = "请先保存 Paper，再打开 Flashcard。"
+            page.update()
+            return
+        ctx.open_flashcards(path.relative_to(ctx.vault))
 
     editor_card = paper_card(
         [

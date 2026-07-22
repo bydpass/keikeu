@@ -10,16 +10,19 @@ from __future__ import annotations
 
 import ctypes
 from dataclasses import dataclass
+from datetime import date, datetime
 import errno
 import hashlib
 import json
 import os
+from pathlib import Path
+import re
 import secrets
 import shutil
 import stat
 import sys
 import unicodedata
-from pathlib import Path
+from typing import Callable
 
 from keikeu_core.models import validate_paper_code
 
@@ -37,7 +40,12 @@ __all__ = [
     "require_atomic_exchange",
     "atomic_exchange_at_no_follow",
     "atomic_exchange_no_follow",
+    "scan_active_papers",
+    "scan_trashed_papers",
+    "list_active_papers",
+    "next_paper_code",
     "resolve_active_paper_path",
+    "resolve_trashed_paper_path",
     "vault_index_version",
     "validate_vault_papers",
     "validate_folder_name",
@@ -53,6 +61,7 @@ _TreeSnapshot = tuple[tuple[Path, ...], tuple[tuple[Path, str], ...]]
 
 _EMPTY_INDEX: dict[str, object] = {"version": 3, "papers": [], "errors": []}
 _ATOMIC_EXCHANGE_FLAG = 0x00000002
+_PAPER_CODE_FILENAME_RE = re.compile(r"^K-\d{8}-(\d{3})$")
 _RESERVED_FOLDER_NAMES = {
     unicodedata.normalize("NFC", name).casefold()
     for name in (
@@ -348,10 +357,21 @@ def _require_directory_path_identity(path: Path, expected_fd: int) -> None:
 
 def _open_pinned_vault(vault: Path) -> tuple[Path, int]:
     """Validate and pin one Home-contained Paper Vault root; caller closes."""
+    vault, root_fd = _open_pinned_vault_root(vault)
+    try:
+        _scan_regular_tree_fd(root_fd, vault)
+        _require_directory_path_identity(vault, root_fd)
+    except Exception:
+        os.close(root_fd)
+        raise
+    return vault, root_fd
+
+
+def _open_pinned_vault_root(vault: Path) -> tuple[Path, int]:
+    """Pin only the Home-contained Vault root for exact no-follow operations."""
     vault = _require_lexical_home_path(_lexical_absolute_path(vault))
     root_fd = open_directory_no_follow(vault)
     try:
-        _scan_regular_tree_fd(root_fd, vault)
         _require_directory_path_identity(vault, root_fd)
     except Exception:
         os.close(root_fd)
@@ -1390,7 +1410,6 @@ def is_vault(path: Path) -> bool:
     """Return whether ``path`` is a supported Paper Vault or rebuildable."""
     try:
         path = _lexical_absolute_path(path)
-        validate_regular_tree_no_follow(path)
         root_fd = open_directory_no_follow(path)
         try:
             cache_fd = _open_relative_directory_no_follow(
@@ -1436,9 +1455,8 @@ def is_vault(path: Path) -> bool:
 
 
 def vault_index_version(vault: Path) -> int | None:
-    """Read a structurally safe Vault's index version without writing."""
+    """Read the root index version through exact no-follow components."""
     vault = vault.expanduser().absolute()
-    validate_regular_tree_no_follow(vault)
     index_path = _index_path(vault)
     try:
         descriptor = open_regular_no_follow(index_path)
@@ -1453,15 +1471,6 @@ def vault_index_version(vault: Path) -> int | None:
     return version if type(version) is int else None
 
 
-def _direct_markdown_names(directory: Path) -> list[str]:
-    directory_fd = open_directory_no_follow(directory)
-    try:
-        with os.scandir(directory_fd) as entries:
-            return sorted(entry.name for entry in entries if entry.name.endswith(".md"))
-    finally:
-        os.close(directory_fd)
-
-
 def validate_vault_papers(vault: Path) -> None:
     """Strictly validate active and recovery Paper Markdown without writing."""
     from keikeu_core.markdown_io import read_paper_snapshot
@@ -1470,18 +1479,31 @@ def validate_vault_papers(vault: Path) -> None:
     validate_vault_tree_no_follow(raw_vault)
     if not is_vault(raw_vault):
         raise ValueError(f"Vault is not structurally supported: {raw_vault}")
-    for relative_parent, require_filename_code in (
-        (Path("cache"), True),
-        (Path(".trash/cache"), False),
-    ):
-        directory = raw_vault / relative_parent
-        for name in _direct_markdown_names(directory):
-            path = directory / name
-            paper, _source_bytes = read_paper_snapshot(path)
-            if require_filename_code and path.stem != paper.code:
-                raise ValueError(
-                    f"Paper filename and frontmatter code do not match: {path}"
-                )
+    active, active_errors = scan_active_papers(raw_vault)
+    try:
+        trashed, trash_errors = scan_trashed_papers(raw_vault)
+    except FileNotFoundError:
+        trashed, trash_errors = [], []
+    errors = [*active_errors, *trash_errors]
+    if errors:
+        raise ValueError(
+            f"unsupported Paper path {errors[0]['path']}: {errors[0]['reason']}"
+        )
+    codes: dict[str, Path] = {}
+    for relative in [*active, *trashed]:
+        path = raw_vault / relative
+        paper, _source_bytes = read_paper_snapshot(path)
+        if relative.parts[0] == "cache" and path.stem != paper.code:
+            raise ValueError(
+                f"Paper filename and frontmatter code do not match: {path}"
+            )
+        previous = codes.get(paper.code)
+        if previous is not None:
+            raise ValueError(
+                f"duplicate Paper code across active/Trash: {paper.code} "
+                f"({previous}, {relative})"
+            )
+        codes[paper.code] = relative
 
 
 def _direct_paper_relative_path(
@@ -1511,25 +1533,325 @@ def _direct_paper_relative_path(
     return relative
 
 
-def _resolve_direct_paper_path(
+def _supported_paper_relative_path(
     vault: Path,
     candidate: str | Path,
-    parent: tuple[str, ...],
+    base: tuple[str, ...],
+) -> Path:
+    candidate_path = Path(candidate).expanduser()
+    expected = "/".join(base) + "/[folder/]Paper.md"
+    if ".." in candidate_path.parts:
+        raise ValueError(f"expected {expected}")
+    if candidate_path.is_absolute():
+        try:
+            relative = candidate_path.relative_to(vault)
+        except ValueError as exc:
+            raise ValueError(
+                f"Paper path is outside the selected Vault: {candidate}"
+            ) from exc
+    else:
+        relative = candidate_path
+    if relative.parts[: len(base)] != base:
+        raise ValueError(f"expected {expected}")
+    remainder = relative.parts[len(base) :]
+    if len(remainder) not in {1, 2} or relative.suffix != ".md" or not relative.stem:
+        raise ValueError(f"expected {expected}")
+    if len(remainder) == 2:
+        if validate_folder_name(remainder[0]) != remainder[0]:
+            raise ValueError("folder name must not have outer whitespace")
+    return relative
+
+
+def _paper_scan_error(path: Path, reason: str) -> dict[str, str]:
+    return {"path": str(path), "reason": reason}
+
+
+def _scan_paper_area_at(
+    root_fd: int,
+    vault: Path,
+    base: Path,
+) -> tuple[list[Path], list[dict[str, str]]]:
+    """Scan root and one folder level without following any entry."""
+    papers: list[Path] = []
+    errors: list[dict[str, str]] = []
+    base_fd = _open_relative_directory_no_follow(root_fd, base, vault)
+    try:
+        with os.scandir(base_fd) as entries:
+            root_entries = sorted(entries, key=lambda entry: entry.name)
+        for entry in root_entries:
+            relative = base / entry.name
+            path = vault / relative
+            try:
+                entry_stat = entry.stat(follow_symlinks=False)
+                if stat.S_ISLNK(entry_stat.st_mode):
+                    errors.append(_paper_scan_error(relative, "symlink is not supported"))
+                    continue
+                if stat.S_ISREG(entry_stat.st_mode):
+                    if relative.suffix == ".md":
+                        papers.append(relative)
+                    continue
+                if not stat.S_ISDIR(entry_stat.st_mode):
+                    errors.append(
+                        _paper_scan_error(relative, "special filesystem entry is not supported")
+                    )
+                    continue
+                try:
+                    if validate_folder_name(entry.name) != entry.name:
+                        raise ValueError("folder name must not have outer whitespace")
+                except ValueError as exc:
+                    errors.append(_paper_scan_error(relative, str(exc)))
+                    continue
+                folder_fd = _open_child_directory_no_follow(base_fd, entry.name, path)
+                try:
+                    folder_papers: list[Path] = []
+                    folder_errors: list[dict[str, str]] = []
+                    opened = os.fstat(folder_fd)
+                    if (opened.st_dev, opened.st_ino) != (
+                        entry_stat.st_dev,
+                        entry_stat.st_ino,
+                    ):
+                        raise ValueError(f"directory changed while scanning: {path}")
+                    with os.scandir(folder_fd) as children:
+                        folder_entries = sorted(children, key=lambda child: child.name)
+                    for child in folder_entries:
+                        child_relative = relative / child.name
+                        child_stat = child.stat(follow_symlinks=False)
+                        if stat.S_ISLNK(child_stat.st_mode):
+                            folder_errors.append(
+                                _paper_scan_error(
+                                    child_relative,
+                                    "symlink is not supported",
+                                )
+                            )
+                        elif stat.S_ISREG(child_stat.st_mode):
+                            if child_relative.suffix == ".md":
+                                folder_papers.append(child_relative)
+                        elif stat.S_ISDIR(child_stat.st_mode):
+                            folder_errors.append(
+                                _paper_scan_error(
+                                    child_relative,
+                                    "Paper folders support one level only",
+                                )
+                            )
+                        else:
+                            folder_errors.append(
+                                _paper_scan_error(
+                                    child_relative,
+                                    "special filesystem entry is not supported",
+                                )
+                            )
+                    _require_directory_path_identity(path, folder_fd)
+                    papers.extend(folder_papers)
+                    errors.extend(folder_errors)
+                finally:
+                    os.close(folder_fd)
+            except (OSError, ValueError) as exc:
+                errors.append(_paper_scan_error(relative, str(exc)))
+        _require_directory_path_identity(vault / base, base_fd)
+    finally:
+        os.close(base_fd)
+    papers.sort(key=str)
+    errors.sort(key=lambda item: (item["path"], item["reason"]))
+    return papers, errors
+
+
+def _paper_code_exists_at(
+    root_fd: int,
+    vault: Path,
+    code: str,
+    *,
+    parse_code: Callable[[bytes], str],
+    excluding: Path | None = None,
+) -> bool:
+    """Check one code across supported paths on a caller-pinned Vault root."""
+    for base in (Path("cache"), Path(".trash/cache")):
+        try:
+            paths, errors = _scan_paper_area_at(root_fd, vault, base)
+        except FileNotFoundError:
+            continue
+        if any(
+            Path(error["path"]).suffix == ".md"
+            and Path(error["path"]).stem == code
+            for error in errors
+        ):
+            return True
+        for relative in paths:
+            if relative == excluding:
+                continue
+            if relative.stem == code:
+                return True
+            parent_fd = _open_relative_directory_no_follow(
+                root_fd,
+                relative.parent,
+                vault,
+            )
+            try:
+                data, _identity = _read_regular_bytes_at(
+                    parent_fd,
+                    relative.name,
+                    vault / relative,
+                )
+                _require_directory_path_identity(vault / relative.parent, parent_fd)
+            except (OSError, ValueError):
+                continue
+            finally:
+                os.close(parent_fd)
+            try:
+                if parse_code(data) == code:
+                    return True
+            except (ValueError, UnicodeError):
+                continue
+    return False
+
+
+def _scan_paper_area(
+    vault: Path,
+    base: Path,
+) -> tuple[list[Path], list[dict[str, str]]]:
+    vault, root_fd = _open_pinned_vault_root(vault)
+    try:
+        result = _scan_paper_area_at(root_fd, vault, base)
+        _require_directory_path_identity(vault, root_fd)
+        return result
+    finally:
+        os.close(root_fd)
+
+
+def scan_active_papers(vault: Path) -> tuple[list[Path], list[dict[str, str]]]:
+    """Return supported active Paper paths plus isolated path errors."""
+    return _scan_paper_area(vault, Path("cache"))
+
+
+def scan_trashed_papers(vault: Path) -> tuple[list[Path], list[dict[str, str]]]:
+    """Return supported Trash Paper paths plus isolated path errors."""
+    try:
+        return _scan_paper_area(vault, Path(".trash/cache"))
+    except FileNotFoundError:
+        return [], []
+
+
+def list_active_papers(vault: Path) -> list[Path]:
+    """Return sorted safe root/one-folder active Paper paths."""
+    papers, _errors = scan_active_papers(vault)
+    return papers
+
+
+def next_paper_code(
+    vault: Path,
+    on_date: date | datetime | None = None,
+    *,
+    parse_code: Callable[[bytes], str] | None = None,
+) -> str:
+    """Allocate the next code across every supported active and Trash path."""
+    if on_date is None:
+        day = datetime.now().date()
+    elif isinstance(on_date, datetime):
+        day = on_date.date()
+    elif isinstance(on_date, date):
+        day = on_date
+    else:
+        raise ValueError("on_date must be a date or datetime")
+    prefix = f"K-{day.strftime('%Y%m%d')}-"
+    used_sequences: set[int] = set()
+    vault, root_fd = _open_pinned_vault_root(vault)
+    try:
+        active_paths, _active_errors = _scan_paper_area_at(
+            root_fd,
+            vault,
+            Path("cache"),
+        )
+        try:
+            trash_paths, _trash_errors = _scan_paper_area_at(
+                root_fd,
+                vault,
+                Path(".trash/cache"),
+            )
+        except FileNotFoundError:
+            trash_paths = []
+        for relative in [*active_paths, *trash_paths]:
+            candidates = [relative.stem]
+            if parse_code is not None:
+                parent_fd = _open_relative_directory_no_follow(
+                    root_fd,
+                    relative.parent,
+                    vault,
+                )
+                try:
+                    data, _identity = _read_regular_bytes_at(
+                        parent_fd,
+                        relative.name,
+                        vault / relative,
+                    )
+                    _require_directory_path_identity(
+                        vault / relative.parent,
+                        parent_fd,
+                    )
+                    candidates.append(parse_code(data))
+                except (OSError, ValueError, UnicodeError):
+                    pass
+                finally:
+                    os.close(parent_fd)
+            for candidate in candidates:
+                if not candidate.startswith(prefix):
+                    continue
+                match = _PAPER_CODE_FILENAME_RE.fullmatch(candidate)
+                if match is not None:
+                    used_sequences.add(int(match.group(1)))
+        _require_directory_path_identity(vault, root_fd)
+    finally:
+        os.close(root_fd)
+    for sequence in range(1, 1000):
+        if sequence not in used_sequences:
+            return f"{prefix}{sequence:03d}"
+    raise ValueError(f"all Paper codes for {day.isoformat()} are in use")
+
+
+def resolve_active_paper_path(
+    vault: Path,
+    candidate: str | Path,
+    *,
+    must_exist: bool = True,
+) -> Path:
+    """Resolve one root/one-folder active Paper safely."""
+    return _resolve_supported_paper_path(
+        vault, candidate, ("cache",), must_exist=must_exist
+    )
+
+
+def resolve_trashed_paper_path(
+    vault: Path,
+    candidate: str | Path,
+    *,
+    must_exist: bool = True,
+) -> Path:
+    """Resolve one root/one-folder Trash Paper safely."""
+    return _resolve_supported_paper_path(
+        vault, candidate, (".trash", "cache"), must_exist=must_exist
+    )
+
+
+def _resolve_supported_paper_path(
+    vault: Path,
+    candidate: str | Path,
+    base: tuple[str, ...],
     *,
     must_exist: bool,
 ) -> Path:
     raw_vault = _lexical_absolute_path(vault)
-    validate_vault_tree_no_follow(raw_vault)
     canonical_vault = _require_lexical_home_path(raw_vault)
-    relative = _direct_paper_relative_path(canonical_vault, candidate, parent)
+    relative = _supported_paper_relative_path(canonical_vault, candidate, base)
     target = canonical_vault / relative
-
-    parent_path = canonical_vault.joinpath(*parent)
-    parent_fd = open_directory_no_follow(parent_path)
+    vault_fd = open_directory_no_follow(canonical_vault)
+    parent_fd: int | None = None
     try:
+        parent_fd = _open_relative_directory_no_follow(
+            vault_fd,
+            relative.parent,
+            canonical_vault,
+        )
         try:
             target_stat = os.stat(
-                target.name,
+                relative.name,
                 dir_fd=parent_fd,
                 follow_symlinks=False,
             )
@@ -1541,24 +1863,12 @@ def _resolve_direct_paper_path(
                 raise ValueError(f"symlink is not supported: {target}")
             if not stat.S_ISREG(target_stat.st_mode):
                 raise ValueError(f"Paper must be a regular file: {target}")
+        _require_directory_path_identity(target.parent, parent_fd)
+        return target
     finally:
-        os.close(parent_fd)
-    return target
-
-
-def resolve_active_paper_path(
-    vault: Path,
-    candidate: str | Path,
-    *,
-    must_exist: bool = True,
-) -> Path:
-    """Resolve one direct ``cache/*.md`` Paper safely."""
-    return _resolve_direct_paper_path(
-        vault,
-        candidate,
-        ("cache",),
-        must_exist=must_exist,
-    )
+        if parent_fd is not None:
+            os.close(parent_fd)
+        os.close(vault_fd)
 
 
 def _soft_delete_target_name(directory_fd: int, source: Path) -> str:
@@ -1648,20 +1958,9 @@ def soft_delete(vault: Path, rel_path: str) -> Path:
 
 
 def list_trashed_papers(vault: Path) -> list[Path]:
-    """Return sorted vault-relative paths for all direct recovery files."""
-    validate_vault_tree_no_follow(vault)
-    vault = _require_lexical_home_path(vault)
-    trash_dir = vault / ".trash" / "cache"
-    try:
-        directory_fd = open_directory_no_follow(trash_dir)
-    except FileNotFoundError:
-        return []
-    try:
-        with os.scandir(directory_fd) as entries:
-            names = sorted(entry.name for entry in entries if entry.name.endswith(".md"))
-    finally:
-        os.close(directory_fd)
-    return [Path(".trash/cache") / name for name in names]
+    """Return sorted safe root/one-folder recovery Paper paths."""
+    papers, _errors = scan_trashed_papers(vault)
+    return papers
 
 
 def restore_paper(vault: Path, rel_path: str, new_code: str | None = None) -> Path:

@@ -135,6 +135,34 @@ def test_migration_rejects_a_root_symlink_before_writing(tmp_path):
     assert not (tmp_path / "backups").exists()
 
 
+def test_migration_rejects_an_ordinary_root_replacement_after_selection(tmp_path):
+    vault = _copy_fixture(tmp_path, "selected-vault")
+    replacement = _copy_fixture(tmp_path, "replacement-vault")
+    _remove_preflight_failures(vault)
+    _remove_preflight_failures(replacement)
+    selected_stat = vault.stat(follow_symlinks=False)
+    selected_identity = (selected_stat.st_dev, selected_stat.st_ino)
+    selected_before = _file_bytes(vault)
+    replacement_before = _file_bytes(replacement)
+    parked = tmp_path / "parked-selected-vault"
+    vault.rename(parked)
+    replacement.rename(vault)
+    backup_root = tmp_path / "backups"
+
+    with pytest.raises(ValueError, match="root changed after selection"):
+        migrate_v01_vault(
+            vault,
+            backup_root=backup_root,
+            now=datetime(2026, 7, 14, 12, 0),
+            expected_root_identity=selected_identity,
+        )
+
+    assert _file_bytes(parked) == selected_before
+    assert _file_bytes(vault) == replacement_before
+    assert not backup_root.exists()
+    assert not list(tmp_path.glob(".selected-vault.v01-stage-*"))
+
+
 def test_backup_root_must_be_inside_home_and_outside_the_active_vault(tmp_path):
     vault = _copy_fixture(tmp_path)
     _remove_preflight_failures(vault)

@@ -66,6 +66,7 @@ def build_migration_page(
     *,
     on_open_migrated: Callable[[MigrationResult], None],
     on_choose_other: Callable[[], None],
+    expected_root_identity: tuple[int, int] | None = None,
 ) -> ft.Control:
     """Build a no-write preflight page for one detected v0.1 vault."""
     preflight = inspect_v01_vault(vault)
@@ -98,7 +99,10 @@ def build_migration_page(
         status.color = MUTED
         page.update()
         try:
-            result = migrate_v01_vault(vault)
+            result = migrate_v01_vault(
+                vault,
+                expected_root_identity=expected_root_identity,
+            )
         except MigrationPreflightError as exc:
             confirmation.disabled = False
             migrate_button.disabled = False

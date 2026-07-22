@@ -20,10 +20,23 @@ from keikeu_core.markdown_io import (
     rename_paper,
     render_paper_bytes,
     update_paper,
-    write_paper,
+    write_paper as _write_paper,
 )
 from keikeu_core.models import Highlight, Paper
 from keikeu_core.vault import init_vault
+
+
+def write_paper(
+    vault: Path,
+    paper: Paper,
+    *,
+    destination: str | Path | None = None,
+) -> Path:
+    return _write_paper(
+        vault,
+        paper,
+        destination=destination or Path("cache") / f"{paper.code}.md",
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -226,6 +239,194 @@ def test_next_code_and_new_write_never_overwrite(tmp_path):
             Paper(code="K-20260714-001", initial_summary="", summary="replacement"),
         )
     assert path.read_bytes() == before
+
+
+def test_folder_destination_and_global_active_trash_code_scan(tmp_path):
+    day = datetime(2026, 7, 14)
+    active_folder = tmp_path / "cache" / "夜行列车"
+    trash_folder = tmp_path / ".trash" / "cache" / "旧车站"
+    active_folder.mkdir()
+    trash_folder.mkdir()
+    active = write_paper(
+        tmp_path,
+        Paper(code="K-20260714-001", initial_summary="", summary="active"),
+        destination="cache/夜行列车/K-20260714-001.md",
+    )
+    trashed = write_paper(
+        tmp_path,
+        Paper(code="K-20260714-002", initial_summary="", summary="trash"),
+    )
+    trashed.rename(trash_folder / "provider-copy.md")
+
+    assert active == active_folder / "K-20260714-001.md"
+    assert next_paper_code(tmp_path, day) == "K-20260714-003"
+
+    paper, source_bytes = read_paper_snapshot(active)
+    paper.summary = "updated in folder"
+    update_paper(
+        tmp_path,
+        active.relative_to(tmp_path),
+        paper,
+        expected_source_bytes=source_bytes,
+    )
+    assert read_paper(active).summary == "updated in folder"
+
+
+def test_write_requires_an_exact_supported_destination(tmp_path):
+    paper = Paper(code="K-20260714-001", initial_summary="", summary="summary")
+
+    with pytest.raises(ValueError, match="filename must match"):
+        write_paper(tmp_path, paper, destination="cache/K-20260714-002.md")
+    with pytest.raises(ValueError, match="expected"):
+        write_paper(
+            tmp_path,
+            paper,
+            destination="cache/deep/more/K-20260714-001.md",
+        )
+
+
+def test_folder_write_rolls_back_if_the_exact_parent_path_is_replaced(
+    tmp_path,
+    monkeypatch,
+):
+    folder = tmp_path / "cache" / "夜行列车"
+    parked = tmp_path / "cache" / "parked"
+    folder.mkdir()
+    real_create = markdown_mod._create_regular_bytes_at
+    replaced = False
+
+    def replace_folder_then_create(*args, **kwargs):
+        nonlocal replaced
+        if not replaced and args[1] == "K-20260714-001.md":
+            replaced = True
+            folder.rename(parked)
+            folder.mkdir()
+        return real_create(*args, **kwargs)
+
+    monkeypatch.setattr(
+        markdown_mod,
+        "_create_regular_bytes_at",
+        replace_folder_then_create,
+    )
+
+    with pytest.raises(ValueError, match="directory path changed"):
+        write_paper(
+            tmp_path,
+            Paper(code="K-20260714-001", initial_summary="", summary="summary"),
+            destination="cache/夜行列车/K-20260714-001.md",
+        )
+
+    assert not (parked / "K-20260714-001.md").exists()
+    assert not (folder / "K-20260714-001.md").exists()
+
+
+def test_folder_update_rolls_back_if_the_exact_parent_path_is_replaced(
+    tmp_path,
+    monkeypatch,
+):
+    folder = tmp_path / "cache" / "夜行列车"
+    parked = tmp_path / "cache" / "parked"
+    folder.mkdir()
+    path = write_paper(
+        tmp_path,
+        Paper(code="K-20260714-001", initial_summary="", summary="original"),
+        destination="cache/夜行列车/K-20260714-001.md",
+    )
+    original_bytes = path.read_bytes()
+    paper, source_bytes = read_paper_snapshot(path)
+    paper.summary = "updated"
+    real_exchange = markdown_mod.atomic_exchange_at_no_follow
+    replaced = False
+
+    def replace_folder_then_exchange(*args, **kwargs):
+        nonlocal replaced
+        if not replaced:
+            replaced = True
+            folder.rename(parked)
+            folder.mkdir()
+        return real_exchange(*args, **kwargs)
+
+    monkeypatch.setattr(
+        markdown_mod,
+        "atomic_exchange_at_no_follow",
+        replace_folder_then_exchange,
+    )
+
+    with pytest.raises(ValueError, match="directory path changed"):
+        update_paper(
+            tmp_path,
+            path.relative_to(tmp_path),
+            paper,
+            expected_source_bytes=source_bytes,
+        )
+
+    assert (parked / path.name).read_bytes() == original_bytes
+    assert not (folder / path.name).exists()
+
+
+def test_global_duplicate_code_blocks_create_and_update_mutations(tmp_path):
+    active = write_paper(
+        tmp_path,
+        Paper(code="K-20260714-001", initial_summary="", summary="original"),
+    )
+    trash_folder = tmp_path / ".trash" / "cache" / "旧车站"
+    trash_folder.mkdir()
+    duplicate = trash_folder / "provider-copy.md"
+    duplicate.write_bytes(active.read_bytes())
+    original_bytes = active.read_bytes()
+    active.unlink()
+
+    with pytest.raises(FileExistsError, match="active/Trash"):
+        write_paper(
+            tmp_path,
+            Paper(code="K-20260714-001", initial_summary="", summary="new"),
+            destination="cache/K-20260714-001.md",
+        )
+
+    active.write_bytes(original_bytes)
+    paper, source_bytes = read_paper_snapshot(active)
+    paper.summary = "must not update"
+    with pytest.raises(ValueError, match="duplicate Paper code"):
+        update_paper(
+            tmp_path,
+            active.relative_to(tmp_path),
+            paper,
+            expected_source_bytes=source_bytes,
+        )
+
+    assert active.read_bytes() == original_bytes
+    assert duplicate.read_bytes() == original_bytes
+
+
+def test_write_rolls_back_if_the_code_appears_in_another_folder_during_create(
+    tmp_path,
+    monkeypatch,
+):
+    competing_folder = tmp_path / "cache" / "并发导入"
+    competing_folder.mkdir()
+    target = tmp_path / "cache" / "K-20260714-001.md"
+    competing = competing_folder / "provider-copy.md"
+    real_create = markdown_mod._create_regular_bytes_at
+
+    def create_then_compete(directory_fd, name, data, display_path):
+        identity = real_create(directory_fd, name, data, display_path)
+        competing.write_bytes(data)
+        return identity
+
+    monkeypatch.setattr(
+        markdown_mod,
+        "_create_regular_bytes_at",
+        create_then_compete,
+    )
+
+    with pytest.raises(FileExistsError, match="concurrently created"):
+        write_paper(
+            tmp_path,
+            Paper(code="K-20260714-001", initial_summary="", summary="new"),
+        )
+
+    assert not target.exists()
+    assert read_paper(competing).code == "K-20260714-001"
 
 
 def test_write_refuses_a_byte_identical_ordinary_vault_root_replacement(

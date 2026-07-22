@@ -1113,6 +1113,7 @@ def migrate_v01_vault(
     backup_root: Path | None = None,
     now: datetime | None = None,
     failure_hook: Callable[[str], None] | None = None,
+    expected_root_identity: tuple[int, int] | None = None,
 ) -> MigrationResult:
     """Explicitly migrate a preflight-clean v0.1 vault to Paper v3.
 
@@ -1122,6 +1123,16 @@ def migrate_v01_vault(
     testable; a hook that raises is treated like any other I/O failure.
     """
     vault = _require_migration_source(vault)
+    source_fd = open_directory_no_follow(vault)
+    try:
+        source_identity = _directory_identity(source_fd, vault)
+    finally:
+        os.close(source_fd)
+    if (
+        expected_root_identity is not None
+        and source_identity != expected_root_identity
+    ):
+        raise ValueError("v0.1 source root changed after selection")
     source_snapshot = snapshot_regular_tree_no_follow(vault)
     preflight = inspect_v01_vault(vault)
     if snapshot_regular_tree_no_follow(vault) != source_snapshot:
@@ -1150,6 +1161,8 @@ def migrate_v01_vault(
             vault.name,
             vault,
         )
+        if vault_identity != source_identity:
+            raise ValueError("v0.1 source root changed during migration preflight")
         pinned_backup_root = _prepare_external_root(
             vault,
             requested_backup_root,

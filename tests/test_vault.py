@@ -16,7 +16,12 @@ import pytest
 from keikeu_core import indexer as indexer_mod
 from keikeu_core import markdown_io as markdown_mod
 from keikeu_core import vault as vault_mod
-from keikeu_core.markdown_io import read_paper, update_paper, write_paper
+from keikeu_core.markdown_io import (
+    read_paper,
+    render_paper_bytes,
+    update_paper,
+    write_paper as _write_paper,
+)
 from keikeu_core.models import Highlight, Paper
 from keikeu_core.vault import (
     atomic_exchange_at_no_follow,
@@ -26,13 +31,17 @@ from keikeu_core.vault import (
     get_vault,
     init_vault,
     is_vault,
+    list_active_papers,
     list_trashed_papers,
     open_directory_no_follow,
     open_regular_no_follow,
     require_home_path,
     require_atomic_exchange,
     resolve_active_paper_path,
+    resolve_trashed_paper_path,
     restore_paper,
+    scan_active_papers,
+    scan_trashed_papers,
     set_vault,
     snapshot_regular_tree_no_follow,
     soft_delete,
@@ -42,6 +51,27 @@ from keikeu_core.vault import (
     validate_vault_papers,
     vault_index_version,
 )
+
+
+def write_paper(
+    vault: Path,
+    paper: Paper,
+    *,
+    destination: str | Path | None = None,
+) -> Path:
+    return _write_paper(
+        vault,
+        paper,
+        destination=destination or Path("cache") / f"{paper.code}.md",
+    )
+
+
+def write_external_paper(vault: Path, paper: Paper) -> Path:
+    """Model a provider/legacy duplicate that bypasses keikeu's write guard."""
+    paper.initial_summary = paper.summary
+    path = vault / "cache" / f"{paper.code}.md"
+    path.write_bytes(render_paper_bytes(paper))
+    return path
 
 
 def _paper(code: str, summary: str = "A writing-ready summary.") -> Paper:
@@ -543,6 +573,108 @@ def test_list_trashed_papers_is_sorted_and_uses_relative_paths(tmp_path):
     ]
 
 
+def test_folder_aware_scans_resolve_supported_paths_and_isolate_errors(tmp_path):
+    vault = tmp_path / "vault"
+    init_vault(vault)
+    active_folder = vault / "cache" / "夜行列车"
+    trash_folder = vault / ".trash" / "cache" / "旧车站"
+    active_folder.mkdir()
+    trash_folder.mkdir()
+    active = write_paper(
+        vault,
+        _paper("K-20260714-001"),
+        destination="cache/夜行列车/K-20260714-001.md",
+    )
+    root_trash = write_paper(vault, _paper("K-20260714-002"))
+    root_trash.rename(vault / ".trash" / "cache" / root_trash.name)
+    folder_trash = write_paper(vault, _paper("K-20260714-003"))
+    folder_trash.rename(trash_folder / folder_trash.name)
+    deep = active_folder / "深层"
+    deep.mkdir()
+    (deep / "K-20260714-004.md").write_bytes(active.read_bytes())
+    outside = tmp_path / "outside.md"
+    outside.write_bytes(b"outside")
+    (vault / "cache" / "linked.md").symlink_to(outside)
+
+    active_paths, active_errors = scan_active_papers(vault)
+    trash_paths, trash_errors = scan_trashed_papers(vault)
+
+    assert active_paths == [Path("cache/夜行列车/K-20260714-001.md")]
+    assert active_errors == [
+        {"path": "cache/linked.md", "reason": "symlink is not supported"},
+        {"path": "cache/夜行列车/深层", "reason": "Paper folders support one level only"},
+    ]
+    assert trash_paths == [
+        Path(".trash/cache/K-20260714-002.md"),
+        Path(".trash/cache/旧车站/K-20260714-003.md"),
+    ]
+    assert trash_errors == []
+    assert list_active_papers(vault) == active_paths
+    assert list_trashed_papers(vault) == trash_paths
+    assert resolve_active_paper_path(vault, active.relative_to(vault)) == active
+    assert resolve_trashed_paper_path(vault, trash_paths[1]) == trash_folder / folder_trash.name
+    with pytest.raises(ValueError, match="expected"):
+        resolve_active_paper_path(vault, deep / "K-20260714-004.md")
+    assert outside.read_bytes() == b"outside"
+
+
+def test_folder_scan_discards_detached_results_after_ordinary_replacement(
+    tmp_path,
+    monkeypatch,
+):
+    vault = tmp_path / "vault"
+    init_vault(vault)
+    folder = vault / "cache" / "夜行列车"
+    folder.mkdir()
+    original = write_paper(
+        vault,
+        _paper("K-20260714-001"),
+        destination="cache/夜行列车/K-20260714-001.md",
+    )
+    replacement = tmp_path / "replacement-folder"
+    replacement.mkdir()
+    second = write_paper(vault, _paper("K-20260714-002"))
+    second.rename(replacement / second.name)
+    parked = tmp_path / "parked-folder"
+    real_open_child = vault_mod._open_child_directory_no_follow
+    replaced = False
+
+    def open_then_replace(directory_fd: int, name: str, display_path: Path) -> int:
+        nonlocal replaced
+        descriptor = real_open_child(directory_fd, name, display_path)
+        if display_path == folder and not replaced:
+            replaced = True
+            folder.rename(parked)
+            replacement.rename(folder)
+        return descriptor
+
+    monkeypatch.setattr(
+        vault_mod,
+        "_open_child_directory_no_follow",
+        open_then_replace,
+    )
+
+    paths, errors = scan_active_papers(vault)
+
+    assert paths == []
+    assert errors == [
+        {
+            "path": "cache/夜行列车",
+            "reason": f"directory path changed during operation: {folder}",
+        }
+    ]
+    assert original.name in {path.name for path in parked.iterdir()}
+    monkeypatch.setattr(
+        vault_mod,
+        "_open_child_directory_no_follow",
+        real_open_child,
+    )
+    assert scan_active_papers(vault) == (
+        [Path("cache/夜行列车/K-20260714-002.md")],
+        [],
+    )
+
+
 def test_restore_paper_moves_original_bytes_back_when_there_is_no_collision(tmp_path):
     vault = tmp_path / "vault"
     init_vault(vault)
@@ -608,7 +740,10 @@ def test_restore_paper_requires_a_new_code_for_an_active_code_collision(tmp_path
     deleted = write_paper(vault, _paper("K-20260714-001", "Original summary."))
     deleted_bytes = deleted.read_bytes()
     trashed = soft_delete(vault, "cache/K-20260714-001.md")
-    active = write_paper(vault, _paper("K-20260714-001", "Current summary."))
+    active = write_external_paper(
+        vault,
+        _paper("K-20260714-001", "Current summary."),
+    )
     active_bytes = active.read_bytes()
 
     with pytest.raises(FileExistsError, match="choose a new Paper code"):
@@ -635,7 +770,10 @@ def test_restore_paper_with_new_code_preserves_frozen_draft_and_current_summary(
         expected_source_bytes=expected_source_bytes,
     )
     trashed = soft_delete(vault, "cache/K-20260714-001.md")
-    write_paper(vault, _paper("K-20260714-001", "Current active paper."))
+    write_external_paper(
+        vault,
+        _paper("K-20260714-001", "Current active paper."),
+    )
 
     restored = restore_paper(
         vault,
@@ -661,7 +799,7 @@ def test_restore_with_new_code_refuses_a_byte_identical_ordinary_root_replacemen
     init_vault(vault)
     original = write_paper(vault, _paper("K-20260714-001", "original"))
     trashed = soft_delete(vault, str(original.relative_to(vault)))
-    active = write_paper(vault, _paper("K-20260714-001", "active"))
+    active = write_external_paper(vault, _paper("K-20260714-001", "active"))
     trashed_bytes = trashed.read_bytes()
     active_bytes = active.read_bytes()
     shutil.copytree(vault, replacement)
@@ -701,7 +839,10 @@ def test_restore_paper_rejects_non_trash_paths_and_existing_new_code(tmp_path):
     init_vault(vault)
     write_paper(vault, _paper("K-20260714-001"))
     trashed = soft_delete(vault, "cache/K-20260714-001.md")
-    write_paper(vault, _paper("K-20260714-001", "Current active paper."))
+    write_external_paper(
+        vault,
+        _paper("K-20260714-001", "Current active paper."),
+    )
     write_paper(vault, _paper("K-20260714-002"))
 
     with pytest.raises(ValueError, match=r"\.trash/cache/\*\.md"):
@@ -735,7 +876,7 @@ def test_restore_rollback_does_not_unlink_a_concurrently_replaced_target(
     init_vault(vault)
     original = write_paper(vault, _paper("K-20260714-001", "original"))
     trashed = soft_delete(vault, str(original.relative_to(vault)))
-    write_paper(vault, _paper("K-20260714-001", "active"))
+    write_external_paper(vault, _paper("K-20260714-001", "active"))
     target = vault / "cache" / "K-20260714-002.md"
 
     def fail_source_cleanup(*args, **kwargs) -> None:
@@ -766,7 +907,7 @@ def test_restore_preserves_a_source_edited_in_place_before_cleanup(
     init_vault(vault)
     original = write_paper(vault, _paper("K-20260714-001", "original"))
     trashed = soft_delete(vault, str(original.relative_to(vault)))
-    write_paper(vault, _paper("K-20260714-001", "active"))
+    write_external_paper(vault, _paper("K-20260714-001", "active"))
     target = vault / "cache" / "K-20260714-002.md"
     original_bytes = trashed.read_bytes()
     real_move = markdown_mod._move_regular_no_overwrite_at

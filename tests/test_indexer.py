@@ -20,9 +20,25 @@ from keikeu_core.indexer import (
     rebuild_index,
     save_index,
 )
-from keikeu_core.markdown_io import write_paper
+from keikeu_core.markdown_io import write_paper as _write_paper
 from keikeu_core.models import Highlight, Paper
 from keikeu_core.vault import init_vault, soft_delete
+
+
+V03_FIXTURE = Path(__file__).parent / "fixtures" / "v03-vault" / "mixed-vault"
+
+
+def write_paper(
+    vault: Path,
+    paper: Paper,
+    *,
+    destination: str | Path | None = None,
+) -> Path:
+    return _write_paper(
+        vault,
+        paper,
+        destination=destination or Path("cache") / f"{paper.code}.md",
+    )
 
 
 def _paper(
@@ -156,7 +172,15 @@ def test_rebuild_quarantines_a_conflict_copy_without_changing_the_active_paper(t
         {
             "path": "cache/K-20260714-001 (conflicted copy).md",
             "reason": "Paper filename must match frontmatter code",
-        }
+        },
+        {
+            "path": "cache/K-20260714-001 (conflicted copy).md",
+            "reason": "duplicate Paper code across active/Trash: K-20260714-001",
+        },
+        {
+            "path": "cache/K-20260714-001.md",
+            "reason": "duplicate Paper code across active/Trash: K-20260714-001",
+        },
     ]
     assert active.read_bytes() == active_before
     assert conflict_copy.read_bytes() == copy_before
@@ -197,6 +221,88 @@ def test_load_index_rebuilds_missing_or_invalid_metadata_without_touching_papers
         index_path.write_text(payload, encoding="utf-8")
         assert [entry["code"] for entry in load_index(vault)["papers"]] == ["K-20260714-001"]
         assert paper_path.read_bytes() == original_bytes
+
+
+def test_load_index_rejects_a_detached_valid_index_after_root_replacement(
+    tmp_path,
+    monkeypatch,
+):
+    vault = _fresh_vault(tmp_path)
+    write_paper(vault, _paper("K-20260714-001", "Selected root."))
+    rebuild_index(vault)
+    replacement = tmp_path / "replacement-vault"
+    init_vault(replacement)
+    write_paper(replacement, _paper("K-20260714-002", "Replacement root."))
+    rebuild_index(replacement)
+    parked = tmp_path / "parked-vault"
+    real_check = indexer_mod._index_entries_are_safe_at
+
+    def check_then_replace(selected_vault, root_fd, data):
+        result = real_check(selected_vault, root_fd, data)
+        vault.rename(parked)
+        replacement.rename(vault)
+        return result
+
+    monkeypatch.setattr(
+        indexer_mod,
+        "_index_entries_are_safe_at",
+        check_then_replace,
+    )
+
+    with pytest.raises(ValueError, match="directory path changed"):
+        load_index(vault)
+
+    monkeypatch.setattr(
+        indexer_mod,
+        "_index_entries_are_safe_at",
+        real_check,
+    )
+    assert [entry["code"] for entry in load_index(vault)["papers"]] == [
+        "K-20260714-002"
+    ]
+
+
+def test_load_index_rebuilds_from_current_folder_after_ordinary_replacement(
+    tmp_path,
+    monkeypatch,
+):
+    vault = _fresh_vault(tmp_path)
+    folder = vault / "cache" / "夜行列车"
+    folder.mkdir()
+    original = write_paper(
+        vault,
+        _paper("K-20260714-001", "Detached folder."),
+        destination="cache/夜行列车/K-20260714-001.md",
+    )
+    rebuild_index(vault)
+    replacement = tmp_path / "replacement-folder"
+    replacement.mkdir()
+    current = write_paper(vault, _paper("K-20260714-002", "Current folder."))
+    current.rename(replacement / current.name)
+    parked = tmp_path / "parked-folder"
+    real_read = indexer_mod._read_regular_bytes_at
+    replaced = False
+
+    def read_then_replace(directory_fd, name, display_path):
+        nonlocal replaced
+        result = real_read(directory_fd, name, display_path)
+        if display_path == original and not replaced:
+            replaced = True
+            folder.rename(parked)
+            replacement.rename(folder)
+        return result
+
+    monkeypatch.setattr(
+        indexer_mod,
+        "_read_regular_bytes_at",
+        read_then_replace,
+    )
+
+    index = load_index(vault)
+
+    assert [entry["code"] for entry in index["papers"]] == ["K-20260714-002"]
+    assert (folder / "K-20260714-002.md").exists()
+    assert (parked / "K-20260714-001.md").exists()
 
 
 def test_malicious_absolute_index_path_rebuilds_without_outside_access(
@@ -317,20 +423,93 @@ def test_index_mutation_refuses_a_byte_identical_ordinary_root_replacement(
         assert list(root.glob(".keikeu_index.json.*.tmp")) == []
 
 
-def test_rebuild_rejects_symlink_paper_without_touching_outside(tmp_path):
+def test_rebuild_reports_symlink_paper_without_touching_outside(tmp_path):
     vault = _fresh_vault(tmp_path)
     outside = tmp_path / "outside-paper.md"
     outside.write_bytes(b"outside Paper bytes")
     linked = vault / "cache" / "K-20260714-001.md"
     linked.symlink_to(outside)
-    index_before = (vault / "keikeu_index.json").read_bytes()
-
-    with pytest.raises(ValueError, match="symlink"):
-        rebuild_index(vault)
+    index = rebuild_index(vault)
 
     assert linked.is_symlink()
     assert outside.read_bytes() == b"outside Paper bytes"
-    assert (vault / "keikeu_index.json").read_bytes() == index_before
+    assert index["papers"] == []
+    assert index["errors"] == [
+        {"path": "cache/K-20260714-001.md", "reason": "symlink is not supported"}
+    ]
+
+
+def test_mixed_fixture_rebuild_is_folder_aware_and_reports_deep_and_symlink_paths(
+    tmp_path,
+):
+    vault = tmp_path / "mixed-vault"
+    shutil.copytree(V03_FIXTURE, vault)
+    outside = tmp_path / "outside.md"
+    outside.write_bytes(b"outside")
+    (vault / "cache" / "链接目录").symlink_to(
+        vault / "cache" / "夜行列车",
+        target_is_directory=True,
+    )
+    (vault / "cache" / "K-20260720-099.md").symlink_to(outside)
+
+    index = rebuild_index(vault)
+
+    assert [(entry["path"], entry["folder"]) for entry in index["papers"]] == [
+        ("cache/K-20260720-001.md", None),
+        ("cache/K-20260720-002.md", None),
+        ("cache/夜行列车/K-20260720-003.md", "夜行列车"),
+    ]
+    assert index["errors"] == [
+        {"path": "cache/K-20260720-099.md", "reason": "symlink is not supported"},
+        {"path": "cache/夜行列车/深层", "reason": "Paper folders support one level only"},
+        {"path": "cache/链接目录", "reason": "symlink is not supported"},
+    ]
+    assert outside.read_bytes() == b"outside"
+
+
+def test_rebuild_reports_duplicate_codes_across_active_and_trash_without_rewriting(
+    tmp_path,
+):
+    vault = _fresh_vault(tmp_path)
+    active = write_paper(vault, _paper("K-20260714-001", "active"))
+    trash_folder = vault / ".trash" / "cache" / "旧车站"
+    trash_folder.mkdir()
+    duplicate = trash_folder / "provider-copy.md"
+    duplicate.write_bytes(active.read_bytes())
+    before = {active: active.read_bytes(), duplicate: duplicate.read_bytes()}
+
+    index = rebuild_index(vault)
+
+    assert [entry["path"] for entry in index["papers"]] == [
+        "cache/K-20260714-001.md"
+    ]
+    assert index["errors"] == [
+        {
+            "path": ".trash/cache/旧车站/provider-copy.md",
+            "reason": "duplicate Paper code across active/Trash: K-20260714-001",
+        },
+        {
+            "path": "cache/K-20260714-001.md",
+            "reason": "duplicate Paper code across active/Trash: K-20260714-001",
+        },
+    ]
+    assert {path: path.read_bytes() for path in before} == before
+
+
+def test_external_folder_move_is_reflected_by_deterministic_rebuild(tmp_path):
+    vault = _fresh_vault(tmp_path)
+    source = write_paper(vault, _paper("K-20260714-001", "move me"))
+    folder = vault / "cache" / "夜行列车"
+    folder.mkdir()
+    target = folder / source.name
+    source.rename(target)
+
+    first = rebuild_index(vault)
+    second = rebuild_index(vault)
+
+    assert first == second
+    assert first["papers"][0]["path"] == "cache/夜行列车/K-20260714-001.md"
+    assert first["papers"][0]["folder"] == "夜行列车"
 
 
 def test_module_imports_only_stdlib_dependencies():

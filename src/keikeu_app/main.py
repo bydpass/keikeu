@@ -86,6 +86,25 @@ def _classify_vault_source_no_follow(source: Path) -> str:
     raise ValueError("该文件夹不是受支持的 v0.1 或 Paper v2/v3 Vault")
 
 
+def _classify_configured_home_vault(source: Path) -> str:
+    """Classify a Home Vault while leaving isolated Paper path errors visible."""
+    version = vault_index_version(source)
+    if version in {2, 3}:
+        if not is_vault(source):
+            raise ValueError(f"index v{version} 的 Vault 结构不完整")
+        return _SOURCE_PAPER
+    if version is None and is_vault(source):
+        return _SOURCE_PAPER
+    validate_regular_tree_no_follow(source)
+    if version == 1 and is_v01_vault(source):
+        return _SOURCE_V01
+    if version is not None:
+        raise ValueError(f"不支持的 Vault index version：{version}")
+    if is_v01_vault(source):
+        return _SOURCE_V01
+    raise ValueError("该文件夹不是受支持的 v0.1 或 Paper v2/v3 Vault")
+
+
 def _has_unsupported_paper_schema(index: dict[str, object]) -> bool:
     errors = index.get("errors")
     return isinstance(errors, list) and any(
@@ -167,7 +186,7 @@ class AppContext:
     vault: Path
     state_path: Path | None = None
     open_paper: Callable[[Path | None], None] = field(default=lambda _path: None)
-    open_flashcards: Callable[[str | None], None] = field(default=lambda _code: None)
+    open_flashcards: Callable[[Path | None], None] = field(default=lambda _path: None)
     open_library: Callable[[], None] = field(default=lambda: None)
     change_vault: Callable[[], None] = field(default=lambda: None)
 
@@ -177,10 +196,39 @@ def _configure_window(page: ft.Page) -> None:
     page.window.height = INITIAL_WINDOW_HEIGHT
 
 
-def _build_shell(page: ft.Page, vault: Path) -> None:
+def _pin_home_vault_root(
+    vault: Path,
+    expected_identity: tuple[int, int] | None = None,
+) -> tuple[Path, tuple[int, int]]:
+    """Return one exact Home root and reject symlink or identity replacement."""
+    raw_vault = vault.expanduser().absolute()
+    root_fd = open_directory_no_follow(raw_vault)
+    try:
+        safe_vault = require_home_path(raw_vault)
+        safe_fd = open_directory_no_follow(safe_vault)
+        try:
+            raw_stat = os.fstat(root_fd)
+            safe_stat = os.fstat(safe_fd)
+            identity = (raw_stat.st_dev, raw_stat.st_ino)
+            if identity != (safe_stat.st_dev, safe_stat.st_ino):
+                raise ValueError("Vault root changed during validation")
+            if expected_identity is not None and identity != expected_identity:
+                raise ValueError("Vault root changed after selection")
+            return safe_vault, identity
+        finally:
+            os.close(safe_fd)
+    finally:
+        os.close(root_fd)
+
+
+def _build_shell(
+    page: ft.Page,
+    vault: Path,
+    *,
+    expected_root_identity: tuple[int, int] | None = None,
+) -> None:
     """Build the Paper / Flashcard / Library navigation shell."""
-    validate_vault_tree_no_follow(vault)
-    vault = require_home_path(vault)
+    vault, root_identity = _pin_home_vault_root(vault, expected_root_identity)
     apply_theme(page)
     page.controls.clear()
     page.scroll = None
@@ -195,15 +243,22 @@ def _build_shell(page: ft.Page, vault: Path) -> None:
                 else None
             )
             nav.selected_index = _NAV_PAPER
-            body.content = build_paper_page(ctx, safe_path)
+            relative = safe_path.relative_to(vault) if safe_path is not None else None
+            body.content = build_paper_page(ctx, relative)
             page.update()
         except Exception as ex:
             notify(page, f"无法打开 Paper：{ex}")
 
-    def show_flashcards(code: str | None = None) -> None:
+    def show_flashcards(open_path: Path | None = None) -> None:
         try:
+            safe_path = (
+                resolve_active_paper_path(vault, open_path)
+                if open_path is not None
+                else None
+            )
             nav.selected_index = _NAV_FLASHCARD
-            body.content = build_flashcard_page(ctx, code)
+            relative = safe_path.relative_to(vault) if safe_path is not None else None
+            body.content = build_flashcard_page(ctx, relative)
             page.update()
         except Exception as ex:
             notify(page, f"无法打开 Flashcard：{ex}")
@@ -222,7 +277,11 @@ def _build_shell(page: ft.Page, vault: Path) -> None:
     ctx.change_vault = lambda: _build_vault_picker(
         page,
         initial_path=vault,
-        on_cancel=lambda: _build_shell(page, vault),
+        on_cancel=lambda: _build_shell(
+            page,
+            vault,
+            expected_root_identity=root_identity,
+        ),
     )
 
     def on_nav_change(e: ft.ControlEvent) -> None:
@@ -293,10 +352,12 @@ def _build_migration_gate(
     *,
     configured: bool = False,
     on_cancel: Callable[[], None] | None = None,
+    expected_root_identity: tuple[int, int] | None = None,
 ) -> None:
     """Show a no-write v0.1 preflight before allowing Paper Vault actions."""
+    vault, root_identity = _pin_home_vault_root(vault, expected_root_identity)
     validate_vault_tree_no_follow(vault)
-    vault = require_home_path(vault)
+    vault, root_identity = _pin_home_vault_root(vault, root_identity)
     apply_theme(page)
     page.controls.clear()
     page.scroll = None
@@ -306,7 +367,11 @@ def _build_migration_gate(
             safe_vault = require_home_path(vault)
             selection = _validated_rebuild(safe_vault)
             set_vault(safe_vault, CONFIG_PATH, selection)
-            _build_shell(page, safe_vault)
+            _build_shell(
+                page,
+                safe_vault,
+                expected_root_identity=selection.root_identity,
+            )
         except (OSError, ValueError) as ex:
             notify(page, f"无法打开已迁移的 Vault：{ex}；请检查路径后重试。")
 
@@ -327,6 +392,7 @@ def _build_migration_gate(
                 vault,
                 on_open_migrated=open_migrated,
                 on_choose_other=choose_other,
+                expected_root_identity=root_identity,
             ),
         )
     )
@@ -399,7 +465,11 @@ def _build_vault_picker(
             show_error(f"无法打开 Vault：{ex}；当前 Vault 未切换。")
             return
         notify(page, "Vault 已切换")
-        _build_shell(page, safe_vault)
+        _build_shell(
+            page,
+            safe_vault,
+            expected_root_identity=selection.root_identity,
+        )
 
     def initialize_vault(vault: Path, generation: int) -> None:
         if generation != preview_generation:
@@ -425,7 +495,11 @@ def _build_vault_picker(
             show_error(f"无法初始化 Vault：{ex}；当前 Vault 未切换。")
             return
         notify(page, "Vault 已创建")
-        _build_shell(page, safe_vault)
+        _build_shell(
+            page,
+            safe_vault,
+            expected_root_identity=selection.root_identity,
+        )
 
     def show_relocation(
         source: Path,
@@ -496,7 +570,12 @@ def _build_vault_picker(
                     selection = _validated_v01_selection(copied)
                     set_vault(copied, CONFIG_PATH, selection)
                     switched = True
-                    _build_migration_gate(page, copied, configured=True)
+                    _build_migration_gate(
+                        page,
+                        copied,
+                        configured=True,
+                        expected_root_identity=selection.root_identity,
+                    )
                     return
                 selection = _validated_rebuild(copied)
                 set_vault(copied, CONFIG_PATH, selection)
@@ -520,7 +599,11 @@ def _build_vault_picker(
                 )
                 return
             notify(page, "Vault 已复制、验证并切换；原路径保持不变")
-            _build_shell(page, copied)
+            _build_shell(
+                page,
+                copied,
+                expected_root_identity=selection.root_identity,
+            )
 
         confirmation.on_change = on_confirmation_change
         relocate_button.on_click = on_relocate
@@ -704,7 +787,7 @@ def main(page: ft.Page) -> None:
         )
         return
     try:
-        safe_vault = require_home_path(raw_vault)
+        safe_vault, root_identity = _pin_home_vault_root(raw_vault)
     except (OSError, ValueError) as ex:
         try:
             source_kind = _classify_vault_source_no_follow(raw_vault)
@@ -728,8 +811,7 @@ def main(page: ft.Page) -> None:
         )
         return
     try:
-        validate_vault_tree_no_follow(raw_vault)
-        source_kind = _classify_vault_source_no_follow(safe_vault)
+        source_kind = _classify_configured_home_vault(safe_vault)
     except (OSError, ValueError) as ex:
         _build_vault_picker(
             page,
@@ -738,9 +820,32 @@ def main(page: ft.Page) -> None:
         )
         return
     if source_kind == _SOURCE_V01:
-        _build_migration_gate(page, safe_vault, configured=True)
+        try:
+            _build_migration_gate(
+                page,
+                safe_vault,
+                configured=True,
+                expected_root_identity=root_identity,
+            )
+        except (OSError, ValueError) as ex:
+            _build_vault_picker(
+                page,
+                initial_path=raw_vault,
+                initial_error=f"当前 Vault 在打开迁移页前发生变化：{ex}",
+            )
     else:
-        _build_shell(page, safe_vault)
+        try:
+            _build_shell(
+                page,
+                safe_vault,
+                expected_root_identity=root_identity,
+            )
+        except (OSError, ValueError) as ex:
+            _build_vault_picker(
+                page,
+                initial_path=raw_vault,
+                initial_error=f"当前 Vault 在打开前发生变化：{ex}",
+            )
 
 
 def run() -> None:

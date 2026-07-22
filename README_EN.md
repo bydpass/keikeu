@@ -8,7 +8,7 @@
 
 The code implements the `Paper Markdown → Flashcard → external prose editor` core. Road v0.2 Phases 0–7 engineering, macOS file-service smoke, and Phase 8 real-author one-shot and two-session short/medium acceptance are complete and marked by local annotated tag `v0.2.0`. Road archival remains a developer decision.
 
-Phase 7.5 is an independent lightweight iOS build for rapid testing. Its responsive UI, app-sandbox Vault, and on-device fixes are complete on a separate branch; it is not a merge gate in the macOS Road. Road v0.3 Phase 2 Paper v3 naming is complete, and Phase 3 folder-aware core is next. The runtime reads Paper v2/v3 and writes Paper/index v3, while folders and later interactions remain unimplemented. See [PROJECT](docs/PROJECT.md) for live coordinates.
+Phase 7.5 is an independent lightweight iOS build for rapid testing. Its responsive UI, app-sandbox Vault, and on-device fixes are complete on a separate branch; it is not a merge gate in the macOS Road. Road v0.3 Phase 3 folder-aware core is complete, and Phase 4 folder/Trash/branch core operations are next. The runtime reads Paper v2/v3, writes Paper/index v3, and safely enumerates and addresses Papers in one-level folders. See [PROJECT](docs/PROJECT.md) for live coordinates.
 
 ## Current runtime flow
 
@@ -86,7 +86,7 @@ v0.1        archived macOS Cache / Outline pre-alpha
 v0.2        macOS Paper / Flashcard Core; product acceptance complete, Road closeout pending
 Phase 7.5   independent lightweight iOS rapid-test build
 Phase 8.5   Road v0.3 preparation; precursor to the next Mac version
-Road v0.3   macOS Paper Library; Phase 2 complete, Phase 3 next
+Road v0.3   macOS Paper Library; Phase 3 complete, Phase 4 next
 Pre-Advance optional Markdown Outline; never blocks the core flow
 later       iPhone/iPad file-service capability, Android, Windows
 ```

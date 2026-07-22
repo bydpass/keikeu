@@ -14,7 +14,7 @@ from keikeu_app import main as app_main
 from keikeu_app.pages import migration_page as migration_page_mod
 from keikeu_app.pages.migration_page import build_migration_page
 from keikeu_core.markdown_io import write_paper
-from keikeu_core.migration_v01 import MigrationResult
+from keikeu_core.migration_v01 import MigrationResult, is_v01_vault
 from keikeu_core.models import Highlight, Paper
 from keikeu_core.vault import (
     capture_vault_selection_token,
@@ -248,7 +248,7 @@ def test_valid_vault_preview_is_read_only_until_confirmed(tmp_path, monkeypatch)
     monkeypatch.setattr(
         app_main,
         "_build_shell",
-        lambda _page, _vault: order.append("shell"),
+        lambda _page, _vault, **_kwargs: order.append("shell"),
     )
 
     app_main._build_vault_picker(page)  # type: ignore[attr-defined, arg-type]
@@ -287,7 +287,7 @@ def test_confirmed_v2_rejects_ordinary_root_replacement_after_final_validation(
     monkeypatch.setattr(
         app_main,
         "_build_shell",
-        lambda _page, selected: shell_calls.append(selected),
+        lambda _page, selected, **_kwargs: shell_calls.append(selected),
     )
 
     app_main._build_vault_picker(page, show_configured=False)  # type: ignore[attr-defined, arg-type]
@@ -365,7 +365,7 @@ def test_empty_vault_preview_does_not_initialize_before_confirm(tmp_path, monkey
     monkeypatch.setattr(
         app_main,
         "_build_shell",
-        lambda _page, _vault: order.append("shell"),
+        lambda _page, _vault, **_kwargs: order.append("shell"),
     )
 
     app_main._build_vault_picker(page)  # type: ignore[attr-defined, arg-type]
@@ -501,7 +501,7 @@ def test_valid_home_v2_with_a_damaged_paper_switches_and_exposes_index_error(
     monkeypatch.setattr(
         app_main,
         "_build_shell",
-        lambda _page, _vault: order.append("shell"),
+        lambda _page, _vault, **_kwargs: order.append("shell"),
     )
 
     app_main._build_vault_picker(page, show_configured=False)  # type: ignore[attr-defined, arg-type]
@@ -527,6 +527,7 @@ def test_v2_index_with_a_v3_paper_rebuilds_v3_and_switches(tmp_path, monkeypatch
             display_name="v3 Paper",
             highlights=[Highlight(content="保留内容", display_name="锚点")],
         ),
+        destination="cache/K-20260722-001.md",
     )
     (vault / "keikeu_index.json").write_text(
         '{"version": 2, "papers": [], "errors": []}\n',
@@ -542,7 +543,7 @@ def test_v2_index_with_a_v3_paper_rebuilds_v3_and_switches(tmp_path, monkeypatch
     monkeypatch.setattr(
         app_main,
         "_build_shell",
-        lambda _page, _vault: order.append("shell"),
+        lambda _page, _vault, **_kwargs: order.append("shell"),
     )
 
     app_main._build_vault_picker(page, show_configured=False)  # type: ignore[attr-defined, arg-type]
@@ -783,7 +784,7 @@ def test_corrupt_structural_index_is_rebuilt_after_picker_confirmation(
     monkeypatch.setattr(
         app_main,
         "_build_shell",
-        lambda _page, _vault: order.append("shell"),
+        lambda _page, _vault, **_kwargs: order.append("shell"),
     )
 
     app_main._build_vault_picker(page, show_configured=False)  # type: ignore[attr-defined, arg-type]
@@ -812,7 +813,7 @@ def test_missing_disposable_index_is_rebuilt_after_picker_confirmation(
     monkeypatch.setattr(
         app_main,
         "_build_shell",
-        lambda _page, _vault: order.append("shell"),
+        lambda _page, _vault, **_kwargs: order.append("shell"),
     )
 
     app_main._build_vault_picker(page, show_configured=False)  # type: ignore[attr-defined, arg-type]
@@ -857,7 +858,7 @@ def test_startup_rejects_a_root_symlink_before_shell_or_format_probe(
     monkeypatch.setattr(
         app_main,
         "_build_shell",
-        lambda _page, _vault: (_ for _ in ()).throw(AssertionError("must not open shell")),
+        lambda _page, _vault, **_kwargs: (_ for _ in ()).throw(AssertionError("must not open shell")),
     )
 
     app_main.main(page)  # type: ignore[arg-type]
@@ -866,7 +867,7 @@ def test_startup_rejects_a_root_symlink_before_shell_or_format_probe(
     assert root_link.is_symlink()
 
 
-def test_startup_rejects_internal_file_symlink_before_shell_open(tmp_path, monkeypatch):
+def test_startup_opens_home_vault_with_an_isolated_symlink_error(tmp_path, monkeypatch):
     vault = tmp_path / "configured-symlink-vault"
     init_vault(vault)
     target = tmp_path / "outside-paper.md"
@@ -876,27 +877,91 @@ def test_startup_rejects_internal_file_symlink_before_shell_open(tmp_path, monke
     page = FakePage()
     monkeypatch.setattr(app_main, "get_vault", lambda _config: vault)
     monkeypatch.setattr(app_main, "CONFIG_PATH", config)
-    monkeypatch.setattr(
-        app_main,
-        "is_v01_vault",
-        lambda _vault: (_ for _ in ()).throw(AssertionError("must not detect format")),
-    )
-    monkeypatch.setattr(
-        app_main,
-        "is_vault",
-        lambda _vault: (_ for _ in ()).throw(AssertionError("must not detect format")),
-    )
+    opened: list[Path] = []
     monkeypatch.setattr(
         app_main,
         "_build_shell",
-        lambda _page, _vault: (_ for _ in ()).throw(AssertionError("must not open shell")),
+        lambda _page, opened_vault, **_kwargs: opened.append(opened_vault),
     )
 
     app_main.main(page)  # type: ignore[arg-type]
 
-    assert any("symlink" in text for text in _texts(page.controls[0]))
-    assert _text_field(page.controls[0], "Vault 文件夹路径").value == str(vault.resolve())
+    assert opened == [vault]
     assert not config.exists()
+
+
+def test_startup_rejects_root_swap_to_home_symlink_after_classification(
+    tmp_path,
+    monkeypatch,
+):
+    vault = tmp_path / "configured-vault"
+    parked = tmp_path / "parked-vault"
+    redirect = tmp_path / "redirect-vault"
+    init_vault(vault)
+    init_vault(redirect)
+    page = FakePage()
+    monkeypatch.setattr(app_main, "get_vault", lambda _config: vault)
+    real_classify = app_main._classify_configured_home_vault
+
+    def classify_then_swap(candidate: Path) -> str:
+        source_kind = real_classify(candidate)
+        vault.rename(parked)
+        vault.symlink_to(redirect, target_is_directory=True)
+        return source_kind
+
+    monkeypatch.setattr(
+        app_main,
+        "_classify_configured_home_vault",
+        classify_then_swap,
+    )
+
+    app_main.main(page)  # type: ignore[arg-type]
+
+    root = page.controls[0]
+    assert any("发生变化" in text or "symlink" in text for text in _texts(root))
+    assert _text_field(root, "Vault 文件夹路径").value == str(vault)
+    assert vault.is_symlink()
+    assert (parked / "keikeu_index.json").exists()
+    assert (redirect / "keikeu_index.json").exists()
+
+
+def test_startup_rejects_v01_ordinary_root_swap_before_migration_gate(
+    tmp_path,
+    monkeypatch,
+):
+    vault = _copy_fixture(tmp_path)
+    configured = tmp_path / "configured-v01"
+    vault.rename(configured)
+    vault = configured
+    replacement = tmp_path / "replacement-v01"
+    shutil.copytree(FIXTURE_VAULT, replacement)
+    _remove_preflight_failures(vault)
+    _remove_preflight_failures(replacement)
+    parked = tmp_path / "parked-v01"
+    page = FakePage()
+    monkeypatch.setattr(app_main, "get_vault", lambda _config: vault)
+    real_classify = app_main._classify_configured_home_vault
+
+    def classify_then_swap(candidate: Path) -> str:
+        source_kind = real_classify(candidate)
+        vault.rename(parked)
+        replacement.rename(vault)
+        return source_kind
+
+    monkeypatch.setattr(
+        app_main,
+        "_classify_configured_home_vault",
+        classify_then_swap,
+    )
+
+    app_main.main(page)  # type: ignore[arg-type]
+
+    root = page.controls[0]
+    assert any("发生变化" in text for text in _texts(root))
+    assert _text_field(root, "Vault 文件夹路径").value == str(vault)
+    assert not any("创建完整备份并迁移" in text for text in _texts(root))
+    assert is_v01_vault(parked)
+    assert is_v01_vault(vault)
 
 
 def test_unsafe_v2_copy_rebuilds_then_switches_and_keeps_source(tmp_path, monkeypatch):
@@ -945,7 +1010,7 @@ def test_unsafe_v2_copy_rebuilds_then_switches_and_keeps_source(tmp_path, monkey
     monkeypatch.setattr(
         app_main,
         "_build_shell",
-        lambda _page, _vault: order.append("shell"),
+        lambda _page, _vault, **_kwargs: order.append("shell"),
     )
 
     app_main._build_vault_picker(page)  # type: ignore[attr-defined, arg-type]
@@ -1094,7 +1159,7 @@ def test_unsafe_v2_validation_failure_does_not_switch_config(tmp_path, monkeypat
     monkeypatch.setattr(
         app_main,
         "_build_shell",
-        lambda _page, _vault: (_ for _ in ()).throw(AssertionError("must not open")),
+        lambda _page, _vault, **_kwargs: (_ for _ in ()).throw(AssertionError("must not open")),
     )
 
     app_main._build_vault_picker(page)  # type: ignore[attr-defined, arg-type]
@@ -1310,7 +1375,7 @@ def test_unsafe_v01_migration_failure_keeps_safe_copy_selected(tmp_path, monkeyp
     monkeypatch.setattr(
         migration_page_mod,
         "migrate_v01_vault",
-        lambda _vault: (_ for _ in ()).throw(OSError("simulated migration failure")),
+        lambda _vault, **_kwargs: (_ for _ in ()).throw(OSError("simulated migration failure")),
     )
 
     app_main._build_vault_picker(page)  # type: ignore[attr-defined, arg-type]

@@ -20,9 +20,27 @@ from keikeu_app.pages.flashcard_page import build_flashcard_page
 from keikeu_app.pages.library_page import build_library_page
 from keikeu_app.pages.paper_page import build_paper_page
 from keikeu_core.indexer import rebuild_index
-from keikeu_core.markdown_io import read_paper, update_paper, write_paper
+from keikeu_core.markdown_io import (
+    read_paper,
+    render_paper_bytes,
+    update_paper,
+    write_paper as _write_paper,
+)
 from keikeu_core.models import Highlight, Paper
 from keikeu_core.vault import init_vault, soft_delete
+
+
+def write_paper(
+    vault: Path,
+    paper: Paper,
+    *,
+    destination: str | Path | None = None,
+) -> Path:
+    return _write_paper(
+        vault,
+        paper,
+        destination=destination or Path("cache") / f"{paper.code}.md",
+    )
 
 
 class FakePage:
@@ -307,7 +325,7 @@ def test_flashcard_is_summary_first_read_only_and_remembers_position(tmp_path):
     opened: dict[str, Path] = {}
     ctx.open_paper = lambda opened_path: opened.update(path=opened_path)
 
-    root = build_flashcard_page(ctx, paper.code)
+    root = build_flashcard_page(ctx, path.relative_to(tmp_path))
     assert "Current Summary." in _texts(root)
     assert "1 / 3" in _texts(root)
     assert not [control for control in _walk(root) if isinstance(control, ft.TextField)]
@@ -322,14 +340,20 @@ def test_flashcard_is_summary_first_read_only_and_remembers_position(tmp_path):
     _button(root, "查看当前 Summary").on_click(None)
     assert _control_by_key(root, "flashcard-summary-context").visible is True
     _button(root, "返回 Paper").on_click(None)
-    assert opened["path"] == path
+    assert opened["path"] == path.relative_to(tmp_path)
 
-    reopened = build_flashcard_page(_ctx(FakePage(), tmp_path, state_path), paper.code)
+    reopened = build_flashcard_page(
+        _ctx(FakePage(), tmp_path, state_path),
+        path.relative_to(tmp_path),
+    )
     assert "2 / 3" in _texts(reopened)
     assert get_card_index(paper.code, 3, state_path) == 1
 
     state_path.unlink()
-    reset_view = build_flashcard_page(_ctx(FakePage(), tmp_path, state_path), paper.code)
+    reset_view = build_flashcard_page(
+        _ctx(FakePage(), tmp_path, state_path),
+        path.relative_to(tmp_path),
+    )
     assert "1 / 3" in _texts(reset_view)
     assert read_paper(path).summary == "Current Summary."
 
@@ -351,14 +375,17 @@ def test_flashcard_rejects_a_symlinked_cache_before_reading_outside(tmp_path, mo
         return real_read(path)
 
     monkeypatch.setattr(flashcard_page_mod, "read_paper", tracked_read)
-    root = build_flashcard_page(_ctx(FakePage(), vault), paper.code)
+    root = build_flashcard_page(
+        _ctx(FakePage(), vault),
+        Path("cache") / f"{paper.code}.md",
+    )
 
     assert reads == []
     assert "Outside secret summary." not in _texts(root)
     assert "尚未打开 Paper" in _texts(root)
 
 
-def test_shell_flashcard_rejects_a_traversal_code_before_any_read(tmp_path, monkeypatch):
+def test_shell_flashcard_rejects_a_traversal_path_before_any_read(tmp_path, monkeypatch):
     vault = tmp_path / "vault"
     init_vault(vault)
     page = FakePage()
@@ -380,26 +407,53 @@ def test_shell_flashcard_rejects_a_traversal_code_before_any_read(tmp_path, monk
     rail.selected_index = 2
     rail.on_change(SimpleNamespace(control=rail))
 
-    captured[0].open_flashcards("../../outside")
+    captured[0].open_flashcards(Path("../../outside"))
 
     assert reads == []
-    assert rail.selected_index == 1
-    assert "尚未打开 Paper" in _texts(page.controls[0])
+    assert rail.selected_index == 2
 
 
-def test_library_opens_flashcard_with_the_selected_paper_code(tmp_path):
+def test_library_opens_flashcard_with_the_selected_paper_path(tmp_path):
     init_vault(tmp_path)
     paper = _paper("K-20260714-001", "Focus this paper.")
     write_paper(tmp_path, paper)
     rebuild_index(tmp_path)
     ctx = _ctx(FakePage(), tmp_path)
-    opened: list[str | None] = []
-    ctx.open_flashcards = lambda code: opened.append(code)
+    opened: list[Path | None] = []
+    ctx.open_flashcards = lambda path: opened.append(path)
 
     root = build_library_page(ctx)
     _button(root, "打开 Flashcard").on_click(None)
 
-    assert opened == [paper.code]
+    assert opened == [Path("cache") / f"{paper.code}.md"]
+
+
+def test_folder_paper_round_trips_through_editor_library_and_flashcard(tmp_path):
+    init_vault(tmp_path)
+    folder = tmp_path / "cache" / "夜行列车"
+    folder.mkdir()
+    paper = _paper("K-20260714-001", "Folder summary.")
+    path = write_paper(
+        tmp_path,
+        paper,
+        destination="cache/夜行列车/K-20260714-001.md",
+    )
+    page = FakePage()
+    ctx = _ctx(page, tmp_path)
+
+    editor = build_paper_page(ctx, path.relative_to(tmp_path))
+    _text_field(editor, "Summary").value = "Updated folder summary."
+    _button(editor, "保存").on_click(None)
+    assert read_paper(path).summary == "Updated folder summary."
+
+    flashcard = build_flashcard_page(ctx, path.relative_to(tmp_path))
+    assert "Updated folder summary." in _texts(flashcard)
+
+    opened: list[Path | None] = []
+    ctx.open_flashcards = lambda selected: opened.append(selected)
+    library = build_library_page(ctx)
+    _button(library, "打开 Flashcard").on_click(None)
+    assert opened == [Path("cache/夜行列车/K-20260714-001.md")]
 
 
 def test_library_vault_switch_cancel_returns_to_the_current_shell(tmp_path):
@@ -448,7 +502,7 @@ def test_library_searches_code_summary_and_tags_and_opens_paper(tmp_path):
     search.on_change(None)
     tile = next(control for control in _walk(root) if isinstance(control, ft.ListTile))
     tile.on_click(None)
-    assert opened["path"] == first
+    assert opened["path"] == first.relative_to(tmp_path)
 
 
 def test_library_delete_and_restore_are_reachable_from_the_ui(tmp_path):
@@ -471,7 +525,11 @@ def test_library_recovery_accepts_an_explicit_new_code_after_a_collision(tmp_pat
     init_vault(tmp_path)
     deleted = write_paper(tmp_path, _paper("K-20260714-001", "Deleted paper."))
     soft_delete(tmp_path, str(deleted.relative_to(tmp_path)))
-    write_paper(tmp_path, _paper("K-20260714-001", "Active paper."))
+    active = _paper("K-20260714-001", "Active paper.")
+    active.initial_summary = active.summary
+    (tmp_path / "cache" / "K-20260714-001.md").write_bytes(
+        render_paper_bytes(active)
+    )
     rebuild_index(tmp_path)
     root = build_library_page(_ctx(FakePage(), tmp_path))
 
