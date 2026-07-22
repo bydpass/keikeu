@@ -13,7 +13,7 @@ import flet as ft
 import pytest
 
 from keikeu_app import main as app_main
-from keikeu_app.local_state import get_card_index
+from keikeu_app.local_state import load_last_daily_card_date
 from keikeu_app.main import AppContext
 from keikeu_app.pages import flashcard_page as flashcard_page_mod
 from keikeu_app.pages import library_page as library_page_mod
@@ -150,8 +150,8 @@ def _paper(
     )
 
 
-def _ctx(page: FakePage, vault: Path, state_path: Path | None = None) -> AppContext:
-    return AppContext(page=page, vault=vault, state_path=state_path)  # type: ignore[arg-type]
+def _ctx(page: FakePage, vault: Path) -> AppContext:
+    return AppContext(page=page, vault=vault)  # type: ignore[arg-type]
 
 
 def test_shell_uses_paper_flashcard_and_library_navigation(tmp_path):
@@ -183,7 +183,64 @@ def test_shell_uses_paper_flashcard_and_library_navigation(tmp_path):
 
     labels[0].on_click(None)
 
-    assert page.on_keyboard_event is None
+    assert page.on_keyboard_event is not None
+
+
+def test_daily_start_claims_before_display_and_enter_opens_blank_paper(tmp_path):
+    init_vault(tmp_path)
+    state_path = tmp_path / "fresh-device-state.json"
+    page = FakePage()
+
+    app_main._build_startup(  # type: ignore[attr-defined, arg-type]
+        page,
+        tmp_path,
+        state_path=state_path,
+    )
+
+    assert _control_by_key(page.controls[0], "daily-start-card")
+    assert "玛格丽特·阿特伍德（意译）" in _texts(page.controls[0])
+    assert "写作像走迷宫。撞墙时，退回走错的路口，换一条路。" in _texts(
+        page.controls[0]
+    )
+    assert load_last_daily_card_date(state_path) is not None
+    assert page.tasks
+
+    page.on_keyboard_event(SimpleNamespace(key="Enter", meta=False))
+
+    assert _control_by_key(page.controls[0], "shell-sidebar")
+    assert _control_by_key(page.controls[0], "paper-editor-card")
+    assert _text_field(page.controls[0], "Summary").value == ""
+
+
+def test_daily_start_is_same_day_once_and_three_second_task_is_idempotent(
+    tmp_path, monkeypatch
+):
+    init_vault(tmp_path)
+    state_path = tmp_path / "fresh-device-state.json"
+    first_page = FakePage()
+    app_main._build_startup(  # type: ignore[attr-defined, arg-type]
+        first_page,
+        tmp_path,
+        state_path=state_path,
+    )
+
+    async def no_delay(_: float) -> None:
+        return None
+
+    monkeypatch.setattr(app_main.asyncio, "sleep", no_delay)
+    handler, args = first_page.tasks[-1]
+    asyncio.run(handler(*args))
+    assert _control_by_key(first_page.controls[0], "paper-editor-card")
+
+    second_page = FakePage()
+    app_main._build_startup(  # type: ignore[attr-defined, arg-type]
+        second_page,
+        tmp_path,
+        state_path=state_path,
+    )
+    assert _control_by_key(second_page.controls[0], "paper-editor-card")
+    with pytest.raises(AssertionError, match="Control not found"):
+        _control_by_key(second_page.controls[0], "daily-start-card")
 
 
 def test_paper_page_exposes_v3_names_and_an_immutable_system_code(tmp_path):
@@ -346,7 +403,7 @@ def test_saved_paper_keeps_its_immutable_code_and_has_no_rename_action(tmp_path)
         _button(root, "重命名")
 
 
-def test_flashcard_is_summary_first_read_only_and_remembers_position(tmp_path):
+def test_flashcard_is_summary_first_read_only_and_never_remembers_position(tmp_path):
     init_vault(tmp_path)
     paper = _paper(
         "K-20260714-001",
@@ -358,16 +415,19 @@ def test_flashcard_is_summary_first_read_only_and_remembers_position(tmp_path):
         ],
     )
     path = write_paper(tmp_path, paper)
-    state_path = tmp_path / "device-state.json"
     page = FakePage()
-    ctx = _ctx(page, tmp_path, state_path)
+    ctx = _ctx(page, tmp_path)
     opened: dict[str, Path] = {}
     ctx.open_paper = lambda opened_path: opened.update(path=opened_path)
 
     root = build_flashcard_page(ctx, path.relative_to(tmp_path))
     assert "Current Summary." in _texts(root)
     assert "1 / 3" in _texts(root)
-    assert not [control for control in _walk(root) if isinstance(control, ft.TextField)]
+    assert [
+        control.key
+        for control in _walk(root)
+        if isinstance(control, ft.TextField)
+    ] == ["flashcard-jump-page"]
 
     _button(root, "下一张").on_click(None)
     assert "First writing anchor." in _texts(root)
@@ -382,19 +442,92 @@ def test_flashcard_is_summary_first_read_only_and_remembers_position(tmp_path):
     assert opened["path"] == path.relative_to(tmp_path)
 
     reopened = build_flashcard_page(
-        _ctx(FakePage(), tmp_path, state_path),
+        _ctx(FakePage(), tmp_path),
         path.relative_to(tmp_path),
     )
-    assert "2 / 3" in _texts(reopened)
-    assert get_card_index(paper.code, 3, state_path) == 1
-
-    state_path.unlink()
-    reset_view = build_flashcard_page(
-        _ctx(FakePage(), tmp_path, state_path),
-        path.relative_to(tmp_path),
-    )
-    assert "1 / 3" in _texts(reset_view)
+    assert "1 / 3" in _texts(reopened)
     assert read_paper(path).summary == "Current Summary."
+
+
+def test_flashcard_list_jump_arrows_edges_and_paper_switch_reset(
+    tmp_path,
+    monkeypatch,
+):
+    init_vault(tmp_path)
+    first = _paper(
+        "K-20260714-001",
+        "First Summary.",
+        display_name="First Paper",
+        highlights=[
+            Highlight(content="First anchor.", display_name="Named anchor"),
+            Highlight(content="Second anchor."),
+        ],
+    )
+    second = _paper(
+        "K-20260714-002",
+        "Second Summary.",
+        display_name="Second Paper",
+        highlights=[Highlight(content="Other anchor.")],
+    )
+    first_path = write_paper(tmp_path, first)
+    second_path = write_paper(tmp_path, second)
+    page = FakePage()
+    root = build_flashcard_page(
+        _ctx(page, tmp_path),
+        first_path.relative_to(tmp_path),
+    )
+
+    _control_by_key(root, "flashcard-list-2").on_click(None)
+    assert "Second anchor." in _texts(root)
+    assert "Highlight 2" in _texts(root)
+    assert "3 / 3" in _texts(root)
+
+    jump = _control_by_key(root, "flashcard-jump-page")
+    jump.value = "0"
+    _button(root, "跳转").on_click(None)
+    assert "3 / 3" in _texts(root)
+    assert _control_by_key(root, "flashcard-notice").value == "页码范围是 1..3。"
+
+    jump.value = "2"
+    jump.on_submit(None)
+    assert "First anchor." in _texts(root)
+    assert "2 / 3" in _texts(root)
+
+    page.on_keyboard_event(SimpleNamespace(key="Arrow Left", meta=False))
+    assert "First Summary." in _texts(root)
+    page.on_keyboard_event(SimpleNamespace(key="Arrow Left", meta=False))
+    feedback = _control_by_key(root, "flashcard-notice")
+    assert feedback.value == "已经是第一张。"
+    assert page.tasks
+
+    async def no_delay(_: float) -> None:
+        return None
+
+    monkeypatch.setattr(flashcard_page_mod.asyncio, "sleep", no_delay)
+    handler, args = page.tasks[-1]
+    asyncio.run(handler(*args))
+    assert feedback.value == ""
+
+    selector = _control_by_key(root, "flashcard-paper-selector")
+    assert [option.text for option in selector.options] == [
+        f"First Paper ({first.code})",
+        f"Second Paper ({second.code})",
+    ]
+    selector.value = str(second_path.relative_to(tmp_path))
+    selector.on_select(None)
+    assert "Second Summary." in _texts(root)
+    assert "1 / 2" in _texts(root)
+
+
+def test_flashcard_navigation_without_context_selects_the_first_paper(tmp_path):
+    init_vault(tmp_path)
+    paper = _paper("K-20260714-001", "First available Summary.")
+    write_paper(tmp_path, paper)
+
+    root = build_flashcard_page(_ctx(FakePage(), tmp_path))
+
+    assert "First available Summary." in _texts(root)
+    assert "1 / 1" in _texts(root)
 
 
 def test_flashcard_rejects_a_symlinked_cache_before_reading_outside(tmp_path, monkeypatch):
@@ -1175,3 +1308,30 @@ def test_library_cmd_f_focuses_search(tmp_path, monkeypatch):
     page.on_keyboard_event(SimpleNamespace(key="F", meta=True))
 
     assert page.tasks[-1] == (focus, ())
+
+
+def test_paper_cmd_s_saves_the_current_form(tmp_path):
+    init_vault(tmp_path)
+    page = FakePage()
+    root = build_paper_page(_ctx(page, tmp_path))
+    _text_field(root, "Summary").value = "Saved from keyboard."
+
+    page.on_keyboard_event(SimpleNamespace(key="S", meta=True))
+
+    saved = list((tmp_path / "cache").glob("*.md"))
+    assert len(saved) == 1
+    assert read_paper(saved[0]).summary == "Saved from keyboard."
+
+
+def test_escape_closes_the_top_library_dialog(tmp_path):
+    init_vault(tmp_path)
+    page = FakePage()
+    build_library_page(_ctx(page, tmp_path))
+    first = ft.AlertDialog(open=True)
+    second = ft.AlertDialog(open=True)
+    page.overlay.extend([first, second])
+
+    page.on_keyboard_event(SimpleNamespace(key="Escape", meta=False))
+
+    assert first.open is True
+    assert second.open is False

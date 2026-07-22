@@ -6,6 +6,7 @@ JSON, migration, and asset recovery remain in the pure-Python core layer.
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass, field
 import os
 from pathlib import Path
@@ -13,6 +14,7 @@ from typing import Callable
 
 import flet as ft
 
+from keikeu_app.local_state import STATE_PATH as DEVICE_STATE_PATH, claim_daily_card
 from keikeu_app.pages import build_flashcard_page, build_library_page, build_paper_page
 from keikeu_app.pages.migration_page import build_migration_page
 from keikeu_app.theme import (
@@ -184,7 +186,6 @@ class AppContext:
 
     page: ft.Page
     vault: Path
-    state_path: Path | None = None
     library_scope_host: ft.Column | None = None
     open_paper: Callable[[Path | None], None] = field(default=lambda _path: None)
     open_flashcards: Callable[[Path | None], None] = field(default=lambda _path: None)
@@ -432,6 +433,95 @@ def _build_shell(
     show_paper()
 
 
+def _build_daily_start(
+    page: ft.Page,
+    vault: Path,
+    *,
+    expected_root_identity: tuple[int, int] | None = None,
+) -> None:
+    """Show the one built-in daily card, then enter a blank Paper exactly once."""
+    apply_theme(page)
+    page.controls.clear()
+    page.scroll = None
+    finished = False
+
+    def begin_writing() -> None:
+        nonlocal finished
+        if finished:
+            return
+        finished = True
+        _build_shell(
+            page,
+            vault,
+            expected_root_identity=expected_root_identity,
+        )
+
+    async def begin_after_delay() -> None:
+        await asyncio.sleep(3)
+        begin_writing()
+
+    def on_keyboard(event: object) -> None:
+        if str(getattr(event, "key", "")).upper() in {"ENTER", "RETURN"}:
+            begin_writing()
+
+    page.on_keyboard_event = on_keyboard
+    page.add(
+        ft.Container(
+            expand=True,
+            padding=SPACE_8,
+            bgcolor=BG,
+            alignment=ft.Alignment.CENTER,
+            content=paper_card(
+                [
+                    ft.Text(
+                        "玛格丽特·阿特伍德（意译）",
+                        color=MUTED,
+                    ),
+                    ft.Text(
+                        "写作像走迷宫。撞墙时，退回走错的路口，换一条路。",
+                        size=24,
+                        color=FG,
+                        font_family=FONT_DISPLAY,
+                        selectable=True,
+                    ),
+                    primary_button("开始写", lambda _e: begin_writing()),
+                ],
+                key="daily-start-card",
+                spacing=SPACE_4,
+            ),
+        )
+    )
+    page.run_task(begin_after_delay)
+
+
+def _build_startup(
+    page: ft.Page,
+    vault: Path,
+    *,
+    expected_root_identity: tuple[int, int] | None = None,
+    state_path: Path | None = None,
+) -> None:
+    """Enter the daily card only after its date has been atomically claimed."""
+    safe_vault, root_identity = _pin_home_vault_root(vault, expected_root_identity)
+    selected_state_path = DEVICE_STATE_PATH if state_path is None else state_path
+    try:
+        show_daily = claim_daily_card(state_path=selected_state_path)
+    except (OSError, ValueError):
+        show_daily = False
+    if show_daily:
+        _build_daily_start(
+            page,
+            safe_vault,
+            expected_root_identity=root_identity,
+        )
+        return
+    _build_shell(
+        page,
+        safe_vault,
+        expected_root_identity=root_identity,
+    )
+
+
 def _build_migration_gate(
     page: ft.Page,
     vault: Path,
@@ -453,7 +543,7 @@ def _build_migration_gate(
             safe_vault = require_home_path(vault)
             selection = _validated_rebuild(safe_vault)
             set_vault(safe_vault, CONFIG_PATH, selection)
-            _build_shell(
+            _build_startup(
                 page,
                 safe_vault,
                 expected_root_identity=selection.root_identity,
@@ -551,7 +641,7 @@ def _build_vault_picker(
             show_error(f"无法打开 Vault：{ex}；当前 Vault 未切换。")
             return
         notify(page, "Vault 已切换")
-        _build_shell(
+        _build_startup(
             page,
             safe_vault,
             expected_root_identity=selection.root_identity,
@@ -581,7 +671,7 @@ def _build_vault_picker(
             show_error(f"无法初始化 Vault：{ex}；当前 Vault 未切换。")
             return
         notify(page, "Vault 已创建")
-        _build_shell(
+        _build_startup(
             page,
             safe_vault,
             expected_root_identity=selection.root_identity,
@@ -685,7 +775,7 @@ def _build_vault_picker(
                 )
                 return
             notify(page, "Vault 已复制、验证并切换；原路径保持不变")
-            _build_shell(
+            _build_startup(
                 page,
                 copied,
                 expected_root_identity=selection.root_identity,
@@ -921,7 +1011,7 @@ def main(page: ft.Page) -> None:
             )
     else:
         try:
-            _build_shell(
+            _build_startup(
                 page,
                 safe_vault,
                 expected_root_identity=root_identity,

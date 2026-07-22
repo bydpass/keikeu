@@ -36,6 +36,7 @@ from keikeu_app.theme import (
 )
 
 __all__ = [
+    "close_top_dialog",
     "danger_button",
     "notify",
     "page_header",
@@ -45,6 +46,16 @@ __all__ = [
     "single_line_field",
     "status_badge",
 ]
+
+
+def close_top_dialog(page: ft.Page) -> bool:
+    """Close the most recently attached open dialog, if one exists."""
+    for control in reversed(page.overlay):
+        if isinstance(control, ft.AlertDialog) and bool(control.open):
+            control.open = False
+            page.update()
+            return True
+    return False
 
 
 def _field_style() -> dict[str, object]:

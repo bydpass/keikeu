@@ -1,9 +1,9 @@
 # keikeu Road v0.3 Planbook
 
 > Road：macOS Paper Library / Retrieval Quality  
-> 状态：**APPROVED — Phase 5 complete / Phase 6 next**
+> 状态：**APPROVED — Phase 6 complete / Phase 7 next**
 > 基线：`d0feac0269a5619f5dbf27c04347ba69c5665b42`（Road v0.2 已验收，local annotated tag `v0.2.0`）  
-> 当前 checkpoint：**CP3 complete / Phase 5 engineering complete / CP4 pending**
+> 当前 checkpoint：**CP4 complete / Phase 6 engineering complete / CP5 pending**
 > 日期：2026-07-22
 > 权限：本文件是 Road v0.3 的已批准执行计划。[`SPEC.md`](SPEC.md)、[`RULES.md`](RULES.md) 与三个 HTML map 描述 v0.3 目标；当前实现进度与 v0.2 runtime 事实分别见 [`PROJECT.md`](PROJECT.md)、`src/` 和 `tests/`。
 
@@ -530,6 +530,8 @@ Gate：builder tests 覆盖默认、empty、selection、merge、partial error、
 
 Gate：无位置 persistence、跨 Paper reset、非法跳页、same-day once、next-day replay、corrupt state 与键盘/focus 有直接测试和 macOS smoke。
 
+**完成证据（2026-07-22）**：旧 Flashcard position API、code 迁移与读写已删除；Flashcard 通过重建后的准确 index path 提供 Paper selector、卡片列表、无 wrap 左右键、页码跳转与短时边界提示，每次打开和跨 Paper 切换都从第 1 页开始。设备状态只原子保存最后展示的本地日期，缺失、损坏和旧 position state 都按今日未展示处理；启动卡在记录日期后显示，并由 3 秒、Enter 或“开始写”幂等进入空白 Paper。`Cmd+S`、`Cmd+F` 与 `Esc` 使用页面局部 handler，没有 shortcut registry。macOS synthetic Flet smoke 实际验证了 3 秒进入、date-only state、Paper 选择/复位、有效与非法跳页、方向键、边界不循环和 2 秒提示清除；Enter、same-day once、next-day replay 与 corrupt state 由直接测试覆盖。最终 274 项全量自动测试、compile、文档与 diff 检查通过。CP4 完成；`architecture.html` 仍未提前修改，按批准的 option A 留给 Phase 7 依据最终代码校准。
+
 ### Phase 7 — Documentation, smoke and acceptance
 
 **目标**：把“代码完成”“macOS workflow 完成”“产品接受”分开证明。
@@ -553,7 +555,7 @@ Gate：没有 P0/P1；所有高风险文件操作有证据；未验证项明确�
 | CP1 | Authority + path safety 合入 | **Complete** |
 | CP2 | Paper v3 与 mixed-schema round trip | **Complete** |
 | CP3 | Folder/Trash core 完成，UI 尚未成为证据 | Complete |
-| CP4 | Paper/Library/Flashcard UI engineering complete | Pending |
+| CP4 | Paper/Library/Flashcard UI engineering complete | **Complete** |
 | CP5 | macOS candidate smoke complete | Pending |
 | CP6 | Road v0.3 product accepted；是否 tag 另行决定 | Pending |
 
@@ -619,4 +621,4 @@ flet run src/keikeu_app/main.py
 - legacy duplicate code 保留、报告并阻断 mutation，不自动改号；以及
 - unsafe Vault 先只读分类，不跟随 symlink，仅将普通目录/regular files byte-copy/verify 到 Home；v2/v3 再解析并重建 index，v0.1 改走安全副本上的现有 preflight 与 migration gate，不写原件也不以真实唯一 Vault 首测。
 
-Phase 0 权威/fixture、Phase 1 路径安全/Vault 切换、Phase 2 Paper v3 naming、Phase 3 folder-aware filesystem core、Phase 4 folder/Trash/branch core operations 与 Phase 5 Paper/Library interaction 已完成；下一步是 Phase 6 Flashcard/daily card/keyboard，不把 Phase 7 文档校准或产品验收提前混入。
+Phase 0 权威/fixture 到 Phase 6 Flashcard/daily card/keyboard engineering 已完成，CP4 关闭；下一步是 Phase 7 按最终代码校准三张 HTML map、完成 macOS candidate workflow，并将工程、平台 smoke 与产品验收分开记录。

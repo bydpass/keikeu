@@ -27,7 +27,14 @@ from keikeu_app.theme import (
     SPACE_6,
     SURFACE_WARM,
 )
-from keikeu_app.widgets import danger_button, notify, page_header, paper_card, single_line_field
+from keikeu_app.widgets import (
+    close_top_dialog,
+    danger_button,
+    notify,
+    page_header,
+    paper_card,
+    single_line_field,
+)
 from keikeu_core.indexer import list_index_errors, list_papers, rebuild_index
 from keikeu_core.markdown_io import branch_paper, read_paper_snapshot
 from keikeu_core.vault import (
@@ -1254,8 +1261,11 @@ def build_library_page(
     sort_field.on_select = refresh
 
     def on_keyboard(event: object) -> None:
-        if (
-            str(getattr(event, "key", "")).upper() == "F"
+        key = str(getattr(event, "key", "")).upper()
+        if key in {"ESC", "ESCAPE"}:
+            close_top_dialog(page)
+        elif (
+            key == "F"
             and bool(getattr(event, "meta", False))
         ):
             page.run_task(search_field.focus)

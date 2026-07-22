@@ -24,6 +24,7 @@ from keikeu_app.theme import (
     TEXT_LG,
 )
 from keikeu_app.widgets import (
+    close_top_dialog,
     danger_button,
     notify,
     page_header,
@@ -312,7 +313,7 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
             extra_frontmatter=paper.extra_frontmatter.copy() if paper is not None else {},
         )
 
-    def on_save(_: ft.ControlEvent) -> None:
+    def on_save(_: object) -> None:
         if not (summary_field.value or "").strip():
             save_error.value = "Summary 不能为空。"
             page.update()
@@ -429,6 +430,15 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
         key="paper-editor-card",
         spacing=SPACE_3,
     )
+
+    def on_keyboard(event: object) -> None:
+        key = str(getattr(event, "key", "")).upper()
+        if key in {"ESC", "ESCAPE"}:
+            close_top_dialog(page)
+        elif key == "S" and bool(getattr(event, "meta", False)):
+            on_save(event)
+
+    page.on_keyboard_event = on_keyboard
 
     return ft.Column(
         controls=[
