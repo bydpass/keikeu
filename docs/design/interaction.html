@@ -12,7 +12,7 @@
   <div class="shell">
     <aside class="rail" aria-label="页面目录">
       <div class="rail-brand">KEIKEU / FLOW</div>
-      <div class="rail-meta">NORMATIVE INTERACTION MAP · 2026-07-18</div>
+      <div class="rail-meta">ROAD V0.3 TARGET MAP · 2026-07-22</div>
       <nav>
         <a href="#contract">交互契约</a>
         <a href="#paper">Paper</a>
@@ -43,13 +43,14 @@
       </div>
 
       <header class="hero">
-        <div class="eyebrow">Core actions / state specimens</div>
+        <div class="eyebrow">Road v0.3 target actions / state specimens</div>
         <h1>每一次点击，都能说明磁盘上发生了什么。</h1>
-        <p class="lede">这页定义 Paper、Flashcard、Library、迁移与外部编辑器交接的成功、空、错误、禁用和恢复路径。样张只使用合成文字，不读取或保存任何 Vault。</p>
+        <p class="lede">这页定义 Road v0.3 的 Paper、Flashcard、Library、Vault、迁移与外部编辑器交接路径；<a href="../PROJECT.md">PROJECT</a>、源码与测试记录当前实现阶段。样张只使用合成文字，不读取或保存任何 Vault；Road 完成后按实际交互再次校准。</p>
         <div class="status-row">
           <span class="ticket ok">Author-controlled</span>
           <span class="ticket ok">No hidden writes</span>
           <span class="ticket">Summary-first</span>
+          <span class="ticket">Home-only writes</span>
           <span class="ticket warn">No prose editor</span>
         </div>
       </header>
@@ -60,22 +61,26 @@
         <section class="section searchable" id="contract" data-search="contract interaction rules explicit author control 交互 契约 明确 控制">
           <div class="section-head"><div class="section-number">01</div><div><h2>交互契约</h2><p>所有核心操作共享的五条规则。</p></div></div>
           <div class="grid five" style="grid-template-columns:repeat(5,minmax(0,1fr))">
-            <article class="card flat"><h3>显式</h3><p>保存、重命名、删除、恢复、迁移都有明确动作。</p></article>
-            <article class="card flat"><h3>可解释</h3><p>反馈说明文件、索引或设备状态中哪一层改变。</p></article>
+            <article class="card flat"><h3>显式</h3><p>保存、移动、删除、恢复、迁移都有明确动作。</p></article>
+            <article class="card flat"><h3>可解释</h3><p>反馈说明相对路径、索引或每日设备状态中哪一层改变。</p></article>
             <article class="card flat"><h3>保留输入</h3><p>错误不清空表单，不覆盖磁盘旧版本。</p></article>
             <article class="card flat"><h3>可退出</h3><p>危险动作可取消；取消不产生副作用。</p></article>
             <article class="card flat"><h3>有限</h3><p>keikeu 到外部编辑器为止，不继续追踪正文。</p></article>
           </div>
+          <div class="grid two" style="margin-top:14px">
+            <article class="callout ok"><strong>每日启动：</strong>每台设备按本地日期首次启动显示一次内置鼓励卡；3 秒、Enter 或“开始写”进入空白 Paper。设备状态只记录当天日期。</article>
+            <article class="callout warn"><strong>写入边界：</strong>Vault、config 与 state 的持久写入必须 resolve 到当前用户 Home 内；symlink 逃逸或 Home 外旧 Vault 立即停止写入。</article>
+          </div>
         </section>
 
-        <section class="section searchable" id="paper" data-search="paper create save update rename delete summary highlights tags empty error external modification 纸片 新建 保存 重命名 删除">
-          <div class="section-head"><div class="section-number">02</div><div><h2>Paper：从输入到磁盘</h2><p>先建立合成 Paper，再观察保存状态；本演示不写文件。</p></div></div>
+        <section class="section searchable" id="paper" data-search="paper create save update immutable code display name highlight drag menu summary tags empty error external modification 纸片 新建 保存 名称 拖动 菜单 删除">
+          <div class="section-head"><div class="section-number">02</div><div><h2>Paper：命名、排序与安全保存</h2><p>系统编号创建后只读且不可修改；本演示不写文件。</p></div></div>
           <div class="grid two">
             <article class="card">
               <div class="eyebrow">INTERACTIVE SPECIMEN</div>
               <h3 style="margin-top:10px">保存状态机</h3>
               <div class="stepper" id="paper-stepper" aria-live="polite">
-                <div class="step current"><div><strong>编辑当前 Summary</strong><p class="muted">Highlights / Tags 可以为空。</p></div><span class="ticket">INPUT</span></div>
+                <div class="step current"><div><strong>编辑名称与当前 Summary</strong><p class="muted">Paper 名称、Highlights / Tags 可以为空；Highlight 内容为空则删除该项。</p></div><span class="ticket">INPUT</span></div>
                 <div class="step"><div><strong>验证内存模型</strong><p class="muted">空 Summary 在任何磁盘写入前停止。</p></div><span class="ticket">MODEL</span></div>
                 <div class="step"><div><strong>安全写入</strong><p class="muted">新建或同目录临时文件 + 原子替换。</p></div><span class="ticket">DISK</span></div>
                 <div class="step"><div><strong>重建索引</strong><p class="muted">JSON 可由 Paper 再生。</p></div><span class="ticket">INDEX</span></div>
@@ -92,6 +97,8 @@
                 <tbody>
                   <tr><td>新 Paper + 有 Summary</td><td>保存；初稿副本 = 当前 Summary</td><td>目标不存在才创建</td></tr>
                   <tr><td>已存 Paper + 编辑 Summary</td><td>更新当前值</td><td>初稿副本不变</td></tr>
+                  <tr><td>Paper / Highlight 名称</td><td>trim 后保存；空白为无名称</td><td>code 与磁盘正文不被名称替代</td></tr>
+                  <tr><td>拖动 Highlight</td><td>调整顺序；菜单“上移 / 下移”等价</td><td>不显示冗余排序 toast</td></tr>
                   <tr><td>Highlights / Tags 空</td><td>成功 + 温和建议</td><td>保留空章节</td></tr>
                   <tr><td>Summary 空</td><td>阻止 + 字段错误</td><td>零写入</td></tr>
                   <tr><td>文件已外部修改</td><td>拒绝覆盖，要求重开</td><td>外部版本不变</td></tr>
@@ -101,9 +108,9 @@
           </div>
           <div class="flow" style="--cols:5;margin-top:14px">
             <div class="node" data-layer="app"><b>Paper form</b><small>作者输入；不渲染 Markdown</small></div>
-            <div class="node" data-layer="core"><b>Paper()</b><small>验证 Summary、Tags、Highlights</small></div>
-            <div class="node" data-layer="core"><b>write / update</b><small>显式新建或更新</small></div>
-            <div class="node" data-layer="disk"><b>cache/&lt;code&gt;.md</b><small>作者资产</small></div>
+            <div class="node" data-layer="core"><b>Paper()</b><small>验证名称、Summary、Tags、Highlights</small></div>
+            <div class="node" data-layer="core"><b>write / update v3</b><small>使用已验证 destination path</small></div>
+            <div class="node" data-layer="disk"><b>cache/{root,folder}/&lt;code&gt;.md</b><small>作者资产；code 不可变</small></div>
             <div class="node" data-layer="disk"><b>index rebuild</b><small>可删除元数据</small></div>
           </div>
         </section>
@@ -112,53 +119,84 @@
           <div class="section-head"><div class="section-number">03</div><div><h2>Flashcard：有限上下文</h2><p>Summary 永远是第 1 张；每条 Highlight 增加一张。</p></div></div>
           <div class="grid two">
             <article class="card">
-              <div class="eyebrow">FLASHCARD · <span id="card-position">1 / 3</span></div>
+              <div class="demo-field">
+                <label for="flash-paper">Paper</label>
+                <select id="flash-paper">
+                  <option>雪中的无人车 (K-20260721-001)</option>
+                  <option>K-20260718-004</option>
+                </select>
+              </div>
+              <div class="eyebrow" style="margin-top:12px">FLASHCARD · <span id="card-position">1 / 3</span></div>
+              <div class="button-row" aria-label="卡片列表" style="margin-top:12px">
+                <button class="ui-button card-choice" type="button" data-card-index="0">Summary</button>
+                <button class="ui-button card-choice" type="button" data-card-index="1">动作锚点</button>
+                <button class="ui-button card-choice" type="button" data-card-index="2">Highlight 2</button>
+              </div>
               <div class="demo-surface" style="min-height:260px;margin-top:12px;display:grid;align-content:center">
                 <p id="card-copy" style="font-size:24px;margin:0">合成 Summary：这里只展示整体火种。</p>
               </div>
               <div class="button-row" style="margin-top:12px">
-                <button class="ui-button" type="button" id="card-prev" disabled>上一张</button>
+                <button class="ui-button" type="button" id="card-prev">上一张</button>
                 <button class="ui-button primary" type="button" id="card-next">下一张</button>
                 <button class="ui-button" type="button" id="summary-toggle" hidden>临时查看 Summary</button>
               </div>
+              <div class="button-row" style="margin-top:12px">
+                <label for="card-jump">第</label>
+                <input id="card-jump" inputmode="numeric" size="3" aria-describedby="card-message">
+                <span>页</span>
+                <button class="ui-button" type="button" id="card-jump-submit">跳转</button>
+              </div>
+              <p class="muted" id="card-message" role="status" aria-live="polite"></p>
               <div class="callout" id="summary-context" hidden style="margin-top:12px">合成 Summary：这里只展示整体火种。</div>
             </article>
             <article class="card">
               <h3>只读边界</h3>
               <ul>
-                <li>位置写入设备本地状态，不进入 Paper 或索引。</li>
-                <li>状态缺失、损坏或越界时安全回到有效卡片。</li>
+                <li>Library / index 传入 Vault-relative path，不通过 code 猜文件。</li>
+                <li>每次打开、切换 Paper 或重启都从第 1 页开始；位置不持久化。</li>
+                <li>卡片列表可点击；左右键与上一张 / 下一张不循环，越界给短提示。</li>
+                <li>页码只接受 1..N 整数；非法输入不移动。</li>
                 <li>Highlight 卡可临时展开当前 Summary，但不预览相邻卡。</li>
-                <li>“返回 Paper”保留作品上下文；侧栏直接进入可能没有当前 Paper，这是已记录 P2。</li>
+                <li>顶部 Paper selector 显示“名称 (code)”或 code；“返回 Paper”保留路径上下文。</li>
               </ul>
               <div class="callout warn"><strong>没有：</strong>编辑、完成、跳过、消费、正文输入、进度百分比。</div>
             </article>
           </div>
         </section>
 
-        <section class="section searchable" id="library" data-search="library search index error trash restore open finder share 文件库 搜索 索引 回收站 恢复">
-          <div class="section-head"><div class="section-number">04</div><div><h2>Library：检索与恢复</h2><p>它是资产入口，不是项目管理器。</p></div></div>
+        <section class="section searchable" id="library" data-search="library folder scope search index selection move branch trash restore vault switch open finder 文件库 文件夹 范围 搜索 选择 移动 分支 回收站 恢复 更换 Vault">
+          <div class="section-head"><div class="section-number">04</div><div><h2>Library：一层组织、检索与恢复</h2><p>它是资产入口，不是项目管理器；header 始终显示当前 Vault path 与“更换 Vault…”。</p></div></div>
           <div class="flow" style="--cols:5">
-            <div class="node" data-layer="app"><b>search box</b><small>代号 / Summary / Tags</small></div>
-            <div class="node" data-layer="core"><b>list_papers()</b><small>读取本地 v2 index</small></div>
-            <div class="node" data-layer="app"><b>result row</b><small>编辑 / Flashcard / 系统打开</small></div>
-            <div class="node" data-layer="core"><b>soft_delete()</b><small>移动而非擦除</small></div>
-            <div class="node" data-layer="disk"><b>.trash/cache/</b><small>恢复时检查代号冲突</small></div>
+            <div class="node" data-layer="app"><b>folder scope + search</b><small>全部 / 未归类 / 一层文件夹；名称 / code / Summary / Tags / Highlight 名称</small></div>
+            <div class="node" data-layer="core"><b>list_papers()</b><small>读取含 path / folder 的本地 v3 index</small></div>
+            <div class="node" data-layer="app"><b>dense result row</b><small>编辑 / Flashcard / 移动 / 分支 / 系统打开</small></div>
+            <div class="node" data-layer="core"><b>explicit path operations</b><small>单个拖放或菜单；勾选批量逐项报告</small></div>
+            <div class="node" data-layer="disk"><b>.trash/cache/{root,folder}/</b><small>恢复时检查不可变 code 冲突</small></div>
           </div>
           <div class="grid three" style="margin-top:14px">
-            <article class="card flat"><h3>Empty</h3><p>没有 Paper：说明如何创建；搜索无结果：保留查询并允许清空。</p></article>
+            <article class="card flat"><h3>Empty</h3><p>区分空 Vault、空文件夹、空 Trash 与搜索无结果；保留 scope 并给出最短下一步。</p></article>
             <article class="card flat"><h3>Damaged file</h3><p>错误列表显示相对路径与解析原因；健康 Paper 仍可检索。</p></article>
-            <article class="card flat"><h3>Restore conflict</h3><p>同代号存在时要求输入新代号或取消，永不覆盖活动文件。</p></article>
+            <article class="card flat"><h3>Selection</h3><p>全选仅限当前 scope；切换 scope 清空选择并显示短行内说明。</p></article>
+            <article class="card flat"><h3>Partial result</h3><p>move / merge / restore / delete 逐项显示成功与失败；失败项留在原处。</p></article>
+            <article class="card flat"><h3>Restore conflict</h3><p>active code 冲突时阻止该项并留在 Trash；不改历史 code，永不覆盖活动文件。</p></article>
+          </div>
+          <div class="callout" style="margin-top:14px">每个 Paper / folder 拖放都有可键盘到达的“移动到…”菜单等价入口；进入 Library 或显式 Refresh 重建 index，不运行文件监听器。</div>
+          <div class="grid two" style="margin-top:14px">
+            <article class="callout ok"><strong>Vault switch：</strong>有效 Vault 先预览 Paper 数；空目录需确认初始化；非空非 Vault 拒绝。验证与确认成功后才原子替换 config。</article>
+            <article class="callout warn"><strong>Trash：</strong>固定入口始终显示数量；恢复不覆盖。永久删除 1–3 个 Paper 需确认，4 个以上需 trim-exact 小写 `execute`，并逐个处理明确 path。</article>
           </div>
         </section>
 
         <section class="section searchable" id="migration" data-search="migration preflight backup staging validation swap outline destructive 迁移 预检 备份 验证 切换">
-          <div class="section-head"><div class="section-number">05</div><div><h2>v0.1 迁移：高风险手术</h2><p>确认页只描述动作；纯 Python core 执行全部资产变更。</p></div></div>
+          <div class="section-head"><div class="section-number">05</div><div><h2>Home 安全搬迁与 v0.1 迁移</h2><p>白名单外 Vault 先只读分类，再无跟随复制验证；只有 Home 内安全副本可切换或迁移。</p></div></div>
           <div class="stepper">
-            <div class="step"><div><strong>只读预检</strong><p class="muted">列出 Cache 数量、旧 Outline 数量和阻断问题。</p></div><span class="ticket">NO WRITE</span></div>
-            <div class="step"><div><strong>作者显式确认</strong><p class="muted">取消即停止；未勾选时迁移按钮禁用。</p></div><span class="ticket warn">GATE</span></div>
-            <div class="step"><div><strong>Vault 外完整备份</strong><p class="muted">备份不进入活动索引或同步目录。</p></div><span class="ticket">BACKUP</span></div>
-            <div class="step"><div><strong>外部 staging 转换与逐个验证</strong><p class="muted">任何 Cache 失败都不切换活动 Vault。</p></div><span class="ticket">STAGE</span></div>
+            <div class="step"><div><strong>源 Vault 只读分类</strong><p class="muted">停止写入，不跟随/解引 symlink；任何 symlink 或 special entry 都报错，来源与 config 不变。</p></div><span class="ticket">NO WRITE</span></div>
+            <div class="step"><div><strong>选择 Home 内目标并确认</strong><p class="muted">取消即停止；未确认时不复制、不改 config。</p></div><span class="ticket warn">GATE</span></div>
+            <div class="step"><div><strong>复制普通目录与 regular files</strong><p class="muted">在全新 Home 目标中比对 regular-file manifest 与逐文件 bytes；原 Vault 保留。</p></div><span class="ticket">RELOCATE</span></div>
+            <div class="step"><div><strong>v2/v3 验证并切换</strong><p class="muted">逐 Paper 解析，重建并验证 index；全部通过后才原子更新 config。</p></div><span class="ticket">V2/V3 SWITCH</span></div>
+            <div class="step"><div><strong>v0.1 副本预检并切换</strong><p class="muted">不先当作 v2/v3 Paper 解析；现有只读 preflight/manifest 通过后原子选择该安全副本。</p></div><span class="ticket">V0.1 SWITCH</span></div>
+            <div class="step"><div><strong>v0.1 显式迁移 gate 与备份</strong><p class="muted">切换后才可确认迁移；备份位于活动 Vault 外、但仍在 Home 内。</p></div><span class="ticket warn">MIGRATE GATE</span></div>
+            <div class="step"><div><strong>隔离 staging 转换与逐个验证</strong><p class="muted">取消或任何 Cache 失败都不切换 migration staging，未改写的安全 v0.1 副本仍被选中。</p></div><span class="ticket">STAGE</span></div>
             <div class="step"><div><strong>原子切换与报告</strong><p class="muted">全部 Paper 验证后才移除活动旧 Outline。</p></div><span class="ticket ok">COMMIT</span></div>
           </div>
           <div class="callout danger" style="margin-top:14px"><strong>P0 停止规则：</strong>疑似数据丢失、静默改写或半迁移时立即停止写入和重复实验；保护原 Vault，只记录脱敏步骤。</div>
@@ -172,9 +210,11 @@
               <tr><td>Summary 为空</td><td>字段旁阻止保存</td><td>旧文件不变</td><td>补 Summary 或离开</td></tr>
               <tr><td>Paper 被外部删除/移动</td><td>拒绝保存</td><td>不重建假文件</td><td>回 Library 刷新</td></tr>
               <tr><td>Paper 被外部修改</td><td>拒绝覆盖</td><td>外部字节不变</td><td>重新打开并人工决定</td></tr>
-              <tr><td>代号冲突</td><td>拒绝新建/rename/restore</td><td>两边都不覆盖</td><td>新代号或取消</td></tr>
+              <tr><td>代号冲突</td><td>拒绝新建 / move / restore</td><td>两边都不覆盖、不自动改 code</td><td>作者处理重复项或取消</td></tr>
               <tr><td>单 Paper 损坏</td><td>索引记录 error</td><td>其他 Paper 继续</td><td>外部文本工具检查</td></tr>
-              <tr><td>本地 card state 损坏</td><td>忽略并回第 1 张</td><td>Paper 不变</td><td>继续使用</td></tr>
+              <tr><td>本地 daily state 损坏</td><td>视为今天尚未显示启动卡</td><td>Paper / Vault 不变</td><td>继续使用</td></tr>
+              <tr><td>Home 外路径 / symlink / special entry</td><td>只读分类；不跟随且立即停止写入</td><td>任何不支持项中止搬迁，原 Vault / config 不变</td><td>仅普通目录/regular files 可复制验证到 Home</td></tr>
+              <tr><td>深层目录 / symlink asset</td><td>索引记录 error，阻止相关操作</td><td>不写穿、不递归删除</td><td>作者在 Finder 修复</td></tr>
               <tr><td>Provider 冲突副本</td><td>按未知文件处理</td><td>不自动合并文字</td><td>作者在系统层处理</td></tr>
             </tbody>
           </table></div>
@@ -192,20 +232,20 @@
         </section>
 
         <section class="section searchable" id="proof" data-search="source code tests proof 源码 测试 锚点">
-          <div class="section-head"><div class="section-number">08</div><div><h2>源码锚点</h2><p>样张对应到实现和直接测试。</p></div></div>
+          <div class="section-head"><div class="section-number">08</div><div><h2>目标实现锚点</h2><p>样张指向目标实现位置与直接测试；当前收敛阶段见 PROJECT。</p></div></div>
           <div class="table-wrap"><table class="matrix">
             <thead><tr><th>流程</th><th>实现</th><th>证据</th></tr></thead>
             <tbody>
-              <tr><td>Paper create / update / rename / delete</td><td><a href="../../src/keikeu_app/pages/paper_page.py">paper_page.py</a> → <a href="../../src/keikeu_core/markdown_io.py">markdown_io.py</a></td><td><a href="../../tests/test_app_pages.py">test_app_pages.py</a> / <a href="../../tests/test_markdown_io.py">test_markdown_io.py</a></td></tr>
-              <tr><td>Summary-first card and position</td><td><a href="../../src/keikeu_app/pages/flashcard_page.py">flashcard_page.py</a> → <a href="../../src/keikeu_app/local_state.py">local_state.py</a></td><td><a href="../../tests/test_local_state.py">test_local_state.py</a></td></tr>
-              <tr><td>Search / damage / trash / restore</td><td><a href="../../src/keikeu_app/pages/library_page.py">library_page.py</a> → <a href="../../src/keikeu_core/indexer.py">indexer.py</a> / <a href="../../src/keikeu_core/vault.py">vault.py</a></td><td><a href="../../tests/test_indexer.py">test_indexer.py</a> / <a href="../../tests/test_vault.py">test_vault.py</a></td></tr>
+              <tr><td>Paper v3 create / update / immutable code</td><td><a href="../../src/keikeu_app/pages/paper_page.py">paper_page.py</a> → <a href="../../src/keikeu_core/markdown_io.py">markdown_io.py</a></td><td><a href="../../tests/test_app_pages.py">test_app_pages.py</a> / <a href="../../tests/test_markdown_io.py">test_markdown_io.py</a></td></tr>
+              <tr><td>Summary-first card / page-1 reset / daily state</td><td><a href="../../src/keikeu_app/pages/flashcard_page.py">flashcard_page.py</a> → <a href="../../src/keikeu_app/local_state.py">local_state.py</a></td><td><a href="../../tests/test_app_pages.py">test_app_pages.py</a> / <a href="../../tests/test_local_state.py">test_local_state.py</a></td></tr>
+              <tr><td>Folder scope / path / damage / Trash</td><td><a href="../../src/keikeu_app/pages/library_page.py">library_page.py</a> → <a href="../../src/keikeu_core/indexer.py">indexer.py</a> / <a href="../../src/keikeu_core/vault.py">vault.py</a></td><td><a href="../../tests/test_indexer.py">test_indexer.py</a> / <a href="../../tests/test_vault.py">test_vault.py</a></td></tr>
               <tr><td>Migration gate and transaction</td><td><a href="../../src/keikeu_app/pages/migration_page.py">migration_page.py</a> → <a href="../../src/keikeu_core/migration_v01.py">migration_v01.py</a></td><td><a href="../../tests/test_migration_page.py">test_migration_page.py</a> / <a href="../../tests/test_migration_v01.py">test_migration_v01.py</a></td></tr>
             </tbody>
           </table></div>
         </section>
       </div>
 
-      <footer class="footer">keikeu Interaction Map · active user-flow authority · examples are synthetic and non-persistent</footer>
+      <footer class="footer">keikeu Interaction Map · Road v0.3 target authority · current Phase in PROJECT / synthetic and non-persistent</footer>
     </main>
   </div>
   <script src="../assets/map.js"></script>
@@ -243,17 +283,61 @@
       const next = document.getElementById("card-next");
       const summaryToggle = document.getElementById("summary-toggle");
       const summaryContext = document.getElementById("summary-context");
+      const paperSelector = document.getElementById("flash-paper");
+      const cardChoices = Array.from(document.querySelectorAll(".card-choice"));
+      const jump = document.getElementById("card-jump");
+      const jumpSubmit = document.getElementById("card-jump-submit");
+      const cardMessage = document.getElementById("card-message");
       function renderCard() {
         position.textContent = (cardIndex + 1) + " / " + cards.length;
         copy.textContent = cards[cardIndex];
-        previous.disabled = cardIndex === 0;
-        next.disabled = cardIndex === cards.length - 1;
         summaryToggle.hidden = cardIndex === 0;
         summaryContext.hidden = true;
+        cardChoices.forEach(function (choice, index) {
+          choice.classList.toggle("primary", index === cardIndex);
+        });
       }
-      previous.addEventListener("click", function () { cardIndex -= 1; renderCard(); });
-      next.addEventListener("click", function () { cardIndex += 1; renderCard(); });
+      function moveCard(delta) {
+        const nextIndex = cardIndex + delta;
+        if (nextIndex < 0 || nextIndex >= cards.length) {
+          cardMessage.textContent = delta < 0 ? "已经是第 1 页。" : "已经是最后一页。";
+          return;
+        }
+        cardIndex = nextIndex;
+        cardMessage.textContent = "";
+        renderCard();
+      }
+      previous.addEventListener("click", function () { moveCard(-1); });
+      next.addEventListener("click", function () { moveCard(1); });
       summaryToggle.addEventListener("click", function () { summaryContext.hidden = !summaryContext.hidden; });
+      paperSelector.addEventListener("change", function () {
+        cardIndex = 0;
+        cardMessage.textContent = "已切换 Paper；从第 1 页开始。";
+        renderCard();
+      });
+      cardChoices.forEach(function (choice) {
+        choice.addEventListener("click", function () {
+          cardIndex = Number(choice.dataset.cardIndex);
+          cardMessage.textContent = "";
+          renderCard();
+        });
+      });
+      jumpSubmit.addEventListener("click", function () {
+        const page = Number(jump.value);
+        if (!Number.isInteger(page) || page < 1 || page > cards.length) {
+          cardMessage.textContent = "请输入 1–" + cards.length + " 的整数。";
+          return;
+        }
+        cardIndex = page - 1;
+        cardMessage.textContent = "";
+        renderCard();
+      });
+      document.addEventListener("keydown", function (event) {
+        if (event.target.matches("input, textarea, select")) return;
+        if (event.key === "ArrowLeft") moveCard(-1);
+        if (event.key === "ArrowRight") moveCard(1);
+      });
+      renderCard();
     })();
   </script>
 </body>

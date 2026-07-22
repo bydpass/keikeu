@@ -1,11 +1,11 @@
 # keikeu Road v0.3 Planbook
 
 > Road：macOS Paper Library / Retrieval Quality  
-> 状态：**DRAFT — 等待开发者审阅；尚未开始实现**  
+> 状态：**APPROVED — Phase 0 complete / Phase 1 next**
 > 基线：`d0feac0269a5619f5dbf27c04347ba69c5665b42`（Road v0.2 已验收，local annotated tag `v0.2.0`）  
-> 当前 checkpoint：**CP0 / 设计冻结，Planbook review**  
-> 日期：2026-07-21  
-> 权限：本文件是 Road v0.3 的执行计划，不覆盖当前 [`SPEC.md`](SPEC.md)、[`RULES.md`](RULES.md) 或运行时事实。
+> 当前 checkpoint：**Phase 0 complete / Phase 1 path safety next**
+> 日期：2026-07-22
+> 权限：本文件是 Road v0.3 的已批准执行计划。[`SPEC.md`](SPEC.md)、[`RULES.md`](RULES.md) 与三个 HTML map 描述 v0.3 目标；当前实现进度与 v0.2 runtime 事实分别见 [`PROJECT.md`](PROJECT.md)、`src/` 和 `tests/`。
 
 ## 1. 核心判断
 
@@ -174,7 +174,8 @@ updated: 2026-07-21T10:45:00
 Rules：
 
 - `code` 继续使用 `K-YYYYMMDD-NNN`，生成后不可修改。
-- `display_name` 可选；外层空白去除，空白为 `None`；允许 Unicode、emoji、标点和重复；上限 200 个 Unicode 字符。
+- `display_name` 可选；外层空白去除，空白为 `None`；非空值必须是单行、不得含控制字符，上限 200 个 Unicode code point；允许 Unicode、emoji、标点和重复。
+- 名称保存作者 trim 后原文；排序和相等比较只使用 `unicodedata.normalize("NFC", value).casefold()`，不静默规范化磁盘文字。
 - `display_name` 为 `None` 时不写该 frontmatter key；读取缺失 key 得到 `None`。
 - 系统文件名始终是 `<code>.md`；Markdown 一级标题继续使用 code，便于手工识别。
 - `Highlight.content` required；保存时空白 content 删除整项，包括已填写的名称。
@@ -208,11 +209,12 @@ device-local, under current user's Home:
 Folder rules：
 
 - 仅允许 `cache/` 下零层或一层 Paper；更深目录和 symlink 进入 error 状态，keikeu 不写入。
-- 名称 trim 后为 1–80 个 Unicode 字符；禁止 `/`、`:`、控制字符、`.`、`..`、前导 `.` 和系统保留名。
-- 比较重名时使用标准库 Unicode 规范化比较键 + `casefold()`；磁盘保存作者输入的 trim 后原文，不静默改写名称。
+- 名称 trim 后为单行 1–200 个 Unicode code point；禁止 `/`、`:`、控制字符、`.`、`..`、前导 `.`，以及 NFC+casefold 后等于 `cache`、`.trash`、`keikeu_index.json`、`全部 Paper`、`未归类` 或 `Trash` 的名称。
+- 比较重名与排序时使用 `unicodedata.normalize("NFC", value).casefold()`；磁盘保存作者输入的 trim 后原文，不静默改写名称。
 - “全部 Paper”和“未归类”是 UI scope，不是磁盘目录。
 - 文件夹可为空；删除空文件夹也进入 Trash 并可恢复。
 - Paper code 在 active 与 Trash 的全部支持路径中全局唯一；新编号扫描两边。
+- 外部或旧版本留下的重复 code 不自动改写：全部保留并显示 error，涉及冲突资产的 move/restore/delete/branch 等 mutation 在作者处理前阻断。
 
 ### 6.3 Index v3
 
@@ -225,6 +227,7 @@ created, updated
 ```
 
 - `path` 是 Vault-relative path；GUI 通过它打开 Paper。
+- 名称排序使用 `display_name or code` 的 NFC+casefold key，再以 code 和 path 作稳定 tie-breaker。
 - 搜索字段：Paper 名称、code、Summary、Tags、Highlight 名称。
 - 不索引 Highlight content 或初稿副本。
 - 单 Paper 损坏、非法深层路径和 symlink 进入 `errors[]`，不隐藏其余 Paper。
@@ -249,14 +252,15 @@ created, updated
   > 玛格丽特·阿特伍德（意译）  
   > 写作像走迷宫。撞墙时，退回走错的路口，换一条路。
 
-- 文案来自内置列表；无网络、AI、设置或用户自定义。
+- Road v0.3 只内置这一条文案；无列表轮换、网络、AI、设置或用户自定义。
+- 判定当日尚未显示后，先原子写入当天本地日期，再显示卡片；这样崩溃或快速重启不会重复出现。
 
 ### 7.2 Paper editor
 
 - 显示只读系统编号；移除 Road v0.2 的 code rename 入口。
 - Paper 名称输入位于“保存”操作上方；空白时 Library 显示 code。
 - Highlight row 包含可选“命名”和 required“内容”；外框高度随文本框。
-- 拖动 handle 是唯一排序控件；不提供上移/下移、辅助移动菜单或“顺序已更新”提示。
+- 每行显示 drag handle；同一行的键盘可达菜单提供“上移/下移”完全等价路径，不显示“顺序已更新”提示。
 - 保存把空 content 的 Highlight 当作删除。
 - `Cmd+S` 保存；外部移动、删除或修改继续阻止覆盖并保留表单输入。
 
@@ -327,12 +331,13 @@ created, updated
 
 若配置指向白名单外：
 
-1. 立即停止对该 Vault 的写入。
-2. 明确显示当前路径和原因，不推断来源或“滥用”。
-3. 用户选择 Home 下安全的新位置。
-4. 复制完整 Vault 到 staging，逐 Paper 解析，检查数量、code、folder、Trash 与 index 可重建性。
-5. 全部验证成功后才原子更新 config。
-6. 原 Vault 保留，永不自动删除。
+1. 立即停止对该 Vault 的写入，先以只读方式分类来源和全部目录项；不跟随或解引 symlink。
+2. 任何 symlink 或不支持的 special entry 都报错并中止搬迁，不改来源与 config。
+3. 明确显示当前路径和原因；用户选择 Home 下全新安全位置。
+4. 仅复制普通目录和 regular files，比对来源与副本的 regular-file manifest 和逐文件 bytes。
+5. v2/v3 副本额外逐 Paper 解析并重建/验证 index；全部成功后才原子更新 config。
+6. v0.1 副本不得先按 v2/v3 Paper 解析；在副本上运行现有 v0.1 只读 preflight/manifest validation，通过后原子切换 config，再只对该安全副本进入现有显式 migration gate；取消或迁移失败仍选择未改写的安全副本。
+7. 原 Vault 保留且永不写入或自动删除；任何搬迁或切换前验证失败都不更新 config。
 
 ### 8.3 Partial operations
 
@@ -340,10 +345,14 @@ created, updated
 - 已成功项不回滚；失败项留在原位置。UI 不得宣称“全部成功”。
 - 包含未知文件、深层目录或 symlink 的文件夹不能整体删除或合并；先报告并由作者在 Finder 中处理。
 - 外部 provider conflict copy 是未知文件；不自动合并或改写。
+- 外部或历史状态中的重复 code 全部保留并进入 errors；不得自动换号，涉及这些资产的 mutation 先阻断。
+- 禁止 `rmtree` 适用于 active/Trash 与永久删除；keikeu 自己创建、与作者资产隔离且尚未切换为 active 的 migration staging 可在失败清理时递归删除。
 
 ## 9. Phase plan
 
 每个 Phase 开始前应用 Git gate；在独立分支或明确接受的现有工作树上完成。每个 Phase 必须保持测试可运行，不提交半个 schema 或无法打开的 UI。
+
+交付节奏采用开发者选择的 **B**：每个 Phase 通过本 Phase gate 与独立复核后形成一个 focused local commit；不得把后续 Phase 混入，不自动 push 或 tag。
 
 ### Phase 0 — Authority and fixtures
 
@@ -356,16 +365,21 @@ created, updated
 - `docs/RULES.md`
 - `docs/design/design.html`
 - `docs/design/interaction.html`
+- `docs/architecture/architecture.html`
 - `docs/architecture/decisions/`
+- `tests/fixtures/v03-vault/`
+- `pyproject.toml`
 
 步骤：
 
 1. SPEC 升级 Paper/Highlight、folder、Flashcard、Trash、Vault 与 acceptance 契约。
 2. 显式撤销 code rename、Flashcard position persistence、restore-with-new-code。
 3. 写两个轻量 ADR：Home 写入白名单/App Sandbox 延后；Paper v3 + 一层真实文件夹。
-4. 建立 v2/v3、folder、Trash、非法深层目录、symlink 和不安全 Vault fixture。
+4. architecture/design/interaction 在 Phase 0 改为明确标注的 **Road v0.3 target**；`PROJECT.md` 单独记录当前 runtime 仍为 v0.2 与下一收敛 gate。
+5. 建立 v2/v3、folder、Trash、非法深层目录、运行时 symlink 和不安全路径模拟 fixture；冻结文件不被测试原地修改。
+6. pytest 默认 basetemp 固定到已忽略的 `tests/test-vault/pytest`，所有自动测试写入仓库内合成区域。
 
-Gate：权威无冲突、无 TBD；`scripts/check_docs.py` 与 `git diff --check` 通过。
+Gate：权威无冲突、无 TBD；fixture validation、`scripts/check_docs.py` 与 `git diff --check` 通过；应用测试未因 docs-only authority 更新而冒充运行时 v0.3 证据。
 
 ### Phase 1 — Path safety and Vault switch
 
@@ -384,7 +398,7 @@ Gate：权威无冲突、无 TBD；`scripts/check_docs.py` 与 `git diff --check
 1. 在 `vault.py` 集中 Home 白名单、symlink-resolved path 和 folder-name 验证。
 2. `set_vault()` 使用临时文件 + `os.replace()`；验证完成前不改 config。
 3. 增加 valid / empty / non-empty non-Vault 三种切换路径。
-4. 增加 unsafe legacy Vault 的 copy → validate → switch；原件保留。
+4. 增加 unsafe Vault 的 read-only classify → no-follow regular-file copy/byte verify → format-specific validate → atomic switch；v2/v3 重建 index，v0.1 只在安全副本上跑现有 preflight 与 migration gate。
 5. UI 公告真实保护边界，不声称 Apple App Sandbox 已启用。
 
 Gate：所有白名单与迁移失败测试证明无外部写入、无配置提前切换；复制 Vault smoke 只使用副本。
@@ -398,11 +412,13 @@ Gate：所有白名单与迁移失败测试证明无外部写入、无配置提�
 - `src/keikeu_core/models.py`
 - `src/keikeu_core/markdown_io.py`
 - `src/keikeu_core/indexer.py`
+- `src/keikeu_core/migration_v01.py`
 - `src/keikeu_app/pages/paper_page.py`
 - `src/keikeu_app/pages/flashcard_page.py`
 - `tests/test_models.py`
 - `tests/test_markdown_io.py`
 - `tests/test_indexer.py`
+- `tests/test_migration_v01.py`
 - `tests/test_app_pages.py`
 
 最小实现：
@@ -411,8 +427,9 @@ Gate：所有白名单与迁移失败测试证明无外部写入、无配置提�
 2. `Paper` 增加 optional `display_name` 与 `list[Highlight]`。
 3. Reader 接受 schema 2/3；renderer 只写 schema 3。
 4. Index 增加 Paper/Highlight 名称；搜索不加入 Highlight content。
-5. Paper UI 增加名称与 paired Highlight fields；删除 code rename UI。
-6. Flashcard 投影适配 `Highlight.content` 与名称标题，仍暂时保持现有导航可用。
+5. v0.1 migration 与所有 index 生产者同步构造 v3 Highlight/index shape，不能留下 `list[str]` 或 index v2 常量。
+6. Paper UI 增加名称与 paired Highlight fields；删除 code rename UI。
+7. Flashcard 投影适配 `Highlight.content` 与名称标题，仍暂时保持现有导航可用。
 
 Gate：v2→read→save v3、200 字符边界、Unicode、重复名称、多行内容、空内容删除、未知 frontmatter、CJK round trip 全部有直接测试。
 
@@ -435,7 +452,7 @@ Gate：v2→read→save v3、200 字符边界、Unicode、重复名称、多行�
 2. `markdown_io` 接受已验证 destination path，不再决定 folder；序列化责任不变。
 3. `next_paper_code()` 检查 active + Trash 全部支持路径。
 4. Index entry 保存 vault-relative path/folder；非法深层和 symlink 进入 errors。
-5. Flashcard 与 Paper 打开路径最终由 index/Library 传入，不通过 code 猜路径。
+5. `AppContext.open_flashcards`、Paper/Library callers 与 Flashcard page 都改传已验证的 vault-relative path；不得通过 code 猜路径。
 
 Gate：root/folder/trash 全局 code、外部移动、深层目录、symlink、损坏 Paper 和 deterministic index 有直接测试。
 
@@ -478,7 +495,7 @@ Gate：注入单项 move/unlink 失败，证明其余项结果准确、失败项
 2. 高密度 Paper rows、scope search、sort、全选/取消、切换清选提示。
 3. 使用当前 Flet 已安装的 `Draggable` / `DragTarget`；菜单是可访问的可靠路径，不加 drag dependency。
 4. 接通 folder menus、batch move、branch copy、固定 Trash、永久删除 threshold。
-5. Highlight 仅保留 drag handle；移除上/下与 reorder Toast。
+5. Highlight 保留 drag handle，并在键盘可达 row menu 提供上移/下移；移除 reorder Toast。
 
 Gate：builder tests 覆盖默认、empty、selection、merge、partial error、confirmation threshold 与 focus；macOS Flet smoke 验证实际拖放和菜单。
 
@@ -509,7 +526,7 @@ Gate：无位置 persistence、跨 Paper reset、非法跳页、same-day once、
 
 步骤：
 
-1. 更新 `docs/architecture/architecture.html` 为实际 Road v0.3 模块和 lifecycle。
+1. 将 Phase 0 的 target `docs/architecture/architecture.html` 按已验证代码重新校准为实际 Road v0.3 模块和 lifecycle，移除 target/current 过渡声明。
 2. 更新 design/interaction 页面中的最终状态；不把临时 prototype 当 authority。
 3. 使用可见 synthetic Vault 完成新建/命名/文件夹/复制/Flashcard/Trash/Vault switch 全流。
 4. 使用复制的真实 Vault 验证 v2 lazy upgrade、Finder 外部移动和 unsafe Vault relocation；永不首测唯一真实 Vault。
@@ -522,7 +539,7 @@ Gate：没有 P0/P1；所有高风险文件操作有证据；未验证项明确�
 
 | Checkpoint | 含义 | 当前状态 |
 | --- | --- | --- |
-| CP0 | 范围冻结、Planbook review | **Current** |
+| CP0 | 范围冻结、Planbook approved | **Complete** |
 | CP1 | Authority + path safety 合入 | Pending |
 | CP2 | Paper v3 与 mixed-schema round trip | Pending |
 | CP3 | Folder/Trash core 完成，UI 尚未成为证据 | Pending |
@@ -557,6 +574,8 @@ flet run src/keikeu_app/main.py
 
 ## 12. Development advice
 
+已验证的 installed Flet 0.85.3 路径限于 `Draggable` / `DragTarget`、`ContextMenu` / `PopupMenuButton`、`Page.on_keyboard_event`、`Page.run_task` 与 `TextField.on_submit`。不使用不存在的 `ft.Timer`，不加 drag dependency、shortcut registry 或新状态框架。
+
 1. **先修路径，再碰文件夹。** 当前最大风险不是 UI，而是五处固定路径假设和任意 Vault config；Phase 1/3 不可倒序。
 2. **传 path，不重新找 code。** Library/index 已知道准确文件；页面之间传相对 path，避免全盘扫描和错误命中。
 3. **混合 schema 要被设计，不要偷偷全量迁移。** v2 reader + v3 writer 足够；任何批量改写都另立迁移契约。
@@ -580,14 +599,14 @@ flet run src/keikeu_app/main.py
 | 一层目录不足 | 深层只报错不写入 | 真实工作流反复需要层级而非偏好 |
 | Home-only 阻止外部卷 | 明确不支持 | 用户有必要的外置存储工作流并愿意接受权限设计 |
 
-## 14. Planbook review gate
+## 14. Approved review decisions
 
-实现开始前，开发者需要确认：
+2026-07-22，开发者批准本 Planbook 与以下执行选择：
 
-- 本文件准确表达所有冻结功能；
-- 架构仍为无新增依赖的模块化单体；
-- schema v2/v3 lazy compatibility、Home-only Vault、一层真实文件夹和 partial batch semantics 可接受；
-- Phase 顺序与每个 gate 可执行；以及
-- 临时视觉原型只用于评审，最终规范回写 design/interaction/architecture authority。
+- architecture option A：Phase 0 先写 Road v0.3 target，并在 Road 完成后按实际实现再校准；
+- Highlight ordering option A：drag handle + 键盘可达的上移/下移菜单，无 reorder toast；
+- delivery cadence B：每个 verified Phase 一个 focused local commit，不自动 push/tag；
+- legacy duplicate code 保留、报告并阻断 mutation，不自动改号；以及
+- unsafe Vault 先只读分类，不跟随 symlink，仅将普通目录/regular files byte-copy/verify 到 Home；v2/v3 再解析并重建 index，v0.1 改走安全副本上的现有 preflight 与 migration gate，不写原件也不以真实唯一 Vault 首测。
 
-Planbook 获批后，下一步是 Phase 0；不是直接跳进 UI。
+Phase 0 权威与 fixture gate 已完成；下一步是 Phase 1 路径安全与 Vault 切换，不能直接跳进 UI。

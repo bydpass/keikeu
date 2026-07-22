@@ -30,3 +30,4 @@ packages = ["src/keikeu_core", "src/keikeu_app"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+addopts = "--basetemp=tests/test-vault/pytest"

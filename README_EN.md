@@ -6,11 +6,11 @@
 
 ## Current status
 
-The code implements the `Paper Markdown → Flashcard → external prose editor` core. Road v0.2 Phases 0–7 engineering, macOS file-service smoke, and Phase 8 real-author one-shot and two-session short/medium acceptance are complete. Road archival or tagging remains a developer decision after final checks.
+The code implements the `Paper Markdown → Flashcard → external prose editor` core. Road v0.2 Phases 0–7 engineering, macOS file-service smoke, and Phase 8 real-author one-shot and two-session short/medium acceptance are complete and marked by local annotated tag `v0.2.0`. Road archival remains a developer decision.
 
-Phase 7.5 is an independent lightweight iOS build for rapid testing. Its responsive UI, app-sandbox Vault, and on-device fixes are complete on a separate branch; it is not a merge gate in the macOS Road. Phase 8.5 prepares Road v0.3 and is the precursor to the next Mac version. See [PROJECT](docs/PROJECT.md) for the live coordinates.
+Phase 7.5 is an independent lightweight iOS build for rapid testing. Its responsive UI, app-sandbox Vault, and on-device fixes are complete on a separate branch; it is not a merge gate in the macOS Road. Road v0.3 Phase 0 authority/fixtures are complete, and Phase 1 path safety and Vault switching are next. Target documents do not mean the runtime has upgraded; the current code remains v0.2. See [PROJECT](docs/PROJECT.md) for live coordinates.
 
-## Core flow
+## Current runtime flow
 
 ```text
 existing inspiration → Paper Markdown → Flashcard → external prose editor

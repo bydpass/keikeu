@@ -13,13 +13,17 @@
 
 When intent and runtime differ, change code, change the active specification, or record a temporary deviation in an ADR. Never let two answers remain active.
 
+During a staged Road, SPEC and the HTML maps may describe the approved target while `PROJECT.md`, `src/`, and `tests/` identify the current implementation Phase. The target/current label and next convergence gate must remain explicit until the final architecture calibration.
+
 ## 2. Architecture
 
 - The fixed runtime stack is Python `>=3.11,<3.14`, Flet, author-owned Markdown, and rebuildable JSON metadata.
 - The developer owns architecture, dependencies, data models, build commands, and release artifacts; agent output must remain explainable and reviewable.
 - `keikeu_core` is pure Python and never imports Flet or another GUI toolkit.
 - `markdown_io.py` exclusively owns Paper Markdown parsing and serialization.
+- `vault.py` exclusively owns Home containment, supported Paper-path validation, active/Trash enumeration, code allocation across those paths, and destructive filesystem moves.
 - GUI code calls public core APIs; it never renders Markdown or edits index JSON.
+- App pages pass validated Vault-relative Paper paths; they never recover a path by guessing `cache/<code>.md`.
 - Markdown is canonical author content. Index and device state are disposable.
 - Keep explicit files and control flow. Add abstractions only after a second real use exists.
 - Prefer existing code, Python stdlib, platform features, then already-installed dependencies.
@@ -28,8 +32,9 @@ When intent and runtime differ, change code, change the active specification, or
 ## 3. Author text and privacy
 
 - Never silently delete, overwrite, normalize, auto-correct, summarize, rewrite, merge, score, train on, upload, or expose author text.
-- Preserve the frozen initial Summary, current Summary, Highlight order, intentionally blank optional fields, and feasible unknown frontmatter.
+- Preserve the frozen initial Summary, current Summary, Paper/Highlight display names, Highlight content and order, intentionally blank optional fields, and feasible unknown frontmatter.
 - Required Summary fails explicitly before disk write.
+- Name validation trims only outer whitespace, rejects line breaks/control characters and overlength input, and stores the remaining author text unchanged. NFC+casefold is a comparison key, never a disk rewrite.
 - Never ask for prose, inspirations, names, relationships, Vault paths, secrets, or private drafts in chat or acceptance records.
 - No telemetry, analytics, account, remote API, hidden background service, or external corpus without explicit product authorization.
 
@@ -37,10 +42,16 @@ When intent and runtime differ, change code, change the active specification, or
 
 - Save through same-directory temporary files and safe replacement; never expose a partially written Paper.
 - Reject silent overwrite after external modification, deletion, movement, or code collision.
+- Resolve every durable-write target and require it to be the current user's Home or a descendant; reject symlink escape before writing.
+- Validate a Vault candidate completely before atomically replacing selected-Vault config.
 - Delete means soft-delete for current Paper unless an explicitly specified migration contract says otherwise.
-- Recovery never overwrites another asset. Rename or cancel is explicit.
+- Recovery never overwrites another asset or rewrites a historical Paper code. A conflict stays in Trash and is reported.
 - Migration, delete, restore, conflict, and provider-folder changes start on fixtures or copied Vaults.
-- A destructive migration requires external full backup, staging validation, readable report, and safe failure behavior.
+- Classify an unsafe configured Vault read-only before copying. Copy only ordinary directories and regular files into a new Home-contained destination without following symlinks; any symlink or unsupported/special entry aborts with source and config untouched. Verify the regular-file manifest and bytes.
+- Parse Papers and rebuild/validate the index only for a v2/v3 safe copy before config switch. For v0.1, run the existing read-only preflight/manifest validation on the safe copy, switch config atomically to it, then enter the existing migration gate there; cancellation or failure leaves that unmodified safe copy selected. Never parse v0.1 as v2/v3 or write the unsafe source.
+- Preserve and report externally created duplicate codes; block mutations involving them rather than renaming either asset.
+- Active Trash and permanent delete operate on explicit validated Paper paths, use `unlink` per file, and only `rmdir` verified-empty directories. Recursive cleanup is allowed only for an isolated migration staging tree created by keikeu.
+- A destructive migration requires a full backup outside the active Vault but still under Home, staging validation, a readable report, and safe failure behavior.
 - Disclose changes to selected Vault, device state, persistent config, signing, or generated platform projects before execution and report the result.
 
 ## 5. Interaction
@@ -50,6 +61,7 @@ When intent and runtime differ, change code, change the active specification, or
 - Every core flow covers default, empty, error, disabled/in-progress, and recovery states where applicable.
 - Flashcard remains read-only and Summary-first; it never becomes a progress tracker or prose editor.
 - Use responsive layouts, safe areas, keyboard reachability, readable contrast, visible focus, and text wrapping.
+- Every drag operation has a keyboard-reachable menu equivalent. Highlight rows expose a drag handle plus **上移/下移** menu actions; reordering does not announce a redundant toast.
 - Motion may clarify state but cannot be required to understand or complete a task.
 - System file services are ordinary paths. Do not pretend to manage provider sync, accounts, timing, or conflict merges.
 
@@ -84,6 +96,7 @@ No feature enters an acceptance or bug-fix Phase by being adjacent, attractive, 
 ## 8. Evidence
 
 - A focused test proves only the behavior it exercises.
+- Automated test temporary files stay under the ignored repository path `tests/test-vault/`; tests never select or mutate a real Vault.
 - A synthetic-Vault smoke does not prove a real provider service or real-author workflow.
 - A platform build does not prove launch, relaunch, persistence, file access, or product acceptance unless each was observed.
 - “Engineering complete,” “file-service smoke complete,” “product accepted,” and “Road archived” are separate conclusions.

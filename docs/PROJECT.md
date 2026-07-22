@@ -2,7 +2,7 @@
 
 > Authority: current coordinates, module entry points, documentation index, and next gate. Product behavior belongs in [SPEC](SPEC.md); rules belong in [RULES](RULES.md).
 
-Updated: 2026-07-21
+Updated: 2026-07-22
 
 ## Current coordinates
 
@@ -12,13 +12,13 @@ Updated: 2026-07-21
 | Road v0.2 Phase 8 product acceptance | Complete | The author completed the real one-shot and two-session short/medium scenarios; no P0/P1 was reported. P2/P3 observations are recorded separately. |
 | Phase 7.5 lightweight iOS | Quick-test build complete on an independent branch | Responsive shell and app-sandbox Vault were exercised on `codex/fix-ios-device-readiness`. This is a lightweight iOS version for rapid testing, not a step in the macOS Road sequence. |
 | Phase 8.5 / Road v0.3 preparation | Documentation reform implemented; review pending | This is the precursor to the next macOS version. Current evidence covers the authority map, HTML maps, archive, link gate, browser QA, and bounded Graphify trial; independent fresh-agent cold start was not run. |
-| Road v0.3 planning | Scope frozen; Planbook review in progress (CP0) | [`planbook_road_v0_3.md`](planbook_road_v0_3.md) records the proposed architecture, phases, gates, risks, and explicit non-goals. Runtime implementation has not started. |
+| Road v0.3 Phase 0 | Complete; Phase 1 next | The approved [Planbook](planbook_road_v0_3.md) decisions are encoded in SPEC, RULES, ADRs, target HTML maps, and frozen synthetic fixtures. The current runtime remains v0.2 until later Phases implement and verify v0.3. |
 
-Phase 8 product acceptance is complete. Road archival or tagging remains a separate developer decision after final checks against the candidate commit. Automated tests, platform smoke, and author acceptance remain distinct evidence.
+Phase 8 product acceptance is complete. Road v0.2 is marked by local annotated tag `v0.2.0` at `d0feac0269a5619f5dbf27c04347ba69c5665b42`; archival remains a separate developer decision. Automated tests, platform smoke, and author acceptance remain distinct evidence.
 
 Phase 7.5 and Phase 8.5 are separate tracks: Phase 7.5 is the independent lightweight iOS test version; Phase 8.5 prepares Road v0.3 and the next macOS version. Phase 7.5 is not a merge gate for Phase 8.5.
 
-Road v0.3 product decisions are frozen, but its Planbook is still under developer review. Until CP0 is approved and Phase 0 updates the active authorities, Road v0.2 behavior in SPEC and runtime remains current.
+Road v0.3 product decisions and Planbook are approved, and Phase 0 authority/fixtures are complete without runtime source changes. Phase 1 path safety and Vault switching are next. `src/` and runtime tests still prove v0.2 behavior; each implementation Phase must keep that target/current distinction explicit until Road completion recalibrates `architecture.html` against the verified code.
 
 ## Product flow
 
@@ -28,7 +28,7 @@ Paper Markdown → Flashcard → external prose editor
 
 See [SPEC](SPEC.md) for the contract and [interaction.html](design/interaction.html) for executable state examples.
 
-## Runtime map
+## Current runtime map (v0.2)
 
 | Area | Responsibility | Source | Direct evidence |
 | --- | --- | --- | --- |
@@ -57,9 +57,9 @@ README
 ```
 
 - **Authority:** [SPEC](SPEC.md) owns product behavior and acceptance; [RULES](RULES.md) owns engineering, interaction, data, Git, and evidence constraints; [AGENTS](../AGENTS.md) owns agent procedure. Runtime facts come from [`src/`](../src/) and [`tests/`](../tests/).
-- **Views:** [design](design/design.html) shows visual tokens and component states; [interaction](design/interaction.html) shows user paths and states; [architecture](architecture/architecture.html) shows modules, dependencies, and data lifecycles.
+- **Views:** [design](design/design.html) shows v0.3 target visual tokens and component states; [interaction](design/interaction.html) shows target user paths and states; [architecture](architecture/architecture.html) shows target modules, dependencies, and lifecycles. Current implementation evidence remains in `src/`, `tests/`, and this map.
 - **Evidence:** [acceptance](acceptance/README.md) holds the completed Phase 8 evidence; the used SOP is archived at its commit baseline. [generated](generated/README.md) holds rebuildable observations; the [cold-start audit](cold_start_report.md) records the Phase 8.5 evidence boundary. None defines intent by itself.
-- **Context:** [ADR 0001](architecture/decisions/0001-document-authority.md) explains this split; [manual](manual/README.md) teaches people; [archive](archive/README.md) preserves superseded records. Manual and archive never override authority.
+- **Context:** [ADR 0001](architecture/decisions/0001-document-authority.md) explains the authority split; [ADR 0002](architecture/decisions/0002-home-write-boundary.md) fixes the Home write boundary and App Sandbox deferral; [ADR 0003](architecture/decisions/0003-paper-v3-one-level-folders.md) fixes Paper v3 and one-level folders. [Manual](manual/README.md) teaches people; [archive](archive/README.md) preserves superseded records. Neither overrides authority.
 
 ## Commands
 
@@ -74,8 +74,8 @@ Application tests must not be inferred from documentation checks. Platform smoke
 
 ## Open gates
 
-1. Review and approve the [Road v0.3 Planbook](planbook_road_v0_3.md) at CP0.
-2. After approval, begin Planbook Phase 0 by updating SPEC, RULES, design, interaction, architecture decisions, and fixtures before implementation.
+1. Create one focused local Phase 0 commit from the reviewed working-tree diff; do not push or tag.
+2. Begin Phase 1 path safety on synthetic/copied Vaults only; do not access a real Vault.
 3. Keep the independent Phase 7.5 iOS test build outside every Road v0.3 macOS implementation and acceptance gate.
 
 ## Known candidate, not active scope

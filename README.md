@@ -6,11 +6,11 @@
 
 ## 当前状态
 
-当前代码已经实现 `Paper Markdown → Flashcard → 外部正文编辑器` 核心。Road v0.2 Phase 0–7 工程、macOS 文件服务 smoke，以及 Phase 8 真实 one-shot 与短/中篇跨会话作者验收均已完成。Road 是否归档或打 tag 仍需开发者在最终检查后决定。
+当前代码已经实现 `Paper Markdown → Flashcard → 外部正文编辑器` 核心。Road v0.2 Phase 0–7 工程、macOS 文件服务 smoke，以及 Phase 8 真实 one-shot 与短/中篇跨会话作者验收均已完成，并已以 local annotated tag `v0.2.0` 标记。Road 归档仍需开发者决定。
 
-Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响应式界面、本机沙盒 Vault 与真机修复验证；它不是 macOS Road 的合入闸门。Phase 8.5 则是 Road v0.3 前的准备版本，也是下一版 Mac 端的前体。实时坐标见 [PROJECT](docs/PROJECT.md)。
+Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响应式界面、本机沙盒 Vault 与真机修复验证；它不是 macOS Road 的合入闸门。Road v0.3 Phase 0 authority/fixtures 已完成，下一步是 Phase 1 路径安全与 Vault 切换；目标文档不代表运行时已升级，当前代码仍是 v0.2。实时坐标见 [PROJECT](docs/PROJECT.md)。
 
-## 核心流程
+## 当前运行时核心流程
 
 ```text
 已有灵感 → Paper Markdown → Flashcard → 外部正文编辑器

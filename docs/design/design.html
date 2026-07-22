@@ -12,7 +12,7 @@
   <div class="shell">
     <aside class="rail" aria-label="页面目录">
       <div class="rail-brand">KEIKEU / DESIGN</div>
-      <div class="rail-meta">NORMATIVE VISUAL MAP · 2026-07-18</div>
+      <div class="rail-meta">ROAD V0.3 TARGET MAP · 2026-07-22</div>
       <nav>
         <a href="#direction">设计方向</a>
         <a href="#tokens">Token</a>
@@ -43,13 +43,14 @@
       </div>
 
       <header class="hero">
-        <div class="eyebrow">Visual authority / executable specimen</div>
+        <div class="eyebrow">Road v0.3 visual target / executable specimen</div>
         <h1>像一台安静的旧文字处理机，而不是一间催更办公室。</h1>
-        <p class="lede">这页定义 keikeu 的视觉 token、组件形态、关键状态、响应式分配与无障碍底线。真实实现以链接到的 Flet 源码为准；若样张与源码冲突，必须修一边并记录原因。</p>
+        <p class="lede">这页定义 Road v0.3 的视觉 token、组件形态、关键状态、响应式分配与无障碍底线；<a href="../PROJECT.md">PROJECT</a>、源码与测试记录当前实现阶段。Road 完成后按实际 Flet 界面再次校准本页。</p>
         <div class="status-row">
           <span class="ticket ok">离线可用</span>
           <span class="ticket ok">无外部资产</span>
           <span class="ticket">Showa stationery</span>
+          <span class="ticket">One-level Library</span>
           <span class="ticket warn">不是营销页</span>
         </div>
       </header>
@@ -60,7 +61,7 @@
         <section class="section searchable" id="direction" data-search="direction purpose audience tone 原则 作者控制">
           <div class="section-head"><div class="section-number">01</div><div><h2>设计方向</h2><p>目的、受众、语气和唯一记忆点。</p></div></div>
           <div class="grid four">
-            <article class="card flat"><h3>Purpose</h3><p>把已有灵感稳稳递到作者眼前，减少维护软件本身的负担。</p></article>
+            <article class="card flat"><h3>Purpose</h3><p>把已有灵感稳稳收进一层 Library，再递到作者眼前，减少维护软件本身的负担。</p></article>
             <article class="card flat"><h3>Audience</h3><p>反复使用同一私密流程的单作者；先扫 Summary、当前位置和安全动作。</p></article>
             <article class="card flat"><h3>Tone</h3><p>安静、耐久、技术编辑式。信息密度高，但不制造仪表盘焦虑。</p></article>
             <article class="card flat"><h3>Memorable detail</h3><p>标签机标题、氧化橙动作键、磷光绿文字与微黄纸张。</p></article>
@@ -114,8 +115,8 @@
               <h3>动作键</h3>
               <div class="demo-surface button-row">
                 <button class="ui-button primary" type="button">保存 Paper</button>
-                <button class="ui-button" type="button">打开 Flashcard</button>
-                <button class="ui-button danger" type="button">删除 Paper</button>
+                <button class="ui-button" type="button">移动到…</button>
+                <button class="ui-button danger" type="button">移至 Trash</button>
                 <button class="ui-button" type="button" disabled>迁移中…</button>
               </div>
               <p class="muted">每个页面只突出一个当前主动作；删除保持低强调但语义清楚。</p>
@@ -131,11 +132,23 @@
               <p class="muted">标签是状态证据，不是装饰贴纸；避免在一屏铺满徽章。</p>
             </article>
             <article class="card">
-              <h3>自由文本字段</h3>
+              <h3>命名与自由文本字段</h3>
               <div class="demo-surface demo-field">
+                <label for="paper-name-demo">Paper 名称（可选）</label>
+                <input id="paper-name-demo" value="雪中的无人车">
                 <label for="summary-demo">Summary（必填）</label>
                 <textarea id="summary-demo" rows="4">一个不包含真实作者内容的合成 Summary。</textarea>
-                <small class="muted">保存时冻结首次副本；当前 Summary 仍可编辑。</small>
+                <small class="muted">系统编号只读且不可修改；Highlight 使用同样的可选名称 + 必填内容结构。</small>
+                <div class="button-row" aria-label="Highlight 排序等价入口">
+                  <button class="ui-button" type="button" aria-label="拖动 Highlight 排序">↕ 拖动</button>
+                  <details>
+                    <summary class="ui-button">••• 排序菜单</summary>
+                    <div class="button-row" aria-label="Highlight 排序菜单">
+                      <button class="ui-button" type="button">上移</button>
+                      <button class="ui-button" type="button">下移</button>
+                    </div>
+                  </details>
+                </div>
               </div>
             </article>
             <article class="card">
@@ -155,11 +168,11 @@
           <div class="table-wrap"><table class="matrix">
             <thead><tr><th>状态</th><th>视觉信号</th><th>行为</th><th>禁止</th></tr></thead>
             <tbody>
-              <tr><td>Default</td><td>纸张面、清晰标题、一个主动作</td><td>完成正常任务</td><td>隐藏必要出口</td></tr>
-              <tr><td>Empty</td><td>解释缺少什么，保留上下文</td><td>提供最短下一步</td><td>用错误色惩罚空可选字段</td></tr>
-              <tr><td>Error</td><td>字段旁说明 + 页面级可恢复路径</td><td>保留输入与旧磁盘版本</td><td>只弹“失败”或静默重试写入</td></tr>
+              <tr><td>Default</td><td>当前 Vault / scope 可见、清晰标题、一个主动作</td><td>完成正常任务</td><td>隐藏资产所在位置或必要出口</td></tr>
+              <tr><td>Empty</td><td>区分空 Vault、空文件夹、空 Trash 与搜索无结果</td><td>保留 scope 并提供最短下一步</td><td>用错误色惩罚空可选字段</td></tr>
+              <tr><td>Error</td><td>字段旁说明；批量失败逐项列出 path 与原因</td><td>保留输入、旧磁盘版本与失败项</td><td>只弹“失败”或宣称全部成功</td></tr>
               <tr><td>Disabled / busy</td><td>按钮禁用且标签说明原因</td><td>防止重复危险动作</td><td>靠动画阻断用户理解</td></tr>
-              <tr><td>Recovery</td><td>资产位置、冲突原因、显式选项</td><td>恢复、改代号或取消</td><td>覆盖同名 Paper</td></tr>
+              <tr><td>Recovery</td><td>资产位置、冲突原因、显式选项</td><td>恢复非冲突项、保留冲突项或取消</td><td>改历史 code 或覆盖同名 Paper</td></tr>
             </tbody>
           </table></div>
         </section>
@@ -173,7 +186,7 @@
           </div>
           <div class="device-stage">
             <div class="device mac active" data-panel="device" data-panel-id="mac">
-              <div class="device-nav">◆ PAPER<br><br>FLASHCARD<br><br>本地文件库</div>
+              <div class="device-nav">◆ PAPER<br><br>FLASHCARD<br><br>全部 PAPER<br>未归类<br>夜行列车<br><br>TRASH · 0</div>
               <div class="device-body"><div class="eyebrow">Paper / K-20260718-001</div><h3 style="margin-top:10px">纸片编辑器</h3><div class="mini-card">Summary<br><br><span class="muted">主编辑面 + 侧栏导航 + 外部编辑器并列</span></div></div>
             </div>
             <div class="device phone" data-panel="device" data-panel-id="phone">
@@ -191,7 +204,7 @@
         <section class="section searchable" id="accessibility" data-search="accessibility a11y keyboard focus contrast motion print offline 无障碍 键盘 焦点 对比度 降级">
           <div class="section-head"><div class="section-number">07</div><div><h2>无障碍与降级</h2><p>这些是最低要求，不是后期润色。</p></div></div>
           <div class="grid three">
-            <article class="card flat"><h3>Keyboard</h3><p>交互控件使用原生按钮/字段；焦点始终可见；顺序与视觉阅读顺序一致。</p></article>
+            <article class="card flat"><h3>Keyboard</h3><p>交互控件使用原生按钮/字段；焦点始终可见；每个拖放动作都有菜单等价入口。Highlight 的拖动 handle 配有可键盘到达的“上移 / 下移”，排序后不显示冗余 toast。</p></article>
             <article class="card flat"><h3>Contrast</h3><p>关键状态不只靠颜色；正文不使用 muted 色；错误信息与字段建立可读关联。</p></article>
             <article class="card flat"><h3>Motion</h3><p>尊重 reduced-motion；没有动效也能理解状态和完成任务。</p></article>
             <article class="card flat"><h3>Text</h3><p>长代号、中文、英文和系统字号放大后必须换行，不与按钮或计数器重叠。</p></article>
@@ -201,7 +214,7 @@
         </section>
 
         <section class="section searchable" id="sources" data-search="source code links implementation 源码 锚点 truth">
-          <div class="section-head"><div class="section-number">08</div><div><h2>源码锚点</h2><p>从视觉规范到实现最多两次点击。</p></div></div>
+          <div class="section-head"><div class="section-number">08</div><div><h2>目标实现锚点</h2><p>从视觉规范到目标源码最多两次点击；当前收敛阶段见 PROJECT。</p></div></div>
           <div class="table-wrap"><table class="matrix">
             <thead><tr><th>事实</th><th>源码</th><th>验证</th></tr></thead>
             <tbody>
@@ -211,11 +224,11 @@
               <tr><td>字段错误与外部修改反馈</td><td><a href="../../src/keikeu_app/pages/paper_page.py">paper_page.py</a></td><td><a href="../../tests/test_app_pages.py">test_app_pages.py</a></td></tr>
             </tbody>
           </table></div>
-          <div class="callout ok" style="margin-top:14px">样张与实现冲突时：先判断哪边符合 <a href="../SPEC.md">SPEC</a> 和 <a href="../RULES.md">RULES</a>，再修源码或本页；不允许双活。</div>
+          <div class="callout ok" style="margin-top:14px">Road 施工期间，本页是目标态，<a href="../PROJECT.md">PROJECT</a> 是当前坐标。Road 完成后按 <a href="../SPEC.md">SPEC</a>、<a href="../RULES.md">RULES</a>、源码、测试与 smoke 校准样张，不保留未声明双活。</div>
         </section>
       </div>
 
-      <footer class="footer">keikeu Design System · active visual authority · offline / no build / no external assets</footer>
+      <footer class="footer">keikeu Design System · Road v0.3 target authority · current Phase in PROJECT / offline / no external assets</footer>
     </main>
   </div>
   <script src="../assets/map.js"></script>
