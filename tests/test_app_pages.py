@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+import json
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Iterable
@@ -12,6 +13,7 @@ import flet as ft
 from keikeu_app import main as app_main
 from keikeu_app.local_state import get_card_index, load_card_positions, set_card_index
 from keikeu_app.main import AppContext
+from keikeu_app.pages import flashcard_page as flashcard_page_mod
 from keikeu_app.pages import library_page as library_page_mod
 from keikeu_app.pages.flashcard_page import build_flashcard_page
 from keikeu_app.pages.library_page import build_library_page
@@ -161,6 +163,7 @@ def test_save_reopen_and_update_preserves_first_draft(tmp_path):
     assert paper.initial_summary == "First draft summary."
     assert paper.highlights == ["A held breath."]
     assert paper.tags == ["rain", "station"]
+    assert _text_field(root, "Tags（用逗号分隔）").value == "rain, station"
 
     reopened = build_paper_page(_ctx(page, tmp_path), path)
     assert _text_field(reopened, "Paper 代号").read_only is True
@@ -170,6 +173,7 @@ def test_save_reopen_and_update_preserves_first_draft(tmp_path):
     updated = read_paper(path)
     assert updated.initial_summary == "First draft summary."
     assert updated.summary == "Edited current summary."
+    assert _text_field(reopened, "Summary").value == "Edited current summary."
 
 
 def test_editor_refuses_to_overwrite_an_externally_changed_paper(tmp_path):
@@ -179,10 +183,16 @@ def test_editor_refuses_to_overwrite_an_externally_changed_paper(tmp_path):
     root = build_paper_page(_ctx(page, tmp_path), path)
     _text_field(root, "Summary").value = "Local unsaved change."
 
+    source_bytes = path.read_bytes()
     external = read_paper(path)
     external.summary = "External editor change."
     external.updated = datetime(2026, 7, 14, 10, 0)
-    update_paper(path, external)
+    update_paper(
+        tmp_path,
+        path,
+        external,
+        expected_source_bytes=source_bytes,
+    )
 
     _button(root, "保存").on_click(None)
 
@@ -201,6 +211,27 @@ def test_editor_refuses_to_recreate_an_externally_deleted_paper(tmp_path):
 
     assert not path.exists()
     assert "Paper 已在外部删除或移动；未保存。请返回本地文件库刷新。" in _texts(root)
+
+
+def test_editor_refuses_mutation_after_cache_is_swapped_for_a_symlink(tmp_path):
+    vault = tmp_path / "vault"
+    outside_cache = tmp_path / "outside-cache"
+    init_vault(vault)
+    path = write_paper(vault, _paper("K-20260714-001", "Original summary."))
+    page = FakePage()
+    root = build_paper_page(_ctx(page, vault), path)
+    _text_field(root, "Summary").value = "Must not escape the Vault."
+
+    (vault / "cache").rename(vault / "cache-original")
+    outside_cache.mkdir()
+    outside_path = outside_cache / path.name
+    outside_path.write_bytes(b"outside sentinel")
+    (vault / "cache").symlink_to(outside_cache, target_is_directory=True)
+
+    _button(root, "保存").on_click(None)
+
+    assert outside_path.read_bytes() == b"outside sentinel"
+    assert any("symlink" in text for text in _texts(root))
 
 
 def test_highlight_reorder_is_saved_in_the_visible_order(tmp_path):
@@ -277,6 +308,59 @@ def test_flashcard_is_summary_first_read_only_and_remembers_position(tmp_path):
     assert read_paper(path).summary == "Current Summary."
 
 
+def test_flashcard_rejects_a_symlinked_cache_before_reading_outside(tmp_path, monkeypatch):
+    vault = tmp_path / "vault"
+    outside_vault = tmp_path / "outside-vault"
+    init_vault(vault)
+    init_vault(outside_vault)
+    paper = _paper("K-20260714-001", "Outside secret summary.")
+    write_paper(outside_vault, paper)
+    (vault / "cache").rename(vault / "cache-original")
+    (vault / "cache").symlink_to(outside_vault / "cache", target_is_directory=True)
+    reads: list[Path] = []
+    real_read = flashcard_page_mod.read_paper
+
+    def tracked_read(path: Path) -> Paper:
+        reads.append(path)
+        return real_read(path)
+
+    monkeypatch.setattr(flashcard_page_mod, "read_paper", tracked_read)
+    root = build_flashcard_page(_ctx(FakePage(), vault), paper.code)
+
+    assert reads == []
+    assert "Outside secret summary." not in _texts(root)
+    assert "尚未打开 Paper" in _texts(root)
+
+
+def test_shell_flashcard_rejects_a_traversal_code_before_any_read(tmp_path, monkeypatch):
+    vault = tmp_path / "vault"
+    init_vault(vault)
+    page = FakePage()
+    captured: list[AppContext] = []
+    reads: list[Path] = []
+
+    def capture_library(ctx: AppContext) -> ft.Control:
+        captured.append(ctx)
+        return ft.Column()
+
+    def tracked_read(path: Path) -> Paper:
+        reads.append(path)
+        raise AssertionError("invalid code must not reach Paper I/O")
+
+    monkeypatch.setattr(app_main, "build_library_page", capture_library)
+    monkeypatch.setattr(flashcard_page_mod, "read_paper", tracked_read)
+    app_main._build_shell(page, vault)  # type: ignore[attr-defined, arg-type]
+    rail = next(control for control in _walk(page.controls[0]) if isinstance(control, ft.NavigationRail))
+    rail.selected_index = 2
+    rail.on_change(SimpleNamespace(control=rail))
+
+    captured[0].open_flashcards("../../outside")
+
+    assert reads == []
+    assert rail.selected_index == 1
+    assert "尚未打开 Paper" in _texts(page.controls[0])
+
+
 def test_library_opens_flashcard_with_the_selected_paper_code(tmp_path):
     init_vault(tmp_path)
     paper = _paper("K-20260714-001", "Focus this paper.")
@@ -290,6 +374,31 @@ def test_library_opens_flashcard_with_the_selected_paper_code(tmp_path):
     _button(root, "打开 Flashcard").on_click(None)
 
     assert opened == [paper.code]
+
+
+def test_library_vault_switch_cancel_returns_to_the_current_shell(tmp_path):
+    init_vault(tmp_path)
+    page = FakePage()
+    app_main._build_shell(page, tmp_path)  # type: ignore[attr-defined, arg-type]
+    rail = next(control for control in _walk(page.controls[0]) if isinstance(control, ft.NavigationRail))
+    rail.selected_index = 2
+    rail.on_change(SimpleNamespace(control=rail))
+
+    assert str(tmp_path.resolve()) in _texts(page.controls[0])
+    assert "写入仅允许当前用户 Home 内路径；尚未启用 Apple App Sandbox。" in _texts(
+        page.controls[0]
+    )
+    _button(page.controls[0], "更换 Vault…").on_click(None)
+    assert _control_by_key(page.controls[0], "vault-picker-paper-card")
+    assert _text_field(page.controls[0], "Vault 文件夹路径").value == str(tmp_path.resolve())
+
+    _button(page.controls[0], "取消").on_click(None)
+    rail = next(control for control in _walk(page.controls[0]) if isinstance(control, ft.NavigationRail))
+    assert [destination.label for destination in rail.destinations] == [
+        "纸片",
+        "Flashcard",
+        "本地文件库",
+    ]
 
 
 def test_library_searches_code_summary_and_tags_and_opens_paper(tmp_path):
@@ -365,6 +474,105 @@ def test_library_delegates_open_and_reveal_to_macos_system_commands(tmp_path, mo
     _button(root, "在文件夹中显示").on_click(None)
 
     assert calls == [["open", str(path)], ["open", "-R", str(path)]]
+
+
+def test_library_revalidates_the_vault_before_revealing_it(tmp_path, monkeypatch):
+    vault = tmp_path / "vault"
+    init_vault(vault)
+    page = FakePage()
+    calls: list[list[str]] = []
+    monkeypatch.setattr(
+        library_page_mod.subprocess,
+        "run",
+        lambda command, check: calls.append(command),
+    )
+    root = build_library_page(_ctx(page, vault))
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (vault / "late-link").symlink_to(outside, target_is_directory=True)
+
+    _button(root, "在文件夹中显示").on_click(None)
+
+    assert calls == []
+    assert "symlink" in _texts(page.overlay[-1])[0]
+
+
+def test_library_rejects_an_absolute_index_path_for_every_file_action(
+    tmp_path, monkeypatch
+):
+    vault = tmp_path / "vault"
+    init_vault(vault)
+    outside = tmp_path / "outside.md"
+    outside.write_bytes(b"outside sentinel")
+    crafted_entry = {
+        "code": "K-20260714-999",
+        "path": str(outside),
+        "summary": "Crafted index entry.",
+        "tags": [],
+        "created": "2026-07-14T09:00:00",
+        "updated": "2026-07-14T09:00:00",
+    }
+    (vault / "keikeu_index.json").write_text(
+        json.dumps(
+            {
+                "version": 2,
+                "papers": [crafted_entry],
+                "errors": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    page = FakePage()
+    ctx = _ctx(page, vault)
+    opened: list[Path | None] = []
+    ctx.open_paper = lambda path: opened.append(path)
+    # Exercise the UI boundary even though the core index loader also rejects
+    # and rebuilds this crafted entry.
+    monkeypatch.setattr(library_page_mod, "list_papers", lambda _vault: [crafted_entry])
+    monkeypatch.setattr(
+        library_page_mod.subprocess,
+        "run",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            AssertionError("outside path must not reach the OS")
+        ),
+    )
+    root = build_library_page(ctx)
+
+    _button(root, "编辑").on_click(None)
+    _button(root, "打开").on_click(None)
+    _button(root, "在文件夹中显示").on_click(None)
+    _button(root, "删除").on_click(None)
+
+    assert opened == []
+    assert outside.read_bytes() == b"outside sentinel"
+    assert all("outside the selected Vault" in _texts(bar)[0] for bar in page.overlay[-4:])
+
+
+def test_shell_show_paper_rejects_an_absolute_path_outside_the_vault(
+    tmp_path, monkeypatch
+):
+    vault = tmp_path / "vault"
+    init_vault(vault)
+    outside = tmp_path / "outside.md"
+    outside.write_bytes(b"outside sentinel")
+    page = FakePage()
+    captured: list[AppContext] = []
+
+    def capture_library(ctx: AppContext) -> ft.Control:
+        captured.append(ctx)
+        return ft.Column()
+
+    monkeypatch.setattr(app_main, "build_library_page", capture_library)
+    app_main._build_shell(page, vault)  # type: ignore[attr-defined, arg-type]
+    rail = next(control for control in _walk(page.controls[0]) if isinstance(control, ft.NavigationRail))
+    rail.selected_index = 2
+    rail.on_change(SimpleNamespace(control=rail))
+
+    captured[0].open_paper(outside)
+
+    assert rail.selected_index == 2
+    assert outside.read_bytes() == b"outside sentinel"
+    assert "outside the selected Vault" in _texts(page.overlay[-1])[0]
 
 
 def test_library_displays_parse_errors_and_recovery_conflict_guidance(tmp_path):

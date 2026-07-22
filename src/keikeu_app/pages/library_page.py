@@ -26,7 +26,13 @@ from keikeu_app.widgets import (
     single_line_field,
 )
 from keikeu_core.indexer import list_index_errors, list_papers, rebuild_index
-from keikeu_core.vault import list_trashed_papers, restore_paper, soft_delete
+from keikeu_core.vault import (
+    list_trashed_papers,
+    resolve_active_paper_path,
+    restore_paper,
+    soft_delete,
+    validate_vault_tree_no_follow,
+)
 
 if TYPE_CHECKING:
     from keikeu_app.main import AppContext
@@ -73,6 +79,14 @@ def build_library_page(ctx: "AppContext") -> ft.Control:
     search_field.width = 420
     results = ft.Column(controls=[], scroll=ft.ScrollMode.AUTO, expand=True)
 
+    def on_reveal_vault(_: ft.ControlEvent) -> None:
+        try:
+            validate_vault_tree_no_follow(ctx.vault)
+        except (OSError, ValueError) as ex:
+            notify(page, f"无法在文件夹中显示 Vault：{ex}")
+            return
+        _reveal_in_folder(page, ctx.vault)
+
     def _paper_row(entry: dict[str, object]) -> ft.Control:
         rel_path = str(entry["path"])
         code = str(entry["code"])
@@ -80,11 +94,33 @@ def build_library_page(ctx: "AppContext") -> ft.Control:
         tags = [tag for tag in entry.get("tags", []) if isinstance(tag, str)]
 
         def on_edit(_: ft.ControlEvent) -> None:
-            ctx.open_paper(ctx.vault / rel_path)
+            try:
+                path = resolve_active_paper_path(ctx.vault, rel_path)
+            except (OSError, ValueError) as ex:
+                notify(page, f"无法打开 Paper：{ex}")
+                return
+            ctx.open_paper(path)
+
+        def on_open_system(_: ft.ControlEvent) -> None:
+            try:
+                path = resolve_active_paper_path(ctx.vault, rel_path)
+            except (OSError, ValueError) as ex:
+                notify(page, f"无法打开文件：{ex}")
+                return
+            _open_with_system(page, path)
+
+        def on_reveal(_: ft.ControlEvent) -> None:
+            try:
+                path = resolve_active_paper_path(ctx.vault, rel_path)
+            except (OSError, ValueError) as ex:
+                notify(page, f"无法在文件夹中显示：{ex}")
+                return
+            _reveal_in_folder(page, path)
 
         def on_delete(_: ft.ControlEvent) -> None:
             try:
-                soft_delete(ctx.vault, rel_path)
+                path = resolve_active_paper_path(ctx.vault, rel_path)
+                soft_delete(ctx.vault, str(path))
                 rebuild_index(ctx.vault)
                 notify(page, "已移入回收站")
                 refresh()
@@ -111,11 +147,11 @@ def build_library_page(ctx: "AppContext") -> ft.Control:
                             ),
                             ft.OutlinedButton(
                                 content=ft.Text("打开"),
-                                on_click=lambda _e: _open_with_system(page, ctx.vault / rel_path),
+                                on_click=on_open_system,
                             ),
                             ft.OutlinedButton(
                                 content=ft.Text("在文件夹中显示"),
-                                on_click=lambda _e: _reveal_in_folder(page, ctx.vault / rel_path),
+                                on_click=on_reveal,
                             ),
                             danger_button("删除", on_delete),
                         ],
@@ -257,11 +293,20 @@ def build_library_page(ctx: "AppContext") -> ft.Control:
                     ),
                     ft.OutlinedButton(
                         content=ft.Text("在文件夹中显示"),
-                        on_click=lambda _e: _reveal_in_folder(page, ctx.vault),
+                        on_click=on_reveal_vault,
+                    ),
+                    ft.OutlinedButton(
+                        content=ft.Text("更换 Vault…"),
+                        on_click=lambda _e: ctx.change_vault(),
                     ),
                 ],
                 wrap=True,
                 spacing=SPACE_3,
+            ),
+            ft.Text(
+                "写入仅允许当前用户 Home 内路径；尚未启用 Apple App Sandbox。",
+                color=MUTED,
+                size=12,
             ),
         ],
         key="library-vault-card",

@@ -1,9 +1,9 @@
 # keikeu Road v0.3 Planbook
 
 > Road：macOS Paper Library / Retrieval Quality  
-> 状态：**APPROVED — Phase 0 complete / Phase 1 next**
+> 状态：**APPROVED — Phase 1 complete / Phase 2 next**
 > 基线：`d0feac0269a5619f5dbf27c04347ba69c5665b42`（Road v0.2 已验收，local annotated tag `v0.2.0`）  
-> 当前 checkpoint：**Phase 0 complete / Phase 1 path safety next**
+> 当前 checkpoint：**CP1 complete / Phase 2 Paper v3 naming next**
 > 日期：2026-07-22
 > 权限：本文件是 Road v0.3 的已批准执行计划。[`SPEC.md`](SPEC.md)、[`RULES.md`](RULES.md) 与三个 HTML map 描述 v0.3 目标；当前实现进度与 v0.2 runtime 事实分别见 [`PROJECT.md`](PROJECT.md)、`src/` 和 `tests/`。
 
@@ -403,6 +403,8 @@ Gate：权威无冲突、无 TBD；fixture validation、`scripts/check_docs.py` 
 
 Gate：所有白名单与迁移失败测试证明无外部写入、无配置提前切换；复制 Vault smoke 只使用副本。
 
+**完成证据（2026-07-22）**：Home 白名单、全路径 no-follow、原子 config 切换、unsafe Vault 复制验证、v0.1 安全副本迁移入口和 App Sandbox 边界公告已接通；203 项自动测试、compile、文档检查与 diff 检查通过。当前 relocation 支持 v0.1/v2；v3 要等 Phase 2 reader/index 升级后启用。原子目录交换使用 Darwin/Linux 原生能力，不支持的平台在破坏性 mutation 前失败。`architecture.html` 继续保留 Road v0.3 target 标记，按已批准 option A 在 Phase 7 依据最终代码校准。
+
 ### Phase 2 — Paper v3 naming vertical slice
 
 **目标**：让 schema v2/v3 共存可读，并完整接通 Paper/Highlight 名称。
@@ -540,7 +542,7 @@ Gate：没有 P0/P1；所有高风险文件操作有证据；未验证项明确�
 | Checkpoint | 含义 | 当前状态 |
 | --- | --- | --- |
 | CP0 | 范围冻结、Planbook approved | **Complete** |
-| CP1 | Authority + path safety 合入 | Pending |
+| CP1 | Authority + path safety 合入 | **Complete** |
 | CP2 | Paper v3 与 mixed-schema round trip | Pending |
 | CP3 | Folder/Trash core 完成，UI 尚未成为证据 | Pending |
 | CP4 | Paper/Library/Flashcard UI engineering complete | Pending |
@@ -609,4 +611,4 @@ flet run src/keikeu_app/main.py
 - legacy duplicate code 保留、报告并阻断 mutation，不自动改号；以及
 - unsafe Vault 先只读分类，不跟随 symlink，仅将普通目录/regular files byte-copy/verify 到 Home；v2/v3 再解析并重建 index，v0.1 改走安全副本上的现有 preflight 与 migration gate，不写原件也不以真实唯一 Vault 首测。
 
-Phase 0 权威与 fixture gate 已完成；下一步是 Phase 1 路径安全与 Vault 切换，不能直接跳进 UI。
+Phase 0 权威/fixture 与 Phase 1 路径安全/Vault 切换 gate 已完成；下一步是 Phase 2 Paper v3 naming vertical slice，不能提前混入 folder 或最终 UI scope。

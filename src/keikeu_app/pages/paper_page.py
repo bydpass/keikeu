@@ -36,13 +36,17 @@ from keikeu_app.widgets import (
 from keikeu_core.indexer import list_papers, rebuild_index
 from keikeu_core.markdown_io import (
     next_paper_code,
-    read_paper,
+    read_paper_snapshot,
     rename_paper,
     update_paper,
     write_paper,
 )
 from keikeu_core.models import Paper
-from keikeu_core.vault import soft_delete
+from keikeu_core.vault import (
+    resolve_active_paper_path,
+    soft_delete,
+    validate_vault_tree_no_follow,
+)
 
 if TYPE_CHECKING:
     from keikeu_app.main import AppContext
@@ -67,12 +71,31 @@ def _known_tags(vault: Path) -> list[str]:
 def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Control:
     """Build a Paper create/edit page for ``open_path`` or a fresh Paper."""
     page = ctx.page
-    existing = read_paper(open_path) if open_path is not None else None
+    existing: Paper | None = None
+    existing_bytes: bytes | None = None
+    if open_path is not None:
+        validate_vault_tree_no_follow(ctx.vault)
+        open_path = resolve_active_paper_path(ctx.vault, open_path)
+        existing, existing_bytes = read_paper_snapshot(open_path)
     state: dict[str, object] = {
         "path": open_path,
         "paper": existing,
-        "source_bytes": open_path.read_bytes() if open_path is not None else None,
+        "source_bytes": existing_bytes,
     }
+
+    def validated_path(path: Path, *, must_exist: bool = True) -> Path:
+        validate_vault_tree_no_follow(ctx.vault)
+        return resolve_active_paper_path(
+            ctx.vault,
+            path,
+            must_exist=must_exist,
+        )
+
+    def rebuild_after_mutation(path: Path | None = None) -> None:
+        validate_vault_tree_no_follow(ctx.vault)
+        if path is not None:
+            resolve_active_paper_path(ctx.vault, path)
+        rebuild_index(ctx.vault)
 
     code_field = single_line_field(
         "Paper 代号", existing.code if existing is not None else next_paper_code(ctx.vault)
@@ -178,6 +201,22 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
     for highlight in existing.highlights if existing is not None else []:
         add_highlight(value=highlight)
 
+    def apply_snapshot(path: Path, paper: Paper, source_bytes: bytes) -> None:
+        state["path"] = path
+        state["paper"] = paper
+        state["source_bytes"] = source_bytes
+        code_field.value = paper.code
+        code_field.read_only = True
+        summary_field.value = paper.summary
+        tags_field.value = ", ".join(paper.tags)
+        initial_copy.value = paper.initial_summary
+        highlight_fields[:] = [
+            section_field("", value, min_lines=2, max_lines=6)
+            for value in paper.highlights
+        ]
+        _render_highlights()
+        rename_area.visible = True
+
     def _build_paper() -> Paper:
         stored = state["paper"]
         paper = stored if isinstance(stored, Paper) else None
@@ -202,26 +241,41 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
             paper = _build_paper()
             path = state["path"]
             if isinstance(path, Path):
-                if not path.is_file():
+                try:
+                    path = validated_path(path)
+                except FileNotFoundError:
                     save_error.value = "Paper 已在外部删除或移动；未保存。请返回本地文件库刷新。"
                     page.update()
                     return
                 source_bytes = state["source_bytes"]
-                if isinstance(source_bytes, bytes) and path.read_bytes() != source_bytes:
+                if not isinstance(source_bytes, bytes):
+                    raise ValueError("Paper source snapshot is unavailable")
+                path = validated_path(path)
+                try:
+                    update_paper(
+                        ctx.vault,
+                        path,
+                        paper,
+                        expected_source_bytes=source_bytes,
+                    )
+                except ValueError as ex:
+                    if "Paper changed externally; update refused" not in str(ex):
+                        raise
                     save_error.value = "Paper 已在外部修改；未覆盖。请重新打开后决定如何处理。"
                     page.update()
                     return
-                update_paper(path, paper)
             else:
+                validate_vault_tree_no_follow(ctx.vault)
+                validated_path(
+                    ctx.vault / "cache" / f"{paper.code}.md",
+                    must_exist=False,
+                )
                 path = write_paper(ctx.vault, paper)
-                state["path"] = path
-                code_field.read_only = True
-                rename_area.visible = True
-            state["paper"] = read_paper(path)
-            state["source_bytes"] = path.read_bytes()
-            initial_copy.value = state["paper"].initial_summary  # type: ignore[union-attr]
+            path = validated_path(path)
+            stored, source_bytes = read_paper_snapshot(path)
+            apply_snapshot(path, stored, source_bytes)
             save_error.value = ""
-            rebuild_index(ctx.vault)
+            rebuild_after_mutation(path)
             notify(page, "Paper 已保存")
             page.update()
         except (OSError, ValueError, FileExistsError) as ex:
@@ -236,17 +290,17 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
             page.update()
             return
         try:
+            path = validated_path(path)
             old_code = stored.code
             target = rename_paper(ctx.vault, old_code, rename_field.value or "")
-            state["path"] = target
-            state["paper"] = read_paper(target)
-            state["source_bytes"] = target.read_bytes()
-            code_field.value = state["paper"].code  # type: ignore[union-attr]
+            target = validated_path(target)
+            renamed, source_bytes = read_paper_snapshot(target)
+            apply_snapshot(target, renamed, source_bytes)
             rename_field.value = ""
             save_error.value = ""
-            rebuild_index(ctx.vault)
+            rebuild_after_mutation(target)
             try:
-                move_card_position(old_code, state["paper"].code, ctx.state_path)  # type: ignore[union-attr]
+                move_card_position(old_code, renamed.code, ctx.state_path)
                 status = "Paper 已重命名"
             except OSError:
                 status = "Paper 已重命名；Flashcard 位置未能保存，下次将从 Summary 开始"
@@ -266,8 +320,9 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
             page.update()
             return
         try:
-            soft_delete(ctx.vault, str(path.relative_to(ctx.vault)))
-            rebuild_index(ctx.vault)
+            path = validated_path(path)
+            soft_delete(ctx.vault, str(path))
+            rebuild_after_mutation()
             notify(page, "已移入回收站")
             ctx.open_library()
         except (OSError, ValueError, FileExistsError) as ex:

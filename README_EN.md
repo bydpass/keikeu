@@ -8,7 +8,7 @@
 
 The code implements the `Paper Markdown → Flashcard → external prose editor` core. Road v0.2 Phases 0–7 engineering, macOS file-service smoke, and Phase 8 real-author one-shot and two-session short/medium acceptance are complete and marked by local annotated tag `v0.2.0`. Road archival remains a developer decision.
 
-Phase 7.5 is an independent lightweight iOS build for rapid testing. Its responsive UI, app-sandbox Vault, and on-device fixes are complete on a separate branch; it is not a merge gate in the macOS Road. Road v0.3 Phase 0 authority/fixtures are complete, and Phase 1 path safety and Vault switching are next. Target documents do not mean the runtime has upgraded; the current code remains v0.2. See [PROJECT](docs/PROJECT.md) for live coordinates.
+Phase 7.5 is an independent lightweight iOS build for rapid testing. Its responsive UI, app-sandbox Vault, and on-device fixes are complete on a separate branch; it is not a merge gate in the macOS Road. Road v0.3 Phase 1 path safety and Vault switching are complete, and Phase 2 Paper v3 naming is next. The runtime still uses Paper/index v2; target documents do not mean every v0.3 feature is implemented. See [PROJECT](docs/PROJECT.md) for live coordinates.
 
 ## Current runtime flow
 
@@ -19,6 +19,7 @@ existing inspiration → Paper Markdown → Flashcard → external prose editor
 - **Paper:** required current Summary, frozen first-save copy, ordered optional Highlights, and flat optional Tags.
 - **Flashcard:** a read-only, Summary-first projection; position is disposable per-device state.
 - **Library:** searches, opens, soft-deletes, and restores Papers through a local index.
+- **Vault:** selects paths only under the current user's Home, validates before switching, and byte-verifies copied unsafe legacy Vaults; Apple App Sandbox is not enabled yet.
 - **External editor:** prose always remains outside keikeu.
 
 ## Product principles
@@ -85,6 +86,7 @@ v0.1        archived macOS Cache / Outline pre-alpha
 v0.2        macOS Paper / Flashcard Core; product acceptance complete, Road closeout pending
 Phase 7.5   independent lightweight iOS rapid-test build
 Phase 8.5   Road v0.3 preparation; precursor to the next Mac version
+Road v0.3   macOS Paper Library; Phase 1 complete, Phase 2 next
 Pre-Advance optional Markdown Outline; never blocks the core flow
 later       iPhone/iPad file-service capability, Android, Windows
 ```

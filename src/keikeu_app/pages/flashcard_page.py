@@ -20,6 +20,7 @@ from keikeu_app.theme import (
 from keikeu_app.widgets import page_header, paper_card, primary_button
 from keikeu_core.markdown_io import read_paper
 from keikeu_core.models import Paper, validate_paper_code
+from keikeu_core.vault import resolve_active_paper_path
 
 if TYPE_CHECKING:
     from keikeu_app.main import AppContext
@@ -54,11 +55,6 @@ def _unavailable_page(ctx: "AppContext", message: str) -> ft.Control:
     )
 
 
-def _paper_path(vault: Path, code: str) -> Path:
-    """Return the v2 fixed Paper location; parsing still belongs to core I/O."""
-    return vault / "cache" / f"{code}.md"
-
-
 def build_flashcard_page(ctx: "AppContext", code: str | None = None) -> ft.Control:
     """Build one read-only Paper card deck and remember its local position."""
     if not code:
@@ -66,7 +62,10 @@ def build_flashcard_page(ctx: "AppContext", code: str | None = None) -> ft.Contr
 
     try:
         code = validate_paper_code(code)
-        path = _paper_path(ctx.vault, code)
+        path = resolve_active_paper_path(
+            ctx.vault,
+            Path("cache") / f"{code}.md",
+        )
         paper = read_paper(path)
         if paper.code != code:
             raise ValueError("Paper filename and frontmatter code do not match")
