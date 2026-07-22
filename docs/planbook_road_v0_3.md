@@ -1,9 +1,9 @@
 # keikeu Road v0.3 Planbook
 
 > Road：macOS Paper Library / Retrieval Quality  
-> 状态：**APPROVED — Phase 3 complete / Phase 4 next**
+> 状态：**APPROVED — Phase 4 complete / Phase 5 next**
 > 基线：`d0feac0269a5619f5dbf27c04347ba69c5665b42`（Road v0.2 已验收，local annotated tag `v0.2.0`）  
-> 当前 checkpoint：**CP2 complete / Phase 3 engineering complete / CP3 pending**
+> 当前 checkpoint：**CP3 complete / Phase 4 engineering complete / CP4 pending**
 > 日期：2026-07-22
 > 权限：本文件是 Road v0.3 的已批准执行计划。[`SPEC.md`](SPEC.md)、[`RULES.md`](RULES.md) 与三个 HTML map 描述 v0.3 目标；当前实现进度与 v0.2 runtime 事实分别见 [`PROJECT.md`](PROJECT.md)、`src/` 和 `tests/`。
 
@@ -483,6 +483,8 @@ Gate：root/folder/trash 全局 code、外部移动、深层目录、symlink、�
 
 Gate：注入单项 move/unlink 失败，证明其余项结果准确、失败项保留、未知文件不受影响。
 
+**完成证据（2026-07-22）**：一层 folder create/rename/merge、单个与批量 move、Paper/folder soft-delete 与 restore、明确 Paper path 永久删除、空 Trash folder 永久删除，以及保持原文件夹的新 code branch copy 已接通。移动与删除使用原子 no-replace rename 或隔离后验证，目录批量操作持续绑定 source/destination descriptor；未知项先阻断整文件夹结构操作，损坏 Paper 逐项失败且其余项继续。NFC+casefold 重名、最后一步替换、目录 replacement、单项失败、历史 code 不改写与 branch 字段边界均有直接回归。独立复核通过；最终 247 项自动测试、compile、文档检查与 diff 检查通过，未运行手动 Flet smoke。CP3 完成；`architecture.html` 继续保留 Road v0.3 target 标记，等待 Phase 7 按最终代码校准。
+
 ### Phase 5 — Paper and Library interaction
 
 **目标**：接通已确认视觉布局与安全操作，不建立全局状态框架。
@@ -548,7 +550,7 @@ Gate：没有 P0/P1；所有高风险文件操作有证据；未验证项明确�
 | CP0 | 范围冻结、Planbook approved | **Complete** |
 | CP1 | Authority + path safety 合入 | **Complete** |
 | CP2 | Paper v3 与 mixed-schema round trip | **Complete** |
-| CP3 | Folder/Trash core 完成，UI 尚未成为证据 | Pending |
+| CP3 | Folder/Trash core 完成，UI 尚未成为证据 | Complete |
 | CP4 | Paper/Library/Flashcard UI engineering complete | Pending |
 | CP5 | macOS candidate smoke complete | Pending |
 | CP6 | Road v0.3 product accepted；是否 tag 另行决定 | Pending |
@@ -615,4 +617,4 @@ flet run src/keikeu_app/main.py
 - legacy duplicate code 保留、报告并阻断 mutation，不自动改号；以及
 - unsafe Vault 先只读分类，不跟随 symlink，仅将普通目录/regular files byte-copy/verify 到 Home；v2/v3 再解析并重建 index，v0.1 改走安全副本上的现有 preflight 与 migration gate，不写原件也不以真实唯一 Vault 首测。
 
-Phase 0 权威/fixture、Phase 1 路径安全/Vault 切换、Phase 2 Paper v3 naming 与 Phase 3 folder-aware filesystem core gate 已完成；下一步是 Phase 4 folder/Trash/branch core operations，不能提前混入最终 Library UI scope。
+Phase 0 权威/fixture、Phase 1 路径安全/Vault 切换、Phase 2 Paper v3 naming、Phase 3 folder-aware filesystem core 与 Phase 4 folder/Trash/branch core operations 已完成；下一步是 Phase 5 Paper/Library interaction，不把 Phase 6 平台服务或 Phase 7 产品验收提前混入。

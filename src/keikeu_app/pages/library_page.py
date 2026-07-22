@@ -166,19 +166,16 @@ def build_library_page(ctx: "AppContext") -> ft.Control:
         )
 
     def _recovery_row(rel_path: Path) -> ft.Control:
-        conflict_code = single_line_field("冲突时的新代号")
-        conflict_code.width = 240
         message = ft.Text("", color=ft.Colors.ERROR, size=12)
 
         def on_restore(_: ft.ControlEvent) -> None:
-            new_code = (conflict_code.value or "").strip() or None
             try:
-                restore_paper(ctx.vault, str(rel_path), new_code=new_code)
+                restore_paper(ctx.vault, str(rel_path))
                 rebuild_index(ctx.vault)
                 notify(page, "Paper 已恢复")
                 refresh()
             except FileExistsError:
-                message.value = "现有 Paper 代号冲突；输入未占用的新代号后再恢复，或取消。"
+                message.value = "现有 Paper 代号冲突；历史代号不会改写，请先处理冲突。"
                 page.update()
             except (OSError, ValueError) as ex:
                 message.value = f"无法恢复 Paper：{ex}"
@@ -188,13 +185,9 @@ def build_library_page(ctx: "AppContext") -> ft.Control:
             content=ft.Column(
                 controls=[
                     ft.Text(rel_path.name, color=FG),
-                    ft.Row(
-                        controls=[
-                            conflict_code,
-                            ft.OutlinedButton(content=ft.Text("恢复"), on_click=on_restore),
-                        ],
-                        wrap=True,
-                        spacing=SPACE_3,
+                    ft.OutlinedButton(
+                        content=ft.Text("恢复"),
+                        on_click=on_restore,
                     ),
                     message,
                 ],

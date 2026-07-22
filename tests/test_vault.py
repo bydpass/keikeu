@@ -28,23 +28,33 @@ from keikeu_core.vault import (
     atomic_exchange_no_follow,
     capture_vault_selection_token,
     copy_vault_no_follow,
+    create_folder,
     get_vault,
     init_vault,
     is_vault,
     list_active_papers,
     list_trashed_papers,
+    merge_folders,
+    move_papers,
     open_directory_no_follow,
     open_regular_no_follow,
+    permanently_delete_folder,
+    permanently_delete_papers,
     require_home_path,
     require_atomic_exchange,
+    rename_folder,
     resolve_active_paper_path,
     resolve_trashed_paper_path,
+    restore_folder,
     restore_paper,
+    restore_papers,
     scan_active_papers,
     scan_trashed_papers,
     set_vault,
     snapshot_regular_tree_no_follow,
     soft_delete,
+    soft_delete_folder,
+    soft_delete_papers,
     validate_folder_name,
     validate_regular_tree_no_follow,
     validate_vault_tree_no_follow,
@@ -427,7 +437,7 @@ def test_active_resolver_accepts_only_direct_current_v2_papers(tmp_path):
         outside,
         "../outside.md",
         "cache/../cache/K-20260714-001.md",
-        "cache/nested/K-20260714-001.md",
+        "cache/nested/deep/K-20260714-001.md",
         ".trash/cache/K-20260714-001.md",
     ):
         with pytest.raises((FileNotFoundError, ValueError)):
@@ -449,25 +459,24 @@ def test_soft_delete_moves_only_active_papers_and_preserves_bytes(tmp_path):
     for rel_path in (
         "outlines/old.md",
         ".trash/cache/K-20260714-001.md",
-        "cache/nested/K-20260714-001.md",
+        "cache/nested/deep/K-20260714-001.md",
         "../cache/K-20260714-001.md",
     ):
-        with pytest.raises(ValueError, match=r"cache/\*\.md"):
+        with pytest.raises(ValueError, match=r"cache/\[folder/\]Paper\.md"):
             soft_delete(vault, rel_path)
 
 
-def test_soft_delete_avoids_overwriting_an_existing_trash_file(tmp_path):
+def test_soft_delete_blocks_an_existing_trash_code_without_overwrite(tmp_path):
     vault = tmp_path / "vault"
     init_vault(vault)
     source = write_paper(vault, _paper("K-20260714-001"))
     existing = vault / ".trash" / "cache" / source.name
     existing.write_bytes(b"older trash bytes")
 
-    moved = soft_delete(vault, "cache/K-20260714-001.md")
+    with pytest.raises(FileExistsError, match="duplicate Paper code"):
+        soft_delete(vault, "cache/K-20260714-001.md")
 
-    assert moved.parent == existing.parent
-    assert moved.name.startswith("K-20260714-001-")
-    assert moved.suffix == ".md"
+    assert source.exists()
     assert existing.read_bytes() == b"older trash bytes"
 
 
@@ -512,11 +521,11 @@ def test_soft_delete_does_not_overwrite_a_target_injected_at_move_time(
         "_move_regular_no_overwrite_at",
         inject_target_then_move,
     )
-    moved = soft_delete(vault, str(source.relative_to(vault)))
+    with pytest.raises(FileExistsError, match="File exists"):
+        soft_delete(vault, str(source.relative_to(vault)))
 
+    assert source.exists()
     assert raced_target.read_bytes() == b"concurrent target"
-    assert moved != raced_target
-    assert moved.read_bytes() != b"concurrent target"
 
 
 def test_soft_delete_refuses_an_ordinary_vault_root_replacement(
@@ -734,7 +743,7 @@ def test_normal_restore_refuses_an_ordinary_vault_root_replacement(
     assert not (vault / "cache/K-20260714-001.md").exists()
 
 
-def test_restore_paper_requires_a_new_code_for_an_active_code_collision(tmp_path):
+def test_restore_paper_blocks_an_active_code_collision_without_rewriting(tmp_path):
     vault = tmp_path / "vault"
     init_vault(vault)
     deleted = write_paper(vault, _paper("K-20260714-001", "Original summary."))
@@ -746,113 +755,20 @@ def test_restore_paper_requires_a_new_code_for_an_active_code_collision(tmp_path
     )
     active_bytes = active.read_bytes()
 
-    with pytest.raises(FileExistsError, match="choose a new Paper code"):
+    with pytest.raises(FileExistsError, match="duplicate Paper code"):
         restore_paper(vault, str(trashed.relative_to(vault)))
 
     assert trashed.read_bytes() == deleted_bytes
     assert active.read_bytes() == active_bytes
 
 
-def test_restore_paper_with_new_code_preserves_frozen_draft_and_current_summary(
-    tmp_path,
-):
-    vault = tmp_path / "vault"
-    init_vault(vault)
-    original = write_paper(vault, _paper("K-20260714-001", "First summary."))
-    expected_source_bytes = original.read_bytes()
-    edited = read_paper(original)
-    edited.summary = "Edited current summary."
-    edited.updated = datetime(2026, 7, 14, 10, 0)
-    update_paper(
-        vault,
-        original,
-        edited,
-        expected_source_bytes=expected_source_bytes,
-    )
-    trashed = soft_delete(vault, "cache/K-20260714-001.md")
-    write_external_paper(
-        vault,
-        _paper("K-20260714-001", "Current active paper."),
-    )
-
-    restored = restore_paper(
-        vault,
-        str(trashed.relative_to(vault)),
-        new_code="K-20260714-002",
-    )
-
-    paper = read_paper(restored)
-    assert restored.name == "K-20260714-002.md"
-    assert paper.code == "K-20260714-002"
-    assert paper.initial_summary == "First summary."
-    assert paper.summary == "Edited current summary."
-    assert not trashed.exists()
-
-
-def test_restore_with_new_code_refuses_a_byte_identical_ordinary_root_replacement(
-    tmp_path,
-    monkeypatch,
-):
-    vault = tmp_path / "vault"
-    replacement = tmp_path / "replacement-vault"
-    parked = tmp_path / "parked-vault"
-    init_vault(vault)
-    original = write_paper(vault, _paper("K-20260714-001", "original"))
-    trashed = soft_delete(vault, str(original.relative_to(vault)))
-    active = write_external_paper(vault, _paper("K-20260714-001", "active"))
-    trashed_bytes = trashed.read_bytes()
-    active_bytes = active.read_bytes()
-    shutil.copytree(vault, replacement)
-    real_move = markdown_mod._move_regular_no_overwrite_at
-    swapped = False
-
-    def replace_root_then_move(*args, **kwargs):
-        nonlocal swapped
-        if not swapped:
-            swapped = True
-            vault.rename(parked)
-            replacement.rename(vault)
-        return real_move(*args, **kwargs)
-
-    monkeypatch.setattr(
-        markdown_mod,
-        "_move_regular_no_overwrite_at",
-        replace_root_then_move,
-    )
-    with pytest.raises(ValueError, match="changed before restore cleanup"):
-        restore_paper(
-            vault,
-            ".trash/cache/K-20260714-001.md",
-            new_code="K-20260714-002",
-        )
-
-    for root in (parked, vault):
-        assert (
-            root / ".trash/cache/K-20260714-001.md"
-        ).read_bytes() == trashed_bytes
-        assert (root / "cache/K-20260714-001.md").read_bytes() == active_bytes
-        assert not (root / "cache/K-20260714-002.md").exists()
-
-
-def test_restore_paper_rejects_non_trash_paths_and_existing_new_code(tmp_path):
+def test_restore_paper_rejects_non_trash_paths(tmp_path):
     vault = tmp_path / "vault"
     init_vault(vault)
     write_paper(vault, _paper("K-20260714-001"))
-    trashed = soft_delete(vault, "cache/K-20260714-001.md")
-    write_external_paper(
-        vault,
-        _paper("K-20260714-001", "Current active paper."),
-    )
-    write_paper(vault, _paper("K-20260714-002"))
 
-    with pytest.raises(ValueError, match=r"\.trash/cache/\*\.md"):
+    with pytest.raises(ValueError, match=r"\.trash/cache/\[folder/\]Paper\.md"):
         restore_paper(vault, "cache/K-20260714-001.md")
-    with pytest.raises(FileExistsError):
-        restore_paper(
-            vault,
-            str(trashed.relative_to(vault)),
-            new_code="K-20260714-002",
-        )
 
 
 def test_strict_vault_validation_includes_recovery_papers(tmp_path):
@@ -869,72 +785,329 @@ def test_strict_vault_validation_includes_recovery_papers(tmp_path):
         validate_vault_papers(vault)
 
 
-def test_restore_rollback_does_not_unlink_a_concurrently_replaced_target(
-    tmp_path, monkeypatch
+def test_folder_create_move_merge_and_rename_use_one_real_level(tmp_path):
+    vault = tmp_path / "vault"
+    init_vault(vault)
+    folder_a = create_folder(vault, "  A  ")
+    folder_b = create_folder(vault, "B")
+    root_paper = write_paper(vault, _paper("K-20260714-001", "root"))
+    folder_paper = write_paper(
+        vault,
+        _paper("K-20260714-002", "folder"),
+        destination="cache/A/K-20260714-002.md",
+    )
+
+    moved = move_papers(
+        vault,
+        [root_paper.relative_to(vault), "cache/missing.md"],
+        "B",
+    )
+
+    assert [result.succeeded for result in moved] == [True, False]
+    assert not root_paper.exists()
+    assert (folder_b / root_paper.name).exists()
+
+    merged = merge_folders(vault, "A", "B")
+
+    assert all(result.succeeded for result in merged)
+    assert not folder_a.exists()
+    assert (folder_b / folder_paper.name).exists()
+
+    renamed = rename_folder(vault, "B", "  C  ")
+
+    assert renamed == vault / "cache" / "C"
+    assert not folder_b.exists()
+    assert {path.name for path in renamed.iterdir()} == {
+        "K-20260714-001.md",
+        "K-20260714-002.md",
+    }
+
+
+def test_folder_names_use_nfc_casefold_uniqueness(tmp_path):
+    vault = tmp_path / "vault"
+    init_vault(vault)
+    create_folder(vault, "Folder")
+
+    with pytest.raises(FileExistsError, match=r"NFC\+casefold"):
+        create_folder(vault, "folder")
+
+    create_folder(vault, "Other")
+    with pytest.raises(FileExistsError, match=r"NFC\+casefold"):
+        rename_folder(vault, "Other", "FOLDER")
+
+
+def test_move_noop_still_validates_the_selected_paper(tmp_path):
+    vault = tmp_path / "vault"
+    init_vault(vault)
+
+    result = move_papers(vault, ["cache/missing.md"], None)[0]
+
+    assert not result.succeeded
+    assert "missing" in str(result.source)
+
+
+def test_folder_rename_never_rolls_an_external_replacement_into_source(
+    tmp_path,
+    monkeypatch,
 ):
     vault = tmp_path / "vault"
     init_vault(vault)
-    original = write_paper(vault, _paper("K-20260714-001", "original"))
-    trashed = soft_delete(vault, str(original.relative_to(vault)))
-    write_external_paper(vault, _paper("K-20260714-001", "active"))
-    target = vault / "cache" / "K-20260714-002.md"
+    source = create_folder(vault, "A")
+    paper = write_paper(
+        vault,
+        _paper("K-20260714-001", "original"),
+        destination="cache/A/K-20260714-001.md",
+    )
+    paper_bytes = paper.read_bytes()
+    target = vault / "cache" / "B"
+    parked = tmp_path / "parked-original-folder"
+    real_guard = vault_mod._require_directory_path_identity
+    replaced = False
 
-    def fail_source_cleanup(*args, **kwargs) -> None:
-        target.unlink()
-        target.write_bytes(b"concurrent replacement")
-        raise ValueError("injected source cleanup failure")
+    def replace_target_before_guard(path: Path, expected_fd: int) -> None:
+        nonlocal replaced
+        if path == target and not replaced:
+            replaced = True
+            target.rename(parked)
+            target.mkdir()
+            (target / "external.txt").write_bytes(b"external replacement")
+        real_guard(path, expected_fd)
 
     monkeypatch.setattr(
-        markdown_mod,
-        "_move_regular_no_overwrite_at",
-        fail_source_cleanup,
+        vault_mod,
+        "_require_directory_path_identity",
+        replace_target_before_guard,
     )
-    with pytest.raises(OSError, match="both files were preserved"):
-        restore_paper(
-            vault,
-            str(trashed.relative_to(vault)),
-            new_code="K-20260714-002",
-        )
 
-    assert trashed.exists()
-    assert target.read_bytes() == b"concurrent replacement"
+    with pytest.raises(OSError, match="replacement was preserved"):
+        rename_folder(vault, "A", "B")
+
+    assert not source.exists()
+    assert (target / "external.txt").read_bytes() == b"external replacement"
+    assert (parked / paper.name).read_bytes() == paper_bytes
 
 
-def test_restore_preserves_a_source_edited_in_place_before_cleanup(
-    tmp_path, monkeypatch
+def test_batch_move_reports_injected_failure_and_preserves_failed_item(
+    tmp_path,
+    monkeypatch,
 ):
     vault = tmp_path / "vault"
     init_vault(vault)
-    original = write_paper(vault, _paper("K-20260714-001", "original"))
-    trashed = soft_delete(vault, str(original.relative_to(vault)))
-    write_external_paper(vault, _paper("K-20260714-001", "active"))
-    target = vault / "cache" / "K-20260714-002.md"
-    original_bytes = trashed.read_bytes()
-    real_move = markdown_mod._move_regular_no_overwrite_at
-    edited = False
+    destination = create_folder(vault, "目标")
+    first = write_paper(vault, _paper("K-20260714-001", "first"))
+    second = write_paper(vault, _paper("K-20260714-002", "second"))
+    real_move = vault_mod._move_regular_no_overwrite_at
 
-    def edit_source_before_cleanup(*args, **kwargs) -> None:
-        nonlocal edited
-        if not edited:
-            edited = True
-            with trashed.open("ab") as handle:
-                handle.write(b"external edit")
+    def fail_second(*args, **kwargs):
+        if args[1] == second.name:
+            raise OSError("injected move failure")
+        return real_move(*args, **kwargs)
+
+    monkeypatch.setattr(vault_mod, "_move_regular_no_overwrite_at", fail_second)
+
+    results = move_papers(
+        vault,
+        [first.relative_to(vault), second.relative_to(vault)],
+        "目标",
+    )
+
+    assert [result.succeeded for result in results] == [True, False]
+    assert (destination / first.name).exists()
+    assert second.exists()
+    assert "injected move failure" in (results[1].error or "")
+
+
+def test_move_rolls_back_if_the_exact_destination_folder_is_replaced(
+    tmp_path,
+    monkeypatch,
+):
+    vault = tmp_path / "vault"
+    init_vault(vault)
+    destination = create_folder(vault, "目标")
+    parked = tmp_path / "parked-target"
+    source = write_paper(vault, _paper("K-20260714-001", "source"))
+    source_bytes = source.read_bytes()
+    real_move = vault_mod._move_regular_no_overwrite_at
+    replaced = False
+
+    def move_then_replace(*args, **kwargs):
+        nonlocal replaced
         real_move(*args, **kwargs)
+        if not replaced:
+            replaced = True
+            destination.rename(parked)
+            destination.mkdir()
 
     monkeypatch.setattr(
-        markdown_mod,
+        vault_mod,
         "_move_regular_no_overwrite_at",
-        edit_source_before_cleanup,
+        move_then_replace,
     )
-    with pytest.raises(ValueError, match="changed before restore cleanup"):
-        restore_paper(
-            vault,
-            str(trashed.relative_to(vault)),
-            new_code="K-20260714-002",
+
+    result = move_papers(vault, [source.relative_to(vault)], "目标")[0]
+
+    assert not result.succeeded
+    assert source.read_bytes() == source_bytes
+    assert list(destination.iterdir()) == []
+    assert list(parked.iterdir()) == []
+
+
+def test_folder_soft_delete_and_restore_merge_non_conflicts_only(tmp_path):
+    vault = tmp_path / "vault"
+    init_vault(vault)
+    folder = create_folder(vault, "夜行列车")
+    first = write_paper(
+        vault,
+        _paper("K-20260714-001", "first"),
+        destination="cache/夜行列车/K-20260714-001.md",
+    )
+    second = write_paper(
+        vault,
+        _paper("K-20260714-002", "second"),
+        destination="cache/夜行列车/K-20260714-002.md",
+    )
+    first_bytes = first.read_bytes()
+    second_bytes = second.read_bytes()
+
+    deleted = soft_delete_folder(vault, "夜行列车")
+
+    trash_folder = vault / ".trash" / "cache" / "夜行列车"
+    assert all(result.succeeded for result in deleted)
+    assert not folder.exists()
+    assert (trash_folder / first.name).read_bytes() == first_bytes
+    assert (trash_folder / second.name).read_bytes() == second_bytes
+
+    active_folder = create_folder(vault, "夜行列车")
+    write_external_paper(vault, _paper("K-20260714-001", "active conflict")).rename(
+        active_folder / first.name
+    )
+    restored = restore_folder(vault, "夜行列车")
+
+    assert any(not result.succeeded and result.source.name == first.name for result in restored)
+    assert any(result.succeeded and result.source.name == second.name for result in restored)
+    assert (trash_folder / first.name).read_bytes() == first_bytes
+    assert not (trash_folder / second.name).exists()
+    assert (active_folder / second.name).read_bytes() == second_bytes
+    assert trash_folder.exists()
+
+
+def test_empty_folder_soft_delete_and_restore_preserve_the_folder(tmp_path):
+    vault = tmp_path / "vault"
+    init_vault(vault)
+    active = create_folder(vault, "空文件夹")
+
+    deleted = soft_delete_folder(vault, "空文件夹")
+
+    trash = vault / ".trash" / "cache" / "空文件夹"
+    assert len(deleted) == 1 and deleted[0].succeeded
+    assert not active.exists()
+    assert trash.is_dir()
+
+    restored = restore_folder(vault, "空文件夹")
+
+    assert len(restored) == 1 and restored[0].succeeded
+    assert active.is_dir()
+    assert not trash.exists()
+
+
+def test_permanent_delete_is_explicit_partial_and_never_removes_unknown_files(
+    tmp_path,
+    monkeypatch,
+):
+    vault = tmp_path / "vault"
+    init_vault(vault)
+    create_folder(vault, "旧车站")
+    first = write_paper(
+        vault,
+        _paper("K-20260714-001", "first"),
+        destination="cache/旧车站/K-20260714-001.md",
+    )
+    second = write_paper(
+        vault,
+        _paper("K-20260714-002", "second"),
+        destination="cache/旧车站/K-20260714-002.md",
+    )
+    soft_delete_folder(vault, "旧车站")
+    trash_folder = vault / ".trash" / "cache" / "旧车站"
+    unknown = trash_folder / "provider-conflict.txt"
+    unknown.write_bytes(b"keep unknown")
+    first_trash = trash_folder / first.name
+    second_trash = trash_folder / second.name
+    real_unlink = vault_mod._unlink_owned_file_at
+
+    def fail_second(parent_fd, name, identity, *, expected_digest):
+        if name == second.name:
+            return False
+        return real_unlink(
+            parent_fd,
+            name,
+            identity,
+            expected_digest=expected_digest,
         )
 
-    assert trashed.read_bytes() == original_bytes + b"external edit"
-    assert not target.exists()
+    monkeypatch.setattr(vault_mod, "_unlink_owned_file_at", fail_second)
+
+    results = permanently_delete_papers(
+        vault,
+        [
+            first_trash.relative_to(vault),
+            second_trash.relative_to(vault),
+            "cache/not-trash.md",
+        ],
+    )
+
+    assert [result.succeeded for result in results] == [True, False, False]
+    assert not first_trash.exists()
+    assert second_trash.exists()
+    assert unknown.read_bytes() == b"keep unknown"
+    assert trash_folder.exists()
+
+
+def test_permanent_delete_restores_bytes_if_the_exact_parent_is_replaced(
+    tmp_path,
+    monkeypatch,
+):
+    vault = tmp_path / "vault"
+    init_vault(vault)
+    create_folder(vault, "旧车站")
+    source = write_paper(
+        vault,
+        _paper("K-20260714-001", "source"),
+        destination="cache/旧车站/K-20260714-001.md",
+    )
+    source_bytes = source.read_bytes()
+    soft_delete_folder(vault, "旧车站")
+    trash_folder = vault / ".trash" / "cache" / "旧车站"
+    trashed = trash_folder / source.name
+    parked = tmp_path / "parked-trash-folder"
+    real_unlink = vault_mod._unlink_owned_file_at
+    replaced = False
+
+    def unlink_then_replace(parent_fd, name, identity, *, expected_digest):
+        nonlocal replaced
+        result = real_unlink(
+            parent_fd,
+            name,
+            identity,
+            expected_digest=expected_digest,
+        )
+        if result and not replaced:
+            replaced = True
+            trash_folder.rename(parked)
+            trash_folder.mkdir()
+        return result
+
+    monkeypatch.setattr(
+        vault_mod,
+        "_unlink_owned_file_at",
+        unlink_then_replace,
+    )
+
+    result = permanently_delete_papers(vault, [trashed.relative_to(vault)])[0]
+
+    assert not result.succeeded
+    assert (parked / source.name).read_bytes() == source_bytes
+    assert list(trash_folder.iterdir()) == []
 
 
 def test_set_then_get_vault_round_trips_and_bad_config_is_safe(tmp_path):
@@ -1518,6 +1691,350 @@ def test_copy_verification_does_not_follow_a_source_swapped_after_manifest(
     assert external.read_bytes() == b"original bytes"
     assert paper.is_symlink()
     assert not destination.exists()
+
+
+def test_whole_folder_operations_preflight_unknown_entries_before_moving(tmp_path):
+    vault = tmp_path / "vault"
+    init_vault(vault)
+    source = create_folder(vault, "A")
+    destination = create_folder(vault, "B")
+    paper = write_paper(
+        vault,
+        _paper("K-20260714-001", "keep"),
+        destination="cache/A/K-20260714-001.md",
+    )
+    unknown = source / "provider-conflict.txt"
+    unknown.write_bytes(b"unknown")
+
+    deleted = soft_delete_folder(vault, "A")
+
+    assert deleted and all(not result.succeeded for result in deleted)
+    assert paper.exists()
+    assert unknown.read_bytes() == b"unknown"
+    assert not (vault / ".trash" / "cache" / "A").exists()
+
+    unknown.unlink()
+    wrong = source / "wrong-name.md"
+    wrong_paper = _paper("K-20260714-002", "wrong")
+    wrong_paper.initial_summary = wrong_paper.summary
+    wrong.write_bytes(render_paper_bytes(wrong_paper))
+
+    merged = merge_folders(vault, "A", "B")
+
+    assert merged and all(not result.succeeded for result in merged)
+    assert paper.exists()
+    assert wrong.exists()
+    assert list(destination.iterdir()) == []
+
+
+def test_restore_folder_reports_damaged_paper_and_continues(tmp_path):
+    vault = tmp_path / "vault"
+    init_vault(vault)
+    create_folder(vault, "A")
+    paper = write_paper(
+        vault,
+        _paper("K-20260714-001", "valid"),
+        destination="cache/A/K-20260714-001.md",
+    )
+    soft_delete_folder(vault, "A")
+    trash = vault / ".trash" / "cache" / "A"
+    damaged = trash / "K-20260714-999.md"
+    damaged.write_bytes(b"not a Paper")
+
+    results = restore_folder(vault, "A")
+
+    assert any(result.succeeded and result.source.name == paper.name for result in results)
+    assert any(not result.succeeded and result.source.name == damaged.name for result in results)
+    assert (vault / "cache" / "A" / paper.name).exists()
+    assert damaged.read_bytes() == b"not a Paper"
+
+
+@pytest.mark.parametrize("operation_name", ["merge", "soft_delete", "restore"])
+def test_folder_operations_reject_a_source_folder_replaced_after_scan(
+    tmp_path,
+    monkeypatch,
+    operation_name,
+):
+    vault = tmp_path / "vault"
+    init_vault(vault)
+    create_folder(vault, "A")
+    paper = write_paper(
+        vault,
+        _paper("K-20260714-001", "original"),
+        destination="cache/A/K-20260714-001.md",
+    )
+    if operation_name == "merge":
+        create_folder(vault, "B")
+        source = vault / "cache" / "A"
+    elif operation_name == "soft_delete":
+        source = vault / "cache" / "A"
+    else:
+        soft_delete_folder(vault, "A")
+        source = vault / ".trash" / "cache" / "A"
+    parked = tmp_path / f"parked-{operation_name}"
+    replacement_bytes = render_paper_bytes(
+        _paper("K-20260714-001", "replacement")
+    )
+    real_scan = vault_mod._folder_papers_and_errors_at
+    replaced = False
+
+    def replace_after_scan(*args, **kwargs):
+        nonlocal replaced
+        result = real_scan(*args, **kwargs)
+        if not replaced:
+            replaced = True
+            source.rename(parked)
+            source.mkdir()
+            (source / paper.name).write_bytes(replacement_bytes)
+        return result
+
+    monkeypatch.setattr(
+        vault_mod,
+        "_folder_papers_and_errors_at",
+        replace_after_scan,
+    )
+
+    with pytest.raises(ValueError, match="directory path changed"):
+        if operation_name == "merge":
+            merge_folders(vault, "A", "B")
+        elif operation_name == "soft_delete":
+            soft_delete_folder(vault, "A")
+        else:
+            restore_folder(vault, "A")
+
+    assert (source / paper.name).read_bytes() == replacement_bytes
+    assert (parked / paper.name).exists()
+
+
+def test_move_isolates_and_restores_a_last_moment_source_replacement(
+    tmp_path,
+    monkeypatch,
+):
+    vault = tmp_path / "vault"
+    init_vault(vault)
+    destination = create_folder(vault, "B")
+    source = write_paper(vault, _paper("K-20260714-001", "original"))
+    original_bytes = source.read_bytes()
+    replacement_bytes = render_paper_bytes(
+        _paper("K-20260714-001", "replacement")
+    )
+    parked = tmp_path / "parked-move-source"
+    real_rename = vault_mod._atomic_rename_no_replace_at
+    replaced = False
+
+    def replace_before_rename(source_fd, source_name, destination_fd, destination_name):
+        nonlocal replaced
+        if source_name == source.name and destination_name == source.name and not replaced:
+            replaced = True
+            source.rename(parked)
+            source.write_bytes(replacement_bytes)
+        return real_rename(source_fd, source_name, destination_fd, destination_name)
+
+    monkeypatch.setattr(
+        vault_mod,
+        "_atomic_rename_no_replace_at",
+        replace_before_rename,
+    )
+
+    result = move_papers(vault, [source.relative_to(vault)], "B")[0]
+
+    assert not result.succeeded
+    assert source.read_bytes() == replacement_bytes
+    assert parked.read_bytes() == original_bytes
+    assert not (destination / source.name).exists()
+
+
+def test_permanent_delete_isolates_and_restores_a_last_moment_replacement(
+    tmp_path,
+    monkeypatch,
+):
+    vault = tmp_path / "vault"
+    init_vault(vault)
+    active = write_paper(vault, _paper("K-20260714-001", "original"))
+    trash = soft_delete(vault, active.relative_to(vault))
+    original_bytes = trash.read_bytes()
+    replacement_bytes = render_paper_bytes(
+        _paper("K-20260714-001", "replacement")
+    )
+    parked = tmp_path / "parked-delete-source"
+    real_rename = vault_mod._atomic_rename_no_replace_at
+    replaced = False
+
+    def replace_before_isolate(source_fd, source_name, destination_fd, destination_name):
+        nonlocal replaced
+        if (
+            source_name == trash.name
+            and destination_name.endswith(".keikeu-unlink")
+            and not replaced
+        ):
+            replaced = True
+            trash.rename(parked)
+            trash.write_bytes(replacement_bytes)
+        return real_rename(source_fd, source_name, destination_fd, destination_name)
+
+    monkeypatch.setattr(
+        vault_mod,
+        "_atomic_rename_no_replace_at",
+        replace_before_isolate,
+    )
+
+    result = permanently_delete_papers(vault, [trash.relative_to(vault)])[0]
+
+    assert not result.succeeded
+    assert trash.read_bytes() == replacement_bytes
+    assert parked.read_bytes() == original_bytes
+
+
+def test_permanent_delete_empty_folder_preserves_a_last_moment_replacement(
+    tmp_path,
+    monkeypatch,
+):
+    vault = tmp_path / "vault"
+    init_vault(vault)
+    create_folder(vault, "A")
+    soft_delete_folder(vault, "A")
+    trash = vault / ".trash" / "cache" / "A"
+    parked = tmp_path / "parked-empty-folder"
+    real_rename = vault_mod._atomic_rename_no_replace_at
+    replaced = False
+
+    def replace_before_isolate(source_fd, source_name, destination_fd, destination_name):
+        nonlocal replaced
+        if (
+            source_name == "A"
+            and destination_name.endswith(".keikeu-rmdir")
+            and not replaced
+        ):
+            replaced = True
+            trash.rename(parked)
+            trash.mkdir()
+        return real_rename(source_fd, source_name, destination_fd, destination_name)
+
+    monkeypatch.setattr(
+        vault_mod,
+        "_atomic_rename_no_replace_at",
+        replace_before_isolate,
+    )
+
+    result = permanently_delete_folder(vault, "A")
+
+    assert not result.succeeded
+    assert trash.is_dir()
+    assert parked.is_dir()
+
+
+@pytest.mark.parametrize("operation_name", ["merge", "soft_delete"])
+def test_folder_operations_report_damaged_paper_and_continue(
+    tmp_path,
+    operation_name,
+):
+    vault = tmp_path / "vault"
+    init_vault(vault)
+    source = create_folder(vault, "A")
+    valid = write_paper(
+        vault,
+        _paper("K-20260714-001", "valid"),
+        destination="cache/A/K-20260714-001.md",
+    )
+    damaged = source / "K-20260714-999.md"
+    damaged.write_bytes(b"not a Paper")
+    if operation_name == "merge":
+        destination = create_folder(vault, "B")
+        results = merge_folders(vault, "A", "B")
+    else:
+        destination = vault / ".trash" / "cache" / "A"
+        results = soft_delete_folder(vault, "A")
+
+    assert any(result.succeeded and result.source.name == valid.name for result in results)
+    assert any(not result.succeeded and result.source.name == damaged.name for result in results)
+    assert (destination / valid.name).exists()
+    assert damaged.read_bytes() == b"not a Paper"
+
+
+def test_rename_folder_blocks_filename_frontmatter_mismatch(tmp_path):
+    vault = tmp_path / "vault"
+    init_vault(vault)
+    source = create_folder(vault, "A")
+    wrong = source / "wrong-name.md"
+    wrong_paper = _paper("K-20260714-001", "wrong")
+    wrong_paper.initial_summary = wrong_paper.summary
+    wrong.write_bytes(render_paper_bytes(wrong_paper))
+
+    with pytest.raises(ValueError, match="filename and frontmatter code"):
+        rename_folder(vault, "A", "B")
+
+    assert wrong.exists()
+    assert not (vault / "cache" / "B").exists()
+
+
+def test_rename_folder_restores_a_last_moment_source_replacement(
+    tmp_path,
+    monkeypatch,
+):
+    vault = tmp_path / "vault"
+    init_vault(vault)
+    source = create_folder(vault, "A")
+    paper = write_paper(
+        vault,
+        _paper("K-20260714-001", "original"),
+        destination="cache/A/K-20260714-001.md",
+    )
+    parked = tmp_path / "parked-rename-source"
+    replacement_bytes = render_paper_bytes(
+        _paper("K-20260714-001", "replacement")
+    )
+    real_rename = vault_mod._atomic_rename_no_replace_at
+    replaced = False
+
+    def replace_before_rename(source_fd, source_name, destination_fd, destination_name):
+        nonlocal replaced
+        if source_name == "A" and destination_name == "B" and not replaced:
+            replaced = True
+            source.rename(parked)
+            source.mkdir()
+            (source / paper.name).write_bytes(replacement_bytes)
+        return real_rename(source_fd, source_name, destination_fd, destination_name)
+
+    monkeypatch.setattr(
+        vault_mod,
+        "_atomic_rename_no_replace_at",
+        replace_before_rename,
+    )
+
+    with pytest.raises(ValueError, match="directory path changed"):
+        rename_folder(vault, "A", "B")
+
+    assert (source / paper.name).read_bytes() == replacement_bytes
+    assert (parked / paper.name).exists()
+    assert not (vault / "cache" / "B").exists()
+
+
+def test_folder_targets_merge_by_nfc_casefold_across_active_and_trash(tmp_path):
+    vault = tmp_path / "vault"
+    init_vault(vault)
+    create_folder(vault, "Folder")
+    paper = write_paper(
+        vault,
+        _paper("K-20260714-001", "paper"),
+        destination="cache/Folder/K-20260714-001.md",
+    )
+    trash_target = vault / ".trash" / "cache" / "folder"
+    trash_target.mkdir()
+
+    deleted = soft_delete_folder(vault, "Folder")
+
+    assert all(result.succeeded for result in deleted)
+    assert (trash_target / paper.name).exists()
+    assert [
+        path.name for path in (vault / ".trash" / "cache").iterdir()
+    ] == ["folder"]
+
+    active_target = create_folder(vault, "FOLDER")
+    restored = restore_folder(vault, "folder")
+
+    assert all(result.succeeded for result in restored)
+    assert (active_target / paper.name).exists()
+    assert not trash_target.exists()
 
 
 def test_module_imports_only_stdlib_dependencies():

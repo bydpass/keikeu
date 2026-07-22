@@ -20,9 +20,6 @@ import stat
 from keikeu_core.models import Highlight, Paper, validate_paper_code
 from keikeu_core.vault import (
     _create_regular_bytes_at,
-    _direct_paper_relative_path,
-    _move_regular_no_overwrite_at,
-    _open_pinned_vault,
     _open_pinned_vault_root,
     _open_relative_directory_no_follow,
     _paper_code_exists_at,
@@ -42,8 +39,7 @@ __all__ = [
     "read_paper",
     "read_paper_snapshot",
     "update_paper",
-    "copy_paper_with_code",
-    "rename_paper",
+    "branch_paper",
     "render_paper_bytes",
     "parse_paper_bytes",
 ]
@@ -405,27 +401,6 @@ def _atomic_compare_exchange_bytes_at(
         raise _paper_update_recovery_error(target, temporary)
 
 
-def _copy_source_relative(vault: Path, source: str | Path) -> Path:
-    source_path = Path(source).expanduser()
-    if ".." in source_path.parts:
-        raise ValueError("Paper source must be a direct active or Trash file")
-    if source_path.is_absolute():
-        try:
-            relative = source_path.relative_to(vault)
-        except ValueError as exc:
-            raise ValueError("Paper source is outside the selected Vault") from exc
-    else:
-        relative = source_path
-    if (
-        relative.parts[:-1] not in {("cache",), (".trash", "cache")}
-        or len(relative.parts) not in {2, 3}
-        or relative.suffix != ".md"
-        or not relative.stem
-    ):
-        raise ValueError("Paper source must be a direct active or Trash file")
-    return relative
-
-
 def _require_new_regular_name_at(
     directory_fd: int,
     name: str,
@@ -440,158 +415,40 @@ def _require_new_regular_name_at(
     raise FileExistsError(f"Paper already exists: {display_path}")
 
 
-def _copy_paper_with_code_at(
-    source_directory_fd: int,
-    source_name: str,
-    source: Path,
-    destination_directory_fd: int,
-    destination_name: str,
-    destination: Path,
-    new_code: str,
-    *,
-    expected_source_bytes: bytes,
-    guard_path: Path,
-    guard_fd: int,
-) -> tuple[tuple[int, int], tuple[int, int], bytes]:
-    source_bytes, source_identity = _read_regular_bytes_at(
-        source_directory_fd,
-        source_name,
-        source,
-    )
-    if source_bytes != expected_source_bytes:
-        raise ValueError(f"Paper changed while copying: {source}")
-    target_bytes = render_paper_bytes(
-        replace(parse_paper_bytes(source_bytes), code=new_code)
-    )
-    _require_new_regular_name_at(
-        destination_directory_fd,
-        destination_name,
-        destination,
-    )
-    _require_directory_path_identity(guard_path, guard_fd)
-    target_identity = _create_regular_bytes_at(
-        destination_directory_fd,
-        destination_name,
-        target_bytes,
-        destination,
-    )
-    try:
-        current_bytes, current_identity = _read_regular_bytes_at(
-            source_directory_fd,
-            source_name,
-            source,
-        )
-        if current_identity != source_identity or current_bytes != source_bytes:
-            raise ValueError(f"Paper changed while copying: {source}")
-        _require_directory_path_identity(guard_path, guard_fd)
-    except Exception:
-        if not _unlink_owned_bytes_at(
-            destination_directory_fd,
-            destination_name,
-            target_identity,
-            target_bytes,
-        ):
-            raise OSError(
-                errno.EIO,
-                "Paper copy changed during rollback; both files were preserved at "
-                f"{source} and {destination}",
-            )
-        raise
-    return target_identity, source_identity, target_bytes
-
-
-def _rewrite_paper_code_at(
-    source_directory_fd: int,
-    source_name: str,
-    source: Path,
-    destination_directory_fd: int,
-    destination_name: str,
-    destination: Path,
-    new_code: str,
-    *,
-    expected_source_bytes: bytes,
-    guard_path: Path,
-    guard_fd: int,
-) -> None:
-    target_identity, source_identity, target_bytes = _copy_paper_with_code_at(
-        source_directory_fd,
-        source_name,
-        source,
-        destination_directory_fd,
-        destination_name,
-        destination,
-        new_code,
-        expected_source_bytes=expected_source_bytes,
-        guard_path=guard_path,
-        guard_fd=guard_fd,
-    )
-    while True:
-        recovery_name = f".{source_name}.{secrets.token_hex(8)}.rename"
-        if _entry_identity(source_directory_fd, recovery_name) is None:
-            break
-    recovery = source.with_name(recovery_name)
-    try:
-        _move_regular_no_overwrite_at(
-            source_directory_fd,
-            source_name,
-            source_directory_fd,
-            recovery_name,
-            source_path=source,
-            destination_path=recovery,
-            expected_source_identity=source_identity,
-            expected_source_bytes=expected_source_bytes,
-            guard_path=guard_path,
-            guard_fd=guard_fd,
-        )
-    except Exception:
-        if not _unlink_owned_bytes_at(
-            destination_directory_fd,
-            destination_name,
-            target_identity,
-            target_bytes,
-        ):
-            raise OSError(
-                errno.EIO,
-                "Paper rename could not roll back safely; both files were preserved "
-                f"at {source} and {destination}",
-            )
-        raise
-    if not _unlink_owned_bytes_at(
-        source_directory_fd,
-        recovery_name,
-        source_identity,
-        expected_source_bytes,
-    ):
-        raise OSError(
-            errno.EIO,
-            "Paper rename could not finish safely; both files were preserved "
-            f"at {recovery} and {destination}",
-        )
-
-
-def copy_paper_with_code(
+def branch_paper(
     vault: Path,
     source: str | Path,
     destination: str | Path,
     new_code: str,
     *,
     expected_source_bytes: bytes,
-) -> tuple[tuple[int, int], tuple[int, int], bytes]:
-    """Create a renamed copy only from the caller's exact source snapshot."""
+    now: datetime | None = None,
+) -> Path:
+    """Create a clean branch from one exact saved active Paper snapshot."""
     if not isinstance(expected_source_bytes, bytes):
         raise TypeError("expected_source_bytes must be bytes")
     new_code = validate_paper_code(new_code)
-    vault, root_fd = _open_pinned_vault(vault)
-    source_relative = _copy_source_relative(vault, source)
-    destination_relative = _direct_paper_relative_path(
+    vault, root_fd = _open_pinned_vault_root(vault)
+    source_relative = _supported_paper_relative_path(
+        vault,
+        source,
+        ("cache",),
+    )
+    destination_relative = _supported_paper_relative_path(
         vault,
         destination,
         ("cache",),
     )
+    if destination_relative.name != f"{new_code}.md":
+        raise ValueError("branch destination filename must match its new code")
+    if destination_relative.parent != source_relative.parent:
+        raise ValueError("branch destination must stay in the source folder")
     source_path = vault / source_relative
     destination_path = vault / destination_relative
     source_directory_fd: int | None = None
     destination_directory_fd: int | None = None
+    target_identity: tuple[int, int] | None = None
+    target_bytes: bytes | None = None
     try:
         source_directory_fd = _open_relative_directory_no_follow(
             root_fd,
@@ -600,21 +457,115 @@ def copy_paper_with_code(
         )
         destination_directory_fd = _open_relative_directory_no_follow(
             root_fd,
-            Path("cache"),
+            destination_relative.parent,
             vault,
         )
-        return _copy_paper_with_code_at(
+        source_bytes, source_identity = _read_regular_bytes_at(
             source_directory_fd,
             source_relative.name,
             source_path,
+        )
+        if source_bytes != expected_source_bytes:
+            raise ValueError(f"Paper changed before branch copy: {source_path}")
+        source_paper = parse_paper_bytes(source_bytes)
+        if source_relative.name != f"{source_paper.code}.md":
+            raise ValueError("Paper filename and frontmatter code do not match")
+        if _paper_code_exists_at(
+            root_fd,
+            vault,
+            source_paper.code,
+            parse_code=_paper_code_from_bytes,
+            excluding=source_relative,
+        ):
+            raise ValueError(
+                f"duplicate Paper code blocks mutation: {source_paper.code}"
+            )
+        branch_time = now or datetime.now()
+        branch_display_name = (
+            f"{source_paper.display_name[:195]} · 分支"
+            if source_paper.display_name is not None
+            else None
+        )
+        branched = Paper(
+            code=new_code,
+            initial_summary=source_paper.summary,
+            summary=source_paper.summary,
+            display_name=branch_display_name,
+            highlights=[replace(highlight) for highlight in source_paper.highlights],
+            tags=list(source_paper.tags),
+            created=branch_time,
+            updated=branch_time,
+        )
+        target_bytes = render_paper_bytes(branched)
+        _require_new_regular_name_at(
             destination_directory_fd,
             destination_relative.name,
             destination_path,
-            new_code,
-            expected_source_bytes=expected_source_bytes,
-            guard_path=vault,
-            guard_fd=root_fd,
         )
+        if _paper_code_exists_at(
+            root_fd,
+            vault,
+            new_code,
+            parse_code=_paper_code_from_bytes,
+        ):
+            raise FileExistsError(
+                f"Paper code already exists in active/Trash: {new_code}"
+            )
+        _require_directory_path_identity(source_path.parent, source_directory_fd)
+        _require_directory_path_identity(
+            destination_path.parent,
+            destination_directory_fd,
+        )
+        target_identity = _create_regular_bytes_at(
+            destination_directory_fd,
+            destination_relative.name,
+            target_bytes,
+            destination_path,
+        )
+        try:
+            current_source, current_identity = _read_regular_bytes_at(
+                source_directory_fd,
+                source_relative.name,
+                source_path,
+            )
+            if current_identity != source_identity or current_source != source_bytes:
+                raise ValueError(f"Paper changed during branch copy: {source_path}")
+            stored_bytes, stored_identity = _read_regular_bytes_at(
+                destination_directory_fd,
+                destination_relative.name,
+                destination_path,
+            )
+            if stored_identity != target_identity or stored_bytes != target_bytes:
+                raise ValueError(f"branch Paper changed while creating: {destination_path}")
+            _require_directory_path_identity(source_path.parent, source_directory_fd)
+            _require_directory_path_identity(
+                destination_path.parent,
+                destination_directory_fd,
+            )
+            if _paper_code_exists_at(
+                root_fd,
+                vault,
+                new_code,
+                parse_code=_paper_code_from_bytes,
+                excluding=destination_relative,
+            ):
+                raise FileExistsError(
+                    f"Paper code concurrently created in active/Trash: {new_code}"
+                )
+        except Exception:
+            if not _unlink_owned_bytes_at(
+                destination_directory_fd,
+                destination_relative.name,
+                target_identity,
+                target_bytes,
+            ):
+                raise OSError(
+                    errno.EIO,
+                    "branch Paper could not roll back safely; source and branch were "
+                    f"preserved at {source_path} and {destination_path}",
+                )
+            raise
+        return destination_path
     finally:
         if destination_directory_fd is not None:
             os.close(destination_directory_fd)
@@ -808,7 +759,7 @@ def update_paper(
             raise ValueError("Paper changed externally; update refused")
         existing = parse_paper_bytes(source_bytes)
         if paper.code != existing.code:
-            raise ValueError("Paper code changes require rename_paper")
+            raise ValueError("Paper codes are immutable")
         if _paper_code_exists_at(
             root_fd,
             vault,
@@ -837,49 +788,3 @@ def update_paper(
         if cache_fd is not None:
             os.close(cache_fd)
         os.close(root_fd)
-
-
-def rename_paper(vault: Path, old_code: str, new_code: str) -> Path:
-    """Explicitly rename a Paper code without overwriting another asset."""
-    old_code = validate_paper_code(old_code)
-    new_code = validate_paper_code(new_code)
-    if old_code == new_code:
-        raise ValueError("new Paper code must differ from the current code")
-    vault, root_fd = _open_pinned_vault(vault)
-    source = vault / "cache" / f"{old_code}.md"
-    target = vault / "cache" / f"{new_code}.md"
-    cache_fd: int | None = None
-    try:
-        cache_fd = _open_relative_directory_no_follow(root_fd, Path("cache"), vault)
-        _require_new_regular_name_at(cache_fd, target.name, target)
-        source_bytes, _source_identity = _read_regular_bytes_at(
-            cache_fd,
-            source.name,
-            source,
-        )
-        if parse_paper_bytes(source_bytes).code != old_code:
-            raise ValueError("Paper filename and frontmatter code do not match")
-        try:
-            _rewrite_paper_code_at(
-                cache_fd,
-                source.name,
-                source,
-                cache_fd,
-                target.name,
-                target,
-                new_code,
-                expected_source_bytes=source_bytes,
-                guard_path=target.parent,
-                guard_fd=cache_fd,
-            )
-        except ValueError as exc:
-            if "changed" in str(exc):
-                raise ValueError(
-                    f"Paper changed before rename cleanup: {source}"
-                ) from exc
-            raise
-    finally:
-        if cache_fd is not None:
-            os.close(cache_fd)
-        os.close(root_fd)
-    return target

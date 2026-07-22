@@ -521,7 +521,7 @@ def test_library_delete_and_restore_are_reachable_from_the_ui(tmp_path):
     assert "回收站 · 0" in _texts(root)
 
 
-def test_library_recovery_accepts_an_explicit_new_code_after_a_collision(tmp_path):
+def test_library_recovery_blocks_code_collision_without_rewriting_history(tmp_path):
     init_vault(tmp_path)
     deleted = write_paper(tmp_path, _paper("K-20260714-001", "Deleted paper."))
     soft_delete(tmp_path, str(deleted.relative_to(tmp_path)))
@@ -535,10 +535,8 @@ def test_library_recovery_accepts_an_explicit_new_code_after_a_collision(tmp_pat
 
     _button(root, "恢复").on_click(None)
     assert any("代号冲突" in text for text in _texts(root))
-    _text_field(root, "冲突时的新代号").value = "K-20260714-002"
-    _button(root, "恢复").on_click(None)
-
-    assert read_paper(tmp_path / "cache" / "K-20260714-002.md").summary == "Deleted paper."
+    assert not (tmp_path / "cache" / "K-20260714-002.md").exists()
+    assert (tmp_path / ".trash" / "cache" / "K-20260714-001.md").exists()
 
 
 def test_library_delegates_open_and_reveal_to_macos_system_commands(tmp_path, monkeypatch):
@@ -659,7 +657,7 @@ def test_shell_show_paper_rejects_an_absolute_path_outside_the_vault(
     assert "outside the selected Vault" in _texts(page.overlay[-1])[0]
 
 
-def test_library_displays_parse_errors_and_recovery_conflict_guidance(tmp_path):
+def test_library_displays_parse_errors_and_recovery_action(tmp_path):
     init_vault(tmp_path)
     broken = tmp_path / "cache" / "K-20260714-001.md"
     broken.write_text("---\ntype: paper\n---\nbroken", encoding="utf-8")
@@ -670,6 +668,7 @@ def test_library_displays_parse_errors_and_recovery_conflict_guidance(tmp_path):
     root = build_library_page(_ctx(FakePage(), tmp_path))
 
     assert any("损坏 Paper" in text for text in _texts(root))
-    assert "冲突时的新代号" in [
+    assert "冲突时的新代号" not in [
         field.label for field in _walk(root) if isinstance(field, ft.TextField)
     ]
+    assert _button(root, "恢复")

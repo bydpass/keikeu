@@ -13,11 +13,11 @@ import pytest
 
 from keikeu_core import markdown_io as markdown_mod
 from keikeu_core.markdown_io import (
+    branch_paper,
     next_paper_code,
     parse_paper_bytes,
     read_paper,
     read_paper_snapshot,
-    rename_paper,
     render_paper_bytes,
     update_paper,
     write_paper as _write_paper,
@@ -705,160 +705,156 @@ def test_update_refuses_a_byte_identical_ordinary_vault_root_replacement(
     assert list((vault / "cache").glob(f".{path.name}.*.tmp")) == []
 
 
-def test_explicit_rename_preserves_content_without_overwrite(tmp_path):
+def test_branch_copy_uses_current_summary_new_timestamps_and_no_history(tmp_path):
     source = write_paper(
         tmp_path,
         Paper(
             code="K-20260714-001",
             initial_summary="",
             summary="first summary",
+            display_name="源 Paper",
             highlights=[Highlight(content="anchor")],
             tags=["tag"],
+            legacy_title="old cache title",
+            extra_frontmatter={"provider_history": "old"},
         ),
     )
-    before = source.read_bytes()
+    paper, source_bytes = read_paper_snapshot(source)
+    paper.summary = "current saved summary"
+    update_paper(
+        tmp_path,
+        source,
+        paper,
+        expected_source_bytes=source_bytes,
+    )
+    paper, source_bytes = read_paper_snapshot(source)
+    branch_time = datetime(2026, 7, 22, 13, 45)
+    target = branch_paper(
+        tmp_path,
+        source.relative_to(tmp_path),
+        "cache/K-20260714-002.md",
+        "K-20260714-002",
+        expected_source_bytes=source_bytes,
+        now=branch_time,
+    )
+
+    branched = read_paper(target)
+    assert source.exists()
+    assert branched.code == "K-20260714-002"
+    assert branched.display_name == "源 Paper · 分支"
+    assert branched.initial_summary == "current saved summary"
+    assert branched.summary == "current saved summary"
+    assert branched.highlights == [Highlight(content="anchor")]
+    assert branched.tags == ["tag"]
+    assert branched.created == branch_time
+    assert branched.updated == branch_time
+    assert branched.legacy_title is None
+    assert branched.extra_frontmatter == {}
+
+
+def test_branch_copy_refuses_occupied_code_and_changed_source(tmp_path):
+    source = write_paper(
+        tmp_path,
+        Paper(code="K-20260714-001", initial_summary="", summary="source"),
+    )
+    _paper, source_bytes = read_paper_snapshot(source)
     write_paper(
         tmp_path, Paper(code="K-20260714-002", initial_summary="", summary="occupied")
     )
     with pytest.raises(FileExistsError):
-        rename_paper(tmp_path, "K-20260714-001", "K-20260714-002")
-    assert source.read_bytes() == before
+        branch_paper(
+            tmp_path,
+            source.relative_to(tmp_path),
+            "cache/K-20260714-002.md",
+            "K-20260714-002",
+            expected_source_bytes=source_bytes,
+        )
 
-    target = rename_paper(tmp_path, "K-20260714-001", "K-20260714-003")
-    back = read_paper(target)
-    assert not source.exists()
-    assert back.code == "K-20260714-003"
-    assert back.initial_summary == "first summary"
-    assert back.highlights == [Highlight(content="anchor")]
+    with source.open("ab") as handle:
+        handle.write(b"external edit")
+    with pytest.raises(ValueError, match="changed before branch copy"):
+        branch_paper(
+            tmp_path,
+            source.relative_to(tmp_path),
+            "cache/K-20260714-003.md",
+            "K-20260714-003",
+            expected_source_bytes=source_bytes,
+        )
 
 
-def test_rename_refuses_a_byte_identical_ordinary_vault_root_replacement(
-    tmp_path,
-    monkeypatch,
-):
-    vault = tmp_path / "vault"
-    replacement = tmp_path / "replacement-vault"
-    parked = tmp_path / "parked-vault"
-    init_vault(vault)
+def test_branch_copy_stays_in_source_folder_and_bounds_generated_name(tmp_path):
+    folder = tmp_path / "cache" / "A"
+    folder.mkdir(parents=True)
     source = write_paper(
-        vault,
-        Paper(code="K-20260714-001", initial_summary="", summary="source"),
+        tmp_path,
+        Paper(
+            code="K-20260714-001",
+            initial_summary="",
+            summary="source",
+            display_name="名" * 200,
+        ),
+        destination="cache/A/K-20260714-001.md",
     )
-    source_bytes = source.read_bytes()
-    shutil.copytree(vault, replacement)
-    real_move = markdown_mod._move_regular_no_overwrite_at
-    swapped = False
+    _paper, source_bytes = read_paper_snapshot(source)
 
-    def replace_root_then_move(*args, **kwargs):
-        nonlocal swapped
-        if not swapped:
-            swapped = True
-            vault.rename(parked)
-            replacement.rename(vault)
-        return real_move(*args, **kwargs)
+    with pytest.raises(ValueError, match="stay in the source folder"):
+        branch_paper(
+            tmp_path,
+            source.relative_to(tmp_path),
+            "cache/K-20260714-002.md",
+            "K-20260714-002",
+            expected_source_bytes=source_bytes,
+        )
 
-    monkeypatch.setattr(
-        markdown_mod,
-        "_move_regular_no_overwrite_at",
-        replace_root_then_move,
+    target = branch_paper(
+        tmp_path,
+        source.relative_to(tmp_path),
+        "cache/A/K-20260714-002.md",
+        "K-20260714-002",
+        expected_source_bytes=source_bytes,
     )
-    with pytest.raises(ValueError, match="changed before rename cleanup"):
-        rename_paper(vault, "K-20260714-001", "K-20260714-002")
 
-    for root in (parked, vault):
-        assert (root / "cache" / source.name).read_bytes() == source_bytes
-        assert not (root / "cache" / "K-20260714-002.md").exists()
+    assert read_paper(target).display_name == f"{'名' * 195} · 分支"
+    assert not (tmp_path / "cache" / "K-20260714-003.md").exists()
 
 
-def test_rename_rollback_does_not_unlink_a_concurrently_replaced_target(
+def test_branch_copy_rolls_back_if_source_changes_during_create(
     tmp_path, monkeypatch
 ):
     source = write_paper(
         tmp_path,
         Paper(code="K-20260714-001", initial_summary="", summary="source"),
     )
+    _paper, source_bytes = read_paper_snapshot(source)
     target = tmp_path / "cache" / "K-20260714-002.md"
-
-    def fail_source_cleanup(*args, **kwargs) -> None:
-        target.unlink()
-        target.write_bytes(b"concurrent replacement")
-        raise ValueError("injected source cleanup failure")
-
-    monkeypatch.setattr(
-        markdown_mod,
-        "_move_regular_no_overwrite_at",
-        fail_source_cleanup,
-    )
-    with pytest.raises(OSError, match="both files were preserved"):
-        rename_paper(tmp_path, "K-20260714-001", "K-20260714-002")
-
-    assert source.exists()
-    assert target.read_bytes() == b"concurrent replacement"
-
-
-def test_rename_preserves_a_source_edited_in_place_before_cleanup(
-    tmp_path, monkeypatch
-):
-    source = write_paper(
-        tmp_path,
-        Paper(code="K-20260714-001", initial_summary="", summary="source"),
-    )
-    target = tmp_path / "cache" / "K-20260714-002.md"
-    original = source.read_bytes()
-    real_move = markdown_mod._move_regular_no_overwrite_at
+    real_create = markdown_mod._create_regular_bytes_at
     edited = False
 
-    def edit_source_before_cleanup(*args, **kwargs) -> None:
+    def create_then_edit(*args, **kwargs):
         nonlocal edited
-        if not edited:
-            edited = True
-            with source.open("ab") as handle:
-                handle.write(b"external edit")
-        real_move(*args, **kwargs)
-
-    monkeypatch.setattr(
-        markdown_mod,
-        "_move_regular_no_overwrite_at",
-        edit_source_before_cleanup,
-    )
-    with pytest.raises(ValueError, match="changed before rename cleanup"):
-        rename_paper(tmp_path, "K-20260714-001", "K-20260714-002")
-
-    assert source.read_bytes() == original + b"external edit"
-    assert not target.exists()
-
-
-def test_rename_rollback_preserves_a_target_edited_in_place(
-    tmp_path, monkeypatch
-):
-    source = write_paper(
-        tmp_path,
-        Paper(code="K-20260714-001", initial_summary="", summary="source"),
-    )
-    target = tmp_path / "cache" / "K-20260714-002.md"
-    real_move = markdown_mod._move_regular_no_overwrite_at
-    edited = False
-
-    def edit_before_cleanup(*args, **kwargs) -> None:
-        nonlocal edited
+        identity = real_create(*args, **kwargs)
         if not edited:
             edited = True
             with source.open("ab") as handle:
                 handle.write(b"source edit")
-            with target.open("ab") as handle:
-                handle.write(b"target edit")
-        real_move(*args, **kwargs)
+        return identity
 
     monkeypatch.setattr(
         markdown_mod,
-        "_move_regular_no_overwrite_at",
-        edit_before_cleanup,
+        "_create_regular_bytes_at",
+        create_then_edit,
     )
-    with pytest.raises(OSError, match="both files were preserved"):
-        rename_paper(tmp_path, "K-20260714-001", "K-20260714-002")
+    with pytest.raises(ValueError, match="changed during branch copy"):
+        branch_paper(
+            tmp_path,
+            source.relative_to(tmp_path),
+            target.relative_to(tmp_path),
+            "K-20260714-002",
+            expected_source_bytes=source_bytes,
+        )
 
     assert source.read_bytes().endswith(b"source edit")
-    assert target.read_bytes().endswith(b"target edit")
+    assert not target.exists()
 
 
 def test_active_markdown_io_imports_no_gui_or_third_party_packages():

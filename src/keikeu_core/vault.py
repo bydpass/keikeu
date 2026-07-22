@@ -1,9 +1,8 @@
 """Paper Vault layout, recovery bin, and local config resolution.
 
 The user-selected vault holds only durable Paper Markdown and a disposable
-index.  Recovery moves a file under ``.trash/cache``; it never copies or
-rewrites an asset unless a code collision requires an explicitly requested
-new Paper code.
+index. Recovery moves a file under ``.trash/cache`` without rewriting its
+historical Paper code.
 """
 
 from __future__ import annotations
@@ -22,12 +21,13 @@ import shutil
 import stat
 import sys
 import unicodedata
-from typing import Callable
+from typing import Callable, Iterable
 
 from keikeu_core.models import validate_paper_code
 
 __all__ = [
     "VaultSelectionToken",
+    "PathOperationResult",
     "capture_vault_selection_token",
     "init_vault",
     "is_vault",
@@ -44,6 +44,16 @@ __all__ = [
     "scan_trashed_papers",
     "list_active_papers",
     "next_paper_code",
+    "create_folder",
+    "rename_folder",
+    "merge_folders",
+    "move_papers",
+    "soft_delete_papers",
+    "soft_delete_folder",
+    "restore_papers",
+    "restore_folder",
+    "permanently_delete_papers",
+    "permanently_delete_folder",
     "resolve_active_paper_path",
     "resolve_trashed_paper_path",
     "vault_index_version",
@@ -61,6 +71,8 @@ _TreeSnapshot = tuple[tuple[Path, ...], tuple[tuple[Path, str], ...]]
 
 _EMPTY_INDEX: dict[str, object] = {"version": 3, "papers": [], "errors": []}
 _ATOMIC_EXCHANGE_FLAG = 0x00000002
+_DARWIN_ATOMIC_NO_REPLACE_FLAG = 0x00000004
+_LINUX_ATOMIC_NO_REPLACE_FLAG = 0x00000001
 _PAPER_CODE_FILENAME_RE = re.compile(r"^K-\d{8}-(\d{3})$")
 _RESERVED_FOLDER_NAMES = {
     unicodedata.normalize("NFC", name).casefold()
@@ -81,6 +93,19 @@ class _OwnedDirectory:
     name: str
     identity: tuple[int, int]
     display_path: Path
+
+
+@dataclass(frozen=True)
+class PathOperationResult:
+    """One explicit filesystem item outcome for batch and folder operations."""
+
+    source: Path
+    destination: Path | None = None
+    error: str | None = None
+
+    @property
+    def succeeded(self) -> bool:
+        return self.error is None
 
 
 @dataclass
@@ -186,6 +211,27 @@ def validate_folder_name(name: str) -> str:
     if comparison in _RESERVED_FOLDER_NAMES:
         raise ValueError("folder name is reserved")
     return trimmed
+
+
+def _folder_name_key(name: str) -> str:
+    return unicodedata.normalize("NFC", name).casefold()
+
+
+def _semantic_folder_collision_at(
+    parent_fd: int,
+    name: str,
+    *,
+    excluding: str | None = None,
+) -> str | None:
+    expected_key = _folder_name_key(name)
+    with os.scandir(parent_fd) as entries:
+        candidates = sorted(entries, key=lambda entry: entry.name)
+    for entry in candidates:
+        if entry.name == excluding:
+            continue
+        if _folder_name_key(entry.name) == expected_key:
+            return entry.name
+    return None
 
 
 def _index_path(vault: Path) -> Path:
@@ -353,6 +399,17 @@ def _require_directory_path_identity(path: Path, expected_fd: int) -> None:
             raise ValueError(f"directory path changed during operation: {path}")
     finally:
         os.close(current_fd)
+
+
+def _require_directory_fd_identity(
+    actual_fd: int,
+    expected_fd: int,
+    path: Path,
+) -> None:
+    actual = os.fstat(actual_fd)
+    expected = os.fstat(expected_fd)
+    if (actual.st_dev, actual.st_ino) != (expected.st_dev, expected.st_ino):
+        raise ValueError(f"directory path changed during operation: {path}")
 
 
 def _open_pinned_vault(vault: Path) -> tuple[Path, int]:
@@ -693,6 +750,45 @@ def atomic_exchange_at_no_follow(
         )
 
 
+def _atomic_rename_no_replace_at(
+    source_parent_fd: int,
+    source_name: str,
+    destination_parent_fd: int,
+    destination_name: str,
+) -> None:
+    """Atomically rename one entry while refusing to replace another name."""
+    operation = _native_exchange_operation()
+    for name in (source_name, destination_name):
+        if not name or name in {".", ".."} or Path(name).name != name:
+            raise ValueError(f"atomic rename requires a single entry name: {name!r}")
+    if source_parent_fd == destination_parent_fd and source_name == destination_name:
+        raise ValueError("atomic rename paths must differ")
+    if sys.platform == "darwin":
+        flag = _DARWIN_ATOMIC_NO_REPLACE_FLAG
+    elif sys.platform.startswith("linux"):
+        flag = _LINUX_ATOMIC_NO_REPLACE_FLAG
+    else:
+        raise RuntimeError(
+            f"atomic no-replace rename is unavailable on {sys.platform}"
+        )
+
+    ctypes.set_errno(0)
+    result = operation(
+        source_parent_fd,
+        os.fsencode(source_name),
+        destination_parent_fd,
+        os.fsencode(destination_name),
+        flag,
+    )
+    if result != 0:
+        error_number = ctypes.get_errno()
+        raise OSError(
+            error_number,
+            os.strerror(error_number),
+            f"{source_name} -> {destination_name}",
+        )
+
+
 def atomic_exchange_no_follow(first: Path, second: Path) -> None:
     """Atomically exchange two ordinary file or directory paths."""
     first = _lexical_absolute_path(first)
@@ -725,52 +821,18 @@ def _unlink_owned_file(
     expected_bytes: bytes | None = None,
 ) -> bool:
     """Unlink only an unchanged caller-owned regular file snapshot."""
-    if expected_bytes is not None:
-        try:
-            descriptor = open_regular_no_follow(path)
-        except (OSError, ValueError):
-            return False
-        try:
-            before = os.fstat(descriptor)
-            with os.fdopen(descriptor, "rb", closefd=False) as handle:
-                current_bytes = handle.read()
-            after = os.fstat(descriptor)
-        finally:
-            os.close(descriptor)
-        if (
-            (before.st_dev, before.st_ino) != identity
-            or (
-                before.st_dev,
-                before.st_ino,
-                before.st_size,
-                before.st_mtime_ns,
-                before.st_ctime_ns,
-            )
-            != (
-                after.st_dev,
-                after.st_ino,
-                after.st_size,
-                after.st_mtime_ns,
-                after.st_ctime_ns,
-            )
-            or current_bytes != expected_bytes
-        ):
-            return False
-
     directory_fd = open_directory_no_follow(path.parent)
     try:
-        try:
-            path_stat = os.stat(
-                path.name,
-                dir_fd=directory_fd,
-                follow_symlinks=False,
-            )
-        except FileNotFoundError:
-            return False
-        if (path_stat.st_dev, path_stat.st_ino) != identity:
-            return False
-        os.unlink(path.name, dir_fd=directory_fd)
-        return True
+        return _unlink_owned_file_at(
+            directory_fd,
+            path.name,
+            identity,
+            expected_digest=(
+                hashlib.sha256(expected_bytes).hexdigest()
+                if expected_bytes is not None
+                else None
+            ),
+        )
     finally:
         os.close(directory_fd)
 
@@ -788,7 +850,7 @@ def _move_regular_no_overwrite_at(
     guard_path: Path | None = None,
     guard_fd: int | None = None,
 ) -> None:
-    """Move one regular entry through pinned parents without clobbering."""
+    """Atomically move one regular entry through pinned parents."""
     if (guard_path is None) != (guard_fd is None):
         raise ValueError("move guard path and descriptor must be provided together")
 
@@ -796,10 +858,9 @@ def _move_regular_no_overwrite_at(
         if guard_path is not None and guard_fd is not None:
             _require_directory_path_identity(guard_path, guard_fd)
 
-    linked = False
-    source_unlinked = False
     source_identity: tuple[int, int] | None = None
-    linked_identity: tuple[int, int] | None = None
+    moved_identity: tuple[int, int] | None = None
+    moved = False
     try:
         source_stat = os.stat(
             source_name,
@@ -828,86 +889,80 @@ def _move_regular_no_overwrite_at(
             ):
                 raise ValueError(f"Paper changed before move: {source_path}")
         require_guard()
-        os.link(
+        _atomic_rename_no_replace_at(
+            source_directory_fd,
             source_name,
+            destination_directory_fd,
             destination_name,
-            src_dir_fd=source_directory_fd,
-            dst_dir_fd=destination_directory_fd,
-            follow_symlinks=False,
         )
-        linked = True
-        linked_stat = os.stat(
+        moved = True
+        moved_stat = os.stat(
             destination_name,
             dir_fd=destination_directory_fd,
             follow_symlinks=False,
         )
-        linked_identity = (linked_stat.st_dev, linked_stat.st_ino)
-        current_source_stat = os.stat(
-            source_name,
-            dir_fd=source_directory_fd,
-            follow_symlinks=False,
-        )
-        if (
-            linked_identity != source_identity
-            or (current_source_stat.st_dev, current_source_stat.st_ino)
-            != source_identity
-        ):
+        moved_identity = (moved_stat.st_dev, moved_stat.st_ino)
+        if moved_identity != source_identity:
             raise ValueError(f"Paper changed while moving: {source_path}")
         if expected_source_bytes is not None:
-            linked_bytes, current_linked_identity = _read_regular_bytes_at(
+            moved_bytes, current_moved_identity = _read_regular_bytes_at(
                 destination_directory_fd,
                 destination_name,
                 destination_path,
             )
             if (
-                current_linked_identity != linked_identity
-                or linked_bytes != expected_source_bytes
+                current_moved_identity != moved_identity
+                or moved_bytes != expected_source_bytes
             ):
                 raise ValueError(f"Paper changed while moving: {source_path}")
         require_guard()
-        os.unlink(source_name, dir_fd=source_directory_fd)
-        source_unlinked = True
-        require_guard()
     except Exception as move_error:
-        if source_unlinked and linked_identity is not None:
+        if moved:
             try:
-                os.link(
+                current_destination = os.stat(
                     destination_name,
-                    source_name,
-                    src_dir_fd=destination_directory_fd,
-                    dst_dir_fd=source_directory_fd,
                     follow_symlinks=False,
+                    dir_fd=destination_directory_fd,
                 )
-                restored_stat = os.stat(
+                current_identity = (
+                    current_destination.st_dev,
+                    current_destination.st_ino,
+                )
+                if moved_identity is None:
+                    moved_identity = current_identity
+                if current_identity != moved_identity:
+                    raise ValueError("moved destination identity changed")
+                try:
+                    os.stat(
+                        source_name,
+                        dir_fd=source_directory_fd,
+                        follow_symlinks=False,
+                    )
+                except FileNotFoundError:
+                    pass
+                else:
+                    raise FileExistsError(
+                        f"concurrent source path was preserved: {source_path}"
+                    )
+                _atomic_rename_no_replace_at(
+                    destination_directory_fd,
+                    destination_name,
+                    source_directory_fd,
+                    source_name,
+                )
+                restored = os.stat(
                     source_name,
                     dir_fd=source_directory_fd,
                     follow_symlinks=False,
                 )
-                if (restored_stat.st_dev, restored_stat.st_ino) != linked_identity:
+                if (restored.st_dev, restored.st_ino) != moved_identity:
                     raise ValueError("restored source identity does not match")
-                os.unlink(destination_name, dir_fd=destination_directory_fd)
             except Exception as rollback_error:
                 raise OSError(
                     errno.EIO,
                     "Paper move could not roll back safely; both locations were "
                     f"preserved at {source_path} and {destination_path}",
                 ) from rollback_error
-            raise move_error
-        if linked and linked_identity is not None:
-            try:
-                destination_stat = os.stat(
-                    destination_name,
-                    dir_fd=destination_directory_fd,
-                    follow_symlinks=False,
-                )
-            except FileNotFoundError:
-                pass
-            else:
-                if (
-                    destination_stat.st_dev,
-                    destination_stat.st_ino,
-                ) == linked_identity:
-                    os.unlink(destination_name, dir_fd=destination_directory_fd)
         raise
 
 
@@ -962,16 +1017,14 @@ def _copy_regular_file(source: Path, destination: Path) -> tuple[int, int]:
     except Exception:
         if parent_fd is not None and destination_identity is not None:
             try:
-                current_stat = os.stat(
+                _unlink_owned_file_at(
+                    parent_fd,
                     destination.name,
-                    dir_fd=parent_fd,
-                    follow_symlinks=False,
+                    destination_identity,
+                    expected_digest=None,
                 )
-            except FileNotFoundError:
+            except OSError:
                 pass
-            else:
-                if (current_stat.st_dev, current_stat.st_ino) == destination_identity:
-                    os.unlink(destination.name, dir_fd=parent_fd)
         raise
     finally:
         if destination_fd is not None:
@@ -1074,23 +1127,11 @@ def _mkdir_relative_owned(
             os.close(child_fd)
         return _OwnedDirectory(parent_fd, relative.name, identity, path)
     except Exception:
-        try:
-            current = os.stat(
-                relative.name,
-                dir_fd=parent_fd,
-                follow_symlinks=False,
-            )
-        except FileNotFoundError:
-            pass
-        else:
-            if identity is not None and stat.S_ISDIR(current.st_mode) and (
-                current.st_dev,
-                current.st_ino,
-            ) == identity:
-                try:
-                    os.rmdir(relative.name, dir_fd=parent_fd)
-                except OSError:
-                    pass
+        if identity is not None:
+            try:
+                _rmdir_owned_directory_at(parent_fd, relative.name, identity)
+            except OSError:
+                pass
         os.close(parent_fd)
         raise
 
@@ -1178,51 +1219,119 @@ def _unlink_owned_file_at(
     *,
     expected_digest: str | None,
 ) -> bool:
-    try:
-        descriptor = os.open(
-            name,
-            os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0),
-            dir_fd=parent_fd,
-        )
-    except (FileNotFoundError, OSError):
-        return False
-    try:
-        opened = os.fstat(descriptor)
-        if not stat.S_ISREG(opened.st_mode) or (
-            opened.st_dev,
-            opened.st_ino,
-        ) != identity:
-            return False
-        if expected_digest is not None:
-            digest = hashlib.sha256()
-            before = opened
-            while chunk := os.read(descriptor, 1024 * 1024):
-                digest.update(chunk)
-            after = os.fstat(descriptor)
-            if (
-                before.st_dev,
-                before.st_ino,
-                before.st_size,
-                before.st_mtime_ns,
-                before.st_ctime_ns,
-            ) != (
-                after.st_dev,
-                after.st_ino,
-                after.st_size,
-                after.st_mtime_ns,
-                after.st_ctime_ns,
-            ) or digest.hexdigest() != expected_digest:
-                return False
-    finally:
-        os.close(descriptor)
+    """Isolate, verify, then unlink one exact regular file.
+
+    The random quarantine rename is the mutation boundary. If the named entry
+    was replaced immediately before that boundary, the replacement is restored
+    and retained instead of being deleted.
+    """
     try:
         current = os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
     except OSError:
         return False
-    if (current.st_dev, current.st_ino) != identity:
+    if not stat.S_ISREG(current.st_mode) or (
+        current.st_dev,
+        current.st_ino,
+    ) != identity:
         return False
-    os.unlink(name, dir_fd=parent_fd)
+
+    quarantine_name = f".{name}.{secrets.token_hex(16)}.keikeu-unlink"
+    try:
+        _atomic_rename_no_replace_at(
+            parent_fd,
+            name,
+            parent_fd,
+            quarantine_name,
+        )
+    except FileNotFoundError:
+        return False
+
+    try:
+        data, isolated_identity = _read_regular_bytes_at(
+            parent_fd,
+            quarantine_name,
+            Path(quarantine_name),
+        )
+        matches = isolated_identity == identity and (
+            expected_digest is None
+            or hashlib.sha256(data).hexdigest() == expected_digest
+        )
+    except (OSError, ValueError):
+        matches = False
+        isolated_identity = None
+
+    if not matches:
+        _restore_isolated_entry_at(
+            parent_fd,
+            quarantine_name,
+            name,
+            isolated_identity,
+        )
+        return False
+
+    try:
+        os.unlink(quarantine_name, dir_fd=parent_fd)
+    except Exception:
+        _restore_isolated_entry_at(
+            parent_fd,
+            quarantine_name,
+            name,
+            isolated_identity,
+        )
+        raise
     return True
+
+
+def _restore_isolated_entry_at(
+    parent_fd: int,
+    isolated_name: str,
+    original_name: str,
+    isolated_identity: tuple[int, int] | None,
+) -> None:
+    """Restore one quarantined entry without overwriting a concurrent name."""
+    if isolated_identity is None:
+        raise OSError(
+            errno.EIO,
+            f"isolated entry could not be identified and was preserved: {isolated_name}",
+        )
+    try:
+        current = os.stat(
+            isolated_name,
+            dir_fd=parent_fd,
+            follow_symlinks=False,
+        )
+    except OSError as exc:
+        raise OSError(
+            errno.EIO,
+            f"isolated entry changed and current paths were preserved: {isolated_name}",
+        ) from exc
+    if (current.st_dev, current.st_ino) != isolated_identity:
+        raise OSError(
+            errno.EIO,
+            f"isolated entry changed and current paths were preserved: {isolated_name}",
+        )
+    try:
+        os.stat(original_name, dir_fd=parent_fd, follow_symlinks=False)
+    except FileNotFoundError:
+        pass
+    else:
+        raise OSError(
+            errno.EIO,
+            "isolated entry could not be restored without overwriting a concurrent "
+            f"path; both were preserved: {original_name}, {isolated_name}",
+        )
+    _atomic_rename_no_replace_at(
+        parent_fd,
+        isolated_name,
+        parent_fd,
+        original_name,
+    )
+    restored = os.stat(original_name, dir_fd=parent_fd, follow_symlinks=False)
+    if (restored.st_dev, restored.st_ino) != isolated_identity:
+        raise OSError(
+            errno.EIO,
+            f"isolated entry restore changed identity: {original_name}",
+        )
 
 
 def _cleanup_owned_files(records: list[_OwnedFile]) -> None:
@@ -1238,25 +1347,84 @@ def _cleanup_owned_files(records: list[_OwnedFile]) -> None:
             os.close(record.parent_fd)
 
 
+def _rmdir_owned_directory_at(
+    parent_fd: int,
+    name: str,
+    identity: tuple[int, int],
+) -> bool:
+    """Remove one exact empty directory after isolating its current name."""
+    try:
+        current = os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
+    except OSError:
+        return False
+    if not stat.S_ISDIR(current.st_mode) or (
+        current.st_dev,
+        current.st_ino,
+    ) != identity:
+        return False
+
+    quarantine_name = f".{name}.{secrets.token_hex(16)}.keikeu-rmdir"
+    try:
+        _atomic_rename_no_replace_at(
+            parent_fd,
+            name,
+            parent_fd,
+            quarantine_name,
+        )
+    except FileNotFoundError:
+        return False
+
+    isolated_fd: int | None = None
+    isolated_identity: tuple[int, int] | None = None
+    try:
+        isolated_fd = _open_child_directory_no_follow(
+            parent_fd,
+            quarantine_name,
+            Path(quarantine_name),
+        )
+        opened = os.fstat(isolated_fd)
+        isolated_identity = (opened.st_dev, opened.st_ino)
+        with os.scandir(isolated_fd) as entries:
+            empty = next(entries, None) is None
+    except (OSError, ValueError):
+        empty = False
+    finally:
+        if isolated_fd is not None:
+            os.close(isolated_fd)
+
+    if isolated_identity != identity or not empty:
+        _restore_isolated_entry_at(
+            parent_fd,
+            quarantine_name,
+            name,
+            isolated_identity,
+        )
+        return False
+
+    try:
+        os.rmdir(quarantine_name, dir_fd=parent_fd)
+    except Exception:
+        _restore_isolated_entry_at(
+            parent_fd,
+            quarantine_name,
+            name,
+            isolated_identity,
+        )
+        raise
+    return True
+
+
 def _cleanup_owned_directories(records: list[_OwnedDirectory]) -> None:
     for record in reversed(records):
         try:
             try:
-                current = os.stat(
+                _rmdir_owned_directory_at(
+                    record.parent_fd,
                     record.name,
-                    dir_fd=record.parent_fd,
-                    follow_symlinks=False,
+                    record.identity,
                 )
-            except FileNotFoundError:
-                continue
-            if stat.S_ISDIR(current.st_mode) and (
-                current.st_dev,
-                current.st_ino,
-            ) == record.identity:
-                try:
-                    os.rmdir(record.name, dir_fd=record.parent_fd)
-                except OSError:
-                    pass
+            except OSError:
+                pass
         finally:
             os.close(record.parent_fd)
 
@@ -1871,90 +2039,814 @@ def _resolve_supported_paper_path(
         os.close(vault_fd)
 
 
-def _soft_delete_target_name(directory_fd: int, source: Path) -> str:
-    target_name = source.name
-    while True:
-        try:
-            os.stat(
-                target_name,
-                dir_fd=directory_fd,
-                follow_symlinks=False,
-            )
-        except FileNotFoundError:
-            return target_name
-        target_name = f"{source.stem}-{secrets.token_hex(4)}{source.suffix}"
+def _stored_folder_name(folder: str | Path) -> str:
+    name = str(folder)
+    if Path(name).name != name or validate_folder_name(name) != name:
+        raise ValueError("folder reference must be one exact stored name")
+    return name
 
 
-def soft_delete(vault: Path, rel_path: str) -> Path:
-    """Move an active ``cache/*.md`` Paper to recovery without overwriting.
-
-    The file move preserves bytes exactly.  A duplicate recovery filename gains
-    a random suffix; its Paper frontmatter remains the durable code authority.
-    """
-    vault = _lexical_absolute_path(vault)
-    _require_lexical_home_path(vault)
-    source_relative = _direct_paper_relative_path(vault, rel_path, ("cache",))
-    source = vault / source_relative
-    vault_fd = open_directory_no_follow(vault)
-    cache_fd: int | None = None
-    trash_cache_fd: int | None = None
-    layout_records: list[_OwnedDirectory] = []
+def _semantic_target_folder_name_at(
+    root_fd: int,
+    vault: Path,
+    base: Path,
+    requested_name: str,
+) -> str:
+    """Reuse an existing NFC+casefold-equivalent folder or keep the request."""
+    base_fd = _open_relative_directory_no_follow(root_fd, base, vault)
     try:
-        _scan_regular_tree_fd(vault_fd, vault)
-        _require_directory_path_identity(vault, vault_fd)
-        cache_fd = _open_relative_directory_no_follow(vault_fd, Path("cache"), vault)
-        source_stat = os.stat(
-            source.name,
+        return (
+            _semantic_folder_collision_at(base_fd, requested_name)
+            or requested_name
+        )
+    finally:
+        os.close(base_fd)
+
+
+def _ensure_relative_directory_at(
+    root_fd: int,
+    vault: Path,
+    relative: Path,
+) -> tuple[int, _OwnedDirectory | None]:
+    try:
+        return _open_relative_directory_no_follow(root_fd, relative, vault), None
+    except FileNotFoundError:
+        record = _mkdir_relative_owned(root_fd, vault, relative)
+        try:
+            descriptor = _open_relative_directory_no_follow(root_fd, relative, vault)
+        except Exception:
+            _cleanup_owned_directories([record])
+            raise
+        opened = os.fstat(descriptor)
+        if (opened.st_dev, opened.st_ino) != record.identity:
+            os.close(descriptor)
+            _cleanup_owned_directories([record])
+            raise ValueError(f"directory changed while creating: {vault / relative}")
+        return descriptor, record
+
+
+def _release_or_cleanup_directory(
+    record: _OwnedDirectory | None,
+    *,
+    keep: bool,
+) -> None:
+    if record is None:
+        return
+    if keep:
+        _release_owned_directories([record])
+    else:
+        _cleanup_owned_directories([record])
+
+
+def _move_supported_paper_at(
+    vault: Path,
+    root_fd: int,
+    source_relative: Path,
+    destination_relative: Path,
+    *,
+    expected_source_parent_fd: int | None = None,
+    expected_destination_parent_fd: int | None = None,
+) -> Path:
+    from keikeu_core.markdown_io import parse_paper_bytes
+
+    source = vault / source_relative
+    destination = vault / destination_relative
+    source_parent_fd = _open_relative_directory_no_follow(
+        root_fd,
+        source_relative.parent,
+        vault,
+    )
+    destination_parent_fd: int | None = None
+    try:
+        if expected_source_parent_fd is not None:
+            _require_directory_fd_identity(
+                source_parent_fd,
+                expected_source_parent_fd,
+                source.parent,
+            )
+        destination_parent_fd = _open_relative_directory_no_follow(
+            root_fd,
+            destination_relative.parent,
+            vault,
+        )
+        if expected_destination_parent_fd is not None:
+            _require_directory_fd_identity(
+                destination_parent_fd,
+                expected_destination_parent_fd,
+                destination.parent,
+            )
+        source_bytes, source_identity = _read_regular_bytes_at(
+            source_parent_fd,
+            source_relative.name,
+            source,
+        )
+        paper = parse_paper_bytes(source_bytes)
+        if source_relative.parts[0] == "cache" and source_relative.name != f"{paper.code}.md":
+            raise ValueError(
+                f"Paper filename and frontmatter code do not match: {source}"
+            )
+        if destination_relative.name != f"{paper.code}.md":
+            raise ValueError("Paper moves must preserve the immutable code filename")
+        if _paper_code_exists_at(
+            root_fd,
+            vault,
+            paper.code,
+            parse_code=lambda data: parse_paper_bytes(data).code,
+            excluding=source_relative,
+        ):
+            raise ValueError(f"duplicate Paper code blocks mutation: {paper.code}")
+        _require_directory_path_identity(source.parent, source_parent_fd)
+        _require_directory_path_identity(destination.parent, destination_parent_fd)
+        _move_regular_no_overwrite_at(
+            source_parent_fd,
+            source_relative.name,
+            destination_parent_fd,
+            destination_relative.name,
+            source_path=source,
+            destination_path=destination,
+            expected_source_identity=source_identity,
+            expected_source_bytes=source_bytes,
+            guard_path=vault,
+            guard_fd=root_fd,
+        )
+        try:
+            _require_directory_path_identity(source.parent, source_parent_fd)
+            _require_directory_path_identity(destination.parent, destination_parent_fd)
+        except Exception as guard_error:
+            try:
+                _move_regular_no_overwrite_at(
+                    destination_parent_fd,
+                    destination_relative.name,
+                    source_parent_fd,
+                    source_relative.name,
+                    source_path=destination,
+                    destination_path=source,
+                    expected_source_identity=source_identity,
+                    expected_source_bytes=source_bytes,
+                )
+            except Exception as rollback_error:
+                raise OSError(
+                    errno.EIO,
+                    "Paper move parent changed; both locations were preserved at "
+                    f"{source} and {destination}",
+                ) from rollback_error
+            raise guard_error
+        return destination
+    finally:
+        if destination_parent_fd is not None:
+            os.close(destination_parent_fd)
+        os.close(source_parent_fd)
+
+
+def _result_for_move(
+    vault: Path,
+    root_fd: int,
+    source_relative: Path,
+    destination_relative: Path,
+    *,
+    expected_source_parent_fd: int | None = None,
+    expected_destination_parent_fd: int | None = None,
+) -> PathOperationResult:
+    try:
+        destination = _move_supported_paper_at(
+            vault,
+            root_fd,
+            source_relative,
+            destination_relative,
+            expected_source_parent_fd=expected_source_parent_fd,
+            expected_destination_parent_fd=expected_destination_parent_fd,
+        )
+    except (OSError, ValueError) as exc:
+        return PathOperationResult(source=source_relative, error=str(exc))
+    return PathOperationResult(
+        source=source_relative,
+        destination=destination.relative_to(vault),
+    )
+
+
+def _validate_supported_paper_at(
+    vault: Path,
+    root_fd: int,
+    relative: Path,
+) -> None:
+    from keikeu_core.markdown_io import parse_paper_bytes
+
+    parent_fd = _open_relative_directory_no_follow(
+        root_fd,
+        relative.parent,
+        vault,
+    )
+    try:
+        data, _identity = _read_regular_bytes_at(
+            parent_fd,
+            relative.name,
+            vault / relative,
+        )
+        paper = parse_paper_bytes(data)
+        if relative.name != f"{paper.code}.md":
+            raise ValueError(
+                f"Paper filename and frontmatter code do not match: {vault / relative}"
+            )
+        if _paper_code_exists_at(
+            root_fd,
+            vault,
+            paper.code,
+            parse_code=lambda value: parse_paper_bytes(value).code,
+            excluding=relative,
+        ):
+            raise ValueError(f"duplicate Paper code blocks mutation: {paper.code}")
+        _require_directory_path_identity(vault / relative.parent, parent_fd)
+    finally:
+        os.close(parent_fd)
+
+
+def _remove_empty_folder_at(
+    vault: Path,
+    root_fd: int,
+    relative: Path,
+    *,
+    expected_folder_fd: int | None = None,
+) -> bool:
+    parent_fd = _open_relative_directory_no_follow(root_fd, relative.parent, vault)
+    folder_fd: int | None = None
+    try:
+        try:
+            folder_fd = _open_relative_directory_no_follow(root_fd, relative, vault)
+        except FileNotFoundError:
+            if expected_folder_fd is not None:
+                raise ValueError(
+                    f"directory path changed during operation: {vault / relative}"
+                )
+            return True
+        opened = os.fstat(folder_fd)
+        identity = (opened.st_dev, opened.st_ino)
+        if expected_folder_fd is not None:
+            expected = os.fstat(expected_folder_fd)
+            if identity != (expected.st_dev, expected.st_ino):
+                raise ValueError(
+                    f"directory path changed during operation: {vault / relative}"
+                )
+        with os.scandir(folder_fd) as entries:
+            if next(entries, None) is not None:
+                return False
+        _require_directory_path_identity(vault / relative, folder_fd)
+        _require_directory_path_identity(vault / relative.parent, parent_fd)
+        if not _rmdir_owned_directory_at(parent_fd, relative.name, identity):
+            return False
+        try:
+            _require_directory_path_identity(vault / relative.parent, parent_fd)
+            _require_directory_path_identity(vault, root_fd)
+        except Exception:
+            try:
+                os.mkdir(relative.name, mode=0o700, dir_fd=parent_fd)
+            except Exception as rollback_error:
+                raise OSError(
+                    errno.EIO,
+                    f"empty folder removal could not roll back safely: {vault / relative}",
+                ) from rollback_error
+            raise
+        return True
+    finally:
+        if folder_fd is not None:
+            os.close(folder_fd)
+        os.close(parent_fd)
+
+
+def create_folder(vault: Path, name: str) -> Path:
+    """Create one author folder directly under active ``cache``."""
+    stored_name = validate_folder_name(name)
+    vault, root_fd = _open_pinned_vault_root(vault)
+    record: _OwnedDirectory | None = None
+    cache_fd: int | None = None
+    try:
+        cache_fd = _open_relative_directory_no_follow(
+            root_fd,
+            Path("cache"),
+            vault,
+        )
+        collision = _semantic_folder_collision_at(cache_fd, stored_name)
+        if collision is not None:
+            raise FileExistsError(
+                f"folder name conflicts by NFC+casefold: {collision}"
+            )
+        relative = Path("cache") / stored_name
+        record = _mkdir_relative_owned(root_fd, vault, relative)
+        collision = _semantic_folder_collision_at(
+            cache_fd,
+            stored_name,
+            excluding=stored_name,
+        )
+        if collision is not None:
+            raise FileExistsError(
+                f"folder name conflicts by NFC+casefold: {collision}"
+            )
+        _require_directory_path_identity(vault / "cache", record.parent_fd)
+        _require_directory_path_identity(vault, root_fd)
+        return vault / relative
+    except Exception:
+        if record is not None:
+            _cleanup_owned_directories([record])
+            record = None
+        raise
+    finally:
+        if record is not None:
+            _release_owned_directories([record])
+        if cache_fd is not None:
+            os.close(cache_fd)
+        os.close(root_fd)
+
+
+def rename_folder(vault: Path, folder: str | Path, new_name: str) -> Path:
+    """Atomically rename one active folder without merging or overwriting."""
+    source_name = _stored_folder_name(folder)
+    target_name = validate_folder_name(new_name)
+    vault, root_fd = _open_pinned_vault_root(vault)
+    cache_fd = _open_relative_directory_no_follow(root_fd, Path("cache"), vault)
+    source_fd: int | None = None
+    try:
+        source = vault / "cache" / source_name
+        target = vault / "cache" / target_name
+        source_fd = _open_child_directory_no_follow(cache_fd, source_name, source)
+        papers, folder_errors = _folder_papers_and_errors_at(
+            vault,
+            root_fd,
+            Path("cache"),
+            source_name,
+            folder_fd=source_fd,
+            validate_papers=True,
+        )
+        if folder_errors:
+            raise ValueError(folder_errors[0].error or "unsupported folder entry")
+        from keikeu_core.markdown_io import parse_paper_bytes
+
+        for relative in papers:
+            data, _identity = _read_regular_bytes_at(
+                source_fd,
+                relative.name,
+                vault / relative,
+            )
+            code = parse_paper_bytes(data).code
+            if _paper_code_exists_at(
+                root_fd,
+                vault,
+                code,
+                parse_code=lambda value: parse_paper_bytes(value).code,
+                excluding=relative,
+            ):
+                raise ValueError(f"duplicate Paper code blocks mutation: {code}")
+        if source_name == target_name:
+            _require_directory_path_identity(source, source_fd)
+            return source
+        collision = _semantic_folder_collision_at(
+            cache_fd,
+            target_name,
+            excluding=source_name,
+        )
+        if collision is not None:
+            raise FileExistsError(
+                f"folder name conflicts by NFC+casefold: {collision}"
+            )
+        try:
+            os.stat(target_name, dir_fd=cache_fd, follow_symlinks=False)
+        except FileNotFoundError:
+            pass
+        else:
+            raise FileExistsError(f"folder already exists: {target}")
+        _require_directory_path_identity(source, source_fd)
+        _require_directory_path_identity(vault / "cache", cache_fd)
+        source_stat = os.fstat(source_fd)
+        source_identity = (source_stat.st_dev, source_stat.st_ino)
+        _atomic_rename_no_replace_at(
+            cache_fd,
+            source_name,
+            cache_fd,
+            target_name,
+        )
+        moved_target = os.stat(
+            target_name,
             dir_fd=cache_fd,
             follow_symlinks=False,
         )
-        if stat.S_ISLNK(source_stat.st_mode):
-            raise ValueError(f"symlink is not supported: {source}")
-        if not stat.S_ISREG(source_stat.st_mode):
-            raise ValueError(f"Paper must be a regular file: {source}")
-        source_identity = (source_stat.st_dev, source_stat.st_ino)
-
-        for relative in (Path(".trash"), Path(".trash/cache")):
-            try:
-                directory_fd = _open_relative_directory_no_follow(
-                    vault_fd,
-                    relative,
-                    vault,
+        moved_identity = (moved_target.st_dev, moved_target.st_ino)
+        try:
+            _require_directory_path_identity(target, source_fd)
+            collision = _semantic_folder_collision_at(
+                cache_fd,
+                target_name,
+                excluding=target_name,
+            )
+            if collision is not None:
+                raise FileExistsError(
+                    f"folder name conflicts by NFC+casefold: {collision}"
                 )
+            _require_directory_path_identity(vault, root_fd)
+        except Exception as guard_error:
+            try:
+                current_target = os.stat(
+                    target_name,
+                    dir_fd=cache_fd,
+                    follow_symlinks=False,
+                )
+                try:
+                    os.stat(source_name, dir_fd=cache_fd, follow_symlinks=False)
+                except FileNotFoundError:
+                    source_is_free = True
+                else:
+                    source_is_free = False
+                if (
+                    source_is_free
+                    and stat.S_ISDIR(current_target.st_mode)
+                    and (current_target.st_dev, current_target.st_ino) == moved_identity
+                ):
+                    _atomic_rename_no_replace_at(
+                        cache_fd,
+                        target_name,
+                        cache_fd,
+                        source_name,
+                    )
+                    restored = os.stat(
+                        source_name,
+                        dir_fd=cache_fd,
+                        follow_symlinks=False,
+                    )
+                    if (restored.st_dev, restored.st_ino) != moved_identity:
+                        raise ValueError("restored folder identity does not match")
+                    if moved_identity == source_identity:
+                        _require_directory_path_identity(source, source_fd)
+                    raise guard_error
             except FileNotFoundError:
-                layout_records.append(_mkdir_relative_owned(vault_fd, vault, relative))
-            else:
-                os.close(directory_fd)
-        trash_cache_fd = _open_relative_directory_no_follow(
-            vault_fd,
-            Path(".trash/cache"),
+                pass
+            except Exception as rollback_error:
+                if rollback_error is guard_error:
+                    raise
+                raise OSError(
+                    errno.EIO,
+                    "folder rename could not roll back safely; current paths were "
+                    f"preserved at {source} and {target}",
+                ) from rollback_error
+            raise OSError(
+                errno.EIO,
+                "folder rename target changed externally; replacement was preserved "
+                f"at {target} and was not moved to {source}",
+            ) from guard_error
+        return target
+    finally:
+        if source_fd is not None:
+            os.close(source_fd)
+        os.close(cache_fd)
+        os.close(root_fd)
+
+
+def move_papers(
+    vault: Path,
+    paths: Iterable[str | Path],
+    destination_folder: str | Path | None,
+) -> list[PathOperationResult]:
+    """Move explicit active Papers and report every item independently."""
+    vault, root_fd = _open_pinned_vault_root(vault)
+    destination_fd: int | None = None
+    try:
+        destination_parent = Path("cache")
+        if destination_folder is not None:
+            folder_name = _stored_folder_name(destination_folder)
+            destination_parent /= folder_name
+        destination_fd = _open_relative_directory_no_follow(
+            root_fd,
+            destination_parent,
             vault,
         )
-        while True:
-            target_name = _soft_delete_target_name(trash_cache_fd, source)
-            target = vault / ".trash" / "cache" / target_name
+        results: list[PathOperationResult] = []
+        for candidate in paths:
             try:
-                _move_regular_no_overwrite_at(
-                    cache_fd,
-                    source.name,
-                    trash_cache_fd,
-                    target_name,
-                    source_path=source,
-                    destination_path=target,
-                    expected_source_identity=source_identity,
-                    guard_path=vault,
-                    guard_fd=vault_fd,
+                source_relative = _supported_paper_relative_path(
+                    vault,
+                    candidate,
+                    ("cache",),
                 )
-            except FileExistsError:
-                continue
-            return target
+                destination_relative = destination_parent / source_relative.name
+                if source_relative == destination_relative:
+                    _validate_supported_paper_at(
+                        vault,
+                        root_fd,
+                        source_relative,
+                    )
+                    results.append(
+                        PathOperationResult(
+                            source=source_relative,
+                            destination=source_relative,
+                        )
+                    )
+                    continue
+                results.append(
+                    _result_for_move(
+                        vault,
+                        root_fd,
+                        source_relative,
+                        destination_relative,
+                        expected_destination_parent_fd=destination_fd,
+                    )
+                )
+            except (OSError, ValueError) as exc:
+                results.append(PathOperationResult(source=Path(candidate), error=str(exc)))
+        return results
     finally:
-        if trash_cache_fd is not None:
-            os.close(trash_cache_fd)
-        if cache_fd is not None:
-            os.close(cache_fd)
-        os.close(vault_fd)
-        _release_owned_directories(layout_records)
+        if destination_fd is not None:
+            os.close(destination_fd)
+        os.close(root_fd)
+
+
+def _folder_papers_and_errors_at(
+    vault: Path,
+    root_fd: int,
+    base: Path,
+    folder_name: str,
+    *,
+    folder_fd: int,
+    validate_papers: bool,
+    preflight_filename_conflicts: bool = False,
+) -> tuple[list[Path], list[PathOperationResult]]:
+    folder = base / folder_name
+    papers: list[Path] = []
+    errors: list[PathOperationResult] = []
+    from keikeu_core.markdown_io import parse_paper_bytes
+
+    with os.scandir(folder_fd) as entries:
+        folder_entries = sorted(entries, key=lambda entry: entry.name)
+    for entry in folder_entries:
+        relative = folder / entry.name
+        display_path = vault / relative
+        try:
+            entry_stat = entry.stat(follow_symlinks=False)
+            if stat.S_ISLNK(entry_stat.st_mode):
+                raise ValueError("symlink is not supported")
+            if stat.S_ISDIR(entry_stat.st_mode):
+                raise ValueError("Paper folders support one level only")
+            if not stat.S_ISREG(entry_stat.st_mode):
+                raise ValueError("special filesystem entry is not supported")
+            if relative.suffix != ".md":
+                raise ValueError("unsupported non-Paper file blocks folder operation")
+            if validate_papers or preflight_filename_conflicts:
+                data, identity = _read_regular_bytes_at(
+                    folder_fd,
+                    entry.name,
+                    display_path,
+                )
+                if identity != (entry_stat.st_dev, entry_stat.st_ino):
+                    raise ValueError("Paper changed while inspecting folder")
+                try:
+                    paper = parse_paper_bytes(data)
+                except (ValueError, UnicodeError):
+                    if validate_papers:
+                        raise
+                else:
+                    if entry.name != f"{paper.code}.md":
+                        raise ValueError(
+                            "Paper filename and frontmatter code do not match"
+                        )
+            papers.append(relative)
+        except (OSError, ValueError, UnicodeError) as exc:
+            errors.append(PathOperationResult(source=relative, error=str(exc)))
+    _require_directory_path_identity(vault / folder, folder_fd)
+    papers.sort(key=str)
+    errors.sort(key=lambda result: (str(result.source), result.error or ""))
+    return papers, errors
+
+
+def merge_folders(
+    vault: Path,
+    source_folder: str | Path,
+    destination_folder: str | Path,
+) -> list[PathOperationResult]:
+    """Move supported Papers into an existing folder and remove only if empty."""
+    source_name = _stored_folder_name(source_folder)
+    destination_name = _stored_folder_name(destination_folder)
+    if source_name == destination_name:
+        raise ValueError("source and destination folders must differ")
+    vault, root_fd = _open_pinned_vault_root(vault)
+    source_fd: int | None = None
+    destination_fd: int | None = None
+    try:
+        source_fd = _open_relative_directory_no_follow(
+            root_fd,
+            Path("cache") / source_name,
+            vault,
+        )
+        destination_fd = _open_relative_directory_no_follow(
+            root_fd,
+            Path("cache") / destination_name,
+            vault,
+        )
+        papers, results = _folder_papers_and_errors_at(
+            vault,
+            root_fd,
+            Path("cache"),
+            source_name,
+            folder_fd=source_fd,
+            validate_papers=False,
+            preflight_filename_conflicts=True,
+        )
+        if results:
+            return results
+        _require_directory_path_identity(
+            vault / "cache" / source_name,
+            source_fd,
+        )
+        for source_relative in papers:
+            results.append(
+                _result_for_move(
+                    vault,
+                    root_fd,
+                    source_relative,
+                    Path("cache") / destination_name / source_relative.name,
+                    expected_source_parent_fd=source_fd,
+                    expected_destination_parent_fd=destination_fd,
+                )
+            )
+        source_relative = Path("cache") / source_name
+        try:
+            removed = _remove_empty_folder_at(
+                vault,
+                root_fd,
+                source_relative,
+                expected_folder_fd=source_fd,
+            )
+        except (OSError, ValueError) as exc:
+            results.append(PathOperationResult(source=source_relative, error=str(exc)))
+            removed = False
+        if not removed and not any(result.source == source_relative for result in results):
+            results.append(
+                PathOperationResult(
+                    source=source_relative,
+                    error="folder retained because unsupported or failed items remain",
+                )
+            )
+        return results
+    finally:
+        if source_fd is not None:
+            os.close(source_fd)
+        if destination_fd is not None:
+            os.close(destination_fd)
+        os.close(root_fd)
+
+
+def soft_delete_papers(
+    vault: Path,
+    paths: Iterable[str | Path],
+) -> list[PathOperationResult]:
+    """Move explicit active Papers to matching Trash folders per item."""
+    vault, root_fd = _open_pinned_vault_root(vault)
+    try:
+        results: list[PathOperationResult] = []
+        for candidate in paths:
+            record: _OwnedDirectory | None = None
+            destination_fd: int | None = None
+            keep_directory = False
+            try:
+                source_relative = _supported_paper_relative_path(
+                    vault,
+                    candidate,
+                    ("cache",),
+                )
+                remainder = source_relative.parts[1:]
+                if len(remainder) == 2:
+                    stored_target = _semantic_target_folder_name_at(
+                        root_fd,
+                        vault,
+                        Path(".trash/cache"),
+                        remainder[0],
+                    )
+                    remainder = (stored_target, remainder[1])
+                destination_relative = Path(".trash/cache").joinpath(*remainder)
+                destination_fd, record = _ensure_relative_directory_at(
+                    root_fd,
+                    vault,
+                    destination_relative.parent,
+                )
+                result = _result_for_move(
+                    vault,
+                    root_fd,
+                    source_relative,
+                    destination_relative,
+                    expected_destination_parent_fd=destination_fd,
+                )
+                keep_directory = result.succeeded
+                results.append(result)
+            except (OSError, ValueError) as exc:
+                results.append(PathOperationResult(source=Path(candidate), error=str(exc)))
+            finally:
+                if destination_fd is not None:
+                    os.close(destination_fd)
+                _release_or_cleanup_directory(record, keep=keep_directory)
+        return results
+    finally:
+        os.close(root_fd)
+
+
+def soft_delete(vault: Path, rel_path: str | Path) -> Path:
+    """Soft-delete one exact active Paper while preserving code and folder."""
+    result = soft_delete_papers(vault, [rel_path])[0]
+    if result.error is not None:
+        if (
+            "already exists" in result.error
+            or "duplicate Paper code" in result.error
+            or "File exists" in result.error
+        ):
+            raise FileExistsError(result.error)
+        raise ValueError(result.error)
+    assert result.destination is not None
+    return _lexical_absolute_path(vault) / result.destination
+
+
+def soft_delete_folder(
+    vault: Path,
+    folder: str | Path,
+) -> list[PathOperationResult]:
+    """Soft-delete supported Papers in one folder and preserve failed/unknown items."""
+    folder_name = _stored_folder_name(folder)
+    vault, root_fd = _open_pinned_vault_root(vault)
+    target_record: _OwnedDirectory | None = None
+    keep_target = False
+    source_fd: int | None = None
+    target_fd: int | None = None
+    try:
+        source_fd = _open_relative_directory_no_follow(
+            root_fd,
+            Path("cache") / folder_name,
+            vault,
+        )
+        papers, results = _folder_papers_and_errors_at(
+            vault,
+            root_fd,
+            Path("cache"),
+            folder_name,
+            folder_fd=source_fd,
+            validate_papers=False,
+            preflight_filename_conflicts=True,
+        )
+        if results:
+            return results
+        _require_directory_path_identity(
+            vault / "cache" / folder_name,
+            source_fd,
+        )
+        target_name = _semantic_target_folder_name_at(
+            root_fd,
+            vault,
+            Path(".trash/cache"),
+            folder_name,
+        )
+        target_relative = Path(".trash/cache") / target_name
+        target_fd, target_record = _ensure_relative_directory_at(
+            root_fd,
+            vault,
+            target_relative,
+        )
+        for source_relative in papers:
+            result = _result_for_move(
+                vault,
+                root_fd,
+                source_relative,
+                target_relative / source_relative.name,
+                expected_source_parent_fd=source_fd,
+                expected_destination_parent_fd=target_fd,
+            )
+            keep_target = keep_target or result.succeeded
+            results.append(result)
+        source_relative = Path("cache") / folder_name
+        try:
+            removed = _remove_empty_folder_at(
+                vault,
+                root_fd,
+                source_relative,
+                expected_folder_fd=source_fd,
+            )
+        except (OSError, ValueError) as exc:
+            results.append(PathOperationResult(source=source_relative, error=str(exc)))
+            removed = False
+        if removed:
+            keep_target = True
+            if not papers and not results:
+                results.append(
+                    PathOperationResult(
+                        source=source_relative,
+                        destination=target_relative,
+                    )
+                )
+        elif not any(result.source == source_relative for result in results):
+            results.append(
+                PathOperationResult(
+                    source=source_relative,
+                    error="folder retained because unsupported or failed items remain",
+                )
+            )
+        return results
+    finally:
+        if source_fd is not None:
+            os.close(source_fd)
+        if target_fd is not None:
+            os.close(target_fd)
+        _release_or_cleanup_directory(target_record, keep=keep_target)
+        os.close(root_fd)
 
 
 def list_trashed_papers(vault: Path) -> list[Path]:
@@ -1963,123 +2855,337 @@ def list_trashed_papers(vault: Path) -> list[Path]:
     return papers
 
 
-def restore_paper(vault: Path, rel_path: str, new_code: str | None = None) -> Path:
-    """Restore a trashed Paper, requiring a new code only on active collision.
-
-    A normal restore moves the original file bytes to its code-derived active
-    path.  If that code is already active, the caller must either cancel or
-    supply an unused ``new_code``.  The latter rewrites only the Paper code via
-    ``markdown_io`` while preserving the frozen draft and current Summary.
-    """
-    vault, vault_fd = _open_pinned_vault(vault)
-    try:
-        return _restore_paper_pinned(vault, vault_fd, rel_path, new_code)
-    finally:
-        os.close(vault_fd)
-
-
-def _restore_paper_pinned(
+def restore_papers(
     vault: Path,
-    vault_fd: int,
-    rel_path: str,
-    new_code: str | None,
-) -> Path:
-    from keikeu_core.markdown_io import _rewrite_paper_code_at, parse_paper_bytes
-
-    source_relative = _direct_paper_relative_path(
-        vault,
-        rel_path,
-        (".trash", "cache"),
-    )
-    source_parent_fd = _open_relative_directory_no_follow(
-        vault_fd,
-        Path(".trash/cache"),
-        vault,
-    )
-    target_parent_fd: int | None = None
+    paths: Iterable[str | Path],
+) -> list[PathOperationResult]:
+    """Restore explicit Trash Papers to their matching active folder per item."""
+    vault, root_fd = _open_pinned_vault_root(vault)
     try:
-        source = vault / source_relative
-        source_bytes, source_identity = _read_regular_bytes_at(
-            source_parent_fd,
-            source_relative.name,
-            source,
-        )
-        paper = parse_paper_bytes(source_bytes)
-        target_parent_fd = _open_relative_directory_no_follow(
-            vault_fd,
-            Path("cache"),
+        results: list[PathOperationResult] = []
+        for candidate in paths:
+            record: _OwnedDirectory | None = None
+            destination_fd: int | None = None
+            keep_directory = False
+            try:
+                source_relative = _supported_paper_relative_path(
+                    vault,
+                    candidate,
+                    (".trash", "cache"),
+                )
+                from keikeu_core.markdown_io import parse_paper_bytes
+
+                source_parent_fd = _open_relative_directory_no_follow(
+                    root_fd,
+                    source_relative.parent,
+                    vault,
+                )
+                try:
+                    source_bytes, _identity = _read_regular_bytes_at(
+                        source_parent_fd,
+                        source_relative.name,
+                        vault / source_relative,
+                    )
+                finally:
+                    os.close(source_parent_fd)
+                paper = parse_paper_bytes(source_bytes)
+                if source_relative.name != f"{paper.code}.md":
+                    raise ValueError(
+                        "Paper filename and frontmatter code do not match"
+                    )
+                remainder = source_relative.parts[2:-1]
+                if remainder:
+                    remainder = (
+                        _semantic_target_folder_name_at(
+                            root_fd,
+                            vault,
+                            Path("cache"),
+                            remainder[0],
+                        ),
+                    )
+                destination_parent = Path("cache").joinpath(*remainder)
+                destination_relative = destination_parent / f"{paper.code}.md"
+                destination_fd, record = _ensure_relative_directory_at(
+                    root_fd,
+                    vault,
+                    destination_parent,
+                )
+                result = _result_for_move(
+                    vault,
+                    root_fd,
+                    source_relative,
+                    destination_relative,
+                    expected_destination_parent_fd=destination_fd,
+                )
+                keep_directory = result.succeeded
+                results.append(result)
+            except (OSError, ValueError) as exc:
+                results.append(PathOperationResult(source=Path(candidate), error=str(exc)))
+            finally:
+                if destination_fd is not None:
+                    os.close(destination_fd)
+                _release_or_cleanup_directory(record, keep=keep_directory)
+        return results
+    finally:
+        os.close(root_fd)
+
+
+def restore_paper(vault: Path, rel_path: str | Path) -> Path:
+    """Restore one exact Trash Paper without changing its historical code."""
+    result = restore_papers(vault, [rel_path])[0]
+    if result.error is not None:
+        if "already exists" in result.error or "duplicate Paper code" in result.error:
+            raise FileExistsError(result.error)
+        raise ValueError(result.error)
+    assert result.destination is not None
+    return _lexical_absolute_path(vault) / result.destination
+
+
+def restore_folder(
+    vault: Path,
+    folder: str | Path,
+) -> list[PathOperationResult]:
+    """Restore one Trash folder, merging only non-conflicting Papers."""
+    folder_name = _stored_folder_name(folder)
+    vault, root_fd = _open_pinned_vault_root(vault)
+    target_record: _OwnedDirectory | None = None
+    keep_target = False
+    source_fd: int | None = None
+    target_fd: int | None = None
+    try:
+        source_fd = _open_relative_directory_no_follow(
+            root_fd,
+            Path(".trash/cache") / folder_name,
             vault,
         )
+        papers, results = _folder_papers_and_errors_at(
+            vault,
+            root_fd,
+            Path(".trash/cache"),
+            folder_name,
+            folder_fd=source_fd,
+            validate_papers=False,
+        )
+        if results:
+            return results
+        _require_directory_path_identity(
+            vault / ".trash/cache" / folder_name,
+            source_fd,
+        )
+        target_name = _semantic_target_folder_name_at(
+            root_fd,
+            vault,
+            Path("cache"),
+            folder_name,
+        )
+        target_relative = Path("cache") / target_name
+        target_fd, target_record = _ensure_relative_directory_at(
+            root_fd,
+            vault,
+            target_relative,
+        )
+        for source_relative in papers:
+            from keikeu_core.markdown_io import parse_paper_bytes
 
-        def target_exists(name: str) -> bool:
-            path = vault / "cache" / name
             try:
-                target_stat = os.stat(
-                    name,
-                    dir_fd=target_parent_fd,
-                    follow_symlinks=False,
+                data, _identity = _read_regular_bytes_at(
+                    source_fd,
+                    source_relative.name,
+                    vault / source_relative,
                 )
-            except FileNotFoundError:
-                return False
-            if stat.S_ISLNK(target_stat.st_mode):
-                raise ValueError(f"symlink is not supported: {path}")
-            if not stat.S_ISREG(target_stat.st_mode):
-                raise ValueError(f"Paper must be a regular file: {path}")
-            return True
-
-        current_name = f"{paper.code}.md"
-        current_target = vault / "cache" / current_name
-        collision = target_exists(current_name)
-        if not collision and (
-            new_code is None or validate_paper_code(new_code) == paper.code
-        ):
-            _move_regular_no_overwrite_at(
-                source_parent_fd,
-                source_relative.name,
-                target_parent_fd,
-                current_name,
-                source_path=source,
-                destination_path=current_target,
-                expected_source_identity=source_identity,
-                expected_source_bytes=source_bytes,
-                guard_path=vault,
-                guard_fd=vault_fd,
-            )
-            return current_target
-
-        if new_code is None:
-            raise FileExistsError(
-                "Paper code is already active; choose a new Paper code or cancel"
-            )
-        new_code = validate_paper_code(new_code)
-        target_name = f"{new_code}.md"
-        target = vault / "cache" / target_name
-        if target_exists(target_name):
-            raise FileExistsError(f"Paper already exists: {target}")
+                code = parse_paper_bytes(data).code
+                if source_relative.name != f"{code}.md":
+                    raise ValueError(
+                        "Paper filename and frontmatter code do not match"
+                    )
+                result = _result_for_move(
+                    vault,
+                    root_fd,
+                    source_relative,
+                    target_relative / f"{code}.md",
+                    expected_source_parent_fd=source_fd,
+                    expected_destination_parent_fd=target_fd,
+                )
+            except (OSError, ValueError, UnicodeError) as exc:
+                result = PathOperationResult(
+                    source=source_relative,
+                    error=str(exc),
+                )
+            keep_target = keep_target or result.succeeded
+            results.append(result)
+        source_relative = Path(".trash/cache") / folder_name
         try:
-            _rewrite_paper_code_at(
-                source_parent_fd,
-                source_relative.name,
-                source,
-                target_parent_fd,
-                target_name,
-                target,
-                new_code,
-                expected_source_bytes=source_bytes,
-                guard_path=vault,
-                guard_fd=vault_fd,
+            removed = _remove_empty_folder_at(
+                vault,
+                root_fd,
+                source_relative,
+                expected_folder_fd=source_fd,
             )
-        except ValueError as exc:
-            if "changed" in str(exc):
-                raise ValueError(
-                    f"Paper changed before restore cleanup: {source}"
-                ) from exc
-            raise
-        return target
+        except (OSError, ValueError) as exc:
+            results.append(PathOperationResult(source=source_relative, error=str(exc)))
+            removed = False
+        if removed:
+            keep_target = True
+            if not papers and not results:
+                results.append(
+                    PathOperationResult(
+                        source=source_relative,
+                        destination=target_relative,
+                    )
+                )
+        elif not any(result.source == source_relative for result in results):
+            results.append(
+                PathOperationResult(
+                    source=source_relative,
+                    error="folder retained because unsupported or failed items remain",
+                )
+            )
+        return results
     finally:
-        if target_parent_fd is not None:
-            os.close(target_parent_fd)
-        os.close(source_parent_fd)
+        if source_fd is not None:
+            os.close(source_fd)
+        if target_fd is not None:
+            os.close(target_fd)
+        _release_or_cleanup_directory(target_record, keep=keep_target)
+        os.close(root_fd)
+
+
+def permanently_delete_papers(
+    vault: Path,
+    paths: Iterable[str | Path],
+) -> list[PathOperationResult]:
+    """Permanently unlink only explicit validated Trash Paper paths."""
+    from keikeu_core.markdown_io import parse_paper_bytes
+
+    vault, root_fd = _open_pinned_vault_root(vault)
+    try:
+        results: list[PathOperationResult] = []
+        touched_folders: dict[Path, int] = {}
+        for candidate in paths:
+            try:
+                relative = _supported_paper_relative_path(
+                    vault,
+                    candidate,
+                    (".trash", "cache"),
+                )
+                parent_fd = _open_relative_directory_no_follow(
+                    root_fd,
+                    relative.parent,
+                    vault,
+                )
+                try:
+                    data, identity = _read_regular_bytes_at(
+                        parent_fd,
+                        relative.name,
+                        vault / relative,
+                    )
+                    code = parse_paper_bytes(data).code
+                    if relative.name != f"{code}.md":
+                        raise ValueError(
+                            "Paper filename and frontmatter code do not match"
+                        )
+                    if _paper_code_exists_at(
+                        root_fd,
+                        vault,
+                        code,
+                        parse_code=lambda value: parse_paper_bytes(value).code,
+                        excluding=relative,
+                    ):
+                        raise ValueError(f"duplicate Paper code blocks mutation: {code}")
+                    _require_directory_path_identity(vault / relative.parent, parent_fd)
+                    deleted = _unlink_owned_file_at(
+                        parent_fd,
+                        relative.name,
+                        identity,
+                        expected_digest=hashlib.sha256(data).hexdigest(),
+                    )
+                    if not deleted:
+                        raise ValueError(f"Paper changed before permanent delete: {vault / relative}")
+                    try:
+                        _require_directory_path_identity(vault / relative.parent, parent_fd)
+                        _require_directory_path_identity(vault, root_fd)
+                    except Exception:
+                        try:
+                            _create_regular_bytes_at(
+                                parent_fd,
+                                relative.name,
+                                data,
+                                vault / relative,
+                            )
+                        except Exception as rollback_error:
+                            raise OSError(
+                                errno.EIO,
+                                "permanent delete path changed and byte recovery failed: "
+                                f"{vault / relative}",
+                            ) from rollback_error
+                        raise
+                    if (
+                        len(relative.parts) == 4
+                        and relative.parent not in touched_folders
+                    ):
+                        touched_folders[relative.parent] = os.dup(parent_fd)
+                finally:
+                    os.close(parent_fd)
+                results.append(PathOperationResult(source=relative))
+            except (OSError, ValueError) as exc:
+                results.append(PathOperationResult(source=Path(candidate), error=str(exc)))
+        for relative in sorted(touched_folders, key=str):
+            try:
+                _remove_empty_folder_at(
+                    vault,
+                    root_fd,
+                    relative,
+                    expected_folder_fd=touched_folders[relative],
+                )
+            except (OSError, ValueError) as exc:
+                results.append(PathOperationResult(source=relative, error=str(exc)))
+        return results
+    finally:
+        for folder_fd in touched_folders.values():
+            os.close(folder_fd)
+        os.close(root_fd)
+
+
+def permanently_delete_folder(
+    vault: Path,
+    folder: str | Path,
+) -> PathOperationResult:
+    """Permanently remove one explicit, verified-empty Trash folder."""
+    folder_name = _stored_folder_name(folder)
+    vault, root_fd = _open_pinned_vault_root(vault)
+    folder_fd: int | None = None
+    relative = Path(".trash/cache") / folder_name
+    try:
+        folder_fd = _open_relative_directory_no_follow(
+            root_fd,
+            relative,
+            vault,
+        )
+        with os.scandir(folder_fd) as entries:
+            if next(entries, None) is not None:
+                return PathOperationResult(
+                    source=relative,
+                    error="Trash folder must be empty before permanent delete",
+                )
+        _require_directory_path_identity(vault / relative, folder_fd)
+        removed = _remove_empty_folder_at(
+            vault,
+            root_fd,
+            relative,
+            expected_folder_fd=folder_fd,
+        )
+        if not removed:
+            return PathOperationResult(
+                source=relative,
+                error="Trash folder changed before permanent delete",
+            )
+        return PathOperationResult(source=relative)
+    except (OSError, ValueError) as exc:
+        return PathOperationResult(source=relative, error=str(exc))
+    finally:
+        if folder_fd is not None:
+            os.close(folder_fd)
+        os.close(root_fd)
 
 
 def get_vault(config_path: Path) -> Path | None:
