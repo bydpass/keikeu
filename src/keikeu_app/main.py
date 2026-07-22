@@ -185,6 +185,7 @@ class AppContext:
     page: ft.Page
     vault: Path
     state_path: Path | None = None
+    library_scope_host: ft.Column | None = None
     open_paper: Callable[[Path | None], None] = field(default=lambda _path: None)
     open_flashcards: Callable[[Path | None], None] = field(default=lambda _path: None)
     open_library: Callable[[], None] = field(default=lambda: None)
@@ -233,42 +234,92 @@ def _build_shell(
     page.controls.clear()
     page.scroll = None
     body = ft.Container(expand=True, padding=SPACE_8, bgcolor=BG)
-    ctx = AppContext(page=page, vault=vault)
+    library_scope_host = ft.Column(
+        controls=[],
+        spacing=SPACE_2,
+        scroll=ft.ScrollMode.AUTO,
+        expand=True,
+        horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
+        key="shell-library-scopes",
+    )
+    ctx = AppContext(
+        page=page,
+        vault=vault,
+        library_scope_host=library_scope_host,
+    )
+    current_nav = _NAV_PAPER
+    nav_buttons: dict[int, ft.Button] = {}
+
+    def sync_navigation() -> None:
+        for index, button in nav_buttons.items():
+            selected = index == current_nav
+            button.bgcolor = ACCENT if selected else FG
+            button.color = ACCENT_ON if selected else SURFACE_WARM
 
     def show_paper(open_path: Path | None = None) -> None:
+        nonlocal current_nav
+        previous_scopes = list(library_scope_host.controls)
+        previous_handler = getattr(page, "on_keyboard_event", None)
         try:
             safe_path = (
                 resolve_active_paper_path(vault, open_path)
                 if open_path is not None
                 else None
             )
-            nav.selected_index = _NAV_PAPER
             relative = safe_path.relative_to(vault) if safe_path is not None else None
-            body.content = build_paper_page(ctx, relative)
+            new_content = build_paper_page(ctx, relative)
+            library_scope_host.controls.clear()
+            if getattr(page, "on_keyboard_event", None) is previous_handler:
+                page.on_keyboard_event = None
+            current_nav = _NAV_PAPER
+            sync_navigation()
+            body.content = new_content
             page.update()
         except Exception as ex:
+            library_scope_host.controls = previous_scopes
+            page.on_keyboard_event = previous_handler
+            sync_navigation()
             notify(page, f"无法打开 Paper：{ex}")
 
     def show_flashcards(open_path: Path | None = None) -> None:
+        nonlocal current_nav
+        previous_scopes = list(library_scope_host.controls)
+        previous_handler = getattr(page, "on_keyboard_event", None)
         try:
             safe_path = (
                 resolve_active_paper_path(vault, open_path)
                 if open_path is not None
                 else None
             )
-            nav.selected_index = _NAV_FLASHCARD
             relative = safe_path.relative_to(vault) if safe_path is not None else None
-            body.content = build_flashcard_page(ctx, relative)
+            new_content = build_flashcard_page(ctx, relative)
+            library_scope_host.controls.clear()
+            if getattr(page, "on_keyboard_event", None) is previous_handler:
+                page.on_keyboard_event = None
+            current_nav = _NAV_FLASHCARD
+            sync_navigation()
+            body.content = new_content
             page.update()
         except Exception as ex:
+            library_scope_host.controls = previous_scopes
+            page.on_keyboard_event = previous_handler
+            sync_navigation()
             notify(page, f"无法打开 Flashcard：{ex}")
 
     def show_library() -> None:
+        nonlocal current_nav
+        previous_scopes = list(library_scope_host.controls)
+        previous_handler = getattr(page, "on_keyboard_event", None)
         try:
-            nav.selected_index = _NAV_LIBRARY
-            body.content = build_library_page(ctx)
+            new_content = build_library_page(ctx)
+            current_nav = _NAV_LIBRARY
+            sync_navigation()
+            body.content = new_content
             page.update()
         except Exception as ex:
+            library_scope_host.controls = previous_scopes
+            page.on_keyboard_event = previous_handler
+            sync_navigation()
             notify(page, f"无法打开本地文件库：{ex}")
 
     ctx.open_paper = show_paper
@@ -284,24 +335,33 @@ def _build_shell(
         ),
     )
 
-    def on_nav_change(e: ft.ControlEvent) -> None:
-        if e.control.selected_index == _NAV_PAPER:
-            show_paper()
-        elif e.control.selected_index == _NAV_FLASHCARD:
-            show_flashcards()
-        else:
-            show_library()
+    def navigation_button(
+        index: int,
+        label: str,
+        icon: ft.IconData,
+        on_click: Callable[[], None],
+    ) -> ft.Button:
+        button = ft.Button(
+            content=ft.Text(label),
+            icon=icon,
+            key=f"shell-nav-{index}",
+            on_click=lambda _e: on_click(),
+            color=SURFACE_WARM,
+            elevation=0,
+            style=ft.ButtonStyle(
+                shape=ft.RoundedRectangleBorder(radius=RADIUS_SM),
+                alignment=ft.Alignment.CENTER_LEFT,
+            ),
+        )
+        nav_buttons[index] = button
+        return button
 
-    nav = ft.NavigationRail(
-        selected_index=_NAV_PAPER,
-        extended=True,
-        min_width=72,
-        min_extended_width=SIDEBAR_WIDTH,
+    sidebar = ft.Container(
+        key="shell-sidebar",
+        width=SIDEBAR_WIDTH,
         bgcolor=FG,
-        indicator_color=ACCENT,
-        use_indicator=True,
-        elevation=0,
-        leading=ft.Column(
+        padding=SPACE_4,
+        content=ft.Column(
             controls=[
                 ft.Container(
                     content=ft.Text(
@@ -317,29 +377,55 @@ def _build_shell(
                     border_radius=RADIUS_SM,
                     alignment=ft.Alignment.CENTER,
                 ),
-                ft.Text("KEIKEU", size=22, color=ACCENT_ON, font_family=FONT_DISPLAY, weight=ft.FontWeight.W_700),
-                ft.Text("PERSONAL PAPER DESK", size=10, color=SURFACE_WARM, font_family=FONT_DISPLAY),
+                ft.Text(
+                    "KEIKEU",
+                    size=22,
+                    color=ACCENT_ON,
+                    font_family=FONT_DISPLAY,
+                    weight=ft.FontWeight.W_700,
+                ),
+                ft.Text(
+                    "PERSONAL PAPER DESK",
+                    size=10,
+                    color=SURFACE_WARM,
+                    font_family=FONT_DISPLAY,
+                ),
+                ft.Divider(color=SURFACE_WARM),
+                navigation_button(
+                    _NAV_PAPER,
+                    "纸片",
+                    ft.Icons.EDIT_NOTE,
+                    show_paper,
+                ),
+                navigation_button(
+                    _NAV_FLASHCARD,
+                    "Flashcard",
+                    ft.Icons.STYLE,
+                    show_flashcards,
+                ),
+                navigation_button(
+                    _NAV_LIBRARY,
+                    "本地文件库",
+                    ft.Icons.FOLDER_OUTLINED,
+                    show_library,
+                ),
+                library_scope_host,
+                ft.Text(
+                    "LOCAL PAPER UNIT\nV0.3 · OFFLINE READY",
+                    size=TEXT_SM,
+                    color=SURFACE_WARM,
+                    text_align=ft.TextAlign.CENTER,
+                ),
             ],
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             spacing=SPACE_2,
+            expand=True,
+            horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
         ),
-        trailing=ft.Text(
-            "LOCAL PAPER UNIT\nV0.2 · OFFLINE READY",
-            size=TEXT_SM,
-            color=SURFACE_WARM,
-            text_align=ft.TextAlign.CENTER,
-        ),
-        pin_trailing_to_bottom=True,
-        destinations=[
-            ft.NavigationRailDestination(icon=ft.Icons.EDIT_NOTE, label="纸片"),
-            ft.NavigationRailDestination(icon=ft.Icons.STYLE, label="Flashcard"),
-            ft.NavigationRailDestination(icon=ft.Icons.FOLDER_OUTLINED, label="本地文件库"),
-        ],
-        on_change=on_nav_change,
     )
+    sync_navigation()
     page.add(
         ft.Row(
-            controls=[nav, ft.VerticalDivider(width=3, color=ACCENT), body],
+            controls=[sidebar, ft.VerticalDivider(width=3, color=ACCENT), body],
             expand=True,
         )
     )

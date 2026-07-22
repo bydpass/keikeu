@@ -118,6 +118,9 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
     )
     save_error = ft.Text("", color=ft.Colors.ERROR)
     highlight_fields: list[tuple[ft.TextField, ft.TextField]] = []
+    highlight_drag: dict[str, tuple[ft.TextField, ft.TextField] | None] = {
+        "item": None
+    }
     highlights_box = ft.Column(controls=[], key="highlights-container", spacing=SPACE_3)
 
     def _render_highlights() -> None:
@@ -161,16 +164,45 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
                 _render_highlights()
                 page.update()
 
-            highlights_box.controls.append(
-                ft.Container(
+            def start_drag(
+                _: object,
+                item: tuple[ft.TextField, ft.TextField] = fields,
+            ) -> None:
+                highlight_drag["item"] = item
+
+            def accept_drop(
+                _: object,
+                target: tuple[ft.TextField, ft.TextField] = fields,
+            ) -> None:
+                dragged = highlight_drag.get("item")
+                if dragged is None or dragged is target:
+                    highlight_drag["item"] = None
+                    return
+                target_position = highlight_fields.index(target)
+                highlight_fields.remove(dragged)
+                highlight_fields.insert(target_position, dragged)
+                highlight_drag["item"] = None
+                _render_highlights()
+                page.update()
+
+            highlight_control = ft.Container(
                     content=ft.Column(
                         controls=[
                             ft.Row(
                                 controls=[
-                                    ft.Icon(
-                                        ft.Icons.DRAG_INDICATOR,
-                                        color=MUTED,
-                                        tooltip="拖放排序手柄",
+                                    ft.Draggable(
+                                        group="paper-highlight",
+                                        data=str(index),
+                                        content=ft.Icon(
+                                            ft.Icons.DRAG_INDICATOR,
+                                            color=MUTED,
+                                            tooltip="拖放排序手柄",
+                                        ),
+                                        content_feedback=ft.Text(
+                                            f"Highlight {index + 1}"
+                                        ),
+                                        on_drag_start=start_drag,
+                                        key=f"highlight-drag-{index}",
                                     ),
                                     ft.Text(
                                         f"Highlight {index + 1}",
@@ -210,6 +242,14 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
                     ),
                     padding=ft.Padding.only(bottom=SPACE_3),
                     border=ft.Border.only(bottom=ft.BorderSide(1, BORDER_SOFT)),
+                )
+            highlights_box.controls.append(
+                ft.DragTarget(
+                    group="paper-highlight",
+                    data=str(index),
+                    content=highlight_control,
+                    on_accept=accept_drop,
+                    key=f"highlight-drop-{index}",
                 )
             )
 

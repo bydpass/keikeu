@@ -1,9 +1,9 @@
 # keikeu Road v0.3 Planbook
 
 > Road：macOS Paper Library / Retrieval Quality  
-> 状态：**APPROVED — Phase 4 complete / Phase 5 next**
+> 状态：**APPROVED — Phase 5 complete / Phase 6 next**
 > 基线：`d0feac0269a5619f5dbf27c04347ba69c5665b42`（Road v0.2 已验收，local annotated tag `v0.2.0`）  
-> 当前 checkpoint：**CP3 complete / Phase 4 engineering complete / CP4 pending**
+> 当前 checkpoint：**CP3 complete / Phase 5 engineering complete / CP4 pending**
 > 日期：2026-07-22
 > 权限：本文件是 Road v0.3 的已批准执行计划。[`SPEC.md`](SPEC.md)、[`RULES.md`](RULES.md) 与三个 HTML map 描述 v0.3 目标；当前实现进度与 v0.2 runtime 事实分别见 [`PROJECT.md`](PROJECT.md)、`src/` 和 `tests/`。
 
@@ -507,6 +507,8 @@ Gate：注入单项 move/unlink 失败，证明其余项结果准确、失败项
 
 Gate：builder tests 覆盖默认、empty、selection、merge、partial error、confirmation threshold 与 focus；macOS Flet smoke 验证实际拖放和菜单。
 
+**完成证据（2026-07-22）**：固定 `NavigationRail` 已替换为自定义全局侧栏并挂载全部/未归类/一层文件夹/Trash scope；当前 scope 搜索与排序、选择/批量移动、原生拖放与菜单等价路径、文件夹菜单与右键、同目录分支、可展开 Trash、永久删除门槛，以及 Highlight 拖放/键盘菜单已接通。macOS synthetic Flet smoke 在隔离 Vault 中实际完成菜单移动与 Paper 拖放，磁盘路径核对正确；后续复验发现并修复右键 `ContextMenu` 与 drop 的事件冲突，但最终重启时 Flet 客户端只有进程、没有可连接窗口，未伪报重复 smoke 通过。最终代码由 265 项全量自动测试、156 项独立聚焦复核、compile、文档与 diff 检查覆盖，复核未发现 P0/P1/P2；完整候选原生 smoke 仍由 Phase 7 重跑。`architecture.html` 按批准的 option A 继续等待 Phase 7 依据最终代码校准。
+
 ### Phase 6 — Flashcard, daily card and keyboard
 
 **目标**：完成检索后的聚焦流，并删除不再需要的持久状态。
@@ -617,4 +619,4 @@ flet run src/keikeu_app/main.py
 - legacy duplicate code 保留、报告并阻断 mutation，不自动改号；以及
 - unsafe Vault 先只读分类，不跟随 symlink，仅将普通目录/regular files byte-copy/verify 到 Home；v2/v3 再解析并重建 index，v0.1 改走安全副本上的现有 preflight 与 migration gate，不写原件也不以真实唯一 Vault 首测。
 
-Phase 0 权威/fixture、Phase 1 路径安全/Vault 切换、Phase 2 Paper v3 naming、Phase 3 folder-aware filesystem core 与 Phase 4 folder/Trash/branch core operations 已完成；下一步是 Phase 5 Paper/Library interaction，不把 Phase 6 平台服务或 Phase 7 产品验收提前混入。
+Phase 0 权威/fixture、Phase 1 路径安全/Vault 切换、Phase 2 Paper v3 naming、Phase 3 folder-aware filesystem core、Phase 4 folder/Trash/branch core operations 与 Phase 5 Paper/Library interaction 已完成；下一步是 Phase 6 Flashcard/daily card/keyboard，不把 Phase 7 文档校准或产品验收提前混入。

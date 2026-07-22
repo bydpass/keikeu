@@ -838,7 +838,7 @@ def test_configured_corrupt_structural_index_rebuilds_during_normal_open(
     app_main.main(page)  # type: ignore[arg-type]
 
     assert vault_index_version(vault) == 3
-    assert next(control for control in _walk(page.controls[0]) if isinstance(control, ft.NavigationRail))
+    assert _by_key(page.controls[0], "shell-sidebar")
 
 
 def test_startup_rejects_a_root_symlink_before_shell_or_format_probe(

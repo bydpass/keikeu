@@ -42,6 +42,8 @@ __all__ = [
     "atomic_exchange_no_follow",
     "scan_active_papers",
     "scan_trashed_papers",
+    "list_active_folders",
+    "list_trashed_folders",
     "list_active_papers",
     "next_paper_code",
     "create_folder",
@@ -1888,6 +1890,48 @@ def _scan_paper_area(
 def scan_active_papers(vault: Path) -> tuple[list[Path], list[dict[str, str]]]:
     """Return supported active Paper paths plus isolated path errors."""
     return _scan_paper_area(vault, Path("cache"))
+
+
+def _list_folder_names(vault: Path, base: Path) -> list[str]:
+    vault, root_fd = _open_pinned_vault_root(vault)
+    base_fd: int | None = None
+    try:
+        base_fd = _open_relative_directory_no_follow(root_fd, base, vault)
+        with os.scandir(base_fd) as entries:
+            candidates = sorted(entries, key=lambda entry: _folder_name_key(entry.name))
+        folders: list[str] = []
+        for entry in candidates:
+            try:
+                entry_stat = entry.stat(follow_symlinks=False)
+                if not stat.S_ISDIR(entry_stat.st_mode):
+                    continue
+                if validate_folder_name(entry.name) != entry.name:
+                    continue
+                child_fd = _open_child_directory_no_follow(
+                    base_fd,
+                    entry.name,
+                    vault / base / entry.name,
+                )
+                os.close(child_fd)
+                folders.append(entry.name)
+            except (OSError, ValueError):
+                continue
+        _require_directory_path_identity(vault / base, base_fd)
+        return folders
+    finally:
+        if base_fd is not None:
+            os.close(base_fd)
+        os.close(root_fd)
+
+
+def list_active_folders(vault: Path) -> list[str]:
+    """Return sorted valid one-level active folder names, including empty ones."""
+    return _list_folder_names(vault, Path("cache"))
+
+
+def list_trashed_folders(vault: Path) -> list[str]:
+    """Return sorted valid one-level Trash folder names, including empty ones."""
+    return _list_folder_names(vault, Path(".trash/cache"))
 
 
 def scan_trashed_papers(vault: Path) -> tuple[list[Path], list[dict[str, str]]]:

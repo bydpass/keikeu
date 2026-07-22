@@ -32,7 +32,9 @@ from keikeu_core.vault import (
     get_vault,
     init_vault,
     is_vault,
+    list_active_folders,
     list_active_papers,
+    list_trashed_folders,
     list_trashed_papers,
     merge_folders,
     move_papers,
@@ -834,6 +836,19 @@ def test_folder_names_use_nfc_casefold_uniqueness(tmp_path):
     create_folder(vault, "Other")
     with pytest.raises(FileExistsError, match=r"NFC\+casefold"):
         rename_folder(vault, "Other", "FOLDER")
+
+
+def test_folder_listing_includes_empty_valid_folders_only(tmp_path):
+    vault = tmp_path / "vault"
+    init_vault(vault)
+    create_folder(vault, "B")
+    create_folder(vault, "A")
+    create_folder(vault, "Trash Me")
+    soft_delete_folder(vault, "Trash Me")
+    (vault / "cache" / "unknown.txt").write_bytes(b"unknown")
+
+    assert list_active_folders(vault) == ["A", "B"]
+    assert list_trashed_folders(vault) == ["Trash Me"]
 
 
 def test_move_noop_still_validates_the_selected_paper(tmp_path):

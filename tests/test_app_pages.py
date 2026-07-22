@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime
 import json
 from pathlib import Path
@@ -27,7 +28,13 @@ from keikeu_core.markdown_io import (
     write_paper as _write_paper,
 )
 from keikeu_core.models import Highlight, Paper
-from keikeu_core.vault import init_vault, soft_delete
+from keikeu_core.vault import (
+    PathOperationResult,
+    create_folder,
+    init_vault,
+    soft_delete,
+    soft_delete_folder,
+)
 
 
 def write_paper(
@@ -56,12 +63,17 @@ class FakePage:
         self.bgcolor: str | None = None
         self.title = ""
         self.window = SimpleNamespace(width=None, height=None)
+        self.on_keyboard_event = None
+        self.tasks: list[tuple[object, tuple[object, ...]]] = []
 
     def add(self, *controls: object) -> None:
         self.controls.extend(controls)
 
     def update(self) -> None:
         self.update_count += 1
+
+    def run_task(self, handler: object, *args: object) -> None:
+        self.tasks.append((handler, args))
 
 
 def _walk(control: object) -> Iterable[object]:
@@ -72,8 +84,9 @@ def _walk(control: object) -> Iterable[object]:
             yield from _walk(child)
     for child in getattr(control, "actions", []) or []:
         yield from _walk(child)
-    for child in getattr(control, "items", []) or []:
-        yield from _walk(child)
+    for attr in ("items", "secondary_items"):
+        for child in getattr(control, attr, []) or []:
+            yield from _walk(child)
     for child in getattr(control, "controls", []) or []:
         yield from _walk(child)
 
@@ -98,6 +111,13 @@ def _control_by_key(root: object, key: str) -> object:
         if getattr(control, "key", None) == key:
             return control
     raise AssertionError(f"Control not found: {key}")
+
+
+def _popup_item(root: object, text: str) -> ft.PopupMenuItem:
+    for control in _walk(root):
+        if isinstance(control, ft.PopupMenuItem) and control.content == text:
+            return control
+    raise AssertionError(f"Popup item not found: {text}")
 
 
 def _texts(root: object) -> list[str]:
@@ -141,10 +161,29 @@ def test_shell_uses_paper_flashcard_and_library_navigation(tmp_path):
     app_main._build_shell(page, tmp_path)  # type: ignore[attr-defined, arg-type]
 
     assert page.scroll is None
-    rail = next(control for control in _walk(page.controls[0]) if isinstance(control, ft.NavigationRail))
-    labels = [destination.label for destination in rail.destinations]
-    assert labels == ["纸片", "Flashcard", "本地文件库"]
-    assert "配方票编辑" not in labels
+    assert not any(
+        isinstance(control, ft.NavigationRail) for control in _walk(page.controls[0])
+    )
+    assert _control_by_key(page.controls[0], "shell-sidebar")
+    labels = [
+        _button(page.controls[0], "纸片"),
+        _button(page.controls[0], "Flashcard"),
+        _button(page.controls[0], "本地文件库"),
+    ]
+    assert all(labels)
+    assert "配方票编辑" not in _texts(page.controls[0])
+
+    labels[2].on_click(None)
+
+    assert _control_by_key(page.controls[0], "shell-library-scopes")
+    assert _control_by_key(page.controls[0], "library-scope-all")
+    assert _control_by_key(page.controls[0], "library-scope-unfiled")
+    assert _control_by_key(page.controls[0], "library-scope-trash")
+    assert page.on_keyboard_event is not None
+
+    labels[0].on_click(None)
+
+    assert page.on_keyboard_event is None
 
 
 def test_paper_page_exposes_v3_names_and_an_immutable_system_code(tmp_path):
@@ -403,14 +442,12 @@ def test_shell_flashcard_rejects_a_traversal_path_before_any_read(tmp_path, monk
     monkeypatch.setattr(app_main, "build_library_page", capture_library)
     monkeypatch.setattr(flashcard_page_mod, "read_paper", tracked_read)
     app_main._build_shell(page, vault)  # type: ignore[attr-defined, arg-type]
-    rail = next(control for control in _walk(page.controls[0]) if isinstance(control, ft.NavigationRail))
-    rail.selected_index = 2
-    rail.on_change(SimpleNamespace(control=rail))
+    _control_by_key(page.controls[0], "shell-nav-2").on_click(None)
 
     captured[0].open_flashcards(Path("../../outside"))
 
     assert reads == []
-    assert rail.selected_index == 2
+    assert _control_by_key(page.controls[0], "shell-nav-2").bgcolor is not None
 
 
 def test_library_opens_flashcard_with_the_selected_paper_path(tmp_path):
@@ -460,9 +497,7 @@ def test_library_vault_switch_cancel_returns_to_the_current_shell(tmp_path):
     init_vault(tmp_path)
     page = FakePage()
     app_main._build_shell(page, tmp_path)  # type: ignore[attr-defined, arg-type]
-    rail = next(control for control in _walk(page.controls[0]) if isinstance(control, ft.NavigationRail))
-    rail.selected_index = 2
-    rail.on_change(SimpleNamespace(control=rail))
+    _control_by_key(page.controls[0], "shell-nav-2").on_click(None)
 
     assert str(tmp_path.resolve()) in _texts(page.controls[0])
     assert "写入仅允许当前用户 Home 内路径；尚未启用 Apple App Sandbox。" in _texts(
@@ -473,12 +508,11 @@ def test_library_vault_switch_cancel_returns_to_the_current_shell(tmp_path):
     assert _text_field(page.controls[0], "Vault 文件夹路径").value == str(tmp_path.resolve())
 
     _button(page.controls[0], "取消").on_click(None)
-    rail = next(control for control in _walk(page.controls[0]) if isinstance(control, ft.NavigationRail))
-    assert [destination.label for destination in rail.destinations] == [
-        "纸片",
-        "Flashcard",
-        "本地文件库",
-    ]
+    assert _control_by_key(page.controls[0], "shell-sidebar")
+    assert all(
+        _button(page.controls[0], label)
+        for label in ["纸片", "Flashcard", "本地文件库"]
+    )
 
 
 def test_library_searches_code_summary_and_tags_and_opens_paper(tmp_path):
@@ -491,7 +525,7 @@ def test_library_searches_code_summary_and_tags_and_opens_paper(tmp_path):
     opened: dict[str, Path] = {}
     ctx.open_paper = lambda path: opened.update(path=path)
     root = build_library_page(ctx)
-    search = _text_field(root, "搜索代号、Summary 或 Tags")
+    search = _text_field(root, "搜索名称、代号、Summary、Tags 或 Highlight 名称")
 
     search.value = "rain"
     search.on_change(None)
@@ -500,8 +534,7 @@ def test_library_searches_code_summary_and_tags_and_opens_paper(tmp_path):
 
     search.value = "K-20260714-001"
     search.on_change(None)
-    tile = next(control for control in _walk(root) if isinstance(control, ft.ListTile))
-    tile.on_click(None)
+    _button(root, "编辑").on_click(None)
     assert opened["path"] == first.relative_to(tmp_path)
 
 
@@ -514,11 +547,12 @@ def test_library_delete_and_restore_are_reachable_from_the_ui(tmp_path):
 
     _button(root, "删除").on_click(None)
     assert not path.exists()
-    assert "回收站 · 1" in _texts(root)
+    assert "Trash · 1" in _texts(root)
 
+    _button(root, "Trash · 1").on_click(None)
     _button(root, "恢复").on_click(None)
     assert path.exists()
-    assert "回收站 · 0" in _texts(root)
+    assert "Trash · 0" in _texts(root)
 
 
 def test_library_recovery_blocks_code_collision_without_rewriting_history(tmp_path):
@@ -533,6 +567,7 @@ def test_library_recovery_blocks_code_collision_without_rewriting_history(tmp_pa
     rebuild_index(tmp_path)
     root = build_library_page(_ctx(FakePage(), tmp_path))
 
+    _button(root, "Trash · 1").on_click(None)
     _button(root, "恢复").on_click(None)
     assert any("代号冲突" in text for text in _texts(root))
     assert not (tmp_path / "cache" / "K-20260714-002.md").exists()
@@ -552,8 +587,8 @@ def test_library_delegates_open_and_reveal_to_macos_system_commands(tmp_path, mo
     )
     root = build_library_page(_ctx(FakePage(), tmp_path))
 
-    _button(root, "打开").on_click(None)
-    _button(root, "在文件夹中显示").on_click(None)
+    _control_by_key(root, f"paper-open-{path.relative_to(tmp_path)}").on_click(None)
+    _control_by_key(root, f"paper-reveal-{path.relative_to(tmp_path)}").on_click(None)
 
     assert calls == [["open", str(path)], ["open", "-R", str(path)]]
 
@@ -621,8 +656,8 @@ def test_library_rejects_an_absolute_index_path_for_every_file_action(
     root = build_library_page(ctx)
 
     _button(root, "编辑").on_click(None)
-    _button(root, "打开").on_click(None)
-    _button(root, "在文件夹中显示").on_click(None)
+    _control_by_key(root, f"paper-open-{outside}").on_click(None)
+    _control_by_key(root, f"paper-reveal-{outside}").on_click(None)
     _button(root, "删除").on_click(None)
 
     assert opened == []
@@ -639,20 +674,27 @@ def test_shell_show_paper_rejects_an_absolute_path_outside_the_vault(
     outside.write_bytes(b"outside sentinel")
     page = FakePage()
     captured: list[AppContext] = []
+    library_handler = lambda _event: None
 
     def capture_library(ctx: AppContext) -> ft.Control:
         captured.append(ctx)
-        return ft.Column()
+        assert ctx.library_scope_host is not None
+        ctx.library_scope_host.controls = [
+            ft.Text("scope sentinel", key="scope-sentinel")
+        ]
+        ctx.page.on_keyboard_event = library_handler
+        return ft.Column(controls=[ft.Text("library sentinel")])
 
     monkeypatch.setattr(app_main, "build_library_page", capture_library)
     app_main._build_shell(page, vault)  # type: ignore[attr-defined, arg-type]
-    rail = next(control for control in _walk(page.controls[0]) if isinstance(control, ft.NavigationRail))
-    rail.selected_index = 2
-    rail.on_change(SimpleNamespace(control=rail))
+    _control_by_key(page.controls[0], "shell-nav-2").on_click(None)
 
     captured[0].open_paper(outside)
 
-    assert rail.selected_index == 2
+    assert _control_by_key(page.controls[0], "shell-nav-2").bgcolor is not None
+    assert _control_by_key(page.controls[0], "scope-sentinel")
+    assert page.on_keyboard_event is library_handler
+    assert "library sentinel" in _texts(page.controls[0])
     assert outside.read_bytes() == b"outside sentinel"
     assert "outside the selected Vault" in _texts(page.overlay[-1])[0]
 
@@ -671,4 +713,465 @@ def test_library_displays_parse_errors_and_recovery_action(tmp_path):
     assert "冲突时的新代号" not in [
         field.label for field in _walk(root) if isinstance(field, ft.TextField)
     ]
+    _button(root, "Trash · 1").on_click(None)
     assert _button(root, "恢复")
+
+
+def test_highlight_drag_handle_reorders_without_a_toast(tmp_path):
+    init_vault(tmp_path)
+    page = FakePage()
+    root = build_paper_page(_ctx(page, tmp_path))
+    code = _text_field(root, "系统编号").value
+    _text_field(root, "Summary").value = "Summary."
+    _button(root, "+ 添加 Highlight").on_click(None)
+    _button(root, "+ 添加 Highlight").on_click(None)
+    _text_field(root, "Highlight 1 内容").value = "First."
+    _text_field(root, "Highlight 2 内容").value = "Second."
+
+    _control_by_key(root, "highlight-drag-1").on_drag_start(None)
+    _control_by_key(root, "highlight-drop-0").on_accept(None)
+    _button(root, "保存").on_click(None)
+
+    assert read_paper(tmp_path / "cache" / f"{code}.md").highlights == [
+        Highlight(content="Second."),
+        Highlight(content="First."),
+    ]
+    assert not any("顺序" in text for overlay in page.overlay for text in _texts(overlay))
+
+
+def test_library_scopes_search_names_and_clear_selection_on_scope_change(
+    tmp_path,
+    monkeypatch,
+):
+    init_vault(tmp_path)
+    create_folder(tmp_path, "A")
+    root_path = write_paper(
+        tmp_path,
+        _paper(
+            "K-20260714-001",
+            "Root summary.",
+            display_name="Root Name",
+            highlights=[Highlight(content="body", display_name="Signal")],
+        ),
+    )
+    folder_path = write_paper(
+        tmp_path,
+        _paper("K-20260714-002", "Folder summary."),
+        destination="cache/A/K-20260714-002.md",
+    )
+    rebuild_index(tmp_path)
+    page = FakePage()
+    root = build_library_page(_ctx(page, tmp_path))
+    search = _control_by_key(root, "library-search")
+
+    search.value = "Signal"
+    search.on_change(None)
+    assert "Root Name" in _texts(root)
+    assert "Folder summary." not in _texts(root)
+
+    search.value = ""
+    search.on_change(None)
+    checkbox = _control_by_key(root, f"paper-select-{root_path.relative_to(tmp_path)}")
+    checkbox.value = True
+    checkbox.on_change(None)
+    _control_by_key(root, "library-scope-folder:A").on_click(None)
+
+    assert "已取消选择的 1 个 Paper" in _texts(root)
+    assert "Folder summary." in _texts(root)
+    assert "Root summary." not in _texts(root)
+    assert folder_path.exists()
+    assert len(page.tasks) == 1
+
+    async def no_delay(_seconds: float) -> None:
+        return None
+
+    monkeypatch.setattr(library_page_mod.asyncio, "sleep", no_delay)
+    handler, args = page.tasks[0]
+    asyncio.run(handler(*args))
+    assert "已取消选择的 1 个 Paper" not in _texts(root)
+
+
+def test_library_search_normalizes_unicode_and_does_not_index_none(tmp_path):
+    init_vault(tmp_path)
+    write_paper(
+        tmp_path,
+        _paper(
+            "K-20260714-001",
+            "Named summary.",
+            display_name="Cafe\u0301",
+        ),
+    )
+    write_paper(tmp_path, _paper("K-20260714-002", "Ordinary unnamed summary."))
+    rebuild_index(tmp_path)
+    root = build_library_page(_ctx(FakePage(), tmp_path))
+    search = _control_by_key(root, "library-search")
+
+    search.value = "Café"
+    search.on_change(None)
+    assert "Cafe\u0301" in _texts(root)
+    assert "Ordinary unnamed summary." not in _texts(root)
+
+    search.value = "none"
+    search.on_change(None)
+    assert "Ordinary unnamed summary." not in _texts(root)
+    assert "当前范围没有符合搜索条件的 Paper。" in _texts(root)
+
+
+def test_library_drag_and_menu_move_share_the_same_core_path(tmp_path):
+    init_vault(tmp_path)
+    create_folder(tmp_path, "A")
+    create_folder(tmp_path, "B")
+    first = write_paper(tmp_path, _paper("K-20260714-001", "First."))
+    second = write_paper(tmp_path, _paper("K-20260714-002", "Second."))
+    rebuild_index(tmp_path)
+    root = build_library_page(_ctx(FakePage(), tmp_path))
+
+    _control_by_key(
+        root,
+        f"paper-drag-{first.relative_to(tmp_path)}",
+    ).on_drag_start(None)
+    _control_by_key(root, "library-drop-folder:A").on_accept(None)
+    assert (tmp_path / "cache" / "A" / first.name).exists()
+
+    menu = _control_by_key(root, f"paper-menu-{second.relative_to(tmp_path)}")
+    _popup_item(menu, "移动到：B").on_click(None)
+    assert (tmp_path / "cache" / "B" / second.name).exists()
+    context_menu = _control_by_key(
+        root,
+        f"paper-context-menu-{(Path('cache') / 'B' / second.name)}",
+    )
+    assert "移动到：A" in [item.content for item in context_menu.items]
+
+
+def test_library_batch_unfiled_sentinel_does_not_hide_same_named_folder(tmp_path):
+    init_vault(tmp_path)
+    create_folder(tmp_path, "__unfiled__")
+    paper = write_paper(tmp_path, _paper("K-20260714-001", "Move me."))
+    rebuild_index(tmp_path)
+    root = build_library_page(_ctx(FakePage(), tmp_path))
+
+    checkbox = _control_by_key(
+        root,
+        f"paper-select-{paper.relative_to(tmp_path)}",
+    )
+    checkbox.value = True
+    checkbox.on_change(None)
+    destination = _control_by_key(root, "library-batch-destination")
+    destination.value = "__unfiled__"
+    _button(root, "移动所选").on_click(None)
+
+    assert (tmp_path / "cache" / "__unfiled__" / paper.name).exists()
+
+
+def test_library_stale_move_target_refreshes_instead_of_raising(tmp_path):
+    init_vault(tmp_path)
+    create_folder(tmp_path, "A")
+    paper = write_paper(tmp_path, _paper("K-20260714-001", "Stay safe."))
+    rebuild_index(tmp_path)
+    root = build_library_page(_ctx(FakePage(), tmp_path))
+    (tmp_path / "cache" / "A").rmdir()
+
+    checkbox = _control_by_key(
+        root,
+        f"paper-select-{paper.relative_to(tmp_path)}",
+    )
+    checkbox.value = True
+    checkbox.on_change(None)
+    destination = _control_by_key(root, "library-batch-destination")
+    destination.value = "A"
+    _button(root, "移动所选").on_click(None)
+
+    assert paper.exists()
+    assert any("移动失败" in text and "已刷新 Library" in text for text in _texts(root))
+    assert "A" not in [
+        option.key
+        for option in _control_by_key(
+            root,
+            "library-batch-destination",
+        ).options
+    ]
+
+
+def test_library_batch_move_reports_partial_results(tmp_path, monkeypatch):
+    init_vault(tmp_path)
+    create_folder(tmp_path, "A")
+    first = write_paper(tmp_path, _paper("K-20260714-001", "First."))
+    second = write_paper(tmp_path, _paper("K-20260714-002", "Second."))
+    third = write_paper(tmp_path, _paper("K-20260714-003", "Third."))
+    rebuild_index(tmp_path)
+    calls: list[list[str]] = []
+
+    def partial(_vault, paths, _folder):
+        records = list(paths)
+        calls.append(records)
+        return [
+            PathOperationResult(
+                source=Path(records[0]),
+                destination=Path("cache/A") / Path(records[0]).name,
+            ),
+            PathOperationResult(
+                source=Path(records[1]),
+                error="injected provider failure",
+            ),
+            PathOperationResult(
+                source=Path(records[2]),
+                error="second injected failure",
+            ),
+        ]
+
+    monkeypatch.setattr(library_page_mod, "move_papers", partial)
+    root = build_library_page(_ctx(FakePage(), tmp_path))
+    _button(root, "全选当前").on_click(None)
+    destination = _control_by_key(root, "library-batch-destination")
+    destination.value = "A"
+    _button(root, "移动所选").on_click(None)
+
+    assert calls == [[
+        str(first.relative_to(tmp_path)),
+        str(second.relative_to(tmp_path)),
+        str(third.relative_to(tmp_path)),
+    ]]
+    assert any("1 项成功，2 项失败" in text for text in _texts(root))
+    assert any("injected provider failure" in text for text in _texts(root))
+    assert any("second injected failure" in text for text in _texts(root))
+    assert any(str(second.relative_to(tmp_path)) in text for text in _texts(root))
+    assert any(str(third.relative_to(tmp_path)) in text for text in _texts(root))
+
+
+def test_library_branch_copy_uses_saved_paper_and_stays_in_folder(tmp_path):
+    init_vault(tmp_path)
+    create_folder(tmp_path, "A")
+    source = write_paper(
+        tmp_path,
+        _paper(
+            "K-20260714-001",
+            "Saved summary.",
+            display_name="Source",
+        ),
+        destination="cache/A/K-20260714-001.md",
+    )
+    rebuild_index(tmp_path)
+    root = build_library_page(_ctx(FakePage(), tmp_path))
+    menu = _control_by_key(root, f"paper-menu-{source.relative_to(tmp_path)}")
+
+    _popup_item(menu, "复制分支").on_click(None)
+
+    papers = sorted((tmp_path / "cache" / "A").glob("*.md"))
+    assert len(papers) == 2
+    branch = next(path for path in papers if path != source)
+    assert read_paper(branch).display_name == "Source · 分支"
+    assert read_paper(branch).summary == "Saved summary."
+
+
+def test_library_rename_to_existing_folder_requires_merge_confirmation(tmp_path):
+    init_vault(tmp_path)
+    create_folder(tmp_path, "A")
+    create_folder(tmp_path, "B")
+    paper = write_paper(
+        tmp_path,
+        _paper("K-20260714-001", "Merge me."),
+        destination="cache/A/K-20260714-001.md",
+    )
+    rebuild_index(tmp_path)
+    page = FakePage()
+    root = build_library_page(_ctx(page, tmp_path))
+    menu = _control_by_key(root, "folder-menu-A")
+    context_menu = _control_by_key(root, "folder-context-menu-A")
+    assert [item.content for item in context_menu.items] == [
+        "重命名",
+        "移至 Trash",
+    ]
+
+    _popup_item(menu, "重命名").on_click(None)
+    rename_dialog = page.overlay[-1]
+    _text_field(rename_dialog, "文件夹新名称").value = "B"
+    _button(rename_dialog, "重命名").on_click(None)
+    merge_dialog = page.overlay[-1]
+    assert "合并同名文件夹" in _texts(merge_dialog)
+    _button(merge_dialog, "确认合并").on_click(None)
+
+    assert not (tmp_path / "cache" / "A").exists()
+    assert (tmp_path / "cache" / "B" / paper.name).exists()
+    assert any("1 项成功" in text for text in _texts(root))
+
+
+def test_library_empty_folder_merge_reports_success(tmp_path):
+    init_vault(tmp_path)
+    create_folder(tmp_path, "A")
+    create_folder(tmp_path, "B")
+    page = FakePage()
+    root = build_library_page(_ctx(page, tmp_path))
+
+    _popup_item(_control_by_key(root, "folder-menu-A"), "重命名").on_click(None)
+    rename_dialog = page.overlay[-1]
+    _text_field(rename_dialog, "文件夹新名称").value = "B"
+    _button(rename_dialog, "重命名").on_click(None)
+    _button(page.overlay[-1], "确认合并").on_click(None)
+
+    assert not (tmp_path / "cache" / "A").exists()
+    assert "合并文件夹：空文件夹已合并" in _texts(root)
+
+
+def test_library_folder_mutation_clears_selection_from_all_scope(tmp_path):
+    init_vault(tmp_path)
+    create_folder(tmp_path, "A")
+    paper = write_paper(
+        tmp_path,
+        _paper("K-20260714-001", "Selected."),
+        destination="cache/A/K-20260714-001.md",
+    )
+    rebuild_index(tmp_path)
+    root = build_library_page(_ctx(FakePage(), tmp_path))
+    checkbox = _control_by_key(
+        root,
+        f"paper-select-{paper.relative_to(tmp_path)}",
+    )
+    checkbox.value = True
+    checkbox.on_change(None)
+
+    _popup_item(_control_by_key(root, "folder-menu-A"), "移至 Trash").on_click(None)
+
+    assert "已选择 0" in _texts(root)
+    assert "已取消选择的 1 个 Paper" in _texts(root)
+
+
+def test_library_folder_mutation_keeps_notice_when_scope_falls_back(tmp_path):
+    init_vault(tmp_path)
+    create_folder(tmp_path, "A")
+    paper = write_paper(
+        tmp_path,
+        _paper("K-20260714-001", "Selected."),
+        destination="cache/A/K-20260714-001.md",
+    )
+    rebuild_index(tmp_path)
+    root = build_library_page(_ctx(FakePage(), tmp_path))
+    _control_by_key(root, "library-scope-folder:A").on_click(None)
+    checkbox = _control_by_key(
+        root,
+        f"paper-select-{paper.relative_to(tmp_path)}",
+    )
+    checkbox.value = True
+    checkbox.on_change(None)
+
+    _popup_item(_control_by_key(root, "folder-menu-A"), "移至 Trash").on_click(None)
+
+    assert "全部 Paper · 0" in _texts(root)
+    assert "已取消选择的 1 个 Paper" in _texts(root)
+
+
+def test_library_permanent_delete_threshold_requires_exact_execute(tmp_path):
+    init_vault(tmp_path)
+    paths = [
+        write_paper(
+            tmp_path,
+            _paper(f"K-20260714-{index:03d}", f"Paper {index}."),
+        )
+        for index in range(1, 5)
+    ]
+    for path in paths:
+        soft_delete(tmp_path, path.relative_to(tmp_path))
+    rebuild_index(tmp_path)
+    page = FakePage()
+    root = build_library_page(_ctx(page, tmp_path), initial_scope="trash")
+
+    _button(root, "清空 Trash").on_click(None)
+    dialog = page.overlay[-1]
+    execute = _text_field(dialog, "输入 execute")
+    execute.value = " EXECUTE "
+    _button(dialog, "永久删除").on_click(None)
+    assert any("完全一致" in text for text in _texts(dialog))
+    assert len(list((tmp_path / ".trash" / "cache").glob("*.md"))) == 4
+
+    execute.value = " execute "
+    _button(dialog, "永久删除").on_click(None)
+    assert list((tmp_path / ".trash" / "cache").glob("*.md")) == []
+
+
+def test_library_single_permanent_delete_uses_confirmation_without_execute(tmp_path):
+    init_vault(tmp_path)
+    path = write_paper(
+        tmp_path,
+        _paper("K-20260714-001", "One.", display_name="Named"),
+    )
+    soft_delete(tmp_path, path.relative_to(tmp_path))
+    rebuild_index(tmp_path)
+    page = FakePage()
+    root = build_library_page(_ctx(page, tmp_path), initial_scope="trash")
+
+    _button(root, "永久删除").on_click(None)
+    dialog = page.overlay[-1]
+
+    assert any(
+        "Named (K-20260714-001)" in text for text in _texts(dialog)
+    )
+    assert not any(
+        isinstance(control, ft.TextField) and control.label == "输入 execute"
+        for control in _walk(dialog)
+    )
+
+
+def test_library_trash_folder_is_expandable(tmp_path):
+    init_vault(tmp_path)
+    create_folder(tmp_path, "A")
+    write_paper(
+        tmp_path,
+        _paper("K-20260714-001", "Folder Trash."),
+        destination="cache/A/K-20260714-001.md",
+    )
+    soft_delete_folder(tmp_path, "A")
+    rebuild_index(tmp_path)
+
+    root = build_library_page(_ctx(FakePage(), tmp_path), initial_scope="trash")
+    folder = _control_by_key(root, "trash-folder-A")
+
+    assert isinstance(folder, ft.ExpansionTile)
+    assert _button(folder, "恢复文件夹")
+    assert _button(folder, "永久删除文件夹")
+
+
+def test_library_trash_scope_searches_and_sorts_visible_papers(tmp_path):
+    init_vault(tmp_path)
+    zulu = write_paper(
+        tmp_path,
+        _paper("K-20260714-001", "Zulu summary.", display_name="Zulu"),
+    )
+    alpha = write_paper(
+        tmp_path,
+        _paper("K-20260714-002", "Alpha summary.", display_name="Alpha"),
+    )
+    soft_delete(tmp_path, zulu.relative_to(tmp_path))
+    soft_delete(tmp_path, alpha.relative_to(tmp_path))
+    rebuild_index(tmp_path)
+    root = build_library_page(_ctx(FakePage(), tmp_path), initial_scope="trash")
+
+    sort = _control_by_key(root, "library-sort")
+    sort.value = "name"
+    sort.on_select(None)
+    texts = _texts(root)
+    assert texts.index("Alpha (K-20260714-002)") < texts.index(
+        "Zulu (K-20260714-001)"
+    )
+
+    search = _control_by_key(root, "library-search")
+    search.value = "Zulu"
+    search.on_change(None)
+    assert "Zulu (K-20260714-001)" in _texts(root)
+    assert "Alpha (K-20260714-002)" not in _texts(root)
+    search.value = "definitely-no-match"
+    search.on_change(None)
+    assert "Trash 中没有符合搜索条件的 Paper。" in _texts(root)
+
+
+def test_library_cmd_f_focuses_search(tmp_path, monkeypatch):
+    init_vault(tmp_path)
+    page = FakePage()
+    root = build_library_page(_ctx(page, tmp_path))
+    search = _control_by_key(root, "library-search")
+    async def focus() -> None:
+        return None
+
+    monkeypatch.setattr(search, "focus", focus)
+
+    page.on_keyboard_event(SimpleNamespace(key="F", meta=True))
+
+    assert page.tasks[-1] == (focus, ())
