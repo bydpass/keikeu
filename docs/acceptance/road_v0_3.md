@@ -1,6 +1,6 @@
 # keikeu Road v0.3 — CP5 证据与 CP6 产品验收
 
-> 状态：**CP5 macOS candidate smoke complete / CP6 product acceptance pending**
+> 状态：**CP5 macOS candidate smoke complete / CP6 developer run ready / product acceptance pending**
 > 日期：2026-07-22
 > 权限：支持性证据；验收契约以 [`../SPEC.md`](../SPEC.md) §12 为准，当前结论以 [`../PROJECT.md`](../PROJECT.md) 为准
 
@@ -56,6 +56,18 @@ Phase 7 最终检查：
 
 开始前：使用已经备份且可恢复的真实作者 Vault；不要把任何内容或路径复制到本记录。若出现 P0/P1，停止场景，记录最短去标识化复现并修复后重跑。
 
+### 启动与记录
+
+本轮人工测试会写入真实 Vault：保存既有 v2 Paper 会写成 v3，移动、Trash 与恢复会改变文件位置。先制作可恢复备份，再在应用内确认目标 Vault。
+
+从仓库根目录启动：
+
+```bash
+.venv/bin/flet run src/keikeu_app/main.py
+```
+
+完成场景 A 后执行场景 B 的 Session 1。完全退出应用，再执行 Session 2。只在下方结果表记录完成状态、检索体验、handoff 清晰度和 P0/P1；不要写正文、名称、关系或路径。
+
 ### 场景 A — 新 Paper
 
 1. 新建并命名一个真实 Paper。
@@ -85,6 +97,7 @@ Session 2：
 
 | 项目 | 结果 |
 | --- | --- |
+| 人工测试状态 | **Ready to run** |
 | 场景 A 完成 | Pending |
 | 场景 B Session 1 完成 | Pending |
 | 场景 B Session 2 完成 | Pending |

@@ -8,7 +8,7 @@
 
 The code implements the `Paper Markdown → Flashcard → external prose editor` core. Road v0.2 Phases 0–7 engineering, macOS file-service smoke, and Phase 8 real-author one-shot and two-session short/medium acceptance are complete and marked by local annotated tag `v0.2.0`. Road archival remains a developer decision.
 
-Phase 7.5 is an independent lightweight iOS build for rapid testing. Its responsive UI, app-sandbox Vault, and on-device fixes are complete on a separate branch; it is not a merge gate in the macOS Road. Road v0.3 Phase 6 Flashcard/daily-card/keyboard engineering is complete, and Phase 7 documentation calibration, full macOS candidate smoke, and product acceptance are next. The runtime reads Paper v2/v3, writes Paper/index v3, and supports one-level Library operations, Paper selection and bounded Flashcard navigation, and a once-per-local-day start card. See [PROJECT](docs/PROJECT.md) for live coordinates.
+Phase 7.5 is an independent lightweight iOS build for rapid testing. Its responsive UI, app-sandbox Vault, and on-device fixes are complete on a separate branch; it is not a merge gate in the macOS Road. Road v0.3 Phase 7 engineering and macOS candidate smoke are complete (CP5), including final HTML-map calibration and synthetic/copied-Vault reverification. CP6 manual acceptance is ready for the developer; Road v0.3 product acceptance remains pending. The runtime reads Paper v2/v3, writes Paper/index v3, and supports one-level Library operations, Paper selection and bounded Flashcard navigation, and a once-per-local-day start card. See [PROJECT](docs/PROJECT.md) for live coordinates.
 
 ## Current runtime flow
 
@@ -18,9 +18,19 @@ existing inspiration → Paper Markdown → Flashcard → external prose editor
 
 - **Paper:** required current Summary, frozen first-save copy, ordered optional Highlights, and flat optional Tags.
 - **Flashcard:** a read-only, Summary-first projection that starts on page 1 on every open or Paper switch; position is not persisted.
-- **Library:** searches, opens, soft-deletes, and restores Papers through a local index.
+- **Library:** searches and sorts Papers by all/unfiled/one-level-folder scope, with drag/menu/batch moves, branching, Trash, and restore.
 - **Vault:** selects paths only under the current user's Home, validates before switching, and byte-verifies copied unsafe legacy Vaults; Apple App Sandbox is not enabled yet.
 - **External editor:** prose always remains outside keikeu.
+
+## CP6 manual acceptance
+
+Create a restorable backup of the target real-author Vault, then confirm the selected Vault in the app. The scenarios save an existing v2 Paper and exercise move, Trash, and restore.
+
+```bash
+.venv/bin/flet run src/keikeu_app/main.py
+```
+
+Follow the [CP6 acceptance SOP](docs/acceptance/road_v0_3.md) for the new-Paper scenario and both existing-v2-Paper sessions. Record retrieval clarity/speed, external-editor handoff clarity, and any P0/P1. Keep prose, names, and paths out of the record. The [Road v0.3 status snapshot](docs/archive/snapshots/2cc40bad0f2365010e2de93ef3810d824105a6de.html) shows the completed engineering boundary.
 
 ## Product principles
 
@@ -86,7 +96,7 @@ v0.1        archived macOS Cache / Outline pre-alpha
 v0.2        macOS Paper / Flashcard Core; product acceptance complete, Road closeout pending
 Phase 7.5   independent lightweight iOS rapid-test build
 Phase 8.5   Road v0.3 preparation; precursor to the next Mac version
-Road v0.3   macOS Paper Library; Phase 6 / CP4 complete, Phase 7 next
+Road v0.3   macOS Paper Library; Phase 7 / CP5 complete, CP6 manual acceptance ready for developer run
 Pre-Advance optional Markdown Outline; never blocks the core flow
 later       iPhone/iPad file-service capability, Android, Windows
 ```
