@@ -30,7 +30,7 @@ Create a restorable backup of the target real-author Vault, then confirm the sel
 .venv/bin/flet run src/keikeu_app/main.py
 ```
 
-Follow the [CP6 acceptance SOP](docs/acceptance/road_v0_3.md) for the new-Paper scenario and both existing-v2-Paper sessions. Record retrieval clarity/speed, external-editor handoff clarity, and any P0/P1. Keep prose, names, and paths out of the record. The [Road v0.3 status snapshot](docs/archive/snapshots/2cc40bad0f2365010e2de93ef3810d824105a6de.html) shows the completed engineering boundary.
+Follow the [CP6 acceptance SOP](docs/acceptance/road_v0_3.md) for the new-Paper scenario and both existing-v2-Paper sessions. Record retrieval clarity/speed, external-editor handoff clarity, and any P0/P1. Keep prose, names, and paths out of the record. The [Road v0.3 status snapshot](docs/archive/snapshots/feat-complete-road-v0-3-candidate.html) shows the completed engineering boundary.
 
 ## Product principles
 

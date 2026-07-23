@@ -3,8 +3,8 @@
 # keikeu Road v0.2 — Phase 8 产品验收记录
 
 > 状态：部分验证；仍缺真实 one-shot 与短/中篇工作流证据
-> 权限：支持性证据；当前状态以 [`../PROJECT.md`](../PROJECT.md) 为准，验收契约以 [`../SPEC.md`](../SPEC.md) §12 为准
-> 历史来源：`feature/road-v02-acceptance`；原始文件保存在 [`../archive/146cb74e81fb9a0b93aa232227b86b56ad7c5d08/`](../archive/146cb74e81fb9a0b93aa232227b86b56ad7c5d08/)
+> 权限：支持性证据；当前状态以 [`docs/PROJECT.md`](../../PROJECT.md) 为准，验收契约以 [`docs/SPEC.md`](../../SPEC.md) §12 为准
+> 历史来源：`feature/road-v02-acceptance`；原始文件保存在 [`docs-agents-md-update/`](../docs-agents-md-update/)
 
 ## 边界
 

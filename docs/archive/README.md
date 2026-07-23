@@ -17,16 +17,26 @@ Archive files retain historical reasoning and evidence. Their internal links may
 
 ## Collections
 
-| Collection | Contents | Use |
+| Collection | Target commit and subject | Contents | Use |
+| --- | --- | --- | --- |
+| [`docs-clarify-export-cancellation-semantics/`](docs-clarify-export-cancellation-semantics/) | `9d033db` · `docs: clarify export cancellation semantics` | Road v0.1 records | historical comparison only |
+| [`docs-agents-md-update/`](docs-agents-md-update/) | `146cb74` · `docs: AGENTS.md update` | Road v0.2 records | historical comparison only |
+| [`docs-archive-documentation-reform-report/`](docs-archive-documentation-reform-report/) | `9114d63` · `docs: archive documentation reform report` | Phase 8 record and SOP before final author confirmation | historical acceptance evidence only |
+| [`snapshots/`](snapshots/) | commit-bound status pages listed below | status and handoff HTML | frozen evidence only |
+| [`planning/`](planning/) | supplied on 2026-07-18 | Phase 8.5 reform proposal | understand the migration decision, not current status |
+
+## Snapshot files
+
+| File | Target commit | Commit subject |
 | --- | --- | --- |
-| [`9d033db326295874d1f32f23325e430e0461396d/`](9d033db326295874d1f32f23325e430e0461396d/) | Road v0.1 records at that commit | historical comparison only |
-| [`146cb74e81fb9a0b93aa232227b86b56ad7c5d08/`](146cb74e81fb9a0b93aa232227b86b56ad7c5d08/) | Road v0.2 records at that commit | historical comparison only |
-| [`9114d63153711a7fa55e55bd663b27bfc11828b1/`](9114d63153711a7fa55e55bd663b27bfc11828b1/) | Phase 8 record and SOP before final author confirmation | historical acceptance evidence only |
-| [`snapshots/`](snapshots/) | status HTML named for the commit whose state each page records | frozen evidence only |
-| [`planning/`](planning/) | Phase 8.5 reform proposal supplied on 2026-07-18 | understand the migration decision, not current status |
+| [`fix-support-ios-simulator-deployment.html`](snapshots/fix-support-ios-simulator-deployment.html) | `323b2a3` | `fix: support iOS simulator deployment` |
+| [`fix-ios-create-sandbox-vault-on-device.html`](snapshots/fix-ios-create-sandbox-vault-on-device.html) | `73d3f90` | `fix(ios): create sandbox vault on device` |
+| [`docs-finalize-documentation-reform.html`](snapshots/docs-finalize-documentation-reform.html) | `96567d2` | `docs: finalize documentation reform` |
+| [`docs-stop-at-phase-8.html`](snapshots/docs-stop-at-phase-8.html) | `b31bbc4` | `docs: stop_@_phase_8` |
+| [`feat-complete-road-v0-3-candidate.html`](snapshots/feat-complete-road-v0-3-candidate.html) | `2cc40ba` | `feat: complete Road v0.3 candidate` |
 
 ## Archive rule
 
 Do not update a historical document to match current behavior. If history needs correction, add a dated note beside it. If a current authority is incomplete, fix the active authority rather than reviving an archive file.
 
-Status and handoff reports belong in [`snapshots/`](snapshots/) and use the full hash of the commit whose state they record.
+Commit-bound archive directories and snapshot files use the target commit subject in kebab-case. Conventional type and scope words remain in the name; punctuation becomes a hyphen or a word such as `at`. Each archived directory or page retains the full target hash in its header or body.

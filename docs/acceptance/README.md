@@ -4,6 +4,6 @@
 
 - [`phase8.md`](phase8.md) — completed, de-identified one-shot and two-session author evidence.
 - [`road_v0_3.md`](road_v0_3.md): Road v0.3 CP5 candidate evidence plus the ready-to-run, de-identified CP6 author SOP and result table.
-- [`../archive/9114d63153711a7fa55e55bd663b27bfc11828b1/`](../archive/9114d63153711a7fa55e55bd663b27bfc11828b1/) — read-only pre-completion record and the SOP used for the checks.
+- [`../archive/docs-archive-documentation-reform-report/`](../archive/docs-archive-documentation-reform-report/): read-only pre-completion record and the SOP used for the checks.
 
 Do not place prose, inspirations, names, relationships, Vault paths, device identifiers, or secrets here. Phase 8 completion does not itself tag or archive the Road.

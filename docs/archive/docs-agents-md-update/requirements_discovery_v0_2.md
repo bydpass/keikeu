@@ -57,7 +57,7 @@
 - `.trash` 虽然安全，但目前不可见、不可恢复，是一个黑箱。
 
 这些问题已经记录在
-[`Road v0.1 Issue 复盘`](../9d033db326295874d1f32f23325e430e0461396d/issue_retrospective_v0_1.md)
+[`Road v0.1 Issue 复盘`](../docs-clarify-export-cancellation-semantics/issue_retrospective_v0_1.md)
 的 O-01～O-05，应先于外部候选进入实施排序。
 
 ### 2.2 公开工作流证据

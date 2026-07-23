@@ -30,7 +30,7 @@ Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响�
 .venv/bin/flet run src/keikeu_app/main.py
 ```
 
-按 [CP6 产品验收 SOP](docs/acceptance/road_v0_3.md) 完成新 Paper 场景和既有 v2 Paper 的两个 session。结果只记录检索是否更快且清楚、外部编辑器 handoff 是否清楚、是否出现 P0/P1，不记录正文、名称或路径。工程完成范围见 [Road v0.3 状态快照](docs/archive/snapshots/2cc40bad0f2365010e2de93ef3810d824105a6de.html)。
+按 [CP6 产品验收 SOP](docs/acceptance/road_v0_3.md) 完成新 Paper 场景和既有 v2 Paper 的两个 session。结果只记录检索是否更快且清楚、外部编辑器 handoff 是否清楚、是否出现 P0/P1，不记录正文、名称或路径。工程完成范围见 [Road v0.3 状态快照](docs/archive/snapshots/feat-complete-road-v0-3-candidate.html)。
 
 ## 产品原则
 
