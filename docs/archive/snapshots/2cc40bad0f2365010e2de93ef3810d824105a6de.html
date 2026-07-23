@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>2cc40ba · Road v0.3 状态快照</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --page: #efece4;
+      --paper: #fbfaf6;
+      --card: #ffffff;
+      --ink: #1f2d2a;
+      --muted: #64716d;
+      --line: #d8ddd8;
+      --pine: #176557;
+      --pine-deep: #133f38;
+      --pine-soft: #deefe8;
+      --amber: #9a5b16;
+      --amber-soft: #fff0d9;
+      --blue: #355f82;
+      --blue-soft: #e6eef5;
+      --shadow: 0 18px 48px rgb(27 49 43 / 10%);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(rgb(23 101 87 / 4%) 1px, transparent 1px) 0 0 / 28px 28px,
+        linear-gradient(90deg, rgb(23 101 87 / 4%) 1px, transparent 1px) 0 0 / 28px 28px,
+        var(--page);
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif;
+      line-height: 1.65;
+    }
+
+    a { color: var(--pine); }
+    a:focus-visible { outline: 3px solid #e4a23a; outline-offset: 3px; }
+    code {
+      padding: 2px 5px;
+      border-radius: 5px;
+      color: #245b52;
+      background: #e7f1ed;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: .88em;
+      overflow-wrap: anywhere;
+    }
+
+    .archive-banner {
+      padding: 11px 18px;
+      color: #fffaf5;
+      background: #743b3f;
+      font: 700 12px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace;
+      text-align: center;
+    }
+    .archive-banner a { color: #fff4d7; }
+
+    .shell { width: min(1160px, calc(100% - 32px)); margin: 28px auto 56px; }
+    .hero {
+      padding: clamp(28px, 6vw, 62px);
+      border: 1px solid rgb(255 255 255 / 45%);
+      border-radius: 28px;
+      color: #f7fbf8;
+      background:
+        radial-gradient(circle at 86% 12%, rgb(84 168 147 / 78%) 0, transparent 27%),
+        linear-gradient(132deg, #102f2a, var(--pine-deep) 60%, #14584d);
+      box-shadow: var(--shadow);
+    }
+    .eyebrow, .kicker {
+      margin: 0 0 8px;
+      font-size: .74rem;
+      font-weight: 800;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+    .eyebrow { color: #b9ddd3; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 {
+      max-width: 860px;
+      margin-bottom: 16px;
+      font-size: clamp(2.15rem, 6vw, 4.8rem);
+      line-height: 1.04;
+      letter-spacing: -.05em;
+    }
+    h2 {
+      margin-bottom: 9px;
+      font-size: clamp(1.45rem, 3vw, 2.2rem);
+      line-height: 1.2;
+      letter-spacing: -.03em;
+    }
+    h3 { margin-bottom: 7px; font-size: 1.05rem; }
+    .hero-copy { max-width: 770px; margin-bottom: 0; color: #d4e8e2; font-size: 1.08rem; }
+    .meta, .jump { display: flex; flex-wrap: wrap; gap: 8px; }
+    .meta { margin-top: 24px; }
+    .pill {
+      padding: 4px 10px;
+      border: 1px solid rgb(255 255 255 / 23%);
+      border-radius: 999px;
+      color: #eef8f5;
+      background: rgb(5 31 26 / 24%);
+      font-size: .82rem;
+    }
+    .jump { margin: 16px 0 0; }
+    .jump a {
+      padding: 5px 10px;
+      border-radius: 999px;
+      color: var(--pine-deep);
+      background: rgb(255 255 255 / 75%);
+      font-size: .84rem;
+      font-weight: 750;
+      text-decoration: none;
+    }
+    .jump a:hover { background: #fff; }
+
+    section { margin-top: 40px; }
+    .kicker { color: var(--pine); }
+    .intro { max-width: 800px; color: var(--muted); }
+    .grid { display: grid; gap: 15px; }
+    .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .card, .panel, .table-wrap, .next-step {
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      background: rgb(255 255 255 / 88%);
+      box-shadow: 0 7px 20px rgb(27 49 43 / 5%);
+    }
+    .card { padding: 20px; }
+    .card p { margin-bottom: 0; color: var(--muted); font-size: .93rem; }
+    .card strong { display: block; margin-bottom: 5px; font-size: 1.25rem; line-height: 1.25; }
+    .tag {
+      display: inline-block;
+      margin-bottom: 10px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: .72rem;
+      font-weight: 850;
+      letter-spacing: .04em;
+    }
+    .done { color: #176341; background: var(--pine-soft); }
+    .pending { color: #8b4e0d; background: var(--amber-soft); }
+    .bounded { color: var(--blue); background: var(--blue-soft); }
+
+    .checkpoint {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 18px;
+    }
+    .checkpoint div {
+      min-width: 0;
+      padding: 14px 9px;
+      border: 1px solid #b9d8ce;
+      border-radius: 13px;
+      color: #1d604c;
+      background: #eef8f3;
+      text-align: center;
+    }
+    .checkpoint div:last-child {
+      border-color: #e4bd83;
+      color: #86500e;
+      background: #fff7e9;
+    }
+    .checkpoint strong { display: block; font-size: .91rem; }
+    .checkpoint span { display: block; margin-top: 2px; font-size: .72rem; }
+
+    .phase-list { display: grid; gap: 10px; }
+    .phase {
+      display: grid;
+      grid-template-columns: 72px minmax(180px, .85fr) minmax(260px, 1.8fr) 90px;
+      gap: 15px;
+      align-items: start;
+      padding: 15px 17px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgb(255 255 255 / 84%);
+    }
+    .phase-number { color: var(--pine); font-size: .8rem; font-weight: 900; letter-spacing: .06em; }
+    .phase strong { line-height: 1.3; }
+    .phase p { margin: 0; color: var(--muted); font-size: .88rem; }
+    .phase code { justify-self: end; }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      margin-top: 18px;
+    }
+    .flow .panel { position: relative; padding: 20px; }
+    .flow .panel + .panel::before {
+      position: absolute;
+      top: 50%;
+      left: -27px;
+      color: var(--pine);
+      content: "→";
+      font-size: 1.35rem;
+      font-weight: 900;
+      transform: translateY(-50%);
+    }
+    .flow p { margin-bottom: 0; color: var(--muted); font-size: .9rem; }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; min-width: 730px; border-collapse: collapse; }
+    th, td { padding: 13px 15px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { color: #45544f; background: #eef3f0; font-size: .78rem; letter-spacing: .04em; text-transform: uppercase; }
+    td { font-size: .9rem; }
+    tr:last-child td { border-bottom: 0; }
+
+    .checklist { margin: 0; padding: 0; list-style: none; }
+    .checklist li { position: relative; margin: 9px 0; padding-left: 26px; }
+    .checklist li::before { position: absolute; left: 0; font-weight: 900; }
+    .checklist .yes::before { color: #1a7049; content: "✓"; }
+    .checklist .wait::before { color: var(--amber); content: "○"; }
+
+    .next-step {
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      gap: 17px;
+      padding: 22px;
+      border-color: #e2bd87;
+      background: var(--amber-soft);
+    }
+    .next-step .mark {
+      display: grid;
+      width: 54px;
+      height: 54px;
+      place-items: center;
+      border-radius: 50%;
+      color: #fff;
+      background: var(--amber);
+      font-weight: 900;
+    }
+    .next-step p { margin-bottom: 0; }
+
+    .links { display: flex; flex-wrap: wrap; gap: 10px; }
+    .links a {
+      padding: 8px 11px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgb(255 255 255 / 72%);
+      font-size: .88rem;
+      font-weight: 700;
+      text-decoration: none;
+    }
+    footer { margin-top: 44px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: .85rem; }
+    footer p { margin-bottom: 6px; }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        color-scheme: dark;
+        --page: #17201e;
+        --paper: #1c2724;
+        --card: #22302c;
+        --ink: #edf5f1;
+        --muted: #afbeb8;
+        --line: #3a4a45;
+        --pine: #73c7b2;
+        --pine-deep: #bce7dc;
+        --pine-soft: #24483f;
+        --amber: #e4a959;
+        --amber-soft: #4a351d;
+        --blue: #9fc4df;
+        --blue-soft: #273e52;
+      }
+      code { color: #bde1d6; background: #29443c; }
+      .checkpoint div { border-color: #386657; color: #9ad5c3; background: #203c34; }
+      .checkpoint div:last-child { border-color: #7b5b2e; color: #efbd75; background: #3c2d1b; }
+      .tag.done { color: #a9dfc4; }
+      .tag.pending { color: #f0c17b; }
+      th { color: #c5d2cd; background: #293733; }
+      .jump a { color: #153a32; }
+      .next-step .mark { color: #23190c; }
+    }
+
+    @media (max-width: 820px) {
+      .shell { width: min(100% - 24px, 720px); margin-top: 16px; }
+      .hero { border-radius: 21px; }
+      .grid.three, .grid.two, .flow { grid-template-columns: 1fr; }
+      .flow { gap: 10px; }
+      .flow .panel + .panel::before { display: none; }
+      .checkpoint { grid-template-columns: repeat(4, 1fr); }
+      .phase { grid-template-columns: 55px 1fr; gap: 5px 12px; }
+      .phase p { grid-column: 2; }
+      .phase code { grid-column: 2; justify-self: start; }
+    }
+
+    @media (max-width: 480px) {
+      .shell { width: 100%; margin: 0; }
+      .archive-banner { text-align: left; }
+      .hero { border: 0; border-radius: 0; box-shadow: none; }
+      section, footer { margin-right: 16px; margin-left: 16px; }
+      .checkpoint { grid-template-columns: repeat(2, 1fr); }
+      .phase { grid-template-columns: 1fr; }
+      .phase p, .phase code { grid-column: 1; }
+      .next-step { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="archive-banner">
+    ARCHIVED · READ ONLY · Snapshot of 2cc40bad0f2365010e2de93ef3810d824105a6de ·
+    <a href="../../PROJECT.md">Current status: docs/PROJECT.md</a>
+  </div>
+
+  <main class="shell">
+    <header class="hero">
+      <p class="eyebrow">keikeu · Road v0.3 · 2026-07-22</p>
+      <h1>工程已到 CP5。<br>你还要完成 CP6。</h1>
+      <p class="hero-copy">Phase 0 到 Phase 7 的代码、测试、macOS candidate smoke 和三张 HTML map 已完成。两类真实作者场景决定产品验收结果。</p>
+      <div class="meta" aria-label="状态元数据">
+        <span class="pill">目标提交：2cc40ba</span>
+        <span class="pill">分支：feat/roadv03-construction</span>
+        <span class="pill">276 tests passed</span>
+        <span class="pill">无 push · 无 v0.3 tag</span>
+      </div>
+      <nav class="jump" aria-label="页面导航">
+        <a href="#position">当前坐标</a>
+        <a href="#phases">完成清单</a>
+        <a href="#product">产品闭环</a>
+        <a href="#evidence">验证</a>
+        <a href="#remaining">剩余工作</a>
+      </nav>
+    </header>
+
+    <section id="position">
+      <p class="kicker">01 · position</p>
+      <h2>当前坐标</h2>
+      <div class="grid three">
+        <article class="card">
+          <span class="tag done">完成</span>
+          <strong>Phase 0–7</strong>
+          <p>权威、路径安全、Paper v3、文件夹与 Trash、Library、Flashcard、候选版收口均进入本地提交。</p>
+        </article>
+        <article class="card">
+          <span class="tag done">完成</span>
+          <strong>CP5</strong>
+          <p>macOS synthetic 与 copied-Vault candidate flow 通过。smoke 找出的 P1、P2 已修复并复验。</p>
+        </article>
+        <article class="card">
+          <span class="tag pending">待开发者</span>
+          <strong>CP6</strong>
+          <p>你要用已备份的真实作者 Vault 完成新 Paper 和既有 v2 Paper 两类场景。</p>
+        </article>
+      </div>
+      <div class="checkpoint" aria-label="Road v0.3 checkpoints">
+        <div><strong>CP0</strong><span>范围冻结</span></div>
+        <div><strong>CP1</strong><span>路径安全</span></div>
+        <div><strong>CP2</strong><span>Paper v3</span></div>
+        <div><strong>CP3</strong><span>Folder / Trash</span></div>
+        <div><strong>CP4</strong><span>UI engineering</span></div>
+        <div><strong>CP5</strong><span>macOS smoke</span></div>
+        <div><strong>CP6</strong><span>产品验收待办</span></div>
+      </div>
+    </section>
+
+    <section id="phases">
+      <p class="kicker">02 · completed work</p>
+      <h2>八个 Phase 已完成</h2>
+      <p class="intro">每个 Phase 对应一个本地提交。下面列出用户可见结果和核心工程边界。</p>
+      <div class="phase-list">
+        <article class="phase">
+          <span class="phase-number">PHASE 0</span>
+          <strong>冻结权威与验收</strong>
+          <p>确认 Road 范围、fixtures、checkpoint 与 architecture 最终校准时点。</p>
+          <code>bd65112</code>
+        </article>
+        <article class="phase">
+          <span class="phase-number">PHASE 1</span>
+          <strong>加固 Vault 边界</strong>
+          <p>验证 Home 内路径、Vault 切换、复制校验与 no-follow 文件操作。</p>
+          <code>5746d89</code>
+        </article>
+        <article class="phase">
+          <span class="phase-number">PHASE 2</span>
+          <strong>升级 Paper v3</strong>
+          <p>增加 Paper 与 Highlight 名称，保留顺序、未知 frontmatter 和 mixed-schema round trip。</p>
+          <code>a09aed4</code>
+        </article>
+        <article class="phase">
+          <span class="phase-number">PHASE 3</span>
+          <strong>支持文件夹路径</strong>
+          <p>Paper 可留在 <code>cache/</code> 根层或一个子文件夹，index 使用 Vault-relative path。</p>
+          <code>096abdc</code>
+        </article>
+        <article class="phase">
+          <span class="phase-number">PHASE 4</span>
+          <strong>接通 Folder 与 Trash</strong>
+          <p>创建、改名、合并、移动、软删除、恢复、永久删除和同目录分支复制进入 core。</p>
+          <code>4af96c7</code>
+        </article>
+        <article class="phase">
+          <span class="phase-number">PHASE 5</span>
+          <strong>重建 Paper Library</strong>
+          <p>侧栏 scope、搜索、排序、选择、批量移动、branch、Trash 和系统文件 handoff 可用。</p>
+          <code>613a205</code>
+        </article>
+        <article class="phase">
+          <span class="phase-number">PHASE 6</span>
+          <strong>完成 Flashcard 聚焦流</strong>
+          <p>Paper selector、命名卡片、列表、方向键、合法跳页和每日一次启动卡可用。</p>
+          <code>803a290</code>
+        </article>
+        <article class="phase">
+          <span class="phase-number">PHASE 7</span>
+          <strong>收口 macOS candidate</strong>
+          <p>校准 architecture、design、interaction，完成可见 smoke，并修复无 Trash Vault 和 preview 计数问题。</p>
+          <code>2cc40ba</code>
+        </article>
+      </div>
+    </section>
+
+    <section id="product">
+      <p class="kicker">03 · product flow</p>
+      <h2>目前能走通的产品闭环</h2>
+      <div class="flow" aria-label="Road v0.3 product flow">
+        <article class="panel">
+          <span class="tag done">Paper</span>
+          <h3>整理创作材料</h3>
+          <p>命名 Paper 和 Highlight，调整 Highlight 顺序，把 Paper 放进一个文件夹。</p>
+        </article>
+        <article class="panel">
+          <span class="tag done">Flashcard</span>
+          <h3>按卡片回看</h3>
+          <p>从 Paper selector 选择材料，用列表、方向键或页码浏览 Summary 与 Highlights。</p>
+        </article>
+        <article class="panel">
+          <span class="tag done">Handoff</span>
+          <h3>交给外部编辑器</h3>
+          <p>keikeu 管 Paper 与本地组织，外部编辑器承接正文写作。</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="evidence">
+      <p class="kicker">04 · evidence</p>
+      <h2>目标提交的检查记录</h2>
+      <div class="grid two">
+        <article class="card">
+          <span class="tag done">自动检查</span>
+          <ul class="checklist">
+            <li class="yes"><code>pytest -q</code>：276 passed in 47.37s</li>
+            <li class="yes"><code>compileall -q src</code>：通过</li>
+            <li class="yes"><code>scripts/check_docs.py</code>：27 active、16 required</li>
+            <li class="yes"><code>git diff --check</code>：通过</li>
+          </ul>
+        </article>
+        <article class="card">
+          <span class="tag done">可见 smoke</span>
+          <ul class="checklist">
+            <li class="yes">新建、命名、移动、branch、Trash、恢复</li>
+            <li class="yes">Flashcard、daily card、relaunch、Vault switch</li>
+            <li class="yes">v2 lazy upgrade 与 Finder move + Refresh</li>
+            <li class="yes">缺失 <code>.trash/</code> 和 folder preview 修复复验</li>
+          </ul>
+        </article>
+      </div>
+
+      <div class="table-wrap" style="margin-top:15px">
+        <table>
+          <thead>
+            <tr><th>检查面</th><th>结果</th><th>边界</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>HTML maps</td>
+              <td>nav、theme、search、filter、tabs、stepper 与 prototype 可用；375/768/1440 无水平溢出。</td>
+              <td>仓库没有视觉 baseline；环境没有 axe-core。</td>
+            </tr>
+            <tr>
+              <td>作者数据</td>
+              <td>smoke 使用 synthetic 或 copied Vault；临时副本已删除。</td>
+              <td>唯一真实 Vault、真实 config 和真实 device state 未修改。</td>
+            </tr>
+            <tr>
+              <td>平台范围</td>
+              <td>macOS candidate flow 有可见证据。</td>
+              <td>真实 provider、跨设备同步、外部卷与 Apple App Sandbox 未验证。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="remaining">
+      <p class="kicker">05 · next gate</p>
+      <h2>剩余工作只包含 CP6</h2>
+      <div class="next-step">
+        <span class="mark">CP6</span>
+        <div>
+          <h3>用真实作者流程做产品验收</h3>
+          <p>先备份可恢复的真实 Vault。完成新 Paper 场景，再用既有 v2 Paper 完成两个 session。只记录检索是否更快且清楚、外部编辑器 handoff 是否清楚、是否出现 P0/P1。不要记录正文、名称或路径。</p>
+        </div>
+      </div>
+      <div class="grid two" style="margin-top:15px">
+        <article class="card">
+          <span class="tag pending">仍待决定</span>
+          <strong>产品验收</strong>
+          <p>两个场景完成且没有未解决 P0/P1 后，CP6 才能关闭。</p>
+        </article>
+        <article class="card">
+          <span class="tag bounded">独立决定</span>
+          <strong>tag、archive、push</strong>
+          <p>当前没有 v0.3 tag，也没有远程 push。开发者在 CP6 后决定后续动作。</p>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="links-title">
+      <p class="kicker">06 · source links</p>
+      <h2 id="links-title">继续查看</h2>
+      <div class="links">
+        <a href="../../PROJECT.md">当前坐标</a>
+        <a href="../../planbook_road_v0_3.md">Road v0.3 Planbook</a>
+        <a href="../../acceptance/road_v0_3.md">CP5 证据与 CP6 SOP</a>
+        <a href="../../architecture/architecture.html">Architecture</a>
+        <a href="../../design/design.html">Design</a>
+        <a href="../../design/interaction.html">Interaction</a>
+        <a href="../README.md">Archive 说明</a>
+      </div>
+    </section>
+
+    <footer>
+      <p>本页冻结提交 <code>2cc40bad0f2365010e2de93ef3810d824105a6de</code> 的状态。</p>
+      <p>活动状态以 <a href="../../PROJECT.md">docs/PROJECT.md</a> 为准。Archive 不定义当前产品行为。</p>
+    </footer>
+  </main>
+</body>
+</html>
