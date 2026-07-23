@@ -12,7 +12,7 @@
   <div class="shell">
     <aside class="rail" aria-label="页面目录">
       <div class="rail-brand">KEIKEU / DESIGN</div>
-      <div class="rail-meta">ROAD V0.3 TARGET MAP · 2026-07-22</div>
+      <div class="rail-meta">ROAD V0.3 IMPLEMENTED SYSTEM · 2026-07-22</div>
       <nav>
         <a href="#direction">设计方向</a>
         <a href="#tokens">Token</a>
@@ -43,9 +43,9 @@
       </div>
 
       <header class="hero">
-        <div class="eyebrow">Road v0.3 visual target / executable specimen</div>
+        <div class="eyebrow">Road v0.3 implemented visual system / executable specimen</div>
         <h1>像一台安静的旧文字处理机，而不是一间催更办公室。</h1>
-        <p class="lede">这页定义 Road v0.3 的视觉 token、组件形态、关键状态、响应式分配与无障碍底线；<a href="../PROJECT.md">PROJECT</a>、源码与测试记录当前实现阶段。Road 完成后按实际 Flet 界面再次校准本页。</p>
+        <p class="lede">这页已按 Road v0.3 macOS Flet 界面校准视觉 token、组件形态、关键状态与无障碍底线；移动设备样张只表达独立 Phase 7.5 的平台分配，不伪装成当前 macOS 分支能力。证据状态见 <a href="../PROJECT.md">PROJECT</a>。</p>
         <div class="status-row">
           <span class="ticket ok">离线可用</span>
           <span class="ticket ok">无外部资产</span>
@@ -178,7 +178,7 @@
         </section>
 
         <section class="section searchable" id="devices" data-search="responsive mac iphone ipad mobile desktop tablet 响应式 手机 电脑 平板 safe area">
-          <div class="section-head"><div class="section-number">06</div><div><h2>设备分配</h2><p>同一 Paper 模型，不把桌面布局硬塞进窄屏。</p></div></div>
+          <div class="section-head"><div class="section-number">06</div><div><h2>设备分配</h2><p>macOS 是当前 Road 实现；移动样张属于独立 Phase 7.5，不把桌面布局硬塞进窄屏。</p></div></div>
           <div class="tabs" data-panel-group="device" role="tablist" aria-label="设备样张">
             <button class="active" type="button" role="tab" aria-selected="true" data-panel-target="mac">macOS</button>
             <button type="button" role="tab" aria-selected="false" data-panel-target="phone">iPhone</button>
@@ -190,11 +190,11 @@
               <div class="device-body"><div class="eyebrow">Paper / K-20260718-001</div><h3 style="margin-top:10px">纸片编辑器</h3><div class="mini-card">Summary<br><br><span class="muted">主编辑面 + 侧栏导航 + 外部编辑器并列</span></div></div>
             </div>
             <div class="device phone" data-panel="device" data-panel-id="phone">
-              <div class="device-body"><div class="eyebrow">Flashcard · 2 / 4</div><div class="mini-card" style="margin-top:18px;min-height:290px">合成 Highlight 样张<br><br><span class="muted">全屏、SafeArea、触控目标、无固定桌面宽度</span></div></div>
+              <div class="device-body"><div class="eyebrow">PHASE 7.5 · Flashcard · 2 / 4</div><div class="mini-card" style="margin-top:18px;min-height:290px">合成 Highlight 样张<br><br><span class="muted">独立分支：全屏、SafeArea、触控目标、无固定桌面宽度</span></div></div>
               <div class="device-nav">纸片　Flashcard　文件库</div>
             </div>
             <div class="device tablet" data-panel="device" data-panel-id="tablet">
-              <div class="device-body"><div class="eyebrow">KEIKEU</div><div class="mini-card" style="margin-top:18px;min-height:320px">Flashcard<br><br><span class="muted">只读聚焦视图</span></div></div>
+              <div class="device-body"><div class="eyebrow">PHASE 7.5 · KEIKEU</div><div class="mini-card" style="margin-top:18px;min-height:320px">Flashcard<br><br><span class="muted">独立分支的只读聚焦视图</span></div></div>
               <div class="device-body" style="background:var(--paper-2)"><div class="eyebrow">EXTERNAL EDITOR</div><div class="mini-card" style="margin-top:18px;min-height:320px">正文属于外部应用<br><br><span class="muted">keikeu 不读取这一侧</span></div></div>
             </div>
           </div>
@@ -208,27 +208,28 @@
             <article class="card flat"><h3>Contrast</h3><p>关键状态不只靠颜色；正文不使用 muted 色；错误信息与字段建立可读关联。</p></article>
             <article class="card flat"><h3>Motion</h3><p>尊重 reduced-motion；没有动效也能理解状态和完成任务。</p></article>
             <article class="card flat"><h3>Text</h3><p>长代号、中文、英文和系统字号放大后必须换行，不与按钮或计数器重叠。</p></article>
-            <article class="card flat"><h3>Responsive</h3><p>移动端使用 SafeArea、底部导航和单滚动区；桌面保留侧栏与内容宽度。</p></article>
+            <article class="card flat"><h3>Responsive</h3><p>当前 macOS 保留侧栏与内容宽度；独立 Phase 7.5 移动壳使用 SafeArea、底部导航和单滚动区。</p></article>
             <article class="card flat"><h3>Offline / print</h3><p>无网络、无构建可打开；打印隐藏交互控件但保留全部规范文字。</p></article>
           </div>
         </section>
 
         <section class="section searchable" id="sources" data-search="source code links implementation 源码 锚点 truth">
-          <div class="section-head"><div class="section-number">08</div><div><h2>目标实现锚点</h2><p>从视觉规范到目标源码最多两次点击；当前收敛阶段见 PROJECT。</p></div></div>
+          <div class="section-head"><div class="section-number">08</div><div><h2>实现锚点</h2><p>从视觉规范到当前 macOS 源码最多两次点击；独立平台证据见 PROJECT。</p></div></div>
           <div class="table-wrap"><table class="matrix">
             <thead><tr><th>事实</th><th>源码</th><th>验证</th></tr></thead>
             <tbody>
               <tr><td>颜色、字号、间距、圆角、侧栏宽度</td><td><a href="../../src/keikeu_app/theme.py">theme.py</a></td><td><a href="../../tests/test_app_pages.py">test_app_pages.py</a></td></tr>
               <tr><td>标题、纸张卡、字段、按钮、状态票据</td><td><a href="../../src/keikeu_app/widgets/__init__.py">widgets</a></td><td><a href="../../tests/test_app_pages.py">test_app_pages.py</a></td></tr>
-              <tr><td>桌面侧栏、移动底栏、安全区</td><td><a href="../../src/keikeu_app/main.py">main.py</a></td><td><a href="../../tests/test_app_pages.py">test_app_pages.py</a></td></tr>
+              <tr><td>macOS 自定义侧栏、Library scopes 与 daily start</td><td><a href="../../src/keikeu_app/main.py">main.py</a></td><td><a href="../../tests/test_app_pages.py">test_app_pages.py</a></td></tr>
+              <tr><td>Phase 7.5 移动底栏与 SafeArea（独立分支）</td><td><a href="../PROJECT.md">PROJECT</a></td><td>不能替代 Road v0.3 macOS 证据</td></tr>
               <tr><td>字段错误与外部修改反馈</td><td><a href="../../src/keikeu_app/pages/paper_page.py">paper_page.py</a></td><td><a href="../../tests/test_app_pages.py">test_app_pages.py</a></td></tr>
             </tbody>
           </table></div>
-          <div class="callout ok" style="margin-top:14px">Road 施工期间，本页是目标态，<a href="../PROJECT.md">PROJECT</a> 是当前坐标。Road 完成后按 <a href="../SPEC.md">SPEC</a>、<a href="../RULES.md">RULES</a>、源码、测试与 smoke 校准样张，不保留未声明双活。</div>
+          <div class="callout ok" style="margin-top:14px">本页已按 <a href="../SPEC.md">SPEC</a>、<a href="../RULES.md">RULES</a>、当前 macOS 源码、测试与 candidate smoke 校准；<a href="../PROJECT.md">PROJECT</a> 单独记录 CP5、平台与产品验收边界，不保留未声明双活。</div>
         </section>
       </div>
 
-      <footer class="footer">keikeu Design System · Road v0.3 target authority · current Phase in PROJECT / offline / no external assets</footer>
+      <footer class="footer">keikeu Design System · Road v0.3 implemented macOS system / Phase 7.5 panels explicitly separate / offline</footer>
     </main>
   </div>
   <script src="../assets/map.js"></script>

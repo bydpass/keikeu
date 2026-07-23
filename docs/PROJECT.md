@@ -12,13 +12,13 @@ Updated: 2026-07-22
 | Road v0.2 Phase 8 product acceptance | Complete | The author completed the real one-shot and two-session short/medium scenarios; no P0/P1 was reported. P2/P3 observations are recorded separately. |
 | Phase 7.5 lightweight iOS | Quick-test build complete on an independent branch | Responsive shell and app-sandbox Vault were exercised on `codex/fix-ios-device-readiness`. This is a lightweight iOS version for rapid testing, not a step in the macOS Road sequence. |
 | Phase 8.5 / Road v0.3 preparation | Documentation reform implemented; review pending | This is the precursor to the next macOS version. Current evidence covers the authority map, HTML maps, archive, link gate, browser QA, and bounded Graphify trial; independent fresh-agent cold start was not run. |
-| Road v0.3 Phase 6 | Complete; Phase 7 next | The approved [Planbook](planbook_road_v0_3.md) is executing: Flashcard now selects Papers by indexed path, resets to page 1, supports list/jump/arrow navigation with bounded feedback, and stores no position. The daily start card claims only a local date before display, while `Cmd+S`, `Cmd+F`, and `Esc` use page-local handlers. CP4 is complete; final documentation calibration, candidate smoke, and product acceptance remain Phase 7 scope. |
+| Road v0.3 Phase 7 / CP5 | Engineering and macOS candidate smoke complete; CP6 pending | The [Planbook](planbook_road_v0_3.md) implementation, final HTML-map calibration, synthetic full flow, copied-Vault lazy upgrade/Finder move, launch/relaunch, and focused P1/P2 repair reverification are complete. Product acceptance still requires the two de-identified real-author scenarios in [road_v0_3.md](acceptance/road_v0_3.md); no tag or archive decision has been made. |
 
 Phase 8 product acceptance is complete. Road v0.2 is marked by local annotated tag `v0.2.0` at `d0feac0269a5619f5dbf27c04347ba69c5665b42`; archival remains a separate developer decision. Automated tests, platform smoke, and author acceptance remain distinct evidence.
 
 Phase 7.5 and Phase 8.5 are separate tracks: Phase 7.5 is the independent lightweight iOS test version; Phase 8.5 prepares Road v0.3 and the next macOS version. Phase 7.5 is not a merge gate for Phase 8.5.
 
-Road v0.3 product decisions and Planbook are approved. Phase 0 authority/fixtures through Phase 6 Flashcard/daily-card/keyboard engineering are complete, including CP4. Safe relocation supports v0.1 and mixed Paper v2/v3 Vaults. Native atomic no-replace rename/exchange is available on Darwin/Linux; unsupported platforms fail before destructive mutation. `architecture.html` remains the explicitly marked Road v0.3 target until Phase 7 recalibrates it against verified code.
+Road v0.3 product decisions and Planbook are approved. Phase 0 authority/fixtures through Phase 7 engineering and macOS candidate smoke are complete, including CP5. Safe relocation supports v0.1 and mixed Paper v2/v3 Vaults. Native atomic no-replace rename/exchange is available on Darwin/Linux; unsupported platforms fail before destructive mutation. `architecture.html`, design, and interaction are calibrated to the verified Road v0.3 macOS implementation; CP6 real-author acceptance remains open.
 
 ## Product flow
 
@@ -57,8 +57,8 @@ README
 ```
 
 - **Authority:** [SPEC](SPEC.md) owns product behavior and acceptance; [RULES](RULES.md) owns engineering, interaction, data, Git, and evidence constraints; [AGENTS](../AGENTS.md) owns agent procedure. Runtime facts come from [`src/`](../src/) and [`tests/`](../tests/).
-- **Views:** [design](design/design.html) shows v0.3 target visual tokens and component states; [interaction](design/interaction.html) shows target user paths and states; [architecture](architecture/architecture.html) shows target modules, dependencies, and lifecycles. Current implementation evidence remains in `src/`, `tests/`, and this map.
-- **Evidence:** [acceptance](acceptance/README.md) holds the completed Phase 8 evidence; the used SOP is archived at its commit baseline. [generated](generated/README.md) holds rebuildable observations; the [cold-start audit](cold_start_report.md) records the Phase 8.5 evidence boundary. None defines intent by itself.
+- **Views:** [design](design/design.html) shows the implemented v0.3 macOS visual system and explicitly separate Phase 7.5 mobile specimens; [interaction](design/interaction.html) shows implemented user paths and states; [architecture](architecture/architecture.html) shows implemented modules, dependencies, and lifecycles. Runtime evidence remains in `src/`, `tests/`, and this map.
+- **Evidence:** [acceptance](acceptance/README.md) holds completed Road v0.2 author evidence plus Road v0.3 CP5 evidence and the pending CP6 SOP. [generated](generated/README.md) holds rebuildable observations; the [cold-start audit](cold_start_report.md) records the Phase 8.5 evidence boundary. None defines intent by itself.
 - **Context:** [ADR 0001](architecture/decisions/0001-document-authority.md) explains the authority split; [ADR 0002](architecture/decisions/0002-home-write-boundary.md) fixes the Home write boundary and App Sandbox deferral; [ADR 0003](architecture/decisions/0003-paper-v3-one-level-folders.md) fixes Paper v3 and one-level folders. [Manual](manual/README.md) teaches people; [archive](archive/README.md) preserves superseded records. Neither overrides authority.
 
 ## Commands
@@ -74,9 +74,9 @@ Application tests must not be inferred from documentation checks. Platform smoke
 
 ## Open gates
 
-1. Create the focused local Phase 6 commit from the reviewed implementation and evidence; do not push or tag.
-2. Begin Phase 7 by calibrating `architecture.html`, design, and interaction against the verified implementation before the full candidate workflow.
-3. Keep destructive workflow checks on synthetic/copied Vaults and the independent Phase 7.5 iOS build outside every Road v0.3 macOS gate.
+1. Run the two de-identified real-author scenarios in [Road v0.3 acceptance](acceptance/road_v0_3.md) and record retrieval clarity/speed, external-editor handoff clarity, and any P0/P1 without private content.
+2. Fix and reverify any P0/P1 before closing CP6; keep P2/P3 as separately classified next-Road candidates.
+3. Decide tag/archive only after CP6; do not push, tag, or archive automatically.
 
 ## Known candidate, not active scope
 

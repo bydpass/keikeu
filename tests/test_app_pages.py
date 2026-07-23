@@ -648,6 +648,22 @@ def test_library_vault_switch_cancel_returns_to_the_current_shell(tmp_path):
     )
 
 
+def test_library_opens_supported_vault_without_existing_trash(tmp_path):
+    init_vault(tmp_path)
+    path = write_paper(tmp_path, _paper("K-20260714-001", "Legacy layout."))
+    rebuild_index(tmp_path)
+    (tmp_path / ".trash" / "cache").rmdir()
+    (tmp_path / ".trash").rmdir()
+
+    root = build_library_page(_ctx(FakePage(), tmp_path))
+
+    assert "Trash · 0" in _texts(root)
+    _button(root, "删除").on_click(None)
+    assert not path.exists()
+    assert (tmp_path / ".trash/cache/K-20260714-001.md").is_file()
+    assert "Trash · 1" in _texts(root)
+
+
 def test_library_searches_code_summary_and_tags_and_opens_paper(tmp_path):
     init_vault(tmp_path)
     first = write_paper(tmp_path, _paper("K-20260714-001", "Platform farewell.", ["rain"]))

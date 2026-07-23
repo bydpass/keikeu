@@ -12,7 +12,7 @@
   <div class="shell">
     <aside class="rail" aria-label="页面目录">
       <div class="rail-brand">KEIKEU / ARCH</div>
-      <div class="rail-meta">ROAD V0.3 TARGET MAP · 2026-07-22</div>
+      <div class="rail-meta">ROAD V0.3 IMPLEMENTED MAP · 2026-07-22</div>
       <nav>
         <a href="#boundary">系统边界</a>
         <a href="#modules">模块地图</a>
@@ -44,9 +44,9 @@
       </div>
 
       <header class="hero">
-        <div class="eyebrow">Road v0.3 target architecture / staged implementation</div>
+        <div class="eyebrow">Road v0.3 verified architecture / implemented lifecycle</div>
         <h1>作者资产在中间，应用壳层在外面。</h1>
-        <p class="lede">这张图描述已批准的 Road v0.3 目标模块边界、数据方向、文件生命周期和失败恢复；<a href="../PROJECT.md">PROJECT</a>、源码与测试记录当前实现阶段。Road 完成后再次按实际实现校准本页；生成图只能观察现实，不能改写本页意图。</p>
+        <p class="lede">这张图已按 Road v0.3 实际代码校准模块边界、数据方向、文件生命周期和失败恢复；<a href="../PROJECT.md">PROJECT</a> 区分工程、macOS smoke 与产品验收状态。生成图只能观察现实，不能改写本页边界。</p>
         <div class="status-row">
           <span class="ticket ok">Core = pure Python</span>
           <span class="ticket ok">Markdown = canonical</span>
@@ -85,7 +85,7 @@
           </div>
           <div class="diagram" style="margin-top:14px">
             <div class="flow" style="--cols:4">
-              <div class="node" data-layer="app"><b><a href="../../src/keikeu_app/main.py">app/main.py</a></b><small>Vault gate、路由、桌面侧栏 / 移动底栏</small></div>
+              <div class="node" data-layer="app"><b><a href="../../src/keikeu_app/main.py">app/main.py</a></b><small>daily/Vault gate、路由与 macOS 自定义侧栏</small></div>
               <div class="node" data-layer="app"><b><a href="../../src/keikeu_app/pages/paper_page.py">paper_page.py</a></b><small>Paper / Highlight 命名；拒绝外部改动覆盖</small></div>
               <div class="node" data-layer="app"><b><a href="../../src/keikeu_app/pages/flashcard_page.py">flashcard_page.py</a></b><small>按相对路径读取；只读投影，每次第 1 页</small></div>
               <div class="node" data-layer="app"><b><a href="../../src/keikeu_app/pages/library_page.py">library_page.py</a></b><small>scope 检索、文件夹、批量操作与 Trash</small></div>
@@ -137,6 +137,12 @@
             <div class="node" data-layer="app"><b>transient card index</b><small>selector / list / arrows / bounded jump</small></div>
           </div>
           <div class="callout ok" style="margin-top:14px">Flashcard 位置不持久化。设备状态仅保存 `last_daily_card_date`；删除它不能改变 Paper、索引或作者在外部编辑器中的正文。</div>
+          <div class="flow" style="--cols:4;margin-top:14px">
+            <div class="node" data-layer="app"><b>validated app launch</b><small>先固定 Home 内 Vault root identity</small></div>
+            <div class="node" data-layer="disk"><b>atomic daily claim</b><small>只写 last_daily_card_date</small></div>
+            <div class="node" data-layer="app"><b>built-in start card</b><small>当日本机首次启动才显示</small></div>
+            <div class="node" data-layer="app"><b>blank Paper</b><small>3 秒、Enter 或“开始写”；幂等进入</small></div>
+          </div>
         </section>
 
         <section class="section searchable" id="library" data-search="index rebuild damaged error library trash restore recovery search 索引 重建 损坏 恢复 回收站 搜索">
@@ -223,12 +229,12 @@
             <article class="card flat"><h3>Normative</h3><p><a href="../SPEC.md">SPEC</a>、<a href="../RULES.md">RULES</a> 与本图表达目标和边界。</p></article>
             <article class="card flat"><h3>Observed</h3><p><a href="../generated/graphify/README.md">Graphify trial</a> 与测试只能描述仓库实际连接和已验证行为。</p></article>
           </div>
-          <div class="callout warn" style="margin-top:14px">本页是已批准的 Road v0.3 目标；<a href="../PROJECT.md">PROJECT</a> 明示当前 Phase 与尚未收敛处。Road 完成后必须按源码、测试与 smoke 再校准本页；冲突只允许修实现、修规范或登记临时偏差。</div>
+          <div class="callout ok" style="margin-top:14px">本页已按 Road v0.3 源码、测试与 macOS synthetic/copied-Vault candidate smoke 校准；<a href="../PROJECT.md">PROJECT</a> 继续单独记录 CP5 与产品验收状态。后续冲突只允许修实现、修规范或登记明确偏差。</div>
           <p class="source-link">决策：<a href="decisions/0001-document-authority.md">ADR 0001</a> · 项目坐标：<a href="../PROJECT.md">PROJECT</a></p>
         </section>
       </div>
 
-      <footer class="footer">keikeu Architecture Map · Road v0.3 target authority · current Phase in PROJECT / final calibration after Road</footer>
+      <footer class="footer">keikeu Architecture Map · Road v0.3 implemented module and lifecycle map · evidence status in PROJECT</footer>
     </main>
   </div>
   <script src="../assets/map.js"></script>

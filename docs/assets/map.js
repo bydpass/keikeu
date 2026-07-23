@@ -37,7 +37,9 @@
       const query = search.value.trim().toLocaleLowerCase();
       let visibleCount = 0;
       document.querySelectorAll(".section.searchable").forEach(function (section) {
-        const haystack = (section.dataset.search || section.textContent).toLocaleLowerCase();
+        const haystack = (
+          (section.dataset.search || "") + " " + section.textContent
+        ).toLocaleLowerCase();
         const visible = !query || haystack.includes(query);
         section.hidden = !visible;
         if (visible) visibleCount += 1;

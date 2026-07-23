@@ -1,9 +1,9 @@
 # keikeu Road v0.3 Planbook
 
 > Road：macOS Paper Library / Retrieval Quality  
-> 状态：**APPROVED — Phase 6 complete / Phase 7 next**
+> 状态：**APPROVED — Phase 7 engineering + CP5 complete / CP6 product acceptance pending**
 > 基线：`d0feac0269a5619f5dbf27c04347ba69c5665b42`（Road v0.2 已验收，local annotated tag `v0.2.0`）  
-> 当前 checkpoint：**CP4 complete / Phase 6 engineering complete / CP5 pending**
+> 当前 checkpoint：**CP5 complete / macOS candidate smoke complete / CP6 pending**
 > 日期：2026-07-22
 > 权限：本文件是 Road v0.3 的已批准执行计划。[`SPEC.md`](SPEC.md)、[`RULES.md`](RULES.md) 与三个 HTML map 描述 v0.3 目标；当前实现进度与 v0.2 runtime 事实分别见 [`PROJECT.md`](PROJECT.md)、`src/` 和 `tests/`。
 
@@ -547,6 +547,8 @@ Gate：无位置 persistence、跨 Paper reset、非法跳页、same-day once、
 
 Gate：没有 P0/P1；所有高风险文件操作有证据；未验证项明确列出。
 
+**完成证据（2026-07-22）**：三张 HTML map 已按最终 macOS 实现校准，移除 target/current 过渡声明。可见 synthetic candidate 实际完成 Vault 初始化、daily card、Paper 新建/命名、一层文件夹移动、分支复制、Flashcard、Trash/恢复、同日 relaunch 与系统目录选择器 Vault switch；复制 Vault 实际完成 v2 lazy save、Finder 一层外部移动与显式 Refresh，临时副本随后全部删除。smoke 发现并修复了两个问题：合法但尚无 `.trash/` 的 Vault 无法打开 Library（P1），以及 Vault preview 漏计一层文件夹 Paper（P2）；修复后均在 Flet 中复验。最终 276 项自动测试、compile、文档与 diff 检查通过；HTML browser QA 的交互和三档 overflow 检查通过，视觉 baseline 与 axe-core 审计明确未完成。复制/校验/切换的 relocation 结果有 copied-Vault 证据，真实 outside-Home/external-volume 来源未拿来做交互首测；该路径边界继续由直接自动化测试覆盖，不宣称 provider 或外部卷实测。CP5 完成；CP6 必须由开发者按 [`acceptance/road_v0_3.md`](acceptance/road_v0_3.md) 完成两类去标识化真实作者场景，tag/归档仍未授权。
+
 ## 10. Checkpoints
 
 | Checkpoint | 含义 | 当前状态 |
@@ -556,7 +558,7 @@ Gate：没有 P0/P1；所有高风险文件操作有证据；未验证项明确�
 | CP2 | Paper v3 与 mixed-schema round trip | **Complete** |
 | CP3 | Folder/Trash core 完成，UI 尚未成为证据 | Complete |
 | CP4 | Paper/Library/Flashcard UI engineering complete | **Complete** |
-| CP5 | macOS candidate smoke complete | Pending |
+| CP5 | macOS candidate smoke complete | **Complete** |
 | CP6 | Road v0.3 product accepted；是否 tag 另行决定 | Pending |
 
 任何 checkpoint 都不能用旧测试数字、prototype 或上一 Road 的 smoke 代替当前证据。
@@ -621,4 +623,4 @@ flet run src/keikeu_app/main.py
 - legacy duplicate code 保留、报告并阻断 mutation，不自动改号；以及
 - unsafe Vault 先只读分类，不跟随 symlink，仅将普通目录/regular files byte-copy/verify 到 Home；v2/v3 再解析并重建 index，v0.1 改走安全副本上的现有 preflight 与 migration gate，不写原件也不以真实唯一 Vault 首测。
 
-Phase 0 权威/fixture 到 Phase 6 Flashcard/daily card/keyboard engineering 已完成，CP4 关闭；下一步是 Phase 7 按最终代码校准三张 HTML map、完成 macOS candidate workflow，并将工程、平台 smoke 与产品验收分开记录。
+Phase 0 权威/fixture 到 Phase 7 engineering 与 macOS candidate smoke 已完成，CP5 关闭；下一步是开发者按去标识化 SOP 完成 CP6 两类真实作者场景。工程、平台 smoke、产品验收与 tag/归档继续分开记录。

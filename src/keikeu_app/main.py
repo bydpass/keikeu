@@ -43,6 +43,7 @@ from keikeu_core.vault import (
     get_vault,
     init_vault,
     is_vault,
+    list_active_papers,
     open_directory_no_follow,
     require_home_path,
     resolve_active_paper_path,
@@ -114,20 +115,6 @@ def _has_unsupported_paper_schema(index: dict[str, object]) -> bool:
         and "schema_version: 2 or 3" in str(error.get("reason", ""))
         for error in errors
     )
-
-
-def _count_direct_markdown_files_no_follow(directory: Path) -> int:
-    descriptor = open_directory_no_follow(directory)
-    try:
-        with os.scandir(descriptor) as entries:
-            return sum(
-                1
-                for entry in entries
-                if entry.name.endswith(".md")
-                and entry.is_file(follow_symlinks=False)
-            )
-    finally:
-        os.close(descriptor)
 
 
 def _validated_rebuild(
@@ -854,8 +841,7 @@ def _build_vault_picker(
             if source_kind == _SOURCE_V01:
                 _build_migration_gate(page, safe_vault, on_cancel=on_cancel)
             else:
-                cache = safe_vault / "cache"
-                paper_count = _count_direct_markdown_files_no_follow(cache)
+                paper_count = len(list_active_papers(safe_vault))
                 show_preview(
                     [
                         ft.Text("检测到可用 Vault。", color=FG),

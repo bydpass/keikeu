@@ -1931,7 +1931,10 @@ def list_active_folders(vault: Path) -> list[str]:
 
 def list_trashed_folders(vault: Path) -> list[str]:
     """Return sorted valid one-level Trash folder names, including empty ones."""
-    return _list_folder_names(vault, Path(".trash/cache"))
+    try:
+        return _list_folder_names(vault, Path(".trash/cache"))
+    except FileNotFoundError:
+        return []
 
 
 def scan_trashed_papers(vault: Path) -> tuple[list[Path], list[dict[str, str]]]:
@@ -2127,6 +2130,38 @@ def _ensure_relative_directory_at(
             _cleanup_owned_directories([record])
             raise ValueError(f"directory changed while creating: {vault / relative}")
         return descriptor, record
+
+
+def _ensure_trash_cache_at(
+    root_fd: int,
+    vault: Path,
+) -> tuple[int, list[_OwnedDirectory]]:
+    """Open ``.trash/cache``, creating only its missing owned directories."""
+    records: list[_OwnedDirectory] = []
+    trash_fd: int | None = None
+    try:
+        trash_fd, trash_record = _ensure_relative_directory_at(
+            root_fd,
+            vault,
+            Path(".trash"),
+        )
+        if trash_record is not None:
+            records.append(trash_record)
+        os.close(trash_fd)
+        trash_fd = None
+        cache_fd, cache_record = _ensure_relative_directory_at(
+            root_fd,
+            vault,
+            Path(".trash/cache"),
+        )
+        if cache_record is not None:
+            records.append(cache_record)
+        return cache_fd, records
+    except Exception:
+        if trash_fd is not None:
+            os.close(trash_fd)
+        _cleanup_owned_directories(records)
+        raise
 
 
 def _release_or_cleanup_directory(
@@ -2742,7 +2777,7 @@ def soft_delete_papers(
     try:
         results: list[PathOperationResult] = []
         for candidate in paths:
-            record: _OwnedDirectory | None = None
+            records: list[_OwnedDirectory] = []
             destination_fd: int | None = None
             keep_directory = False
             try:
@@ -2751,6 +2786,9 @@ def soft_delete_papers(
                     candidate,
                     ("cache",),
                 )
+                trash_fd, trash_records = _ensure_trash_cache_at(root_fd, vault)
+                os.close(trash_fd)
+                records.extend(trash_records)
                 remainder = source_relative.parts[1:]
                 if len(remainder) == 2:
                     stored_target = _semantic_target_folder_name_at(
@@ -2761,11 +2799,15 @@ def soft_delete_papers(
                     )
                     remainder = (stored_target, remainder[1])
                 destination_relative = Path(".trash/cache").joinpath(*remainder)
-                destination_fd, record = _ensure_relative_directory_at(
+                destination_fd, destination_record = _ensure_relative_directory_at(
                     root_fd,
                     vault,
                     destination_relative.parent,
                 )
+                if destination_record is not None:
+                    records.append(destination_record)
+                if records and not _owned_directories_still_named(records):
+                    raise ValueError("Trash layout changed while creating")
                 result = _result_for_move(
                     vault,
                     root_fd,
@@ -2780,7 +2822,10 @@ def soft_delete_papers(
             finally:
                 if destination_fd is not None:
                     os.close(destination_fd)
-                _release_or_cleanup_directory(record, keep=keep_directory)
+                if keep_directory:
+                    _release_owned_directories(records)
+                else:
+                    _cleanup_owned_directories(records)
         return results
     finally:
         os.close(root_fd)
@@ -2812,6 +2857,7 @@ def soft_delete_folder(
     keep_target = False
     source_fd: int | None = None
     target_fd: int | None = None
+    trash_records: list[_OwnedDirectory] = []
     try:
         source_fd = _open_relative_directory_no_follow(
             root_fd,
@@ -2833,6 +2879,8 @@ def soft_delete_folder(
             vault / "cache" / folder_name,
             source_fd,
         )
+        trash_fd, trash_records = _ensure_trash_cache_at(root_fd, vault)
+        os.close(trash_fd)
         target_name = _semantic_target_folder_name_at(
             root_fd,
             vault,
@@ -2845,6 +2893,11 @@ def soft_delete_folder(
             vault,
             target_relative,
         )
+        owned_records = list(trash_records)
+        if target_record is not None:
+            owned_records.append(target_record)
+        if owned_records and not _owned_directories_still_named(owned_records):
+            raise ValueError("Trash layout changed while creating")
         for source_relative in papers:
             result = _result_for_move(
                 vault,
@@ -2890,6 +2943,10 @@ def soft_delete_folder(
         if target_fd is not None:
             os.close(target_fd)
         _release_or_cleanup_directory(target_record, keep=keep_target)
+        if keep_target:
+            _release_owned_directories(trash_records)
+        else:
+            _cleanup_owned_directories(trash_records)
         os.close(root_fd)
 
 

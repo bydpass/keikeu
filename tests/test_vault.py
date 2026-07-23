@@ -192,6 +192,8 @@ def test_is_vault_requires_only_cache_and_index_not_trash_or_outlines(tmp_path):
     (vault / ".trash").rmdir()
 
     assert is_vault(vault) is True
+    assert list_trashed_folders(vault) == []
+    assert list_trashed_papers(vault) == []
     assert is_vault(tmp_path / "missing") is False
     assert is_vault(tmp_path) is False
 
@@ -849,6 +851,25 @@ def test_folder_listing_includes_empty_valid_folders_only(tmp_path):
 
     assert list_active_folders(vault) == ["A", "B"]
     assert list_trashed_folders(vault) == ["Trash Me"]
+
+
+def test_soft_delete_folder_creates_missing_trash_layout(tmp_path):
+    vault = tmp_path / "vault"
+    init_vault(vault)
+    create_folder(vault, "Drafts")
+    paper = write_paper(
+        vault,
+        _paper("K-20260714-001", "Legacy folder."),
+        destination="cache/Drafts/K-20260714-001.md",
+    )
+    (vault / ".trash/cache").rmdir()
+    (vault / ".trash").rmdir()
+
+    results = soft_delete_folder(vault, "Drafts")
+
+    assert all(result.succeeded for result in results)
+    assert not paper.exists()
+    assert (vault / ".trash/cache/Drafts/K-20260714-001.md").is_file()
 
 
 def test_move_noop_still_validates_the_selected_paper(tmp_path):

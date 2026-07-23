@@ -232,6 +232,16 @@ def test_system_directory_chooser_cancel_keeps_path_fallback_visible(tmp_path, m
 def test_valid_vault_preview_is_read_only_until_confirmed(tmp_path, monkeypatch):
     vault = tmp_path / "existing-vault"
     init_vault(vault)
+    (vault / "cache" / "Folder").mkdir()
+    write_paper(
+        vault,
+        Paper(
+            code="K-20260722-001",
+            initial_summary="",
+            summary="folder-aware preview",
+        ),
+        destination="cache/Folder/K-20260722-001.md",
+    )
     page = FakePage()
     order: list[str] = []
     monkeypatch.setattr(app_main, "get_vault", lambda _config: None)
@@ -257,7 +267,7 @@ def test_valid_vault_preview_is_read_only_until_confirmed(tmp_path, monkeypatch)
     _button(root, "检查 Vault").on_click(None)
 
     assert order == []
-    assert "Paper 数量：0" in _texts(root)
+    assert "Paper 数量：1" in _texts(root)
     _button(root, "确认切换并打开").on_click(None)
     assert order == ["rebuild", "set", "shell"]
 
