@@ -6,9 +6,9 @@
 
 ## Current status
 
-The code implements the `Paper Markdown → Flashcard → external prose editor` core. Road v0.2 Phases 0–7 engineering, macOS file-service smoke, and Phase 8 real-author one-shot and two-session short/medium acceptance are complete and marked by local annotated tag `v0.2.0`. Road archival remains a developer decision.
+The code implements the `Paper Markdown → Flashcard → external prose editor` core. Road v0.2 Phases 0–7 engineering, macOS file-service smoke, and Phase 8 real-author one-shot and two-session short/medium acceptance are complete and marked by local annotated tag `v0.2.0`.
 
-Phase 7.5 is an independent lightweight iOS build for rapid testing. Its responsive UI, app-sandbox Vault, and on-device fixes are complete on a separate branch; it is not a merge gate in the macOS Road. Road v0.3 Phase 7 engineering and macOS candidate smoke are complete (CP5), including final HTML-map calibration and synthetic/copied-Vault reverification. CP6 manual acceptance is ready for the developer; Road v0.3 product acceptance remains pending. The runtime reads Paper v2/v3, writes Paper/index v3, and supports one-level Library operations, Paper selection and bounded Flashcard navigation, and a once-per-local-day start card. See [PROJECT](docs/PROJECT.md) for live coordinates.
+Phase 7.5 is an independent lightweight iOS build for rapid testing. Its responsive UI, app-sandbox Vault, and on-device fixes are complete on a separate branch; it is not a merge gate in the macOS Road. Road v0.3 engineering, macOS candidate smoke, and CP6 real-author acceptance are complete: retrieval was faster and clear, the external-editor handoff was clear, and no unresolved P0/P1 was reported. Its design and acceptance records are now [read-only history](docs/archive/road-v0-3/README.md); no v0.3 tag was created. The accepted Python/Flet runtime remains available, and the next Road has not entered implementation. See [PROJECT](docs/PROJECT.md) for live coordinates.
 
 ## Current runtime flow
 
@@ -22,15 +22,9 @@ existing inspiration → Paper Markdown → Flashcard → external prose editor
 - **Vault:** selects paths only under the current user's Home, validates before switching, and byte-verifies copied unsafe legacy Vaults; Apple App Sandbox is not enabled yet.
 - **External editor:** prose always remains outside keikeu.
 
-## CP6 manual acceptance
+## Road v0.3 archive
 
-Create a restorable backup of the target real-author Vault, then confirm the selected Vault in the app. The scenarios save an existing v2 Paper and exercise move, Trash, and restore.
-
-```bash
-.venv/bin/flet run src/keikeu_app/main.py
-```
-
-Follow the [CP6 acceptance SOP](docs/acceptance/road_v0_3.md) for the new-Paper scenario and both existing-v2-Paper sessions. Record retrieval clarity/speed, external-editor handoff clarity, and any P0/P1. Keep prose, names, and paths out of the record. The [Road v0.3 status snapshot](docs/archive/snapshots/feat-complete-road-v0-3-candidate.html) shows the completed engineering boundary.
+The [final CP6 record](docs/archive/road-v0-3/acceptance/road_v0_3.md) is stored with the product, visual, interaction, architecture, ADR, and Planbook records in the [version archive](docs/archive/road-v0-3/README.md). Archival does not change the Vault, runtime, or Git history.
 
 ## Product principles
 
@@ -40,7 +34,7 @@ Follow the [CP6 acceptance SOP](docs/acceptance/road_v0_3.md) for the new-Paper 
 - OS-exposed folders such as iCloud Drive may be selected as ordinary paths.
 - No fandom database, AI ghostwriting, community, or built-in prose editor.
 
-The product contract lives in [SPEC](docs/SPEC.md); reviewable constraints live in [RULES](docs/RULES.md).
+Stable product boundaries live in [SPEC](docs/SPEC.md); reviewable constraints live in [RULES](docs/RULES.md).
 
 ## Development
 
@@ -60,10 +54,10 @@ flet run src/keikeu_app/main.py
 README.md                 public entry and real commands
 AGENTS.md                 agent operating discipline and read order
 docs/PROJECT.md           current coordinates, module entry points, next gate
-docs/SPEC.md              product source of truth
+docs/SPEC.md              transition product and author-control boundary
 docs/RULES.md             engineering, interaction, data, and evidence rules
-docs/design/              executable visual system and interaction specimen
-docs/architecture/        modules, data flow, lifecycle, and ADRs
+docs/design/              next-Road visual and interaction approval entry
+docs/architecture/        next-Road architecture approval entry and active ADRs
 docs/acceptance/          supporting evidence; not an independent status source
 docs/manual/              supplementary human guides; never normative
 docs/generated/           rebuildable and disposable observations
@@ -79,12 +73,12 @@ Hard rule: `keikeu_core` must not import Flet. Only the core layer owns Markdown
 
 | Question | Single entry point |
 | --- | --- |
-| Why the product exists, its scope and non-goals | [SPEC](docs/SPEC.md) |
+| Stable product purpose and author-control boundary | [SPEC](docs/SPEC.md) |
 | Current state and next gate | [PROJECT](docs/PROJECT.md) |
 | Rules a change must obey | [RULES](docs/RULES.md) |
-| Modules and data flow | [Architecture map](docs/architecture/architecture.html) |
-| Visual tokens and component states | [Design system](docs/design/design.html) |
-| User actions and success/error paths | [Interaction map](docs/design/interaction.html) |
+| Whether next-Road architecture is active | [Architecture transition](docs/architecture/architecture.html) |
+| Whether next-Road visual design is active | [Design transition](docs/design/design.html) |
+| Whether next-Road interaction design is active | [Interaction transition](docs/design/interaction.html) |
 | How agents work | [AGENTS](AGENTS.md) |
 | Human-facing design, Git, and ethics guides | [Human manuals](docs/manual/README.md) |
 | Historical rationale and snapshots | [Archive](docs/archive/README.md) |
@@ -96,7 +90,8 @@ v0.1        archived macOS Cache / Outline pre-alpha
 v0.2        macOS Paper / Flashcard Core; product acceptance complete, Road closeout pending
 Phase 7.5   independent lightweight iOS rapid-test build
 Phase 8.5   Road v0.3 preparation; precursor to the next Mac version
-Road v0.3   macOS Paper Library; Phase 7 / CP5 complete, CP6 manual acceptance ready for developer run
+Road v0.3   macOS Paper Library; CP6 product accepted, design and acceptance records archived
+next Road   not in implementation; approve active SPEC, Planbook, and three maps first
 Pre-Advance optional Markdown Outline; never blocks the core flow
 later       iPhone/iPad file-service capability, Android, Windows
 ```

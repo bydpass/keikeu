@@ -3,240 +3,31 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light dark">
-  <title>keikeu · Architecture Map</title>
-  <link rel="stylesheet" href="../assets/map.css">
+  <title>keikeu Architecture — transition</title>
+  <style>
+    :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #1e2523; background: #eceae4; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; }
+    main { box-sizing: border-box; width: min(720px, calc(100% - 32px)); padding: 32px; border: 1px solid #c8c9c2; background: #fffefa; }
+    p { line-height: 1.65; }
+    nav { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 24px; }
+    a { color: #2e5d57; }
+    .tools { display: none; }
+  </style>
 </head>
-<body data-theme="light">
-  <a class="skip-link" href="#content">跳到正文</a>
-  <div class="shell">
-    <aside class="rail" aria-label="页面目录">
-      <div class="rail-brand">KEIKEU / ARCH</div>
-      <div class="rail-meta">ROAD V0.3 IMPLEMENTED MAP · 2026-07-22</div>
-      <nav>
-        <a href="#boundary">系统边界</a>
-        <a href="#modules">模块地图</a>
-        <a href="#save">Paper 保存</a>
-        <a href="#flashcard">Flashcard 投影</a>
-        <a href="#library">索引与恢复</a>
-        <a href="#migration">迁移事务</a>
-        <a href="#platforms">平台壳层</a>
-        <a href="#failure">失败与恢复</a>
-        <a href="#proof">规范 / 事实审计</a>
-      </nav>
-      <div class="rail-actions">
-        <button type="button" data-theme-toggle aria-label="切换明暗主题">夜</button>
-        <button type="button" onclick="window.print()" aria-label="打印页面">印</button>
-      </div>
-    </aside>
-
-    <main class="main" id="content">
-      <div class="toolbar">
-        <label class="search">
-          <span class="mono">SEARCH / </span>
-          <input type="search" data-doc-search placeholder="搜索模块、数据流、迁移或错误" aria-label="搜索本文">
-        </label>
-        <div class="toolbar-links">
-          <a href="../PROJECT.md">PROJECT</a>
-          <a href="../RULES.md">RULES</a>
-          <a href="../generated/graphify/README.md">OBSERVED</a>
-        </div>
-      </div>
-
-      <header class="hero">
-        <div class="eyebrow">Road v0.3 verified architecture / implemented lifecycle</div>
-        <h1>作者资产在中间，应用壳层在外面。</h1>
-        <p class="lede">这张图已按 Road v0.3 实际代码校准模块边界、数据方向、文件生命周期和失败恢复；<a href="../PROJECT.md">PROJECT</a> 区分工程、macOS smoke 与产品验收状态。生成图只能观察现实，不能改写本页边界。</p>
-        <div class="status-row">
-          <span class="ticket ok">Core = pure Python</span>
-          <span class="ticket ok">Markdown = canonical</span>
-          <span class="ticket">Index = rebuildable</span>
-          <span class="ticket">Writes = Home only</span>
-          <span class="ticket warn">Provider = external</span>
-        </div>
-      </header>
-
-      <div class="content">
-        <div class="no-results" data-no-results>没有匹配章节。试试“markdown_io”“迁移”“index”或“iOS”。</div>
-
-        <section class="section searchable" id="boundary" data-search="boundary local first author asset external editor provider network 系统 边界 本地 作者资产 外部编辑器">
-          <div class="section-head"><div class="section-number">01</div><div><h2>系统边界</h2><p>keikeu 管理自己能诚实负责的层；其余交还作者或操作系统。</p></div></div>
-          <div class="flow" style="--cols:5">
-            <div class="node" data-layer="external"><b>Author</b><small>决定内容、Vault、外部编辑器与是否同步</small></div>
-            <div class="node" data-layer="app"><b>keikeu_app</b><small>Flet 页面、路由、反馈、设备布局</small></div>
-            <div class="node" data-layer="core"><b>keikeu_core</b><small>模型、Markdown、索引、Vault、迁移</small></div>
-            <div class="node" data-layer="disk"><b>Local filesystem</b><small>一层 Paper / Trash、index；设备 config/state</small></div>
-            <div class="node" data-layer="external"><b>OS / provider / editor</b><small>同步、文件可用性、正文与冲突处理</small></div>
-          </div>
-          <div class="grid two" style="margin-top:14px">
-            <article class="callout ok"><strong>Inside:</strong> Home 内显式文件操作、Paper 校验、安全替换、路径索引、仅含每日启动日期的设备状态。</article>
-            <article class="callout warn"><strong>Outside:</strong> provider accounts/APIs, remote timing, conflict merges, external prose, authorship evaluation, telemetry.</article>
-          </div>
-        </section>
-
-        <section class="section searchable" id="modules" data-search="modules dependencies app core disk main pages models markdown index vault migration local state 模块 依赖">
-          <div class="section-head"><div class="section-number">02</div><div><h2>模块地图</h2><p>用筛选器突出一层；淡化不等于删除依赖。</p></div></div>
-          <div class="button-row" aria-label="模块层筛选">
-            <button type="button" class="filter-button active" data-layer-filter="all">全部</button>
-            <button type="button" class="filter-button" data-layer-filter="app">App</button>
-            <button type="button" class="filter-button" data-layer-filter="core">Core</button>
-            <button type="button" class="filter-button" data-layer-filter="disk">Disk</button>
-            <button type="button" class="filter-button" data-layer-filter="external">External</button>
-          </div>
-          <div class="diagram" style="margin-top:14px">
-            <div class="flow" style="--cols:4">
-              <div class="node" data-layer="app"><b><a href="../../src/keikeu_app/main.py">app/main.py</a></b><small>daily/Vault gate、路由与 macOS 自定义侧栏</small></div>
-              <div class="node" data-layer="app"><b><a href="../../src/keikeu_app/pages/paper_page.py">paper_page.py</a></b><small>Paper / Highlight 命名；拒绝外部改动覆盖</small></div>
-              <div class="node" data-layer="app"><b><a href="../../src/keikeu_app/pages/flashcard_page.py">flashcard_page.py</a></b><small>按相对路径读取；只读投影，每次第 1 页</small></div>
-              <div class="node" data-layer="app"><b><a href="../../src/keikeu_app/pages/library_page.py">library_page.py</a></b><small>scope 检索、文件夹、批量操作与 Trash</small></div>
-            </div>
-            <div class="flow" style="--cols:5">
-              <div class="node" data-layer="core"><b><a href="../../src/keikeu_core/models.py">models.py</a></b><small>Paper / Highlight 不变量与名称</small></div>
-              <div class="node" data-layer="core"><b><a href="../../src/keikeu_core/markdown_io.py">markdown_io.py</a></b><small>读 v2/v3、写 v3；唯一 Markdown I/O</small></div>
-              <div class="node" data-layer="core"><b><a href="../../src/keikeu_core/indexer.py">indexer.py</a></b><small>含 path / folder 的可重建 JSON</small></div>
-              <div class="node" data-layer="core"><b><a href="../../src/keikeu_core/vault.py">vault.py</a></b><small>Home / path / folder / Trash / config</small></div>
-              <div class="node" data-layer="core"><b><a href="../../src/keikeu_core/migration_v01.py">migration_v01.py</a></b><small>一次性安全迁移</small></div>
-            </div>
-            <div class="flow" style="--cols:5">
-              <div class="node" data-layer="disk"><b>cache/{root,folder}/*.md</b><small>零层或一层活动创作资产</small></div>
-              <div class="node" data-layer="disk"><b>.trash/cache/{root,folder}/</b><small>保留原相对位置的软删除资产</small></div>
-              <div class="node" data-layer="disk"><b>keikeu_index.json</b><small>path 搜索元数据 + errors</small></div>
-              <div class="node" data-layer="disk"><b>config</b><small>设备选择的 Vault</small></div>
-              <div class="node" data-layer="disk"><b>state</b><small>last_daily_card_date；可丢弃</small></div>
-            </div>
-          </div>
-          <div class="callout danger" style="margin-top:14px"><strong>禁止反向依赖：</strong>`keikeu_core` 不 import Flet；Paper Markdown 不依赖 GUI 状态；索引与每日设备状态不成为作者事实；页面只传已验证的 Vault-relative Paper path，不用 code 猜路径。</div>
-        </section>
-
-        <section class="section searchable" id="save" data-search="save paper markdown render atomic temp replace immutable code external modification 保存 写入 临时文件 原子替换 不可变编号">
-          <div class="section-head"><div class="section-number">03</div><div><h2>Paper 保存生命周期</h2><p>系统编号创建后不可修改；新建、更新与分支复制共享数据契约，但动作彼此不混淆。</p></div></div>
-          <div class="flow" style="--cols:6;grid-template-columns:repeat(6,minmax(0,1fr))">
-            <div class="node" data-layer="app"><b>Form values</b><small>名称 / Summary / 命名 Highlights / Tags</small></div>
-            <div class="node" data-layer="core"><b>Paper.normalize</b><small>必填与最小清理</small></div>
-            <div class="node" data-layer="app"><b>source bytes check</b><small>识别外删 / 外改</small></div>
-            <div class="node" data-layer="core"><b>render v3</b><small>结构由 markdown_io 独占</small></div>
-            <div class="node" data-layer="disk"><b>temp + replace</b><small>同目录安全替换</small></div>
-            <div class="node" data-layer="core"><b>rebuild index</b><small>磁盘事实 → JSON</small></div>
-          </div>
-          <div class="table-wrap" style="margin-top:14px"><table class="matrix">
-            <thead><tr><th>操作</th><th>入口</th><th>不可违反</th><th>测试</th></tr></thead>
-            <tbody>
-              <tr><td>新建</td><td><a href="../../src/keikeu_core/markdown_io.py">write_paper()</a></td><td>使用已验证目标 path；目标已存在则失败；初稿副本首次冻结</td><td><a href="../../tests/test_markdown_io.py">test_markdown_io.py</a></td></tr>
-              <tr><td>更新</td><td><a href="../../src/keikeu_core/markdown_io.py">update_paper()</a></td><td>code 与初稿副本不变；保留未知 frontmatter</td><td><a href="../../tests/test_markdown_io.py">test_markdown_io.py</a></td></tr>
-              <tr><td>分支复制</td><td><a href="../../src/keikeu_core/vault.py">vault.py</a> + <a href="../../src/keikeu_core/markdown_io.py">markdown_io.py</a></td><td>从已保存版本生成新 code / timestamps，不复制未保存表单</td><td><a href="../../tests/test_vault.py">test_vault.py</a></td></tr>
-            </tbody>
-          </table></div>
-        </section>
-
-        <section class="section searchable" id="flashcard" data-search="flashcard cards projection page one path summary highlight 卡片 投影 第一页 路径">
-          <div class="section-head"><div class="section-number">04</div><div><h2>Flashcard：资产与瞬时视图分离</h2><p>Paper 内容只读投影；每次打开或切换 Paper 都从第 1 页开始。</p></div></div>
-          <div class="flow" style="--cols:4">
-            <div class="node" data-layer="disk"><b>Vault-relative path</b><small>来自 Library / index，不由 code 猜测</small></div>
-            <div class="node" data-layer="core"><b>read_paper()</b><small>解析作者资产</small></div>
-            <div class="node" data-layer="app"><b>project_cards()</b><small>[summary, *highlight.content]</small></div>
-            <div class="node" data-layer="app"><b>transient card index</b><small>selector / list / arrows / bounded jump</small></div>
-          </div>
-          <div class="callout ok" style="margin-top:14px">Flashcard 位置不持久化。设备状态仅保存 `last_daily_card_date`；删除它不能改变 Paper、索引或作者在外部编辑器中的正文。</div>
-          <div class="flow" style="--cols:4;margin-top:14px">
-            <div class="node" data-layer="app"><b>validated app launch</b><small>先固定 Home 内 Vault root identity</small></div>
-            <div class="node" data-layer="disk"><b>atomic daily claim</b><small>只写 last_daily_card_date</small></div>
-            <div class="node" data-layer="app"><b>built-in start card</b><small>当日本机首次启动才显示</small></div>
-            <div class="node" data-layer="app"><b>blank Paper</b><small>3 秒、Enter 或“开始写”；幂等进入</small></div>
-          </div>
-        </section>
-
-        <section class="section searchable" id="library" data-search="index rebuild damaged error library trash restore recovery search 索引 重建 损坏 恢复 回收站 搜索">
-          <div class="section-head"><div class="section-number">05</div><div><h2>索引、删除与恢复</h2><p>磁盘 Paper 是事实，索引是加速层，trash 是可恢复资产状态。</p></div></div>
-          <div class="grid two">
-            <article class="card">
-              <h3>Index rebuild</h3>
-              <div class="flow" style="--cols:3">
-                <div class="node" data-layer="disk"><b>cache/{root,folder}/*.md</b><small>受限枚举零层 / 一层</small></div>
-                <div class="node" data-layer="core"><b>read_paper()</b><small>成功 entry；失败 error</small></div>
-                <div class="node" data-layer="disk"><b>index v3</b><small>path / folder / names + errors[]</small></div>
-              </div>
-            </article>
-            <article class="card">
-              <h3>Soft delete / restore</h3>
-              <div class="flow" style="--cols:3">
-                <div class="node" data-layer="disk"><b>active Paper / folder</b><small>校验 Home 内一层相对路径</small></div>
-                <div class="node" data-layer="core"><b>move explicit paths</b><small>逐项结果；不递归删除</small></div>
-                <div class="node" data-layer="disk"><b>Trash Paper / folder</b><small>恢复 code 冲突时阻止该项</small></div>
-              </div>
-            </article>
-          </div>
-          <p class="source-link">实现：<a href="../../src/keikeu_core/indexer.py">indexer.py</a> · <a href="../../src/keikeu_core/vault.py">vault.py</a></p>
-        </section>
-
-        <section class="section searchable" id="migration" data-search="migration transaction v01 backup staging swap report rollback outline 迁移 事务 备份 暂存 切换 报告 回滚">
-          <div class="section-head"><div class="section-number">06</div><div><h2>不安全 Vault 搬迁与 v0.1 迁移</h2><p>白名单外 Vault 先只读分类，再无跟随复制到 Home 并验证；格式分支只处理安全副本。</p></div></div>
-          <div class="stepper">
-            <div class="step"><div><strong>read-only source classification</strong><p class="muted">白名单外立即停止写入；不跟随/解引 symlink，任何 symlink 或 special entry 都报错中止。</p></div><span class="ticket warn">HOME GATE</span></div>
-            <div class="step"><div><strong>copy regular entries + verify bytes</strong><p class="muted">仅普通目录和 regular files 进入全新 Home 目标；manifest 与 bytes 相同前不切换 config。</p></div><span class="ticket">RELOCATE</span></div>
-            <div class="step"><div><strong>v2/v3 parse + rebuild index</strong><p class="muted">安全副本逐 Paper 解析并验证重建 index；通过后才原子切换 config。</p></div><span class="ticket">V2/V3 SWITCH</span></div>
-            <div class="step"><div><strong><a href="../../src/keikeu_core/migration_v01.py">inspect_v01_vault()</a> on safe copy</strong><p class="muted">v0.1 不先按 v2/v3 解析；现有只读 preflight/manifest 通过后原子切换 config。</p></div><span class="ticket">V0.1 SWITCH</span></div>
-            <div class="step"><div><strong>explicit migration gate + full backup</strong><p class="muted">只在切换后的安全副本上进入；备份根位于活动 Vault 外且仍在 Home 内。</p></div><span class="ticket">BACKUP</span></div>
-            <div class="step"><div><strong>convert in staging</strong><p class="muted">旧 raw → 初稿副本 + Summary；notes → 首条 Highlight；title → legacy_title。</p></div><span class="ticket">STAGE</span></div>
-            <div class="step"><div><strong>read every staged Paper</strong><p class="muted">数量、Summary、初稿副本和报告全部验证。</p></div><span class="ticket">VERIFY</span></div>
-            <div class="step"><div><strong>swap + rebuild index + retain report</strong><p class="muted">全部成功后才替换活动 cache 并移除旧 Outline；Home 内备份仍是人工回滚来源。</p></div><span class="ticket ok">DONE</span></div>
-          </div>
-          <div class="callout danger" style="margin-top:14px">搬迁的来源分类、字节复制或切换前验证失败都保持原 Vault 与 config 不变；v0.1 不先按 v2/v3 Paper 解析，取消或迁移失败只保留已选中的未改写安全副本，不写不安全来源。测试使用 fixture 或复制 Vault，禁止把唯一真实 Vault 当首测。</div>
-        </section>
-
-        <section class="section searchable" id="platforms" data-search="platform macos ios iphone ipad flet shell safe area vault picker sandbox 平台 壳层 安全区 文件选择器 沙盒">
-          <div class="section-head"><div class="section-number">07</div><div><h2>平台壳层</h2><p>领域与文件模型共用，导航和 Vault 能力按平台明确降级。</p></div></div>
-          <div class="table-wrap"><table class="matrix">
-            <thead><tr><th>能力</th><th>macOS</th><th>Phase 7.5 独立轻量 iOS 版</th><th>不应推断</th></tr></thead>
-            <tbody>
-              <tr><td>Navigation</td><td>自定义侧栏 + Library folder scopes</td><td>NavigationBar + SafeArea</td><td>同一布局在所有设备自然</td></tr>
-              <tr><td>Vault choice</td><td>系统目录选择 + 手工路径 fallback；Home guard</td><td>创建应用沙盒本机 Vault</td><td>Road v0.3 已获得 Apple App Sandbox 保护</td></tr>
-              <tr><td>Paper model</td><td colspan="2">同一 `keikeu_core` / Markdown v2-readable、v3-write</td><td>平台验证可互相替代</td></tr>
-              <tr><td>System open</td><td>默认程序 / Finder</td><td>Share 等平台服务</td><td>外部编辑器行为完全一致</td></tr>
-              <tr><td>Evidence</td><td>Road v0.3 工程、smoke 与产品验收分开记录</td><td>独立快速测试轨道</td><td>Phase 7.5 是 Road v0.3 的合入闸门</td></tr>
-            </tbody>
-          </table></div>
-          <p class="source-link">壳层：<a href="../../src/keikeu_app/main.py">main.py</a> · 项目配置：<a href="../../pyproject.toml">pyproject.toml</a></p>
-        </section>
-
-        <section class="section searchable" id="failure" data-search="failure recovery external modification corrupt index state provider error failure matrix 失败 恢复 外部修改 损坏">
-          <div class="section-head"><div class="section-number">08</div><div><h2>失败与恢复矩阵</h2><p>先保护资产，再恢复便利层。</p></div></div>
-          <div class="table-wrap"><table class="matrix">
-            <thead><tr><th>失败层</th><th>检测</th><th>安全响应</th><th>恢复来源</th></tr></thead>
-            <tbody>
-              <tr><td>Paper 输入</td><td>模型验证</td><td>拒绝写入并保留表单</td><td>作者修正输入</td></tr>
-              <tr><td>外部文件改动</td><td>页面打开时保存的 source bytes</td><td>拒绝覆盖</td><td>磁盘外部版本 + 人工决定</td></tr>
-              <tr><td>单 Paper 损坏</td><td>index rebuild parse error</td><td>隔离 error，继续其余文件</td><td>Markdown 手工修复 / 备份</td></tr>
-              <tr><td>Index 丢失/坏</td><td>结构版本检查</td><td>从 cache 重建</td><td>Paper Markdown</td></tr>
-              <tr><td>Daily state 丢失/坏</td><td>JSON/本地日期检查</td><td>视为今天尚未显示；不碰 Vault</td><td>无需恢复</td></tr>
-              <tr><td>Vault 位于 Home 外 / symlink / special entry</td><td>containment + no-follow 只读分类</td><td>立即停止写入；不支持项中止搬迁</td><td>未改的原 Vault + 已验证安全副本</td></tr>
-              <tr><td>深层目录 / 重复 code</td><td>受限枚举与全局 code 扫描</td><td>报告并阻止相关 mutation</td><td>作者用 Finder 修复</td></tr>
-              <tr><td>迁移失败</td><td>checkpoint / staged verification</td><td>不切换迁移 staging</td><td>活动 Vault + 其外但 Home 内的完整备份</td></tr>
-              <tr><td>Provider 冲突</td><td>未知/重复文件</td><td>不自动合并</td><td>操作系统与作者判断</td></tr>
-            </tbody>
-          </table></div>
-        </section>
-
-        <section class="section searchable" id="proof" data-search="normative observed graphify drift audit tests generated 规范 事实 审计 漂移 测试 生成">
-          <div class="section-head"><div class="section-number">09</div><div><h2>规范与现实的对撞</h2><p>生成观察不拥有产品权力。</p></div></div>
-          <div class="flow" style="--cols:5">
-            <div class="node" data-layer="external"><b>SPEC / RULES / this map</b><small>人工维护的意图</small></div>
-            <div class="node" data-layer="core"><b>src/</b><small>当前实现</small></div>
-            <div class="node" data-layer="core"><b>tests/</b><small>已编码行为证据</small></div>
-            <div class="node" data-layer="external"><b>Graphify trial</b><small>可删除观察层</small></div>
-            <div class="node" data-layer="external"><b>drift decision</b><small>改代码 / 改规范 / 写 ADR</small></div>
-          </div>
-          <div class="grid two" style="margin-top:14px">
-            <article class="card flat"><h3>Normative</h3><p><a href="../SPEC.md">SPEC</a>、<a href="../RULES.md">RULES</a> 与本图表达目标和边界。</p></article>
-            <article class="card flat"><h3>Observed</h3><p><a href="../generated/graphify/README.md">Graphify trial</a> 与测试只能描述仓库实际连接和已验证行为。</p></article>
-          </div>
-          <div class="callout ok" style="margin-top:14px">本页已按 Road v0.3 源码、测试与 macOS synthetic/copied-Vault candidate smoke 校准；<a href="../PROJECT.md">PROJECT</a> 继续单独记录 CP5 与产品验收状态。后续冲突只允许修实现、修规范或登记明确偏差。</div>
-          <p class="source-link">决策：<a href="decisions/0001-document-authority.md">ADR 0001</a> · 项目坐标：<a href="../PROJECT.md">PROJECT</a></p>
-        </section>
-      </div>
-
-      <footer class="footer">keikeu Architecture Map · Road v0.3 implemented module and lifecycle map · evidence status in PROJECT</footer>
-    </main>
-  </div>
-  <script src="../assets/map.js"></script>
+<body>
+  <main>
+    <p>ARCHITECTURE TRANSITION</p>
+    <h1>当前运行时仍是已验收的 Python/Flet 单体</h1>
+    <p>Road v0.3 架构与 ADR 已归档。下一 Road 在批准本地调用边界、打包和兼容性方案后，再用新的实现目标替换本页。</p>
+    <div class="tools" aria-hidden="true">
+      <input data-doc-search disabled>
+      <button data-theme-toggle disabled>Theme</button>
+    </div>
+    <nav>
+      <a href="../PROJECT.md">当前坐标</a>
+      <a href="../archive/road-v0-3/architecture/architecture.html">Road v0.3 架构归档</a>
+      <a href="../SPEC.md">产品边界</a>
+    </nav>
+  </main>
 </body>
 </html>

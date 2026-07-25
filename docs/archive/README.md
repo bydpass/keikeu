@@ -4,14 +4,14 @@
 
 ## Why this exists
 
-As part of the Road v0.3 preparation and next-Mac precursor, Phase 8.5 replaced overlapping root documents, Road notebooks, prototypes, and status pages with explicit active authorities and non-normative [human manuals](../manual/README.md):
+Phase 8.5 originally replaced overlapping root documents, Road notebooks, prototypes, and status pages with explicit active authorities and non-normative [human manuals](../manual/README.md). After Road v0.3 acceptance, its version-specific design set moved into [`road-v0-3/`](road-v0-3/). Current entry points are:
 
-- product contract → [`docs/SPEC.md`](../SPEC.md)
+- stable product and author-control boundary → [`docs/SPEC.md`](../SPEC.md)
 - current coordinates → [`docs/PROJECT.md`](../PROJECT.md)
 - engineering and interaction constraints → [`docs/RULES.md`](../RULES.md)
 - agent operation → [`AGENTS.md`](../../AGENTS.md)
-- visual and interaction facts → [`docs/design/`](../design/)
-- runtime structure → [`docs/architecture/`](../architecture/)
+- next-Road visual, interaction, and architecture gates → [`docs/design/`](../design/) and [`docs/architecture/`](../architecture/)
+- runtime facts → [`src/`](../../src/) and [`tests/`](../../tests/)
 
 Archive files retain historical reasoning and evidence. Their internal links may point to superseded locations and are intentionally excluded from active-link validation.
 
@@ -22,6 +22,7 @@ Archive files retain historical reasoning and evidence. Their internal links may
 | [`docs-clarify-export-cancellation-semantics/`](docs-clarify-export-cancellation-semantics/) | `9d033db` · `docs: clarify export cancellation semantics` | Road v0.1 records | historical comparison only |
 | [`docs-agents-md-update/`](docs-agents-md-update/) | `146cb74` · `docs: AGENTS.md update` | Road v0.2 records | historical comparison only |
 | [`docs-archive-documentation-reform-report/`](docs-archive-documentation-reform-report/) | `9114d63` · `docs: archive documentation reform report` | Phase 8 record and SOP before final author confirmation | historical acceptance evidence only |
+| [`road-v0-3/`](road-v0-3/) | version-bound · archived 2026-07-25 | accepted Road v0.3 SPEC, Planbook, maps, ADRs, and CP6 evidence | historical comparison only |
 | [`snapshots/`](snapshots/) | commit-bound status pages listed below | status and handoff HTML | frozen evidence only |
 | [`planning/`](planning/) | supplied on 2026-07-18 | Phase 8.5 reform proposal | understand the migration decision, not current status |
 

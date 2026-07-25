@@ -1,3 +1,5 @@
+> **ARCHIVE — READ ONLY.** Road v0.3 architecture decision; archived on 2026-07-25.
+
 # ADR 0002: Keep Durable Writes Inside the Current User Home
 
 - Status: accepted

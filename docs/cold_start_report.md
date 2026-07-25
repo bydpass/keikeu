@@ -1,5 +1,7 @@
 # Phase 8.5 Cold-Start Audit
 
+> Historical audit note: the Road v0.3 maps exercised below were archived on 2026-07-25 in [`archive/road-v0-3/`](archive/road-v0-3/). Current map paths are transition boundaries until the next Road is approved.
+
 - Date: 2026-07-18
 - Branch: `codex/phase-8-5-doc-reform`
 - Result: structural navigation pass; independent fresh-agent run not performed

@@ -6,9 +6,9 @@
 
 ## 当前状态
 
-当前代码已经实现 `Paper Markdown → Flashcard → 外部正文编辑器` 核心。Road v0.2 Phase 0–7 工程、macOS 文件服务 smoke，以及 Phase 8 真实 one-shot 与短/中篇跨会话作者验收均已完成，并已以 local annotated tag `v0.2.0` 标记。Road 归档仍需开发者决定。
+当前代码已经实现 `Paper Markdown → Flashcard → 外部正文编辑器` 核心。Road v0.2 Phase 0–7 工程、macOS 文件服务 smoke，以及 Phase 8 真实 one-shot 与短/中篇跨会话作者验收均已完成，并已以 local annotated tag `v0.2.0` 标记。
 
-Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响应式界面、本机沙盒 Vault 与真机修复验证；它不是 macOS Road 的合入闸门。Road v0.3 Phase 7 engineering 与 macOS candidate smoke 已完成（CP5），三张 HTML map 已按实现校准，synthetic/copy Vault 全流及修复复验通过。CP6 人工验收已就绪；Road v0.3 尚未 product accepted。当前运行时可读 Paper v2/v3、写入 Paper/index v3，并已接通一层文件夹侧栏、移动/批量移动、分支复制、Trash/恢复、明确永久删除、Paper 间 Flashcard 选择/跳页和每日一次启动卡。实时坐标见 [PROJECT](docs/PROJECT.md)。
+Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响应式界面、本机沙盒 Vault 与真机修复验证；它不是 macOS Road 的合入闸门。Road v0.3 的工程、macOS candidate smoke 与 CP6 真实作者验收均已完成；检索更快且清楚、外部编辑器 handoff 清楚，未报告未解决 P0/P1。其设计与验收文档已[只读归档](docs/archive/road-v0-3/README.md)，未创建 v0.3 tag。当前 Python/Flet 运行时继续可用，下一 Road 尚未进入实现。实时坐标见 [PROJECT](docs/PROJECT.md)。
 
 ## 当前运行时核心流程
 
@@ -22,15 +22,9 @@ Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响�
 - **Vault**：只选择当前用户 Home 内路径；切换前验证，unsafe 旧 Vault 先复制并核对；尚未启用 Apple App Sandbox。
 - **外部编辑器**：正式正文始终在 keikeu 之外完成。
 
-## CP6 人工测试
+## Road v0.3 归档
 
-先为目标真实 Vault 制作可恢复备份，并在应用内确认当前 Vault。测试会保存既有 v2 Paper，并执行移动、Trash 与恢复。
-
-```bash
-.venv/bin/flet run src/keikeu_app/main.py
-```
-
-按 [CP6 产品验收 SOP](docs/acceptance/road_v0_3.md) 完成新 Paper 场景和既有 v2 Paper 的两个 session。结果只记录检索是否更快且清楚、外部编辑器 handoff 是否清楚、是否出现 P0/P1，不记录正文、名称或路径。工程完成范围见 [Road v0.3 状态快照](docs/archive/snapshots/feat-complete-road-v0-3-candidate.html)。
+[最终 CP6 记录](docs/archive/road-v0-3/acceptance/road_v0_3.md)与产品、视觉、交互、架构、ADR、Planbook 一并保存在[版本归档](docs/archive/road-v0-3/README.md)。归档不改变 Vault、运行时或 Git 历史。
 
 ## 产品原则
 
@@ -40,7 +34,7 @@ Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响�
 - 用户可选择 iCloud Drive 等操作系统暴露的普通文件目录。
 - 不接入 fandom 数据库，不做 AI 代写、社区或内置正文编辑器。
 
-完整产品契约见 [SPEC](docs/SPEC.md)，可判定纪律见 [RULES](docs/RULES.md)。
+稳定产品边界见 [SPEC](docs/SPEC.md)，可判定纪律见 [RULES](docs/RULES.md)。
 
 ## 开发
 
@@ -60,10 +54,10 @@ flet run src/keikeu_app/main.py
 README.md                 外部入口与运行命令
 AGENTS.md                 Agent 操作纪律与读图顺序
 docs/PROJECT.md           当前坐标、模块入口、下一闸门
-docs/SPEC.md              产品唯一真相源
+docs/SPEC.md              Road 过渡期产品与作者控制边界
 docs/RULES.md             工程、交互、数据与证据规则
-docs/design/              可执行视觉系统与交互样张
-docs/architecture/        模块、数据流、生命周期与 ADR
+docs/design/              下一 Road 待批准的视觉与交互入口
+docs/architecture/        下一 Road 待批准的架构入口与活跃 ADR
 docs/acceptance/          支持性验收记录；不独立定义状态
 docs/manual/              面向人的补充说明；不定义规范
 docs/generated/           可重建、可删除的观察输出
@@ -79,12 +73,12 @@ tests/                    可验证的实现事实
 
 | 想知道什么 | 唯一入口 |
 | --- | --- |
-| 项目为何存在、做什么、不做什么 | [SPEC](docs/SPEC.md) |
+| 稳定产品目的与作者控制边界 | [SPEC](docs/SPEC.md) |
 | 当前做到哪、下一步是什么 | [PROJECT](docs/PROJECT.md) |
 | 修改时不可违反什么 | [RULES](docs/RULES.md) |
-| 模块与数据如何流动 | [Architecture map](docs/architecture/architecture.html) |
-| 视觉 token 与组件状态 | [Design system](docs/design/design.html) |
-| 用户操作及成功/错误路径 | [Interaction map](docs/design/interaction.html) |
+| 下一 Road 架构是否已生效 | [Architecture transition](docs/architecture/architecture.html) |
+| 下一 Road 视觉是否已生效 | [Design transition](docs/design/design.html) |
+| 下一 Road 交互是否已生效 | [Interaction transition](docs/design/interaction.html) |
 | Agent 如何工作 | [AGENTS](AGENTS.md) |
 | 人工阅读的设计、Git 与伦理说明 | [Human manuals](docs/manual/README.md) |
 | 历史为何这样演变 | [Archive](docs/archive/README.md) |
@@ -96,7 +90,8 @@ v0.1        已归档的 macOS Cache / Outline pre-alpha
 v0.2        macOS Paper / Flashcard Core；产品验收完成，等待 Road 收口决定
 Phase 7.5   独立轻量 iOS 快速测试版
 Phase 8.5   Road v0.3 准备；下一版 Mac 端前体
-Road v0.3   macOS Paper Library；Phase 7 engineering / CP5 完成，CP6 人工验收已就绪，待开发者执行
+Road v0.3   macOS Paper Library；CP6 product accepted，设计与验收文档已归档
+下一 Road    尚未进入实现；先批准活跃 SPEC、Planbook 与三张 map
 Pre-Advance 可选 Markdown Outline；不阻塞核心流程
 之后        iPhone/iPad 文件服务能力、Android、Windows
 ```

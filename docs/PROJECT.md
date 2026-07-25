@@ -2,7 +2,7 @@
 
 > Authority: current coordinates, module entry points, documentation index, and next gate. Product behavior belongs in [SPEC](SPEC.md); rules belong in [RULES](RULES.md).
 
-Updated: 2026-07-22
+Updated: 2026-07-25
 
 ## Current coordinates
 
@@ -11,14 +11,15 @@ Updated: 2026-07-22
 | Road v0.2 engineering Phases 0–7 | Complete | Paper v2, migration, recovery, macOS UI, Flashcard, Outline retirement, and macOS file-service smoke are implemented and recorded. |
 | Road v0.2 Phase 8 product acceptance | Complete | The author completed the real one-shot and two-session short/medium scenarios; no P0/P1 was reported. P2/P3 observations are recorded separately. |
 | Phase 7.5 lightweight iOS | Quick-test build complete on an independent branch | Responsive shell and app-sandbox Vault were exercised on `codex/fix-ios-device-readiness`. This is a lightweight iOS version for rapid testing, not a step in the macOS Road sequence. |
-| Phase 8.5 / Road v0.3 preparation | Documentation reform implemented; review pending | This is the precursor to the next macOS version. Current evidence covers the authority map, HTML maps, archive, link gate, browser QA, and bounded Graphify trial; independent fresh-agent cold start was not run. |
-| Road v0.3 Phase 7 / CP5 | Engineering and macOS candidate smoke complete; CP6 developer run ready | The [Planbook](planbook_road_v0_3.md) implementation, final HTML-map calibration, synthetic full flow, copied-Vault lazy upgrade/Finder move, launch/relaunch, and focused P1/P2 repair reverification are complete. The [CP6 SOP](acceptance/road_v0_3.md) and result table are ready; no real-author result, tag, or archive decision has been recorded. |
+| Phase 8.5 / Road v0.3 preparation | Complete | Documentation reform, authority maps, link gate, browser QA, and bounded Graphify trial completed before Road v0.3 construction. The fresh-agent audit remained unperformed and is not retroactively claimed. |
+| Road v0.3 | Product accepted; design archive complete | Phase 0–7 engineering, CP5 macOS candidate smoke, and CP6 real-author scenarios are complete. Retrieval was faster and clear, external-editor handoff was clear, and no unresolved P0/P1 was reported. The [version archive](archive/road-v0-3/README.md) is read-only; no v0.3 tag, commit, or push is implied. |
+| Next Road | Not in implementation | Active visual, interaction, and architecture pages are transition boundaries. Implementation waits for an approved SPEC, Planbook, maps, and matching RULES updates. |
 
 Phase 8 product acceptance is complete. Road v0.2 is marked by local annotated tag `v0.2.0` at `d0feac0269a5619f5dbf27c04347ba69c5665b42`; archival remains a separate developer decision. Automated tests, platform smoke, and author acceptance remain distinct evidence.
 
-Phase 7.5 and Phase 8.5 are separate tracks: Phase 7.5 is the independent lightweight iOS test version; Phase 8.5 prepares Road v0.3 and the next macOS version. Phase 7.5 is not a merge gate for Phase 8.5.
+Phase 7.5 and the macOS Roads are separate tracks. The lightweight iOS test version is not a merge gate for the next macOS Road.
 
-Road v0.3 product decisions and Planbook are approved. Phase 0 authority/fixtures through Phase 7 engineering and macOS candidate smoke are complete, including CP5. Safe relocation supports v0.1 and mixed Paper v2/v3 Vaults. Native atomic no-replace rename/exchange is available on Darwin/Linux; unsupported platforms fail before destructive mutation. `architecture.html`, design, and interaction are calibrated to the verified Road v0.3 macOS implementation. CP6 real-author acceptance is ready to run and remains open.
+Road v0.3 product decisions, implementation, macOS candidate smoke, and product acceptance are complete. Its detailed SPEC, Planbook, maps, ADRs, and CP6 record are archived. The accepted Python/Flet runtime remains available until a separately approved Road replaces it; archival does not authorize runtime removal or data migration.
 
 ## Product flow
 
@@ -26,7 +27,7 @@ Road v0.3 product decisions and Planbook are approved. Phase 0 authority/fixture
 Paper Markdown → Flashcard → external prose editor
 ```
 
-See [SPEC](SPEC.md) for the contract and [interaction.html](design/interaction.html) for executable state examples.
+See [SPEC](SPEC.md) for the stable product boundary. The accepted Road v0.3 interaction detail is historical and lives in its [archive](archive/road-v0-3/design/interaction.html).
 
 ## Current runtime map (Paper v3 + folder-aware paths)
 
@@ -43,7 +44,7 @@ See [SPEC](SPEC.md) for the contract and [interaction.html](design/interaction.h
 | Device state | disposable once-per-local-day start-card claim; no Flashcard position | [`local_state.py`](../src/keikeu_app/local_state.py) | [`test_local_state.py`](../tests/test_local_state.py) |
 | Library UI | folder scopes, scoped search/sort, selection, drag/menu/batch moves, branch, Trash/recovery, system handoff | [`library_page.py`](../src/keikeu_app/pages/library_page.py) | [`test_app_pages.py`](../tests/test_app_pages.py) |
 
-The visual dependency and lifecycle view is [architecture.html](architecture/architecture.html).
+The active [architecture page](architecture/architecture.html) records the transition boundary; the implemented Road v0.3 lifecycle view is [archived](archive/road-v0-3/architecture/architecture.html).
 
 ## Documentation map
 
@@ -56,10 +57,10 @@ README
        └─ CONTEXT ──── human manuals / ADRs / read-only archive
 ```
 
-- **Authority:** [SPEC](SPEC.md) owns product behavior and acceptance; [RULES](RULES.md) owns engineering, interaction, data, Git, and evidence constraints; [AGENTS](../AGENTS.md) owns agent procedure. Runtime facts come from [`src/`](../src/) and [`tests/`](../tests/).
-- **Views:** [design](design/design.html) shows the implemented v0.3 macOS visual system and explicitly separate Phase 7.5 mobile specimens; [interaction](design/interaction.html) shows implemented user paths and states; [architecture](architecture/architecture.html) shows implemented modules, dependencies, and lifecycles. Runtime evidence remains in `src/`, `tests/`, and this map.
-- **Evidence:** [acceptance](acceptance/README.md) holds completed Road v0.2 author evidence plus Road v0.3 CP5 evidence and the ready-to-run CP6 SOP. The frozen [2cc40ba status snapshot](archive/snapshots/feat-complete-road-v0-3-candidate.html) shows the CP5 boundary. [generated](generated/README.md) holds rebuildable observations; the [cold-start audit](cold_start_report.md) records the Phase 8.5 evidence boundary. None defines intent by itself.
-- **Context:** [ADR 0001](architecture/decisions/0001-document-authority.md) explains the authority split; [ADR 0002](architecture/decisions/0002-home-write-boundary.md) fixes the Home write boundary and App Sandbox deferral; [ADR 0003](architecture/decisions/0003-paper-v3-one-level-folders.md) fixes Paper v3 and one-level folders. [Manual](manual/README.md) teaches people; [archive](archive/README.md) preserves superseded records. Neither overrides authority.
+- **Authority:** [SPEC](SPEC.md) preserves stable product and author-control boundaries during the Road transition; [RULES](RULES.md) owns engineering, interaction, data, Git, and evidence constraints; [AGENTS](../AGENTS.md) owns agent procedure. Runtime facts come from [`src/`](../src/) and [`tests/`](../tests/).
+- **Views:** [design](design/design.html), [interaction](design/interaction.html), and [architecture](architecture/architecture.html) currently state that the next Road is not active. They must be replaced only by an approved Road.
+- **Evidence:** [acceptance](acceptance/README.md) links completed Road v0.2 evidence and the archived Road v0.3 CP6 record. The frozen [2cc40ba status snapshot](archive/snapshots/feat-complete-road-v0-3-candidate.html) shows the earlier CP5 boundary. [generated](generated/README.md) remains rebuildable observation; the [cold-start audit](cold_start_report.md) is dated historical evidence, not a claim about the transition pages.
+- **Context:** [ADR 0001](architecture/decisions/0001-document-authority.md) explains the authority split. Road v0.3 ADR 0002/0003 and its design set live in the [version archive](archive/road-v0-3/README.md). [Manual](manual/README.md) teaches people; [archive](archive/README.md) preserves superseded records. Neither overrides authority.
 
 ## Commands
 
@@ -74,9 +75,9 @@ Application tests must not be inferred from documentation checks. Platform smoke
 
 ## Open gates
 
-1. Make a restorable backup, start the app with `.venv/bin/flet run src/keikeu_app/main.py`, confirm the selected Vault, then run the two de-identified real-author scenarios in [Road v0.3 acceptance](acceptance/road_v0_3.md). Record retrieval clarity/speed, external-editor handoff clarity, and any P0/P1 without private content.
-2. Fix and reverify any P0/P1 before closing CP6; keep P2/P3 as separately classified next-Road candidates.
-3. Decide tag/archive only after CP6; do not push, tag, or archive automatically.
+1. Approve the next Road's active SPEC, Planbook, visual map, interaction map, architecture map, and required RULES changes.
+2. Keep the accepted Python/Flet runtime until the replacement Road reaches its own parity and real-author acceptance gate.
+3. Treat tag, commit, push, signing, distribution, and any real-Vault migration as separate developer decisions.
 
 ## Known candidate, not active scope
 
@@ -84,4 +85,4 @@ The Phase 8 [issue classification](acceptance/phase8.md#issue-分级) records th
 
 ## History boundary
 
-Road v0.1 Cache/Outline behavior, old planning debates, frozen status pages, and the Phase 8.5 proposal live under [archive](archive/README.md). Human explanations live under [manual](manual/README.md). Neither defines current behavior.
+Road v0.1/v0.2 history, Road v0.3 design and acceptance, old planning debates, frozen status pages, and the Phase 8.5 proposal live under [archive](archive/README.md). Human explanations live under [manual](manual/README.md). Neither defines current or future Road behavior.

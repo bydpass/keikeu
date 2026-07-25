@@ -1,12 +1,14 @@
+> **ARCHIVE — READ ONLY.** Final Road v0.3 acceptance record; archived on 2026-07-25.
+
 # keikeu Road v0.3 — CP5 证据与 CP6 产品验收
 
-> 状态：**CP5 macOS candidate smoke complete / CP6 developer run ready / product acceptance pending**
-> 日期：2026-07-22
+> 状态：**CP5 macOS candidate smoke complete / CP6 complete / product accepted**
+> 日期：2026-07-25
 > 权限：支持性证据；验收契约以 [`../SPEC.md`](../SPEC.md) §12 为准，当前结论以 [`../PROJECT.md`](../PROJECT.md) 为准
 
 ## 证据边界
 
-- CP5 证明当前分支的工程实现和 macOS candidate workflow；不证明真实作者工作流已接受。
+- CP5 证明当前分支的工程实现和 macOS candidate workflow；CP6 结论来自开发者确认的去标识化真实作者场景。
 - 所有破坏性动作先在 synthetic 或 copied Vault 执行；唯一真实 Vault、真实 config 和真实 device state 未修改。
 - 记录不包含正文、灵感、名称、关系、Vault 路径、设备标识或 provider 私密信息。
 - Product acceptance、tag、archive 和 push 是四个独立决定；本记录不授权后三项。
@@ -93,17 +95,17 @@ Session 2：
 
 只记录：跨 session 检索是否更快且清楚、handoff 是否清楚、是否发生 P0/P1。
 
-## CP6 结果（待开发者填写）
+## CP6 结果
 
 | 项目 | 结果 |
 | --- | --- |
-| 人工测试状态 | **Ready to run** |
-| 场景 A 完成 | Pending |
-| 场景 B Session 1 完成 | Pending |
-| 场景 B Session 2 完成 | Pending |
-| 检索更快且清楚 | Pending |
-| 外部编辑器 handoff 清楚 | Pending |
-| P0/P1 | Pending |
-| CP6 结论 | **Pending — Road v0.3 尚未 product accepted** |
+| 人工测试状态 | **Complete** |
+| 场景 A 完成 | Complete |
+| 场景 B Session 1 完成 | Complete |
+| 场景 B Session 2 完成 | Complete |
+| 检索更快且清楚 | Yes |
+| 外部编辑器 handoff 清楚 | Yes |
+| P0/P1 | None reported |
+| CP6 结论 | **Complete — Road v0.3 product accepted** |
 
-CP6 只有在两个场景完成且没有未解决 P0/P1 时才能改为 Complete。之后是否 tag 或 archive 仍由开发者另行决定。
+开发者于 2026-07-25 确认上述去标识化结论，并明确决定归档 Road v0.3 设计文档。未创建 tag、commit 或 push。

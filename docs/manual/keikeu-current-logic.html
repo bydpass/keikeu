@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>keikeu · 当前业务逻辑</title>
+  <style>
+    :root {
+      --bg: #f5f0e7;
+      --surface: #fffcf6;
+      --surface-2: #eee6d7;
+      --ink: #22251d;
+      --muted: #5f6258;
+      --line: #cfc5b3;
+      --accent: #9f3d2b;
+      --accent-ink: #fff7ed;
+      --green: #2f7654;
+      --yellow: #9a6a19;
+      --red: #a2392c;
+      --shadow: 0 10px 24px rgb(34 37 29 / 9%);
+    }
+    [data-theme="dark"] {
+      --bg: #191c18;
+      --surface: #242722;
+      --surface-2: #30342d;
+      --ink: #f5f0e7;
+      --muted: #c7c1b4;
+      --line: #53584e;
+      --accent: #ef7e62;
+      --accent-ink: #231812;
+      --green: #79c496;
+      --yellow: #e7be63;
+      --red: #f28a7a;
+      --shadow: none;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--bg);
+      font: 16px/1.55 ui-sans-serif, -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans CJK SC", sans-serif;
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; }
+    .skip { position: fixed; left: 12px; top: -80px; z-index: 20; padding: 8px 12px; background: var(--ink); color: var(--bg); }
+    .skip:focus { top: 12px; }
+    .shell { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100vh; }
+    .rail {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 28px 18px;
+      color: var(--bg);
+      background: var(--ink);
+      border-right: 4px solid var(--accent);
+    }
+    .brand, .eyebrow, .code, .pill, .step-no, .source { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    .brand { font-size: 19px; font-weight: 800; letter-spacing: .08em; }
+    .rail small { display: block; margin: 8px 0 24px; color: #d9d1c2; font-size: 11px; letter-spacing: .06em; }
+    .rail nav { display: grid; gap: 4px; }
+    .rail a { padding: 8px 10px; color: #e5dccd; text-decoration: none; border-left: 2px solid transparent; }
+    .rail a:hover, .rail a:focus { color: #fff8ec; background: rgb(255 255 255 / 8%); border-left-color: var(--accent); outline: 0; }
+    .rail-actions { display: flex; gap: 8px; margin-top: 24px; }
+    .rail-actions button {
+      min-height: 36px; padding: 6px 10px; color: #fff8ec; background: transparent; border: 1px solid #756f64; border-radius: 4px;
+    }
+    .main { min-width: 0; }
+    .topbar { position: sticky; top: 0; z-index: 10; display: flex; gap: 14px; align-items: center; justify-content: space-between; padding: 12px clamp(20px, 5vw, 72px); background: color-mix(in srgb, var(--bg) 92%, transparent); border-bottom: 1px solid var(--line); backdrop-filter: blur(12px); }
+    .topbar input { width: min(420px, 100%); min-height: 40px; padding: 8px 12px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 4px; }
+    .topbar span { color: var(--muted); font-size: 13px; white-space: nowrap; }
+    .hero, .content, .footer { width: min(1120px, calc(100% - 40px)); margin: 0 auto; }
+    .hero { padding: clamp(50px, 9vw, 104px) 0 40px; }
+    .eyebrow { color: var(--accent); font-size: 12px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+    h1, h2, h3 { text-wrap: balance; }
+    h1 { max-width: 900px; margin: 14px 0; font: 800 clamp(39px, 7vw, 76px)/1.03 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: -.06em; }
+    .lede { max-width: 760px; margin: 0; color: var(--muted); font-size: clamp(18px, 2vw, 22px); }
+    .state-row, .button-row, .legend { display: flex; flex-wrap: wrap; gap: 8px; }
+    .state-row { margin-top: 22px; }
+    .pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 9px; font-size: 11px; font-weight: 800; letter-spacing: .03em; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; }
+    .pill::before { content: "●"; color: var(--accent); }
+    .pill.good::before { color: var(--green); }
+    .pill.warn::before { color: var(--yellow); }
+    .section { padding: 36px 0 24px; scroll-margin-top: 72px; }
+    .section[hidden] { display: none; }
+    .section-head { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 12px; margin-bottom: 18px; }
+    .step-no { padding-top: 8px; color: var(--accent); font-weight: 800; font-size: 12px; }
+    h2 { margin: 0 0 5px; font-size: clamp(27px, 4vw, 43px); line-height: 1.13; }
+    h3 { margin: 0 0 8px; font-size: 18px; }
+    .section-head p, .muted { margin: 0; color: var(--muted); }
+    .grid { display: grid; gap: 14px; }
+    .two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .card, .flow-node, .sim-panel { min-width: 0; padding: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; box-shadow: var(--shadow); }
+    .card p, .flow-node p { margin: 7px 0 0; color: var(--muted); }
+    .card strong, .flow-node strong { display: block; }
+    .source { margin-top: 14px; color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
+    .flow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; }
+    .flow-node { position: relative; border-top: 4px solid var(--accent); }
+    .flow-node.core { border-top-color: var(--green); }
+    .flow-node.disk { border-top-color: var(--yellow); }
+    .flow-node.external { border-top-color: var(--muted); }
+    .flow-node:not(:last-child)::after { content: "→"; position: absolute; top: 40%; right: -15px; color: var(--yellow); font: 800 20px ui-monospace, monospace; }
+    .button-row { margin: 0 0 14px; }
+    .choice, .mode, .small-button {
+      min-height: 40px; padding: 8px 12px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 4px; font-weight: 700;
+    }
+    .choice[aria-pressed="true"], .mode.active, .small-button.primary { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+    .choice:focus-visible, .mode:focus-visible, .small-button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid var(--yellow); outline-offset: 3px; }
+    .sim-panel { box-shadow: none; background: var(--surface-2); }
+    .save-track { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
+    .save-step { min-height: 118px; padding: 12px; border: 1px solid var(--line); background: var(--surface); }
+    .save-step b { display: block; font-size: 13px; }
+    .save-step span { display: block; margin-top: 6px; color: var(--muted); font-size: 12px; }
+    .save-step.on { border-color: var(--green); box-shadow: inset 0 4px var(--green); }
+    .save-step.stop { border-color: var(--red); box-shadow: inset 0 4px var(--red); }
+    .notice { margin: 14px 0 0; padding: 11px 13px; border-left: 4px solid var(--accent); background: var(--surface); }
+    .notice.good { border-left-color: var(--green); }
+    .notice.bad { border-left-color: var(--red); }
+    .authority { display: grid; grid-template-columns: minmax(180px, .75fr) minmax(0, 2fr); gap: 14px; }
+    .authority-list { display: grid; gap: 8px; align-content: start; }
+    .authority-button { text-align: left; }
+    .authority-detail h3 { font-family: ui-monospace, monospace; }
+    .authority-detail ul, .principle-list { margin: 10px 0 0; padding-left: 20px; }
+    .authority-detail li, .principle-list li { margin: 6px 0; }
+    .deck { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 14px; }
+    .card-face { min-height: 230px; display: grid; align-content: space-between; padding: 24px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-top: 6px solid var(--green); border-radius: 6px; box-shadow: var(--shadow); }
+    .card-face .card-type { color: var(--muted); font: 800 12px ui-monospace, monospace; letter-spacing: .07em; }
+    .card-copy { max-width: 630px; margin: 20px 0; font-size: clamp(20px, 3vw, 31px); line-height: 1.4; }
+    .deck-list { display: grid; align-content: start; gap: 8px; }
+    .deck-list button { text-align: left; }
+    .deck-list button.active { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+    .tree { padding: 18px; font: 14px/1.75 ui-monospace, monospace; white-space: pre-wrap; background: var(--ink); color: #fff8ec; border-radius: 6px; overflow: auto; }
+    .architecture { display: grid; gap: 12px; }
+    .layer { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 14px; padding: 16px; border: 1px solid var(--line); background: var(--surface); border-left: 5px solid var(--accent); }
+    .layer[data-layer="core"] { border-left-color: var(--green); }
+    .layer[data-layer="disk"] { border-left-color: var(--yellow); }
+    .layer[data-layer="outside"] { border-left-color: var(--muted); }
+    .layer.dim { opacity: .24; }
+    .layer-name { font: 800 13px ui-monospace, monospace; }
+    .module-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .module { padding: 5px 8px; color: var(--muted); background: var(--surface-2); border-radius: 3px; font: 12px ui-monospace, monospace; }
+    .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 6px; }
+    table { width: 100%; min-width: 700px; border-collapse: collapse; background: var(--surface); }
+    th, td { padding: 12px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); background: var(--surface-2); font: 800 11px ui-monospace, monospace; letter-spacing: .05em; }
+    tr:last-child td { border: 0; }
+    .status { border-left: 4px solid var(--yellow); }
+    .footer { padding: 38px 0 60px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); }
+    .no-results { display: none; margin: 20px 0; padding: 14px; color: var(--muted); background: var(--surface); border: 1px dashed var(--line); }
+    .no-results.visible { display: block; }
+    @media (max-width: 920px) {
+      .shell { display: block; }
+      .rail { position: relative; height: auto; padding: 18px; border-right: 0; border-bottom: 4px solid var(--accent); }
+      .rail small { margin-bottom: 14px; }
+      .rail nav { display: flex; overflow-x: auto; }
+      .rail nav a { white-space: nowrap; }
+      .rail-actions { position: absolute; top: 12px; right: 18px; margin: 0; }
+      .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .flow-node::after { display: none; }
+      .save-track { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    @media (max-width: 650px) {
+      .topbar { align-items: stretch; flex-direction: column; }
+      .topbar input { width: 100%; }
+      .hero, .content, .footer { width: min(100% - 28px, 1120px); }
+      .two, .three, .four, .flow, .save-track, .deck { grid-template-columns: 1fr; }
+      .section-head, .authority, .layer { grid-template-columns: 1fr; }
+      .layer { gap: 8px; }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+    @media print { .rail, .topbar, button { display: none !important; } .shell { display: block; } .hero, .content, .footer { width: 100%; } .card, .flow-node { box-shadow: none; } }
+  </style>
+</head>
+<body data-theme="light">
+  <a class="skip" href="#content">跳到正文</a>
+  <div class="shell">
+    <aside class="rail" aria-label="页面目录">
+      <div class="brand">KEIKEU / NOW</div>
+      <small>ROAD V0.3 · 本地代码与规范核对<br>2026-07-25</small>
+      <nav>
+        <a href="#product">产品链路</a>
+        <a href="#save">一次保存</a>
+        <a href="#authority">谁说了算</a>
+        <a href="#flashcard">Flashcard</a>
+        <a href="#library">文件库与恢复</a>
+        <a href="#architecture">实现分层</a>
+        <a href="#principles">原则与现状</a>
+      </nav>
+      <div class="rail-actions">
+        <button type="button" data-theme aria-label="切换主题">夜</button>
+        <button type="button" onclick="window.print()" aria-label="打印页面">印</button>
+      </div>
+    </aside>
+
+    <main class="main" id="content">
+      <div class="topbar">
+        <input type="search" data-search aria-label="搜索业务、模块或规则" placeholder="搜索：Markdown、索引、回收、迁移…">
+        <span>交互说明 · 点击按钮看状态变化</span>
+      </div>
+
+      <header class="hero">
+        <div class="eyebrow">Current business logic and implementation</div>
+        <h1>把零散灵感变成可回到写作的本地锚点。</h1>
+        <p class="lede">作者把一份创作单元保存成 Paper Markdown。keikeu 用 Flashcard 提取当前 Summary 和 Highlights，帮助作者回忆，然后把正文写作交给外部编辑器。</p>
+        <div class="state-row">
+          <span class="pill good">Paper Markdown 是主数据</span>
+          <span class="pill good">Core 不依赖 Flet</span>
+          <span class="pill">索引可以重建</span>
+          <span class="pill">设备状态只记日期</span>
+          <span class="pill warn">CP6 真实作者验收待执行</span>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="no-results" data-no-results>没有找到匹配章节。试试“保存”“Markdown”“迁移”或“Flashcard”。</div>
+
+        <section class="section searchable" id="product" data-search="产品 链路 Paper Markdown Flashcard 外部 编辑器 业务 灵感 summary highlights">
+          <div class="section-head"><div class="step-no">01</div><div><h2>产品链路</h2><p>keikeu 管理写作前的信息，不接管正文。</p></div></div>
+          <div class="button-row" aria-label="产品链路演示">
+            <button class="choice" type="button" data-flow="capture" aria-pressed="true">捕捉并保存</button>
+            <button class="choice" type="button" data-flow="focus" aria-pressed="false">提取写作锚点</button>
+            <button class="choice" type="button" data-flow="handoff" aria-pressed="false">交给外部编辑器</button>
+          </div>
+          <div class="flow" data-flow-view>
+            <article class="flow-node"><strong>作者的灵感</strong><p>作者保留内容判断和命名权。</p></article>
+            <article class="flow-node"><strong>Paper 表单</strong><p>输入 Summary、Highlights、Tags。</p></article>
+            <article class="flow-node core"><strong>Paper 模型</strong><p>校验必填字段、代码和可选字段。</p></article>
+            <article class="flow-node disk"><strong>Markdown 文件</strong><p>把创作资产写进 Vault。</p></article>
+            <article class="flow-node external"><strong>外部编辑器</strong><p>作者在那里写正文。</p></article>
+          </div>
+          <p class="notice" data-flow-note>保存后，Paper 既能被作者用普通文本工具检查，也能被 keikeu 重新读取。</p>
+          <div class="grid three" style="margin-top:14px">
+            <article class="card"><strong>Paper 是一个工作单元</strong><p>它保存一个当前 Summary、按作者顺序排列的 Highlights 和 Tags。它不保存进度、章节正文或任务状态。</p><div class="source">models.py · Paper / Highlight</div></article>
+            <article class="card"><strong>Flashcard 是投影</strong><p>它读取 Paper，按 Summary 在前、Highlights 在后的顺序显示卡片。它不产生另一份创作资产。</p><div class="source">flashcard_page.py · project_cards()</div></article>
+            <article class="card"><strong>文件库负责找回</strong><p>作者用文件夹、搜索、排序、分支、Trash 和恢复管理已有 Paper。</p><div class="source">library_page.py + vault.py + indexer.py</div></article>
+          </div>
+        </section>
+
+        <section class="section searchable" id="save" data-search="保存 保存流程 外部修改 原子替换 Markdown 写入 校验 summary 文件变化">
+          <div class="section-head"><div class="step-no">02</div><div><h2>一次保存怎样保护作者的内容</h2><p>选择现场情况，查看页面和核心层会走哪条路。</p></div></div>
+          <div class="button-row" aria-label="保存情境">
+            <button class="choice" type="button" data-save="valid" aria-pressed="true">正常保存</button>
+            <button class="choice" type="button" data-save="changed" aria-pressed="false">外部已修改</button>
+            <button class="choice" type="button" data-save="missing" aria-pressed="false">外部已移动或删除</button>
+            <button class="choice" type="button" data-save="blank" aria-pressed="false">Summary 为空</button>
+          </div>
+          <div class="sim-panel">
+            <div class="save-track" data-save-track>
+              <div class="save-step on"><b>1. 表单检查</b><span>Summary 不能为空。</span></div>
+              <div class="save-step on"><b>2. 建立 Paper</b><span>模型去掉空 Highlight，整理重复 Tag。</span></div>
+              <div class="save-step on"><b>3. 核对快照</b><span>编辑页用打开时的原始字节核对文件。</span></div>
+              <div class="save-step on"><b>4. 原子交换</b><span>核心层在同目录准备临时文件，再安全替换。</span></div>
+              <div class="save-step on"><b>5. 重建索引</b><span>应用刷新可丢弃的检索元数据。</span></div>
+            </div>
+            <p class="notice good" data-save-notice>keikeu 保存新内容，然后用新快照更新编辑页。作者下次保存会基于这份快照继续核对。</p>
+          </div>
+          <div class="grid two" style="margin-top:14px">
+            <article class="card"><h3>编辑页负责拒绝危险保存</h3><p>页面先判断 Summary。编辑已有 Paper 时，页面拒绝不存在的路径，也把打开时的字节交给核心层。核心层发现字节不一致时拒绝覆盖。</p><div class="source">paper_page.py · on_save()</div></article>
+            <article class="card"><h3>Markdown I/O 负责写入细节</h3><p>它序列化 Paper v3，保留可行的未知 frontmatter，并用临时文件和原子交换处理更新。失败时它优先保留两份内容供作者恢复。</p><div class="source">markdown_io.py · _atomic_compare_exchange_bytes_at()</div></article>
+          </div>
+        </section>
+
+        <section class="section searchable" id="authority" data-search="权威 主数据 Markdown 索引 JSON 设备状态 source of truth config state 可重建">
+          <div class="section-head"><div class="step-no">03</div><div><h2>谁说了算</h2><p>这套分工决定 keikeu 在崩溃、外部修改和重建时该相信什么。</p></div></div>
+          <div class="authority">
+            <div class="authority-list" role="tablist" aria-label="数据权威层">
+              <button type="button" class="mode authority-button active" data-authority="markdown" role="tab" aria-selected="true">Paper Markdown</button>
+              <button type="button" class="mode authority-button" data-authority="index" role="tab" aria-selected="false">keikeu_index.json</button>
+              <button type="button" class="mode authority-button" data-authority="device" role="tab" aria-selected="false">设备 config / state</button>
+              <button type="button" class="mode authority-button" data-authority="external" role="tab" aria-selected="false">编辑器与同步盘</button>
+            </div>
+            <article class="card authority-detail" data-authority-detail>
+              <h3>Paper Markdown</h3>
+              <p>作者内容的唯一主版本。每个 Paper 都是一个可读、可修的 Markdown 文件。</p>
+              <ul><li>保存 Paper、更新 Paper、分支和 Flashcard 都从它读写。</li><li>索引丢失后，keikeu 扫描它重建检索数据。</li><li>作者可以用文本编辑器查看它；keikeu 不会静默改写创作文本。</li></ul>
+              <div class="source">SPEC §3 · RULES §2–4 · markdown_io.py</div>
+            </article>
+          </div>
+        </section>
+
+        <section class="section searchable" id="flashcard" data-search="Flashcard 卡片 summary highlights 只读 投影 书写 焦点 页码">
+          <div class="section-head"><div class="step-no">04</div><div><h2>Flashcard 把 Paper 切成写作锚点</h2><p>下面的卡组模拟一份 Paper。它从第 1 张 Summary 开始，后面跟作者保存的 Highlights。</p></div></div>
+          <div class="deck">
+            <article class="card-face" aria-live="polite">
+              <span class="card-type" data-card-kind>1 / 3 · SUMMARY</span>
+              <p class="card-copy" data-card-copy>雨停后，主角发现车轮痕迹通向一座没有入口的车站。</p>
+              <div class="button-row">
+                <button type="button" class="small-button" data-card-prev>上一张</button>
+                <button type="button" class="small-button primary" data-card-next>下一张</button>
+              </div>
+            </article>
+            <div class="deck-list" aria-label="选择卡片">
+              <button type="button" class="small-button active" data-card-index="0">1. Summary</button>
+              <button type="button" class="small-button" data-card-index="1">2. 车轮痕迹</button>
+              <button type="button" class="small-button" data-card-index="2">3. 站台广播</button>
+              <p class="muted" data-card-note>Flashcard 不保存进度，也不接收正文。</p>
+            </div>
+          </div>
+          <div class="grid two" style="margin-top:14px">
+            <article class="card"><strong>投影规则</strong><p><span class="code">cards = [current Summary] + ordered Highlight content</span>。应用每次打开、切换 Paper 或重启都回到第 1 张。</p></article>
+            <article class="card"><strong>交互边界</strong><p>作者可以用卡片列表、上一张/下一张、方向键和页码跳转。首尾不会循环，越界操作只给短提示。</p></article>
+          </div>
+        </section>
+
+        <section class="section searchable" id="library" data-search="文件库 folder Trash 回收 恢复 索引 搜索 分支 删除 Vault Home">
+          <div class="section-head"><div class="step-no">05</div><div><h2>文件库负责检索、移动和可恢复的删除</h2><p>Vault 允许活动区和 Trash 各保留零层或一层文件夹。文件库传递已经验证过的 Vault 相对路径。</p></div></div>
+          <div class="grid two">
+            <div class="tree" aria-label="Vault 文件结构">vault/
+  cache/
+    K-20260725-001.md
+    station/
+      K-20260725-002.md
+  .trash/cache/
+    station/
+      K-20260720-001.md
+  keikeu_index.json</div>
+            <article class="card"><h3>检索和刷新</h3><p>索引记录显示名、相对路径、文件夹、Summary、Tags 和 Highlight 名称。索引失效时，`indexer.py` 扫描 Markdown 重建它；解析问题留在 errors 中，不会把坏文件吞掉。</p><h3 style="margin-top:18px">移动、恢复和永久删除</h3><p>常规删除先移到 Trash。恢复遇到活动区同代码时会保留 Trash 项并报告冲突。永久删除只处理明确验证过的 Paper 路径。</p></article>
+          </div>
+          <div class="grid three" style="margin-top:14px">
+            <article class="card"><strong>路径防线</strong><p>Vault 只能落在当前用户 Home 内。核心层拒绝 symlink 逃逸和不支持的目录结构。</p><div class="source">vault.py · require_home_path / 路径解析</div></article>
+            <article class="card"><strong>代码防线</strong><p>新代码跨活动区和 Trash 分配。发现重复代码时，keikeu 报错并阻止可能覆盖资产的操作。</p><div class="source">vault.py + indexer.py</div></article>
+            <article class="card"><strong>迁移防线</strong><p>旧 v0.1 Vault 先在安全副本上验证，再走显式迁移和备份流程。原始不安全来源保持不动。</p><div class="source">main.py + migration_v01.py</div></article>
+          </div>
+        </section>
+
+        <section class="section searchable" id="architecture" data-search="架构 Flet core Markdown Vault indexer model migration UI 分层 模块">
+          <div class="section-head"><div class="step-no">06</div><div><h2>实现分层</h2><p>点击层级，检查每层该做什么，以及它刻意不做什么。</p></div></div>
+          <div class="button-row" aria-label="架构层筛选">
+            <button type="button" class="choice" data-layer-filter="all" aria-pressed="true">全部</button>
+            <button type="button" class="choice" data-layer-filter="app" aria-pressed="false">App</button>
+            <button type="button" class="choice" data-layer-filter="core" aria-pressed="false">Core</button>
+            <button type="button" class="choice" data-layer-filter="disk" aria-pressed="false">Disk</button>
+            <button type="button" class="choice" data-layer-filter="outside" aria-pressed="false">Outside</button>
+          </div>
+          <div class="architecture">
+            <article class="layer" data-layer="app"><div class="layer-name">APP · Flet</div><div><p class="muted">页面组装、路由、快捷键、可见反馈和 Vault 选择。App 把验证后的相对路径交给 Core。</p><div class="module-list"><span class="module">main.py</span><span class="module">paper_page.py</span><span class="module">flashcard_page.py</span><span class="module">library_page.py</span><span class="module">local_state.py</span></div></div></article>
+            <article class="layer" data-layer="core"><div class="layer-name">CORE · Python</div><div><p class="muted">模型校验、Markdown 解析/序列化、索引重建、文件操作和 v0.1 迁移。Core 不导入 Flet。</p><div class="module-list"><span class="module">models.py</span><span class="module">markdown_io.py</span><span class="module">indexer.py</span><span class="module">vault.py</span><span class="module">migration_v01.py</span></div></div></article>
+            <article class="layer" data-layer="disk"><div class="layer-name">DISK · 本地文件</div><div><p class="muted">Paper Markdown 承载作者资产。JSON 索引加速检索。设备配置和每日卡片日期放在 Vault 外，并且可丢弃。</p><div class="module-list"><span class="module">cache/*.md</span><span class="module">.trash/cache/*.md</span><span class="module">keikeu_index.json</span><span class="module">config</span><span class="module">state</span></div></div></article>
+            <article class="layer" data-layer="outside"><div class="layer-name">OUTSIDE</div><div><p class="muted">作者决定 Vault、系统文件服务和外部编辑器。同步盘、冲突合并、账号、云服务和正文编辑不属于 keikeu。</p><div class="module-list"><span class="module">Finder</span><span class="module">iCloud / Dropbox</span><span class="module">外部 prose editor</span></div></div></article>
+          </div>
+        </section>
+
+        <section class="section searchable" id="principles" data-search="原则 现状 v0.3 CP6 验收 隐私 author control local first 测试">
+          <div class="section-head"><div class="step-no">07</div><div><h2>实现原则与当前状态</h2><p>这些规则约束产品扩张，也让作者在文件出问题时能理解和修复。</p></div></div>
+          <div class="grid two">
+            <article class="card"><h3>实现原则</h3><ul class="principle-list"><li>Markdown 保存作者内容，JSON 只做可重建的辅助索引。</li><li>UI 调用公开 Core API，不渲染 Markdown，也不直接编辑索引 JSON。</li><li>保存、迁移、删除和恢复先保护已有文件，再报告失败原因。</li><li>keikeu 不生成、改写、评价、上传或合并作者的创作文本。</li><li>系统功能在边界外处理：正文在外部编辑器，同步和冲突由 provider 负责。</li></ul></article>
+            <article class="card status"><h3>Road v0.3 的当前位置</h3><p>工程实现和 macOS 候选 smoke 已完成。CP6 的真实作者验收流程已经准备好，还没有记录结果。</p><div class="source">PROJECT.md · Current coordinates<br>acceptance/road_v0_3.md</div></article>
+          </div>
+          <div class="table-wrap" style="margin-top:14px">
+            <table>
+              <thead><tr><th>结论</th><th>当前状态</th><th>能证明什么</th></tr></thead>
+              <tbody>
+                <tr><td>代码实现</td><td>已完成</td><td>源代码与聚焦测试覆盖 Road v0.3 的核心约束。</td></tr>
+                <tr><td>macOS 候选 smoke</td><td>已完成</td><td>合成 Vault 和候选工作流已被检查。</td></tr>
+                <tr><td>真实作者验收</td><td>待执行 CP6</td><td>作者能否更快找回内容、顺利交给外部编辑器。</td></tr>
+                <tr><td>Road 打标或归档</td><td>尚未决定</td><td>需要产品验收结果和开发者决策。</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <footer class="footer">最终核对：<a href="../SPEC.md">SPEC</a>、<a href="../PROJECT.md">PROJECT</a> 与 <a href="../RULES.md">RULES</a>。运行时事实来自 `src/keikeu_core/`、`src/keikeu_app/` 与对应测试；此页只负责解释。</footer>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+      var body = document.body;
+      var theme = document.querySelector("button[data-theme]");
+      var savedTheme = localStorage.getItem("keikeu-current-logic-theme");
+      if (savedTheme === "dark") body.dataset.theme = "dark";
+      function syncThemeLabel() { theme.textContent = body.dataset.theme === "dark" ? "昼" : "夜"; }
+      syncThemeLabel();
+      theme.addEventListener("click", function () {
+        body.dataset.theme = body.dataset.theme === "dark" ? "light" : "dark";
+        localStorage.setItem("keikeu-current-logic-theme", body.dataset.theme);
+        syncThemeLabel();
+      });
+
+      var flows = {
+        capture: {
+          note: "作者先保存一份可检查的 Paper。应用把这份 Markdown 当作主数据，索引只负责加速检索。"
+        },
+        focus: {
+          note: "作者打开 Flashcard 时，应用从当前 Paper 投影卡组：Summary 在前，Highlights 按保存顺序跟在后面。"
+        },
+        handoff: {
+          note: "作者拿着卡片回忆和整理，再在自己选择的外部编辑器写正文。keikeu 不读取那份正文。"
+        }
+      };
+      document.querySelectorAll("[data-flow]").forEach(function (button) {
+        button.addEventListener("click", function () {
+          var key = button.dataset.flow;
+          document.querySelectorAll("[data-flow]").forEach(function (item) { item.setAttribute("aria-pressed", String(item === button)); });
+          document.querySelector("[data-flow-note]").textContent = flows[key].note;
+        });
+      });
+
+      var saveScenarios = {
+        valid: { active: [0, 1, 2, 3, 4], stopped: [], kind: "good", text: "keikeu 保存新内容，然后用新快照更新编辑页。作者下次保存会基于这份快照继续核对。" },
+        changed: { active: [0, 1, 2], stopped: [2], kind: "bad", text: "核心层发现磁盘字节和编辑页快照不同，拒绝覆盖。作者重新打开 Paper 后决定怎样处理两份内容。" },
+        missing: { active: [0, 1], stopped: [2], kind: "bad", text: "编辑页发现原路径不存在，停止保存，并要求作者回到文件库刷新。应用不会猜测文件的新位置。" },
+        blank: { active: [0], stopped: [0], kind: "bad", text: "页面发现 Summary 为空，直接阻止这一次保存。磁盘上的旧版本保持不变。" }
+      };
+      function renderSave(key) {
+        var scenario = saveScenarios[key];
+        document.querySelectorAll("[data-save-track] .save-step").forEach(function (step, index) {
+          step.classList.toggle("on", scenario.active.includes(index));
+          step.classList.toggle("stop", scenario.stopped.includes(index));
+        });
+        var notice = document.querySelector("[data-save-notice]");
+        notice.className = "notice " + scenario.kind;
+        notice.textContent = scenario.text;
+      }
+      document.querySelectorAll("[data-save]").forEach(function (button) {
+        button.addEventListener("click", function () {
+          document.querySelectorAll("[data-save]").forEach(function (item) { item.setAttribute("aria-pressed", String(item === button)); });
+          renderSave(button.dataset.save);
+        });
+      });
+
+      var authority = {
+        markdown: { title: "Paper Markdown", intro: "作者内容的唯一主版本。每个 Paper 都是一个可读、可修的 Markdown 文件。", points: ["保存 Paper、更新 Paper、分支和 Flashcard 都从它读写。", "索引丢失后，keikeu 扫描它重建检索数据。", "作者可以用文本编辑器查看它；keikeu 不会静默改写创作文本。"], source: "SPEC §3 · RULES §2–4 · markdown_io.py" },
+        index: { title: "keikeu_index.json", intro: "检索用的辅助数据。它记录活动 Paper 的路径和可搜索字段，不承担作者内容的权威。", points: ["indexer.py 扫描活动区和 Trash，隔离损坏文件的解析问题。", "应用发现 JSON 失效或条目过期时，会从 Markdown 重建。", "删除索引不会删除 Paper Markdown。"], source: "RULES §2 · indexer.py · load_index()" },
+        device: { title: "设备 config / state", intro: "这两份文件放在 Vault 外。config 记住选择的 Vault；state 只记当天是否展示过启动卡。", points: ["设备状态损坏时，应用把当天当作尚未展示，不触碰 Vault。", "配置切换先验证候选 Vault，再原子替换配置。", "Flashcard 位置不写入设备状态。"], source: "SPEC §3 / §9 · local_state.py · vault.py" },
+        external: { title: "编辑器与同步盘", intro: "作者和操作系统拥有这条边界。keikeu 只把符合 Home 安全边界的路径当成普通文件路径。", points: ["外部编辑器保存正文；keikeu 不读取它。", "iCloud、Dropbox 或 OneDrive 的同步和冲突由 provider 负责。", "keikeu 遇到外部修改时拒绝静默覆盖。"], source: "SPEC §7 / §10 · RULES §3–5" }
+      };
+      function renderAuthority(key) {
+        var item = authority[key];
+        var detail = document.querySelector("[data-authority-detail]");
+        detail.innerHTML = "<h3>" + item.title + "</h3><p>" + item.intro + "</p><ul>" + item.points.map(function (point) { return "<li>" + point + "</li>"; }).join("") + "</ul><div class=\"source\">" + item.source + "</div>";
+      }
+      document.querySelectorAll("[data-authority]").forEach(function (button) {
+        button.addEventListener("click", function () {
+          document.querySelectorAll("[data-authority]").forEach(function (item) {
+            var selected = item === button;
+            item.classList.toggle("active", selected);
+            item.setAttribute("aria-selected", String(selected));
+          });
+          renderAuthority(button.dataset.authority);
+        });
+      });
+
+      var cards = [
+        { title: "SUMMARY", copy: "雨停后，主角发现车轮痕迹通向一座没有入口的车站。" },
+        { title: "车轮痕迹", copy: "水洼里的车辙没有离开站台。它们在站台边缘消失。" },
+        { title: "站台广播", copy: "广播报出一班不存在的列车，播报员念出了主角的旧名字。" }
+      ];
+      var cardIndex = 0;
+      function renderCard() {
+        var card = cards[cardIndex];
+        document.querySelector("[data-card-kind]").textContent = (cardIndex + 1) + " / " + cards.length + " · " + card.title;
+        document.querySelector("[data-card-copy]").textContent = card.copy;
+        document.querySelectorAll("[data-card-index]").forEach(function (button) { button.classList.toggle("active", Number(button.dataset.cardIndex) === cardIndex); });
+        document.querySelector("[data-card-note]").textContent = cardIndex === 0 ? "Flashcard 从当前 Summary 开始。" : "Highlight 卡片可暂时查看 Summary 对照。";
+      }
+      document.querySelector("[data-card-prev]").addEventListener("click", function () { cardIndex = Math.max(0, cardIndex - 1); renderCard(); });
+      document.querySelector("[data-card-next]").addEventListener("click", function () { cardIndex = Math.min(cards.length - 1, cardIndex + 1); renderCard(); });
+      document.querySelectorAll("[data-card-index]").forEach(function (button) { button.addEventListener("click", function () { cardIndex = Number(button.dataset.cardIndex); renderCard(); }); });
+
+      document.querySelectorAll("[data-layer-filter]").forEach(function (button) {
+        button.addEventListener("click", function () {
+          var key = button.dataset.layerFilter;
+          document.querySelectorAll("[data-layer-filter]").forEach(function (item) { item.setAttribute("aria-pressed", String(item === button)); });
+          document.querySelectorAll(".layer[data-layer]").forEach(function (layer) { layer.classList.toggle("dim", key !== "all" && layer.dataset.layer !== key); });
+        });
+      });
+
+      var search = document.querySelector("[data-search]");
+      var noResults = document.querySelector("[data-no-results]");
+      search.addEventListener("input", function () {
+        var query = search.value.trim().toLocaleLowerCase();
+        var count = 0;
+        document.querySelectorAll(".section.searchable").forEach(function (section) {
+          var visible = !query || ((section.dataset.search || "") + " " + section.textContent).toLocaleLowerCase().includes(query);
+          section.hidden = !visible;
+          if (visible) count += 1;
+        });
+        noResults.classList.toggle("visible", count === 0);
+      });
+
+      console.assert(cards.length === 3, "Flashcard demo needs one Summary and two Highlights.");
+      console.assert(saveScenarios.changed.stopped.includes(2), "External changes must stop before overwrite.");
+    }());
+  </script>
+</body>
+</html>

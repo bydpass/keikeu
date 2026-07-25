@@ -11,6 +11,7 @@ Git 入门 ── git-interactive ── gitspec ───→ RULES §7
 | 从哪里开始 | 读到什么 | 最终核对 |
 | --- | --- | --- |
 | [appdesign.md](appdesign.md) | Road v0.2 的产品设计来路与长篇解释 | [SPEC](../SPEC.md) |
+| [keikeu-current-logic.html](keikeu-current-logic.html) | 当前业务链路、数据权威、保存防护与实现分层的交互说明 | [PROJECT](../PROJECT.md)、[SPEC](../SPEC.md) 与 [RULES](../RULES.md) |
 | [git-interactive.html](git-interactive.html) | 工作区、暂存区、本地历史与远端的状态地图 | [RULES §7](../RULES.md#7-git) |
 | [gitspec.md](gitspec.md) | Caveman 风格的 Git 最短安全路径 | [RULES §7](../RULES.md#7-git) |
 | [ethics.md](ethics.md) | 作者控制、数据边界与功能评审方法 | [SPEC](../SPEC.md) 与 [RULES](../RULES.md) |

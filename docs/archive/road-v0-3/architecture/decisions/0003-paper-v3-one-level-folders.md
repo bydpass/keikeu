@@ -1,3 +1,5 @@
+> **ARCHIVE — READ ONLY.** Road v0.3 architecture decision; archived on 2026-07-25.
+
 # ADR 0003: Use Paper v3 with One-Level Real Folders
 
 - Status: accepted
