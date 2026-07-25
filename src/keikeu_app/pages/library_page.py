@@ -35,27 +35,7 @@ from keikeu_app.widgets import (
     paper_card,
     single_line_field,
 )
-from keikeu_core.indexer import list_index_errors, list_papers, rebuild_index
-from keikeu_core.markdown_io import branch_paper, read_paper_snapshot
-from keikeu_core.vault import (
-    PathOperationResult,
-    create_folder,
-    list_active_folders,
-    list_trashed_folders,
-    list_trashed_papers,
-    merge_folders,
-    move_papers,
-    next_paper_code,
-    permanently_delete_folder,
-    permanently_delete_papers,
-    rename_folder,
-    resolve_active_paper_path,
-    restore_folder,
-    restore_papers,
-    soft_delete_folder,
-    soft_delete_papers,
-    validate_vault_tree_no_follow,
-)
+from keikeu_bridge import LibraryEntryDto, OperationReportDto, ServiceError
 
 if TYPE_CHECKING:
     from keikeu_app.main import AppContext
@@ -121,7 +101,7 @@ def _close_dialog(page: ft.Page) -> None:
     page.pop_dialog()
 
 
-def _result_summary(action: str, results: Iterable[PathOperationResult]) -> str:
+def _result_summary(action: str, results: Iterable[OperationReportDto]) -> str:
     records = list(results)
     succeeded = sum(result.succeeded for result in records)
     failed = len(records) - succeeded
@@ -137,12 +117,27 @@ def _result_summary(action: str, results: Iterable[PathOperationResult]) -> str:
     return f"{action}：{succeeded} 项成功，{failed} 项失败；{failure_details}"
 
 
+def _entry_dict(entry: LibraryEntryDto) -> dict[str, object]:
+    return {
+        "path": entry.path,
+        "code": entry.code,
+        "display_name": entry.display_name,
+        "folder": entry.folder,
+        "summary": entry.summary,
+        "tags": list(entry.tags),
+        "highlight_names": list(entry.highlight_names),
+        "created": entry.created,
+        "updated": entry.updated,
+    }
+
+
 def build_library_page(
     ctx: "AppContext",
     initial_scope: str = _SCOPE_ALL,
 ) -> ft.Control:
     """Build the one-level scoped Library with per-item safe mutations."""
     page = ctx.page
+    vault_label = ctx.service.active_vault
     search_field = single_line_field(
         "搜索名称、代号、Summary、Tags 或 Highlight 名称"
     )
@@ -197,11 +192,11 @@ def build_library_page(
 
     def on_reveal_vault(_: ft.ControlEvent) -> None:
         try:
-            validate_vault_tree_no_follow(ctx.vault)
-        except (OSError, ValueError) as ex:
-            notify(page, f"无法在文件夹中显示 Vault：{ex}")
+            target = ctx.service.resolve_system_target("reveal", ".")
+        except ServiceError as ex:
+            notify(page, f"无法在文件夹中显示 Vault：{ex.message}")
             return
-        _reveal_in_folder(page, ctx.vault)
+        _reveal_in_folder(page, target)
 
     def _set_operation(message: str) -> None:
         operation_status.value = message
@@ -209,23 +204,22 @@ def build_library_page(
     def _recover_from_stale_action(action: str, error: Exception) -> None:
         message = f"{action}失败：{error}；已刷新 Library，请重试。"
         try:
-            rebuild_index(ctx.vault)
+            ctx.service.library_query(rebuild=True)
             _set_operation(message)
             refresh()
-        except (OSError, ValueError) as refresh_error:
+        except ServiceError as refresh_error:
             _set_operation(f"{message} 刷新失败：{refresh_error}")
             page.update()
 
     def _refresh_after_mutation(message: str) -> None:
-        rebuild_index(ctx.vault)
         _set_operation(message)
         refresh()
 
     def _apply_move(paths: Iterable[str], folder: str | None) -> None:
         records = list(paths)
         try:
-            results_for_move = move_papers(ctx.vault, records, folder)
-        except (OSError, ValueError) as ex:
+            results_for_move = ctx.service.library_move(records, folder)
+        except ServiceError as ex:
             _recover_from_stale_action("移动", ex)
             return
         succeeded = {
@@ -257,27 +251,18 @@ def build_library_page(
 
     def _branch(rel_path: str) -> None:
         try:
-            source = resolve_active_paper_path(ctx.vault, rel_path)
-            _paper, source_bytes = read_paper_snapshot(source)
-            code = next_paper_code(ctx.vault)
-            destination = source.relative_to(ctx.vault).parent / f"{code}.md"
-            branch_paper(
-                ctx.vault,
-                source.relative_to(ctx.vault),
-                destination,
-                code,
-                expected_source_bytes=source_bytes,
-            )
+            report = ctx.service.library_branch(rel_path)
+            code = Path(report.destination or "").stem
             _refresh_after_mutation(f"已创建分支 {code}")
-        except (OSError, ValueError, FileExistsError) as ex:
-            _set_operation(f"无法创建分支：{ex}")
+        except ServiceError as ex:
+            _set_operation(f"无法创建分支：{ex.message}")
             page.update()
 
     def _trash_active(paths: Iterable[str]) -> None:
         records = list(paths)
         try:
-            deletion_results = soft_delete_papers(ctx.vault, records)
-        except (OSError, ValueError) as ex:
+            deletion_results = ctx.service.library_soft_delete(records)
+        except ServiceError as ex:
             _recover_from_stale_action("移至 Trash", ex)
             return
         selected_paths.difference_update(
@@ -285,10 +270,10 @@ def build_library_page(
         )
         _refresh_after_mutation(_result_summary("移至 Trash", deletion_results))
 
-    def _restore_paths(paths: Iterable[Path]) -> None:
+    def _restore_paths(paths: Iterable[str]) -> None:
         try:
-            restore_results = restore_papers(ctx.vault, list(paths))
-        except (OSError, ValueError) as ex:
+            restore_results = ctx.service.library_restore(paths)
+        except ServiceError as ex:
             _recover_from_stale_action("恢复", ex)
             return
         if any(
@@ -301,36 +286,43 @@ def build_library_page(
         _refresh_after_mutation(message)
 
     def _run_permanent_delete(
-        paths: list[Path],
+        paths: list[str],
         *,
         folder: str | None,
         clear_all: bool,
         dialog: ft.AlertDialog,
     ) -> None:
         try:
-            deletion_results = permanently_delete_papers(ctx.vault, paths)
-            if folder is not None and folder in list_trashed_folders(ctx.vault):
+            deletion_results = list(
+                ctx.service.library_permanently_delete(paths)
+            )
+            trash = ctx.service.library_query(scope=_SCOPE_TRASH)
+            if folder is not None and folder in trash.trash_folders:
                 remaining = [
-                    path
-                    for path in list_trashed_papers(ctx.vault)
-                    if path.parent == Path(".trash/cache") / folder
+                    entry
+                    for entry in trash.entries
+                    if Path(entry.path).parent == Path(".trash/cache") / folder
                 ]
                 if not remaining:
                     deletion_results.append(
-                        permanently_delete_folder(ctx.vault, folder)
+                        ctx.service.library_permanently_delete_folder(folder)
                     )
             if clear_all:
-                for empty_folder in list_trashed_folders(ctx.vault):
+                trash = ctx.service.library_query(scope=_SCOPE_TRASH)
+                for empty_folder in trash.trash_folders:
                     remaining = [
-                        path
-                        for path in list_trashed_papers(ctx.vault)
-                        if path.parent == Path(".trash/cache") / empty_folder
+                        entry
+                        for entry in trash.entries
+                        if Path(entry.path).parent
+                        == Path(".trash/cache") / empty_folder
                     ]
                     if not remaining:
                         deletion_results.append(
-                            permanently_delete_folder(ctx.vault, empty_folder)
+                            ctx.service.library_permanently_delete_folder(
+                                empty_folder
+                            )
                         )
-        except (OSError, ValueError) as ex:
+        except ServiceError as ex:
             _close_dialog(page)
             _recover_from_stale_action("永久删除", ex)
             return
@@ -338,7 +330,7 @@ def build_library_page(
         _refresh_after_mutation(_result_summary("永久删除", deletion_results))
 
     def _confirm_permanent_delete(
-        paths: list[Path],
+        paths: list[str],
         *,
         folder: str | None = None,
         label: str,
@@ -417,9 +409,9 @@ def build_library_page(
 
         def create(_: ft.ControlEvent) -> None:
             try:
-                create_folder(ctx.vault, name_field.value or "")
-            except (OSError, ValueError, FileExistsError) as ex:
-                error.value = f"无法新建文件夹：{ex}"
+                ctx.service.library_create_folder(name_field.value or "")
+            except ServiceError as ex:
+                error.value = f"无法新建文件夹：{ex.message}"
                 page.update()
                 return
             _close_dialog(page)
@@ -451,8 +443,11 @@ def build_library_page(
 
         def merge(_: ft.ControlEvent) -> None:
             try:
-                merge_results = merge_folders(ctx.vault, source, destination)
-            except (OSError, ValueError) as ex:
+                merge_results = ctx.service.library_merge_folders(
+                    source,
+                    destination,
+                )
+            except ServiceError as ex:
                 _close_dialog(page)
                 _close_dialog(page)
                 _recover_from_stale_action("合并文件夹", ex)
@@ -493,21 +488,24 @@ def build_library_page(
 
         def rename(_: ft.ControlEvent) -> None:
             requested = (name_field.value or "").strip()
-            existing = next(
-                (
-                    name
-                    for name in list_active_folders(ctx.vault)
-                    if name != folder and _folder_key(name) == _folder_key(requested)
-                ),
-                None,
-            )
+            try:
+                folders = ctx.service.library_query().folders
+            except ServiceError as ex:
+                error.value = f"无法检查文件夹：{ex.message}"
+                page.update()
+                return
+            existing = next((
+                name
+                for name in folders
+                if name != folder and _folder_key(name) == _folder_key(requested)
+            ), None)
             if existing is not None:
                 _show_merge_confirmation(folder, existing)
                 return
             try:
-                rename_folder(ctx.vault, folder, requested)
-            except (OSError, ValueError, FileExistsError) as ex:
-                error.value = f"无法重命名文件夹：{ex}"
+                ctx.service.library_rename_folder(folder, requested)
+            except ServiceError as ex:
+                error.value = f"无法重命名文件夹：{ex.message}"
                 page.update()
                 return
             _cancel_selection_for_scope_change()
@@ -526,8 +524,8 @@ def build_library_page(
 
     def _trash_folder(folder: str) -> None:
         try:
-            folder_results = soft_delete_folder(ctx.vault, folder)
-        except (OSError, ValueError) as ex:
+            folder_results = ctx.service.library_soft_delete_folder(folder)
+        except ServiceError as ex:
             _recover_from_stale_action("文件夹移至 Trash", ex)
             return
         _cancel_selection_for_scope_change()
@@ -535,8 +533,8 @@ def build_library_page(
 
     def _restore_trash_folder(folder: str) -> None:
         try:
-            folder_results = restore_folder(ctx.vault, folder)
-        except (OSError, ValueError) as ex:
+            folder_results = ctx.service.library_restore_folder(folder)
+        except ServiceError as ex:
             _recover_from_stale_action("恢复文件夹", ex)
             return
         _refresh_after_mutation(_result_summary("恢复文件夹", folder_results))
@@ -738,25 +736,25 @@ def build_library_page(
 
         def on_edit(_: ft.ControlEvent) -> None:
             try:
-                path = resolve_active_paper_path(ctx.vault, rel_path)
-            except (OSError, ValueError) as ex:
-                notify(page, f"无法打开 Paper：{ex}")
+                ctx.service.resolve_system_target("open", rel_path)
+            except ServiceError as ex:
+                notify(page, f"无法打开 Paper：{ex.message}")
                 return
-            ctx.open_paper(path.relative_to(ctx.vault))
+            ctx.open_paper(Path(rel_path))
 
         def on_open_system(_: ft.ControlEvent) -> None:
             try:
-                path = resolve_active_paper_path(ctx.vault, rel_path)
-            except (OSError, ValueError) as ex:
-                notify(page, f"无法打开文件：{ex}")
+                path = ctx.service.resolve_system_target("open", rel_path)
+            except ServiceError as ex:
+                notify(page, f"无法打开文件：{ex.message}")
                 return
             _open_with_system(page, path)
 
         def on_reveal(_: ft.ControlEvent) -> None:
             try:
-                path = resolve_active_paper_path(ctx.vault, rel_path)
-            except (OSError, ValueError) as ex:
-                notify(page, f"无法在文件夹中显示：{ex}")
+                path = ctx.service.resolve_system_target("reveal", rel_path)
+            except ServiceError as ex:
+                notify(page, f"无法在文件夹中显示：{ex.message}")
                 return
             _reveal_in_folder(page, path)
 
@@ -883,16 +881,15 @@ def build_library_page(
             key=f"paper-drag-{rel_path}",
         )
 
-    def _trash_row(rel_path: Path) -> ft.Control:
-        try:
-            paper, _source_bytes = read_paper_snapshot(ctx.vault / rel_path)
-            delete_label = (
-                f"{paper.display_name} ({paper.code})"
-                if paper.display_name
-                else paper.code
-            )
-        except (OSError, ValueError):
-            delete_label = rel_path.name
+    def _trash_row(entry: dict[str, object]) -> ft.Control:
+        rel_path = str(entry["path"])
+        display_name = entry.get("display_name")
+        code = str(entry.get("code") or Path(rel_path).stem)
+        delete_label = (
+            f"{display_name} ({code})"
+            if isinstance(display_name, str) and display_name
+            else code
+        )
 
         def restore(_: ft.ControlEvent) -> None:
             _restore_paths([rel_path])
@@ -916,39 +913,10 @@ def build_library_page(
             border=ft.Border.only(bottom=ft.BorderSide(width=1, color=BORDER_SOFT)),
         )
 
-    def _trash_entry(rel_path: Path) -> dict[str, object]:
-        try:
-            paper, _source_bytes = read_paper_snapshot(ctx.vault / rel_path)
-        except (OSError, ValueError):
-            return {
-                "path": str(rel_path),
-                "code": rel_path.stem,
-                "display_name": None,
-                "summary": "",
-                "tags": [],
-                "highlight_names": [],
-                "created": "",
-                "updated": "",
-            }
-        return {
-            "path": str(rel_path),
-            "code": paper.code,
-            "display_name": paper.display_name,
-            "summary": paper.summary,
-            "tags": list(paper.tags),
-            "highlight_names": [
-                highlight.display_name
-                for highlight in paper.highlights
-                if highlight.display_name
-            ],
-            "created": paper.created.isoformat(),
-            "updated": paper.updated.isoformat(),
-        }
-
     def _render_trash(
-        visible_trashed: list[Path],
+        visible_trashed: list[dict[str, object]],
         trash_folders: list[str],
-        all_trashed: list[Path],
+        all_trashed: list[dict[str, object]],
         *,
         filtered: bool,
     ) -> None:
@@ -967,7 +935,7 @@ def build_library_page(
                     danger_button(
                         "清空 Trash",
                         lambda _e: _confirm_permanent_delete(
-                            all_trashed,
+                            [str(entry["path"]) for entry in all_trashed],
                             label="清空 Trash",
                             clear_all=True,
                         ),
@@ -976,15 +944,23 @@ def build_library_page(
                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             )
         )
-        root_papers = [path for path in visible_trashed if len(path.parts) == 3]
-        results.controls.extend(_trash_row(path) for path in root_papers)
+        root_papers = [
+            entry
+            for entry in visible_trashed
+            if len(Path(str(entry["path"])).parts) == 3
+        ]
+        results.controls.extend(_trash_row(entry) for entry in root_papers)
         for folder in trash_folders:
             folder_path = Path(".trash/cache") / folder
             visible_folder_papers = [
-                path for path in visible_trashed if path.parent == folder_path
+                entry
+                for entry in visible_trashed
+                if Path(str(entry["path"])).parent == folder_path
             ]
             all_folder_papers = [
-                path for path in all_trashed if path.parent == folder_path
+                entry
+                for entry in all_trashed
+                if Path(str(entry["path"])).parent == folder_path
             ]
             if filtered and not visible_folder_papers:
                 continue
@@ -1005,8 +981,8 @@ def build_library_page(
                                 ),
                                 danger_button(
                                     "永久删除文件夹",
-                                    lambda _e, name=folder, paths=all_folder_papers: _confirm_permanent_delete(
-                                        paths,
+                                    lambda _e, name=folder, entries=all_folder_papers: _confirm_permanent_delete(
+                                        [str(entry["path"]) for entry in entries],
                                         folder=name,
                                         label=f"文件夹 {name}",
                                     ),
@@ -1015,7 +991,7 @@ def build_library_page(
                             spacing=SPACE_3,
                             wrap=True,
                         ),
-                        *[_trash_row(path) for path in visible_folder_papers],
+                        *[_trash_row(entry) for entry in visible_folder_papers],
                     ],
                     controls_padding=SPACE_3,
                     maintain_state=True,
@@ -1030,55 +1006,6 @@ def build_library_page(
             )
         elif not all_trashed and not trash_folders:
             results.controls.append(ft.Text("Trash 为空。", color=MUTED))
-
-    def _entry_search_text(entry: dict[str, object]) -> str:
-        values = [
-            value
-            for value in (
-                entry.get("display_name"),
-                entry.get("code"),
-                entry.get("summary"),
-            )
-            if isinstance(value, str)
-        ]
-        for key in ("tags", "highlight_names"):
-            values.extend(
-                value
-                for value in entry.get(key, [])
-                if isinstance(value, str)
-            )
-        return _folder_key(" ".join(values))
-
-    def _sort_entries(entries: list[dict[str, object]]) -> list[dict[str, object]]:
-        mode = sort_field.value or "updated_desc"
-        if mode == "name":
-            return sorted(
-                entries,
-                key=lambda entry: (
-                    _folder_key(
-                        str(entry.get("display_name") or entry.get("code", ""))
-                    ),
-                    str(entry.get("code", "")),
-                    str(entry.get("path", "")),
-                ),
-            )
-        if mode == "created_asc":
-            return sorted(
-                entries,
-                key=lambda entry: (
-                    str(entry.get("created", "")),
-                    str(entry.get("path", "")),
-                ),
-            )
-        field = "created" if mode == "created_desc" else "updated"
-        return sorted(
-            entries,
-            key=lambda entry: (
-                str(entry.get(field, "")),
-                str(entry.get("path", "")),
-            ),
-            reverse=True,
-        )
 
     def _select_all(_: ft.ControlEvent) -> None:
         selected_paths.update(str(entry["path"]) for entry in visible_active)
@@ -1109,18 +1036,24 @@ def build_library_page(
         rebuild: bool = False,
     ) -> None:
         nonlocal current_scope, visible_active
-        if rebuild:
-            rebuild_index(ctx.vault)
-        papers = list_papers(ctx.vault)
-        errors = list_index_errors(ctx.vault)
-        folders = list_active_folders(ctx.vault)
-        trashed = list_trashed_papers(ctx.vault)
-        trash_folders = list_trashed_folders(ctx.vault)
-        requested_folder = _folder_from_scope(current_scope)
-        if requested_folder is not None and requested_folder not in folders:
+        query = (search_field.value or "").strip()
+        try:
+            view = ctx.service.library_query(
+                scope=current_scope,
+                search=query,
+                sort=sort_field.value or "updated_desc",
+                rebuild=rebuild,
+            )
+        except ServiceError as ex:
+            _set_operation(f"无法刷新 Library：{ex.message}")
+            page.update()
+            return
+        if view.scope != current_scope:
             _cancel_selection_for_scope_change()
-            current_scope = _SCOPE_ALL
-        _render_scopes(folders, len(trashed))
+            current_scope = view.scope
+        folders = list(view.folders)
+        errors = view.errors
+        _render_scopes(folders, view.trash_count)
 
         batch_destination.options = [
             ft.DropdownOption(key=_BATCH_UNFILED_KEY, text="未归类"),
@@ -1129,34 +1062,25 @@ def build_library_page(
                 for folder in folders
             ],
         ]
-        query = _folder_key((search_field.value or "").strip())
-        scoped = papers
-        if current_scope == _SCOPE_UNFILED:
-            scoped = [entry for entry in papers if entry.get("folder") is None]
-        elif current_scope.startswith(_FOLDER_PREFIX):
-            folder = _folder_from_scope(current_scope)
-            scoped = [entry for entry in papers if entry.get("folder") == folder]
-        visible_active = _sort_entries(
-            [
-                entry
-                for entry in scoped
-                if not query or query in _entry_search_text(entry)
-            ]
-        )
+        visible_active = [_entry_dict(entry) for entry in view.entries]
 
         results.controls.clear()
         if current_scope == _SCOPE_TRASH:
-            trash_entries = _sort_entries(
-                [
-                    entry
-                    for entry in (_trash_entry(path) for path in trashed)
-                    if not query or query in _entry_search_text(entry)
-                ]
-            )
+            all_trash = view
+            if query:
+                try:
+                    all_trash = ctx.service.library_query(
+                        scope=_SCOPE_TRASH,
+                        sort=sort_field.value or "updated_desc",
+                    )
+                except ServiceError as ex:
+                    _set_operation(f"无法刷新 Trash：{ex.message}")
+                    page.update()
+                    return
             _render_trash(
-                [Path(str(entry["path"])) for entry in trash_entries],
-                trash_folders,
-                trashed,
+                visible_active,
+                list(view.trash_folders),
+                [_entry_dict(entry) for entry in all_trash.entries],
                 filtered=bool(query),
             )
         else:
@@ -1242,7 +1166,7 @@ def build_library_page(
             if errors:
                 results.controls.extend(
                     ft.Text(
-                        f"损坏 Paper：{error.get('path', '')} — {error.get('reason', '')}",
+                        f"损坏 Paper：{error.path} — {error.reason}",
                         color=ft.Colors.ERROR,
                     )
                     for error in errors
@@ -1317,7 +1241,7 @@ def build_library_page(
             ft.Row(
                 controls=[
                     ft.Text(
-                        str(ctx.vault),
+                        str(vault_label or "未选择 Vault"),
                         width=360,
                         max_lines=2,
                         overflow=ft.TextOverflow.ELLIPSIS,

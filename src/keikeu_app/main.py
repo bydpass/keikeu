@@ -1,20 +1,19 @@
 """keikeu Flet shell for the current macOS Paper flow.
 
-The GUI only routes user actions to public ``keikeu_core`` APIs.  Markdown,
-JSON, migration, and asset recovery remain in the pure-Python core layer.
+The GUI routes user actions through ``KeikeuService``. Markdown, JSON,
+migration, and asset recovery remain behind that local boundary.
 """
 
 from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass, field
-import os
 from pathlib import Path
 from typing import Callable
 
 import flet as ft
 
-from keikeu_app.local_state import STATE_PATH as DEVICE_STATE_PATH, claim_daily_card
+from keikeu_app.local_state import STATE_PATH as DEVICE_STATE_PATH
 from keikeu_app.pages import build_flashcard_page, build_library_page, build_paper_page
 from keikeu_app.pages.migration_page import build_migration_page
 from keikeu_app.theme import (
@@ -34,24 +33,12 @@ from keikeu_app.theme import (
     apply_theme,
 )
 from keikeu_app.widgets import notify, paper_card, primary_button, single_line_field
-from keikeu_core.indexer import rebuild_index
-from keikeu_core.migration_v01 import inspect_v01_vault, is_v01_vault
-from keikeu_core.vault import (
-    VaultSelectionToken,
-    capture_vault_selection_token,
-    copy_vault_no_follow,
-    get_vault,
-    init_vault,
-    is_vault,
-    list_active_papers,
-    open_directory_no_follow,
-    require_home_path,
-    resolve_active_paper_path,
-    set_vault,
-    validate_regular_tree_no_follow,
-    validate_vault_papers,
-    validate_vault_tree_no_follow,
-    vault_index_version,
+from keikeu_bridge import (
+    KeikeuService,
+    MigrationPreflightDto,
+    ServiceError,
+    StartupDto,
+    VaultPreviewDto,
 )
 
 __all__ = ["main", "run", "AppContext", "CONFIG_PATH"]
@@ -64,115 +51,13 @@ _NAV_PAPER = 0
 _NAV_FLASHCARD = 1
 _NAV_LIBRARY = 2
 
-_SOURCE_V01 = "v0.1"
-_SOURCE_PAPER = "Paper v2/v3"
-
-
-def _classify_vault_source_no_follow(source: Path) -> str:
-    """Return the supported source format after a read-only regular-tree scan."""
-    validate_regular_tree_no_follow(source)
-    version = vault_index_version(source)
-    if version in {2, 3}:
-        if not is_vault(source):
-            raise ValueError(f"index v{version} 的 Vault 结构不完整")
-        return _SOURCE_PAPER
-    if version == 1:
-        if not is_v01_vault(source):
-            raise ValueError("index v1 未匹配可迁移的 v0.1 Vault")
-        return _SOURCE_V01
-    if version is not None:
-        raise ValueError(f"不支持的 Vault index version：{version}")
-    if is_v01_vault(source):
-        return _SOURCE_V01
-    if is_vault(source):
-        return _SOURCE_PAPER
-    raise ValueError("该文件夹不是受支持的 v0.1 或 Paper v2/v3 Vault")
-
-
-def _classify_configured_home_vault(source: Path) -> str:
-    """Classify a Home Vault while leaving isolated Paper path errors visible."""
-    version = vault_index_version(source)
-    if version in {2, 3}:
-        if not is_vault(source):
-            raise ValueError(f"index v{version} 的 Vault 结构不完整")
-        return _SOURCE_PAPER
-    if version is None and is_vault(source):
-        return _SOURCE_PAPER
-    validate_regular_tree_no_follow(source)
-    if version == 1 and is_v01_vault(source):
-        return _SOURCE_V01
-    if version is not None:
-        raise ValueError(f"不支持的 Vault index version：{version}")
-    if is_v01_vault(source):
-        return _SOURCE_V01
-    raise ValueError("该文件夹不是受支持的 v0.1 或 Paper v2/v3 Vault")
-
-
-def _has_unsupported_paper_schema(index: dict[str, object]) -> bool:
-    errors = index.get("errors")
-    return isinstance(errors, list) and any(
-        isinstance(error, dict)
-        and "schema_version: 2 or 3" in str(error.get("reason", ""))
-        for error in errors
-    )
-
-
-def _validated_rebuild(
-    vault: Path,
-    *,
-    require_clean_papers: bool = True,
-) -> VaultSelectionToken:
-    """Strictly validate one unchanged Paper candidate and bind its final bytes."""
-    before = capture_vault_selection_token(vault)
-    if _classify_vault_source_no_follow(vault) != _SOURCE_PAPER:
-        raise ValueError("Vault 状态已变化；请重新检查后再确认")
-    validate_vault_tree_no_follow(vault)
-    if require_clean_papers:
-        validate_vault_papers(vault)
-    index = rebuild_index(vault)
-    errors = index.get("errors")
-    if not isinstance(errors, list):
-        raise ValueError("索引重建没有返回可验证的 errors 列表")
-    if errors:
-        if _has_unsupported_paper_schema(index):
-            raise ValueError("检测到当前运行时不支持的 Paper schema；未切换")
-        if require_clean_papers:
-            raise ValueError(f"Vault 有 {len(errors)} 个无法验证的 Paper")
-    if _classify_vault_source_no_follow(vault) != _SOURCE_PAPER:
-        raise ValueError("Vault 在索引重建期间发生变化；未切换")
-    final = capture_vault_selection_token(vault)
-    if final.path != before.path or final.root_identity != before.root_identity:
-        raise ValueError("Vault 根目录在验证期间发生变化；未切换")
-    return final
-
-
-def _validated_v01_selection(vault: Path) -> VaultSelectionToken:
-    """Bind a v0.1 manifest preflight between two immutable snapshots."""
-    before = capture_vault_selection_token(vault)
-    if _classify_vault_source_no_follow(vault) != _SOURCE_V01:
-        raise ValueError("v0.1 Vault 在迁移预检后发生变化；未切换")
-    preflight = inspect_v01_vault(vault)
-    if not preflight.ready:
-        blockers = "、".join(
-            str(issue.path.relative_to(vault)) for issue in preflight.issues
-        )
-        raise ValueError(
-            f"v0.1 迁移预检未通过（{len(preflight.issues)} 个阻塞项）：{blockers}"
-        )
-    if _classify_vault_source_no_follow(vault) != _SOURCE_V01:
-        raise ValueError("v0.1 Vault 在迁移预检后发生变化；未切换")
-    final = capture_vault_selection_token(vault)
-    if final != before:
-        raise ValueError("v0.1 Vault 在迁移预检后发生变化；未切换")
-    return final
-
-
 @dataclass
 class AppContext:
     """The active vault and page-navigation callbacks shared by GUI builders."""
 
     page: ft.Page
     vault: Path
+    service: KeikeuService
     library_scope_host: ft.Column | None = None
     open_paper: Callable[[Path | None], None] = field(default=lambda _path: None)
     open_flashcards: Callable[[Path | None], None] = field(default=lambda _path: None)
@@ -185,29 +70,11 @@ def _configure_window(page: ft.Page) -> None:
     page.window.height = INITIAL_WINDOW_HEIGHT
 
 
-def _pin_home_vault_root(
-    vault: Path,
-    expected_identity: tuple[int, int] | None = None,
-) -> tuple[Path, tuple[int, int]]:
-    """Return one exact Home root and reject symlink or identity replacement."""
-    raw_vault = vault.expanduser().absolute()
-    root_fd = open_directory_no_follow(raw_vault)
-    try:
-        safe_vault = require_home_path(raw_vault)
-        safe_fd = open_directory_no_follow(safe_vault)
-        try:
-            raw_stat = os.fstat(root_fd)
-            safe_stat = os.fstat(safe_fd)
-            identity = (raw_stat.st_dev, raw_stat.st_ino)
-            if identity != (safe_stat.st_dev, safe_stat.st_ino):
-                raise ValueError("Vault root changed during validation")
-            if expected_identity is not None and identity != expected_identity:
-                raise ValueError("Vault root changed after selection")
-            return safe_vault, identity
-        finally:
-            os.close(safe_fd)
-    finally:
-        os.close(root_fd)
+def _new_service(*, state_path: Path | None = None) -> KeikeuService:
+    return KeikeuService(
+        config_path=CONFIG_PATH,
+        state_path=DEVICE_STATE_PATH if state_path is None else state_path,
+    )
 
 
 def _build_shell(
@@ -215,9 +82,18 @@ def _build_shell(
     vault: Path,
     *,
     expected_root_identity: tuple[int, int] | None = None,
+    service: KeikeuService | None = None,
 ) -> None:
     """Build the Paper / Flashcard / Library navigation shell."""
-    vault, root_identity = _pin_home_vault_root(vault, expected_root_identity)
+    service = _new_service() if service is None else service
+    service.activate_existing_vault(
+        vault,
+        expected_root_identity=expected_root_identity,
+    )
+    active_vault = service.active_vault
+    if active_vault is None:
+        raise ServiceError("operation_failed", "Vault activation failed", "choose_vault")
+    vault = active_vault
     apply_theme(page)
     page.controls.clear()
     page.scroll = None
@@ -233,6 +109,7 @@ def _build_shell(
     ctx = AppContext(
         page=page,
         vault=vault,
+        service=service,
         library_scope_host=library_scope_host,
     )
     current_nav = _NAV_PAPER
@@ -249,13 +126,7 @@ def _build_shell(
         previous_scopes = list(library_scope_host.controls)
         previous_handler = getattr(page, "on_keyboard_event", None)
         try:
-            safe_path = (
-                resolve_active_paper_path(vault, open_path)
-                if open_path is not None
-                else None
-            )
-            relative = safe_path.relative_to(vault) if safe_path is not None else None
-            new_content = build_paper_page(ctx, relative)
+            new_content = build_paper_page(ctx, open_path)
             library_scope_host.controls.clear()
             if getattr(page, "on_keyboard_event", None) is previous_handler:
                 page.on_keyboard_event = None
@@ -274,13 +145,7 @@ def _build_shell(
         previous_scopes = list(library_scope_host.controls)
         previous_handler = getattr(page, "on_keyboard_event", None)
         try:
-            safe_path = (
-                resolve_active_paper_path(vault, open_path)
-                if open_path is not None
-                else None
-            )
-            relative = safe_path.relative_to(vault) if safe_path is not None else None
-            new_content = build_flashcard_page(ctx, relative)
+            new_content = build_flashcard_page(ctx, open_path)
             library_scope_host.controls.clear()
             if getattr(page, "on_keyboard_event", None) is previous_handler:
                 page.on_keyboard_event = None
@@ -315,11 +180,12 @@ def _build_shell(
     ctx.open_library = show_library
     ctx.change_vault = lambda: _build_vault_picker(
         page,
+        service=service,
         initial_path=vault,
         on_cancel=lambda: _build_shell(
             page,
             vault,
-            expected_root_identity=root_identity,
+            service=service,
         ),
     )
 
@@ -425,6 +291,7 @@ def _build_daily_start(
     vault: Path,
     *,
     expected_root_identity: tuple[int, int] | None = None,
+    service: KeikeuService | None = None,
 ) -> None:
     """Show the one built-in daily card, then enter a blank Paper exactly once."""
     apply_theme(page)
@@ -441,6 +308,7 @@ def _build_daily_start(
             page,
             vault,
             expected_root_identity=expected_root_identity,
+            service=service,
         )
 
     async def begin_after_delay() -> None:
@@ -489,59 +357,85 @@ def _build_startup(
     state_path: Path | None = None,
 ) -> None:
     """Enter the daily card only after its date has been atomically claimed."""
-    safe_vault, root_identity = _pin_home_vault_root(vault, expected_root_identity)
-    selected_state_path = DEVICE_STATE_PATH if state_path is None else state_path
-    try:
-        show_daily = claim_daily_card(state_path=selected_state_path)
-    except (OSError, ValueError):
-        show_daily = False
-    if show_daily:
+    service = _new_service(state_path=state_path)
+    startup = service.activate_existing_vault(
+        vault,
+        expected_root_identity=expected_root_identity,
+        claim_daily=True,
+    )
+    active_vault = service.active_vault
+    if active_vault is None:
+        raise ServiceError("operation_failed", "Vault activation failed", "choose_vault")
+    if startup.show_daily_card:
         _build_daily_start(
             page,
-            safe_vault,
-            expected_root_identity=root_identity,
+            active_vault,
+            service=service,
         )
         return
     _build_shell(
         page,
-        safe_vault,
-        expected_root_identity=root_identity,
+        active_vault,
+        service=service,
     )
 
 
 def _build_migration_gate(
     page: ft.Page,
-    vault: Path,
+    vault_or_service: Path | KeikeuService,
     *,
     configured: bool = False,
     on_cancel: Callable[[], None] | None = None,
     expected_root_identity: tuple[int, int] | None = None,
+    preflight: MigrationPreflightDto | None = None,
 ) -> None:
     """Show a no-write v0.1 preflight before allowing Paper Vault actions."""
-    vault, root_identity = _pin_home_vault_root(vault, expected_root_identity)
-    validate_vault_tree_no_follow(vault)
-    vault, root_identity = _pin_home_vault_root(vault, root_identity)
+    if isinstance(vault_or_service, KeikeuService):
+        service = vault_or_service
+        vault = service.active_vault
+        if preflight is None:
+            preflight = service.migration_preflight()
+    else:
+        vault = vault_or_service
+        service = _new_service()
+        inspected = service.vault_inspect(str(vault))
+        preflight = inspected.migration
+    if preflight is None:
+        raise ServiceError(
+            "preflight_blocked",
+            "migration preflight is unavailable",
+            "inspect",
+        )
     apply_theme(page)
     page.controls.clear()
     page.scroll = None
 
     def open_migrated(_: object) -> None:
         try:
-            safe_vault = require_home_path(vault)
-            selection = _validated_rebuild(safe_vault)
-            set_vault(safe_vault, CONFIG_PATH, selection)
-            _build_startup(
-                page,
-                safe_vault,
-                expected_root_identity=selection.root_identity,
+            active_vault = service.active_vault
+            if active_vault is None:
+                raise ServiceError(
+                    "operation_failed",
+                    "migrated Vault was not activated",
+                    "choose_vault",
+                )
+            startup = service.activate_existing_vault(
+                active_vault,
+                claim_daily=True,
+                require_clean_papers=True,
             )
-        except (OSError, ValueError) as ex:
-            notify(page, f"无法打开已迁移的 Vault：{ex}；请检查路径后重试。")
+            if startup.show_daily_card:
+                _build_daily_start(page, active_vault, service=service)
+            else:
+                _build_shell(page, active_vault, service=service)
+        except ServiceError as ex:
+            notify(page, f"无法打开已迁移的 Vault：{ex.message}；请检查路径后重试。")
 
     def choose_other() -> None:
         _build_vault_picker(
             page,
-            initial_path=vault if configured else None,
+            service=service,
+            initial_path=vault if configured and vault is not None else None,
             on_cancel=on_cancel,
         )
 
@@ -552,10 +446,10 @@ def _build_migration_gate(
             bgcolor=BG,
             content=build_migration_page(
                 page,
-                vault,
+                service,
+                preflight,
                 on_open_migrated=open_migrated,
                 on_choose_other=choose_other,
-                expected_root_identity=root_identity,
             ),
         )
     )
@@ -564,21 +458,22 @@ def _build_migration_gate(
 def _build_vault_picker(
     page: ft.Page,
     *,
+    service: KeikeuService | None = None,
     show_configured: bool = True,
     initial_path: Path | None = None,
     on_cancel: Callable[[], None] | None = None,
+    initial_preview: VaultPreviewDto | None = None,
     unsafe_source: Path | None = None,
     unsafe_source_kind: str = "",
     unsafe_reason: str = "",
     initial_error: str = "",
 ) -> None:
     """Classify a candidate read-only, then require confirmation before writes."""
+    service = _new_service() if service is None else service
     apply_theme(page)
     page.controls.clear()
     page.scroll = ft.ScrollMode.AUTO
     existing = initial_path
-    if existing is None and show_configured:
-        existing = get_vault(CONFIG_PATH)
     path_field = single_line_field("Vault 文件夹路径", str(existing) if existing is not None else "")
     path_field.hint_text = str(Path.home() / "keikeu-vault")
     path_field.expand = True
@@ -614,63 +509,52 @@ def _build_vault_picker(
         error_text.value = message
         page.update()
 
-    def open_safe_vault(vault: Path, generation: int) -> None:
+    def enter_startup(startup: StartupDto) -> None:
+        active_vault = service.active_vault
+        if startup.state == "migration" and startup.migration is not None:
+            _build_migration_gate(
+                page,
+                service,
+                configured=True,
+                preflight=startup.migration,
+            )
+            return
+        if active_vault is None:
+            show_error("Vault 已处理，但没有可用的活动路径。")
+            return
+        if startup.show_daily_card:
+            _build_daily_start(page, active_vault, service=service)
+        else:
+            _build_shell(page, active_vault, service=service)
+
+    def open_safe_vault(candidate: VaultPreviewDto, generation: int) -> None:
         if generation != preview_generation:
             return
         try:
-            safe_vault = require_home_path(vault)
-            selection = _validated_rebuild(
-                safe_vault,
-                require_clean_papers=False,
-            )
-            set_vault(safe_vault, CONFIG_PATH, selection)
-        except (OSError, ValueError) as ex:
-            show_error(f"无法打开 Vault：{ex}；当前 Vault 未切换。")
+            startup = service.vault_open(candidate.token)
+        except ServiceError as ex:
+            show_error(f"无法打开 Vault：{ex.message}；当前 Vault 未切换。")
             return
         notify(page, "Vault 已切换")
-        _build_startup(
-            page,
-            safe_vault,
-            expected_root_identity=selection.root_identity,
-        )
+        enter_startup(startup)
 
-    def initialize_vault(vault: Path, generation: int) -> None:
+    def initialize_vault(candidate: VaultPreviewDto, generation: int) -> None:
         if generation != preview_generation:
             return
         try:
-            raw_vault = vault.expanduser().absolute()
-            if os.path.lexists(raw_vault):
-                validate_vault_tree_no_follow(raw_vault)
-                descriptor = open_directory_no_follow(raw_vault)
-                try:
-                    with os.scandir(descriptor) as entries:
-                        if next(entries, None) is not None:
-                            raise ValueError("目标已不再为空；请重新检查，不会自动初始化")
-                finally:
-                    os.close(descriptor)
-            else:
-                require_home_path(raw_vault)
-            init_vault(raw_vault)
-            safe_vault = require_home_path(raw_vault)
-            selection = _validated_rebuild(safe_vault)
-            set_vault(safe_vault, CONFIG_PATH, selection)
-        except (OSError, ValueError) as ex:
-            show_error(f"无法初始化 Vault：{ex}；当前 Vault 未切换。")
+            startup = service.vault_initialize(candidate.token)
+        except ServiceError as ex:
+            show_error(f"无法初始化 Vault：{ex.message}；当前 Vault 未切换。")
             return
         notify(page, "Vault 已创建")
-        _build_startup(
-            page,
-            safe_vault,
-            expected_root_identity=selection.root_identity,
-        )
+        enter_startup(startup)
 
     def show_relocation(
-        source: Path,
-        reason: str,
-        source_kind: str,
+        candidate: VaultPreviewDto,
         generation: int,
     ) -> None:
         destination_field = single_line_field("Home 内全新目标路径")
+        source = Path(candidate.display_path)
         destination_field.hint_text = str(Path.home() / f"{source.name or 'keikeu-vault'}-safe")
         destination_field.expand = True
         confirmation = ft.Checkbox(
@@ -712,37 +596,12 @@ def _build_vault_picker(
             error_text.value = ""
             page.update()
 
-            copied: Path | None = None
-            switched = False
             try:
-                current_kind = _classify_vault_source_no_follow(source)
-                if current_kind != source_kind:
-                    raise ValueError(
-                        f"来源格式已从 {source_kind} 变为 {current_kind}；请重新检查"
-                    )
-                destination = Path(raw_destination).expanduser().absolute()
-                copied = copy_vault_no_follow(source, destination)
-                copied = require_home_path(copied)
-                validate_vault_tree_no_follow(copied)
-                copied_kind = _classify_vault_source_no_follow(copied)
-                if copied_kind != source_kind:
-                    raise ValueError(
-                        f"复制结果格式与已确认来源不符：{source_kind} -> {copied_kind}"
-                    )
-                if source_kind == _SOURCE_V01:
-                    selection = _validated_v01_selection(copied)
-                    set_vault(copied, CONFIG_PATH, selection)
-                    switched = True
-                    _build_migration_gate(
-                        page,
-                        copied,
-                        configured=True,
-                        expected_root_identity=selection.root_identity,
-                    )
-                    return
-                selection = _validated_rebuild(copied)
-                set_vault(copied, CONFIG_PATH, selection)
-            except (OSError, ValueError) as ex:
+                startup = service.vault_relocate(
+                    candidate.token,
+                    raw_destination,
+                )
+            except ServiceError as ex:
                 relocation_busy = False
                 confirmation.disabled = False
                 destination_field.disabled = False
@@ -751,22 +610,12 @@ def _build_vault_picker(
                 directory_button.disabled = False
                 relocate_button.disabled = not bool(confirmation.value)
                 progress_text.value = ""
-                retained = f"；安全副本保留在 {copied}" if copied is not None else ""
-                config_state = (
-                    "；安全副本仍是当前 Vault"
-                    if switched
-                    else "；当前配置未修改"
-                )
                 show_action_error(
-                    f"无法搬迁 Vault：{ex}；原路径未修改{config_state}{retained}。"
+                    f"无法搬迁 Vault：{ex.message}；原路径未修改。"
                 )
                 return
             notify(page, "Vault 已复制、验证并切换；原路径保持不变")
-            _build_startup(
-                page,
-                copied,
-                expected_root_identity=selection.root_identity,
-            )
+            enter_startup(startup)
 
         confirmation.on_change = on_confirmation_change
         relocate_button.on_click = on_relocate
@@ -774,8 +623,8 @@ def _build_vault_picker(
             [
                 ft.Text("此路径不在允许写入的 Home 边界内。", color=ft.Colors.ERROR),
                 ft.Text(f"来源：{source}", selectable=True),
-                ft.Text(f"原因：{reason}", color=MUTED, selectable=True),
-                ft.Text(f"只读识别：{source_kind} Vault", color=MUTED),
+                ft.Text(f"原因：{candidate.message}", color=MUTED, selectable=True),
+                ft.Text(f"只读识别：{candidate.source_kind} Vault", color=MUTED),
                 ft.Text("必须复制到当前用户 Home 内的全新位置，验证完成后才会切换。", color=MUTED),
                 destination_field,
                 confirmation,
@@ -787,75 +636,51 @@ def _build_vault_picker(
 
     def inspect_vault(raw: str) -> None:
         generation = invalidate_preview()
-        raw = raw.strip()
-        if not raw:
-            show_error("请输入文件夹路径。")
+        try:
+            candidate = service.vault_inspect(raw)
+        except ServiceError as ex:
+            show_error(f"无法检查 Vault：{ex.message}")
             return
-        vault = Path(raw).expanduser().absolute()
-        if not os.path.lexists(vault):
-            try:
-                safe_vault = require_home_path(vault)
-            except (OSError, ValueError) as ex:
-                show_error(f"无法检查 Vault：{ex}")
-                return
+        if candidate.kind == "create":
             show_preview(
                 [
                     ft.Text("此位置为空或尚不存在。", color=FG),
-                    ft.Text(f"路径：{safe_vault}", selectable=True),
+                    ft.Text(f"路径：{candidate.display_path}", selectable=True),
                     ft.Text("确认后将创建 Paper Vault 结构。", color=MUTED),
                     primary_button(
                         "确认初始化并打开",
-                        lambda _e: initialize_vault(vault, generation),
+                        lambda _e: initialize_vault(candidate, generation),
                     ),
                 ],
                 generation,
             )
             return
-        try:
-            safe_vault = require_home_path(vault)
-        except (OSError, ValueError) as ex:
-            try:
-                source_kind = _classify_vault_source_no_follow(vault)
-            except (OSError, ValueError) as source_ex:
-                show_error(f"无法搬迁此来源：{source_ex}；未复制、未切换 Vault。")
-                return
-            show_relocation(vault, str(ex), source_kind, generation)
+        if candidate.kind == "relocate":
+            show_relocation(candidate, generation)
             return
-        try:
-            validate_vault_tree_no_follow(vault)
-            if safe_vault.is_dir() and not any(safe_vault.iterdir()):
-                show_preview(
-                    [
-                        ft.Text("此位置为空或尚不存在。", color=FG),
-                        ft.Text(f"路径：{safe_vault}", selectable=True),
-                        ft.Text("确认后将创建 Paper Vault 结构。", color=MUTED),
-                        primary_button(
-                            "确认初始化并打开",
-                            lambda _e: initialize_vault(vault, generation),
-                        ),
-                    ],
-                    generation,
-                )
-                return
-            source_kind = _classify_vault_source_no_follow(safe_vault)
-            if source_kind == _SOURCE_V01:
-                _build_migration_gate(page, safe_vault, on_cancel=on_cancel)
-            else:
-                paper_count = len(list_active_papers(safe_vault))
-                show_preview(
-                    [
-                        ft.Text("检测到可用 Vault。", color=FG),
-                        ft.Text(f"路径：{safe_vault}", selectable=True),
-                        ft.Text(f"Paper 数量：{paper_count}"),
-                        primary_button(
-                            "确认切换并打开",
-                            lambda _e: open_safe_vault(safe_vault, generation),
-                        ),
-                    ],
-                    generation,
-                )
-        except (OSError, ValueError) as ex:
-            show_error(f"无法检查 Vault：{ex}")
+        if candidate.kind == "migration" and candidate.migration is not None:
+            _build_migration_gate(
+                page,
+                service,
+                on_cancel=on_cancel,
+                preflight=candidate.migration,
+            )
+            return
+        if candidate.kind == "paper":
+            show_preview(
+                [
+                    ft.Text("检测到可用 Vault。", color=FG),
+                    ft.Text(f"路径：{candidate.display_path}", selectable=True),
+                    ft.Text(f"Paper 数量：{candidate.paper_count}"),
+                    primary_button(
+                        "确认切换并打开",
+                        lambda _e: open_safe_vault(candidate, generation),
+                    ),
+                ],
+                generation,
+            )
+            return
+        show_error("无法识别此 Vault。")
 
     def on_open(_: ft.ControlEvent) -> None:
         inspect_vault(path_field.value or "")
@@ -919,14 +744,12 @@ def _build_vault_picker(
             ),
         )
     )
-    if unsafe_source is not None:
-        generation = invalidate_preview()
-        show_relocation(
-            unsafe_source,
-            unsafe_reason or "路径未通过 Home 安全检查",
-            unsafe_source_kind,
-            generation,
-        )
+    if initial_preview is not None:
+        path_field.value = initial_preview.display_path
+        inspect_vault(initial_preview.display_path)
+    elif unsafe_source is not None:
+        path_field.value = str(unsafe_source)
+        inspect_vault(str(unsafe_source))
     elif initial_error:
         show_error(initial_error)
 
@@ -936,78 +759,56 @@ def main(page: ft.Page) -> None:
     page.title = "keikeu"
     _configure_window(page)
     apply_theme(page)
-    vault = get_vault(CONFIG_PATH)
-    if vault is None:
-        _build_vault_picker(page)
-        return
-    raw_vault = vault.expanduser().absolute()
-    if not os.path.lexists(raw_vault):
-        _build_vault_picker(
-            page,
-            initial_path=raw_vault,
-            initial_error="当前配置的 Vault 不存在；请选择现有 Vault 或新位置。",
-        )
-        return
+    service = _new_service()
     try:
-        safe_vault, root_identity = _pin_home_vault_root(raw_vault)
-    except (OSError, ValueError) as ex:
-        try:
-            source_kind = _classify_vault_source_no_follow(raw_vault)
-        except (OSError, ValueError) as source_ex:
-            _build_vault_picker(
-                page,
-                show_configured=False,
-                initial_path=raw_vault,
-                initial_error=(
-                    f"当前 Vault 无法安全搬迁：{source_ex}；未复制、未更改配置。"
-                ),
-            )
-            return
+        startup = service.startup_load()
+    except ServiceError as ex:
         _build_vault_picker(
             page,
-            show_configured=False,
-            initial_path=raw_vault,
-            unsafe_source=raw_vault,
-            unsafe_source_kind=source_kind,
-            unsafe_reason=str(ex),
+            service=service,
+            initial_error=f"当前 Vault 无法安全打开：{ex.message}",
         )
         return
-    try:
-        source_kind = _classify_configured_home_vault(safe_vault)
-    except (OSError, ValueError) as ex:
-        _build_vault_picker(
+    if startup.state == "migration" and startup.migration is not None:
+        _build_migration_gate(
             page,
-            initial_path=raw_vault,
-            initial_error=f"当前 Vault 无法安全打开：{ex}",
+            service,
+            configured=True,
+            preflight=startup.migration,
         )
         return
-    if source_kind == _SOURCE_V01:
+    if startup.state == "ready" and service.active_vault is not None:
         try:
-            _build_migration_gate(
-                page,
-                safe_vault,
-                configured=True,
-                expected_root_identity=root_identity,
-            )
-        except (OSError, ValueError) as ex:
+            if startup.show_daily_card:
+                _build_daily_start(
+                    page,
+                    service.active_vault,
+                    service=service,
+                )
+            else:
+                _build_shell(
+                    page,
+                    service.active_vault,
+                    service=service,
+                )
+        except ServiceError as ex:
             _build_vault_picker(
                 page,
-                initial_path=raw_vault,
-                initial_error=f"当前 Vault 在打开迁移页前发生变化：{ex}",
+                service=service,
+                initial_error=f"当前 Vault 无法安全打开：{ex.message}",
             )
-    else:
-        try:
-            _build_startup(
-                page,
-                safe_vault,
-                expected_root_identity=root_identity,
-            )
-        except (OSError, ValueError) as ex:
-            _build_vault_picker(
-                page,
-                initial_path=raw_vault,
-                initial_error=f"当前 Vault 在打开前发生变化：{ex}",
-            )
+        return
+    _build_vault_picker(
+        page,
+        service=service,
+        initial_path=(
+            Path(startup.configured_path)
+            if startup.configured_path
+            else None
+        ),
+        initial_preview=startup.preview,
+        initial_error=startup.message,
+    )
 
 
 def run() -> None:

@@ -13,7 +13,7 @@ Updated: 2026-07-25
 | Phase 7.5 lightweight iOS | Quick-test build complete on an independent branch | Responsive shell and app-sandbox Vault were exercised on `codex/fix-ios-device-readiness`. This is a lightweight iOS version for rapid testing, not a step in the macOS Road sequence. |
 | Phase 8.5 / Road v0.3 preparation | Complete | Documentation reform, authority maps, link gate, browser QA, and bounded Graphify trial completed before Road v0.3 construction. The fresh-agent audit remained unperformed and is not retroactively claimed. |
 | Road v0.3 | Product accepted; design archive complete | Phase 0–7 engineering, CP5 macOS candidate smoke, and CP6 real-author scenarios are complete. Retrieval was faster and clear, external-editor handoff was clear, and no unresolved P0/P1 was reported. The [version archive](archive/road-v0-3/README.md) is read-only; no v0.3 tag, commit, or push is implied. |
-| Road v0.4 | CP1 — application boundary implemented | `keikeu_bridge` now owns transport-neutral startup/Vault, Paper, Flashcard, Library, migration, and validated system-target orchestration. Flet remains the runnable baseline and is rewired only in CP2; Vue/Tauri manifests remain blocked on stable tooling and dependency approval. |
+| Road v0.4 | CP2 — Flet adapter rewired | The runnable Flet baseline now routes startup/Vault, Paper, Flashcard, Library, migration, and validated system actions through `KeikeuService`; no Flet module imports `keikeu_core`. CP3 JSONL work is next, while Vue/Tauri manifests remain blocked on stable tooling and dependency approval. |
 
 Phase 8 product acceptance is complete. Road v0.2 is marked by local annotated tag `v0.2.0` at `d0feac0269a5619f5dbf27c04347ba69c5665b42`; archival remains a separate developer decision. Automated tests, platform smoke, and author acceptance remain distinct evidence.
 
@@ -21,7 +21,13 @@ Phase 7.5 and the macOS Roads are separate tracks. The lightweight iOS test vers
 
 Road v0.3 product decisions, implementation, macOS candidate smoke, and product acceptance are complete. Its detailed SPEC, Planbook, maps, ADRs, and CP6 record are archived. The accepted Python/Flet runtime remains available until a separately approved Road replaces it; archival does not authorize runtime removal or data migration.
 
-Road v0.4 CP0 is committed at `8407941` on `codex/road-v04-cp0`. CP1 is implemented on `codex/road-v04-cp1`. Each checkpoint uses its own `codex/road-v04-cpN` branch created from the previous accepted checkpoint.
+Road v0.4 CP0 is committed at `8407941` on `codex/road-v04-cp0`; CP1 is committed at `b718ed8` on `codex/road-v04-cp1`; CP2 is implemented on `codex/road-v04-cp2`. Each checkpoint uses its own `codex/road-v04-cpN` branch created from the previous accepted checkpoint.
+
+## Road v0.4 CP2 evidence
+
+- `.venv/bin/python -m pytest -q` — `286 passed` on 2026-07-25.
+- The real Flet runtime rendered an isolated Vault picker for about 10 seconds and exited cleanly on Ctrl-C. This smoke bypassed configured Vault and device state, so it did not touch author data or persistent app state.
+- `src/keikeu_app/` has no direct `keikeu_core` import; builder tests now inject and exercise `KeikeuService`.
 
 ## Road v0.4 CP0 toolchain observation
 
@@ -92,9 +98,9 @@ Application tests must not be inferred from documentation checks. Platform smoke
 
 ## Open gates
 
-1. Start CP2 on `codex/road-v04-cp2` from the accepted CP1 HEAD; rewire Flet to `KeikeuService` without changing behavior, then run full tests and a Flet smoke.
-2. Provide a stable macOS/Xcode environment, then approve exact Node, Rust, Python build, Vue, Tauri, test, and PyInstaller versions before creating frontend/Rust manifests or lockfiles.
-3. Treat commit, tag, push, signing, distribution, and any real-Vault operation as separate developer decisions.
+1. Start CP3 on `codex/road-v04-cp3` from the accepted CP2 HEAD; add the JSONL dispatcher, handshake, session-bound handles, and contract tests without creating frontend/Rust manifests.
+2. Provide a stable macOS/Xcode environment, then approve exact Node, Rust, Python build, Vue, Tauri, test, and PyInstaller versions before CP4 creates frontend/Rust manifests or lockfiles.
+3. Treat tag, push, signing, distribution, and any real-Vault operation as separate developer decisions.
 
 ## Known candidate, not active scope
 

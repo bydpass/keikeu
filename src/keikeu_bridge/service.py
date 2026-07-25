@@ -164,6 +164,11 @@ class KeikeuService:
         self._root_identity: tuple[int, int] | None = None
         self._tokens: dict[str, object] = {}
 
+    @property
+    def active_vault(self) -> Path | None:
+        """Return the active path for the in-process Flet adapter only."""
+        return self._active_vault
+
     def _put_token(self, value: object) -> str:
         token = secrets.token_urlsafe(24)
         while token in self._tokens:
@@ -331,10 +336,15 @@ class KeikeuService:
             return StartupDto(
                 state="vault_picker",
                 message="configured Vault does not exist",
+                configured_path=str(raw_vault),
             )
         try:
             safe_vault, identity = self._pin_home_vault_root(raw_vault)
             source_kind = self._classify_configured_home_vault(safe_vault)
+            safe_vault, identity = self._pin_home_vault_root(
+                safe_vault,
+                identity,
+            )
             if source_kind == _SOURCE_V01:
                 self._active_vault = safe_vault
                 self._root_identity = identity
@@ -344,9 +354,44 @@ class KeikeuService:
         except (OSError, ValueError, UnicodeError) as error:
             self._active_vault = None
             self._root_identity = None
+            message = str(error)
+            try:
+                preview = self.vault_inspect(str(raw_vault))
+            except ServiceError as preview_error:
+                preview = None
+                message = preview_error.message
+            if preview is not None and preview.kind != "relocate":
+                preview = None
             return StartupDto(
                 state="vault_picker",
-                message=str(error),
+                message=message,
+                configured_path=str(raw_vault),
+                preview=preview,
+            )
+
+    def activate_existing_vault(
+        self,
+        vault: Path,
+        *,
+        expected_root_identity: tuple[int, int] | None = None,
+        claim_daily: bool = False,
+        require_clean_papers: bool = False,
+    ) -> StartupDto:
+        """Attach the accepted Flet adapter to one selected Paper Vault."""
+        with _translated_errors():
+            safe_vault, identity = self._pin_home_vault_root(
+                vault,
+                expected_root_identity,
+            )
+            if require_clean_papers:
+                selection = self._validated_rebuild(safe_vault)
+                identity = selection.root_identity
+            elif self._classify_configured_home_vault(safe_vault) != _SOURCE_PAPER:
+                raise ValueError("selected Vault is not a Paper v2/v3 Vault")
+            return self._activate(
+                safe_vault,
+                identity,
+                claim_daily=claim_daily,
             )
 
     @staticmethod
@@ -368,27 +413,45 @@ class KeikeuService:
                 safe_path = require_home_path(path)
                 token = self._put_token(_VaultPreviewState(safe_path, "create"))
                 return VaultPreviewDto(token, "create", str(safe_path))
+            root_descriptor = open_directory_no_follow(path)
             try:
-                safe_path = require_home_path(path)
-            except (OSError, ValueError) as home_error:
-                source_kind = self._classify_vault_source_no_follow(path)
-                token = self._put_token(
-                    _VaultPreviewState(path, "relocate", source_kind)
-                )
-                return VaultPreviewDto(
-                    token,
-                    "relocate",
-                    str(path),
-                    source_kind=source_kind,
-                    message=str(home_error),
-                )
+                try:
+                    safe_path = require_home_path(path)
+                except ValueError as home_error:
+                    source_kind = self._classify_vault_source_no_follow(path)
+                    token = self._put_token(
+                        _VaultPreviewState(path, "relocate", source_kind)
+                    )
+                    return VaultPreviewDto(
+                        token,
+                        "relocate",
+                        str(path),
+                        source_kind=source_kind,
+                        message=str(home_error),
+                    )
+                safe_descriptor = open_directory_no_follow(safe_path)
+                try:
+                    raw_stat = os.fstat(root_descriptor)
+                    safe_stat = os.fstat(safe_descriptor)
+                    if (
+                        raw_stat.st_dev,
+                        raw_stat.st_ino,
+                    ) != (
+                        safe_stat.st_dev,
+                        safe_stat.st_ino,
+                    ):
+                        raise ValueError("Vault root changed during inspection")
+                    identity = (raw_stat.st_dev, raw_stat.st_ino)
+                finally:
+                    os.close(safe_descriptor)
+            finally:
+                os.close(root_descriptor)
             validate_vault_tree_no_follow(safe_path)
             if self._directory_is_empty(safe_path):
                 token = self._put_token(_VaultPreviewState(safe_path, "create"))
                 return VaultPreviewDto(token, "create", str(safe_path))
             source_kind = self._classify_vault_source_no_follow(safe_path)
             if source_kind == _SOURCE_V01:
-                _vault, identity = self._pin_home_vault_root(safe_path)
                 migration = self._migration_preflight(safe_path, identity)
                 return VaultPreviewDto(
                     migration.token,
@@ -501,6 +564,7 @@ class KeikeuService:
         return MigrationPreflightDto(
             token=token,
             ready=preflight.ready,
+            backup_path=str(preflight.vault.resolve().parent / "keikeu-backups"),
             cache_count=preflight.cache_count,
             trash_cache_count=preflight.trash_cache_count,
             outline_count=preflight.outline_count,

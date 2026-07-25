@@ -7,32 +7,23 @@ delegates the atomic migration to the pure-Python core module.
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Callable
 
 import flet as ft
 
 from keikeu_app.theme import DANGER, FG, FONT_DISPLAY, MUTED, SPACE_3, SPACE_4, SPACE_6, SUCCESS, SURFACE_WARM
 from keikeu_app.widgets import page_header, paper_card, primary_button
-from keikeu_core.migration_v01 import (
-    MigrationPreflight,
-    MigrationPreflightError,
-    MigrationResult,
-    inspect_v01_vault,
-    migrate_v01_vault,
+from keikeu_bridge import (
+    KeikeuService,
+    MigrationPreflightDto,
+    MigrationResultDto,
+    ServiceError,
 )
 
 __all__ = ["build_migration_page"]
 
 
-def _relative_label(path: Path, vault: Path) -> str:
-    try:
-        return str(path.relative_to(vault)) or "."
-    except ValueError:
-        return str(path)
-
-
-def _preflight_lines(preflight: MigrationPreflight) -> list[ft.Control]:
+def _preflight_lines(preflight: MigrationPreflightDto) -> list[ft.Control]:
     lines: list[ft.Control] = [
         ft.Text(f"活动 Cache：{preflight.cache_count}", color=FG),
         ft.Text(f"回收站 Cache：{preflight.trash_cache_count}", color=FG),
@@ -49,7 +40,7 @@ def _preflight_lines(preflight: MigrationPreflight) -> list[ft.Control]:
         lines.append(ft.Text("迁移被以下项目阻止：", color=DANGER, weight=ft.FontWeight.W_600))
         lines.extend(
             ft.Text(
-                f"• {_relative_label(issue.path, preflight.vault)}：{issue.message}",
+                f"• {issue.path}：{issue.message}",
                 color=DANGER,
                 selectable=True,
             )
@@ -62,15 +53,13 @@ def _preflight_lines(preflight: MigrationPreflight) -> list[ft.Control]:
 
 def build_migration_page(
     page: ft.Page,
-    vault: Path,
+    service: KeikeuService,
+    preflight: MigrationPreflightDto,
     *,
-    on_open_migrated: Callable[[MigrationResult], None],
+    on_open_migrated: Callable[[MigrationResultDto], None],
     on_choose_other: Callable[[], None],
-    expected_root_identity: tuple[int, int] | None = None,
 ) -> ft.Control:
     """Build a no-write preflight page for one detected v0.1 vault."""
-    preflight = inspect_v01_vault(vault)
-    backup_root = vault.resolve().parent / "keikeu-backups"
     status = ft.Text("", color=DANGER, selectable=True)
     result_details = ft.Column(controls=[], visible=False, spacing=SPACE_3)
     confirmation = ft.Checkbox(
@@ -99,21 +88,12 @@ def build_migration_page(
         status.color = MUTED
         page.update()
         try:
-            result = migrate_v01_vault(
-                vault,
-                expected_root_identity=expected_root_identity,
-            )
-        except MigrationPreflightError as exc:
+            result = service.migration_run(preflight.token)
+        except ServiceError as exc:
             confirmation.disabled = False
             migrate_button.disabled = False
-            status.value = f"迁移未执行：{exc}"
-            status.color = DANGER
-            page.update()
-            return
-        except (OSError, ValueError) as exc:
-            confirmation.disabled = False
-            migrate_button.disabled = False
-            status.value = f"迁移失败：{exc}；原 vault 保持可恢复状态。"
+            prefix = "迁移未执行" if exc.code == "preflight_blocked" else "迁移失败"
+            status.value = f"{prefix}：{exc.message}；原 vault 保持可恢复状态。"
             status.color = DANGER
             page.update()
             return
@@ -143,8 +123,8 @@ def build_migration_page(
             paper_card(
                 [
                     ft.Text("迁移前检查", size=22, color=FG, font_family=FONT_DISPLAY),
-                    ft.Text(f"Vault：{preflight.vault}", color=MUTED, selectable=True),
-                    ft.Text(f"完整备份将写入：{backup_root}", color=MUTED, selectable=True),
+                    ft.Text("Vault：已验证的本地迁移来源", color=MUTED),
+                    ft.Text(f"完整备份将写入：{preflight.backup_path}", color=MUTED, selectable=True),
                     ft.Container(
                         content=ft.Column(controls=_preflight_lines(preflight), spacing=SPACE_3),
                         bgcolor=SURFACE_WARM,

@@ -125,6 +125,7 @@ class MigrationIssueDto:
 class MigrationPreflightDto:
     token: str
     ready: bool
+    backup_path: str
     cache_count: int
     trash_cache_count: int
     outline_count: int
@@ -145,7 +146,9 @@ class StartupDto:
     state: str
     show_daily_card: bool = False
     message: str = ""
+    configured_path: str = ""
     migration: MigrationPreflightDto | None = None
+    preview: VaultPreviewDto | None = None
 
 
 @dataclass(frozen=True)

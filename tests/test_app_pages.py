@@ -20,6 +20,13 @@ from keikeu_app.pages import library_page as library_page_mod
 from keikeu_app.pages.flashcard_page import build_flashcard_page
 from keikeu_app.pages.library_page import build_library_page
 from keikeu_app.pages.paper_page import build_paper_page
+from keikeu_bridge import (
+    KeikeuService,
+    LibraryEntryDto,
+    LibraryViewDto,
+    OperationReportDto,
+)
+import keikeu_bridge.service as bridge_service_mod
 from keikeu_core.indexer import rebuild_index
 from keikeu_core.markdown_io import (
     read_paper,
@@ -29,7 +36,6 @@ from keikeu_core.markdown_io import (
 )
 from keikeu_core.models import Highlight, Paper
 from keikeu_core.vault import (
-    PathOperationResult,
     create_folder,
     init_vault,
     soft_delete,
@@ -167,7 +173,16 @@ def _paper(
 
 
 def _ctx(page: FakePage, vault: Path) -> AppContext:
-    return AppContext(page=page, vault=vault)  # type: ignore[arg-type]
+    service = KeikeuService(
+        config_path=vault.parent / f".{vault.name}-test-config.json",
+        state_path=vault.parent / f".{vault.name}-test-state.json",
+    )
+    service.activate_existing_vault(vault)
+    return AppContext(  # type: ignore[arg-type]
+        page=page,
+        vault=vault,
+        service=service,
+    )
 
 
 def test_shell_uses_paper_flashcard_and_library_navigation(tmp_path):
@@ -551,20 +566,21 @@ def test_flashcard_rejects_a_symlinked_cache_before_reading_outside(tmp_path, mo
     outside_vault = tmp_path / "outside-vault"
     init_vault(vault)
     init_vault(outside_vault)
+    ctx = _ctx(FakePage(), vault)
     paper = _paper("K-20260714-001", "Outside secret summary.")
     write_paper(outside_vault, paper)
     (vault / "cache").rename(vault / "cache-original")
     (vault / "cache").symlink_to(outside_vault / "cache", target_is_directory=True)
     reads: list[Path] = []
-    real_read = flashcard_page_mod.read_paper
+    real_read = bridge_service_mod.read_paper_snapshot
 
-    def tracked_read(path: Path) -> Paper:
+    def tracked_read(path: Path) -> tuple[Paper, bytes]:
         reads.append(path)
         return real_read(path)
 
-    monkeypatch.setattr(flashcard_page_mod, "read_paper", tracked_read)
+    monkeypatch.setattr(bridge_service_mod, "read_paper_snapshot", tracked_read)
     root = build_flashcard_page(
-        _ctx(FakePage(), vault),
+        ctx,
         Path("cache") / f"{paper.code}.md",
     )
 
@@ -589,7 +605,7 @@ def test_shell_flashcard_rejects_a_traversal_path_before_any_read(tmp_path, monk
         raise AssertionError("invalid code must not reach Paper I/O")
 
     monkeypatch.setattr(app_main, "build_library_page", capture_library)
-    monkeypatch.setattr(flashcard_page_mod, "read_paper", tracked_read)
+    monkeypatch.setattr(bridge_service_mod, "read_paper_snapshot", tracked_read)
     app_main._build_shell(page, vault)  # type: ignore[attr-defined, arg-type]
     _control_by_key(page.controls[0], "shell-nav-2").on_click(None)
 
@@ -808,9 +824,31 @@ def test_library_rejects_an_absolute_index_path_for_every_file_action(
     ctx = _ctx(page, vault)
     opened: list[Path | None] = []
     ctx.open_paper = lambda path: opened.append(path)
-    # Exercise the UI boundary even though the core index loader also rejects
-    # and rebuilds this crafted entry.
-    monkeypatch.setattr(library_page_mod, "list_papers", lambda _vault: [crafted_entry])
+    # Exercise the UI boundary with a crafted adapter result.
+    monkeypatch.setattr(
+        ctx.service,
+        "library_query",
+        lambda **_kwargs: LibraryViewDto(
+            scope="all",
+            entries=(
+                LibraryEntryDto(
+                    path=str(outside),
+                    code="K-20260714-999",
+                    display_name=None,
+                    folder=None,
+                    summary="Crafted index entry.",
+                    tags=(),
+                    highlight_names=(),
+                    created="2026-07-14T09:00:00",
+                    updated="2026-07-14T09:00:00",
+                ),
+            ),
+            folders=(),
+            trash_folders=(),
+            trash_count=0,
+            errors=(),
+        ),
+    )
     monkeypatch.setattr(
         library_page_mod.subprocess,
         "run",
@@ -1066,26 +1104,30 @@ def test_library_batch_move_reports_partial_results(tmp_path, monkeypatch):
     rebuild_index(tmp_path)
     calls: list[list[str]] = []
 
-    def partial(_vault, paths, _folder):
+    def partial(paths, _folder):
         records = list(paths)
         calls.append(records)
         return [
-            PathOperationResult(
-                source=Path(records[0]),
-                destination=Path("cache/A") / Path(records[0]).name,
+            OperationReportDto(
+                source=records[0],
+                destination=str(Path("cache/A") / Path(records[0]).name),
+                error=None,
             ),
-            PathOperationResult(
-                source=Path(records[1]),
+            OperationReportDto(
+                source=records[1],
+                destination=None,
                 error="injected provider failure",
             ),
-            PathOperationResult(
-                source=Path(records[2]),
+            OperationReportDto(
+                source=records[2],
+                destination=None,
                 error="second injected failure",
             ),
         ]
 
-    monkeypatch.setattr(library_page_mod, "move_papers", partial)
-    root = build_library_page(_ctx(FakePage(), tmp_path))
+    ctx = _ctx(FakePage(), tmp_path)
+    monkeypatch.setattr(ctx.service, "library_move", partial)
+    root = build_library_page(ctx)
     _button(root, "全选当前").on_click(None)
     destination = _control_by_key(root, "library-batch-destination")
     destination.value = "A"

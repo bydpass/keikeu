@@ -6,7 +6,6 @@ renders Markdown, builds JSON, or decides how a Paper is serialized.
 
 from __future__ import annotations
 
-from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -33,17 +32,12 @@ from keikeu_app.widgets import (
     section_field,
     single_line_field,
 )
-from keikeu_core.indexer import list_papers, rebuild_index
-from keikeu_core.markdown_io import (
-    next_paper_code,
-    read_paper_snapshot,
-    update_paper,
-    write_paper,
-)
-from keikeu_core.models import Highlight, Paper
-from keikeu_core.vault import (
-    resolve_active_paper_path,
-    soft_delete,
+from keikeu_bridge import (
+    HighlightDto,
+    KeikeuService,
+    PaperDto,
+    PaperSaveDto,
+    ServiceError,
 )
 
 if TYPE_CHECKING:
@@ -52,16 +46,16 @@ if TYPE_CHECKING:
 __all__ = ["build_paper_page"]
 
 
-def _known_tags(vault: Path) -> list[str]:
+def _known_tags(service: KeikeuService) -> list[str]:
     """Collect first-seen tags from the disposable index for a soft suggestion."""
     tags: list[str] = []
     try:
-        entries = list_papers(vault)
-    except (OSError, ValueError):
+        entries = service.library_query().entries
+    except ServiceError:
         return tags
     for entry in entries:
-        for tag in entry.get("tags", []):
-            if isinstance(tag, str) and tag not in tags:
+        for tag in entry.tags:
+            if tag not in tags:
                 tags.append(tag)
     return tags
 
@@ -69,52 +63,38 @@ def _known_tags(vault: Path) -> list[str]:
 def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Control:
     """Build a Paper create/edit page for ``open_path`` or a fresh Paper."""
     page = ctx.page
-    existing: Paper | None = None
-    existing_bytes: bytes | None = None
-    if open_path is not None:
-        open_path = resolve_active_paper_path(ctx.vault, open_path)
-        existing, existing_bytes = read_paper_snapshot(open_path)
-    state: dict[str, object] = {
-        "path": open_path,
-        "paper": existing,
-        "source_bytes": existing_bytes,
-    }
-
-    def validated_path(path: Path, *, must_exist: bool = True) -> Path:
-        return resolve_active_paper_path(
-            ctx.vault,
-            path,
-            must_exist=must_exist,
-        )
-
-    def rebuild_after_mutation(path: Path | None = None) -> None:
-        if path is not None:
-            resolve_active_paper_path(ctx.vault, path)
-        rebuild_index(ctx.vault)
+    is_new = open_path is None
+    service = ctx.service
+    existing = (
+        service.paper_open(str(open_path))
+        if open_path is not None
+        else service.paper_create_draft()
+    )
+    state: dict[str, PaperDto] = {"paper": existing}
 
     code_field = single_line_field(
-        "系统编号", existing.code if existing is not None else next_paper_code(ctx.vault)
+        "系统编号", existing.code
     )
     code_field.read_only = True
     display_name_field = single_line_field(
         "Paper 名称（可选）",
-        (existing.display_name or "") if existing is not None else "",
+        existing.display_name or "",
     )
     summary_field = section_field(
-        "Summary", existing.summary if existing is not None else "", min_lines=4, max_lines=12
+        "Summary", existing.summary, min_lines=4, max_lines=12
     )
     tags_field = single_line_field(
-        "Tags（用逗号分隔）", ", ".join(existing.tags) if existing is not None else ""
+        "Tags（用逗号分隔）", ", ".join(existing.tags)
     )
     tags_field.hint_text = "例如：末班车, 离别, 暧昧"
-    known_tags = _known_tags(ctx.vault)
+    known_tags = _known_tags(service)
     tag_hint = ft.Text(
         "已有 Tags：" + ("、".join(known_tags) if known_tags else "还没有，直接输入即可。"),
         size=12,
         color=MUTED,
     )
     initial_copy = ft.Text(
-        existing.initial_summary if existing is not None else "初稿副本会在首次保存后冻结，只读保留。",
+        existing.initial_summary or "初稿副本会在首次保存后冻结，只读保留。",
         selectable=True,
     )
     save_error = ft.Text("", color=ft.Colors.ERROR)
@@ -256,9 +236,9 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
 
     def add_highlight(
         _: ft.ControlEvent | None = None,
-        value: Highlight | None = None,
+        value: HighlightDto | None = None,
     ) -> None:
-        highlight = value or Highlight(content="")
+        highlight = value or HighlightDto(display_name=None, content="")
         highlight_fields.append(
             (
                 single_line_field("", highlight.display_name or ""),
@@ -269,13 +249,11 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
         if _ is not None:
             page.update()
 
-    for highlight in existing.highlights if existing is not None else []:
+    for highlight in existing.highlights:
         add_highlight(value=highlight)
 
-    def apply_snapshot(path: Path, paper: Paper, source_bytes: bytes) -> None:
-        state["path"] = path
+    def apply_snapshot(paper: PaperDto) -> None:
         state["paper"] = paper
-        state["source_bytes"] = source_bytes
         code_field.value = paper.code
         code_field.read_only = True
         display_name_field.value = paper.display_name or ""
@@ -291,111 +269,72 @@ def build_paper_page(ctx: "AppContext", open_path: Path | None = None) -> ft.Con
         ]
         _render_highlights()
 
-    def _build_paper() -> Paper:
-        stored = state["paper"]
-        paper = stored if isinstance(stored, Paper) else None
-        return Paper(
-            code=code_field.value or "",
-            initial_summary=paper.initial_summary if paper is not None else "",
-            summary=summary_field.value or "",
-            display_name=display_name_field.value,
-            highlights=[
-                Highlight(
-                    display_name=name_field.value,
-                    content=content_field.value or "",
-                )
-                for name_field, content_field in highlight_fields
-            ],
-            tags=(tags_field.value or "").split(","),
-            created=paper.created if paper is not None else datetime.now(),
-            updated=datetime.now(),
-            legacy_title=paper.legacy_title if paper is not None else None,
-            extra_frontmatter=paper.extra_frontmatter.copy() if paper is not None else {},
-        )
-
     def on_save(_: object) -> None:
         if not (summary_field.value or "").strip():
             save_error.value = "Summary 不能为空。"
             page.update()
             return
         try:
-            paper = _build_paper()
-            path = state["path"]
-            if isinstance(path, Path):
-                try:
-                    path = validated_path(path)
-                except FileNotFoundError:
-                    save_error.value = "Paper 已在外部删除或移动；未保存。请返回本地文件库刷新。"
-                    page.update()
-                    return
-                source_bytes = state["source_bytes"]
-                if not isinstance(source_bytes, bytes):
-                    raise ValueError("Paper source snapshot is unavailable")
-                path = validated_path(path)
-                try:
-                    update_paper(
-                        ctx.vault,
-                        path,
-                        paper,
-                        expected_source_bytes=source_bytes,
-                    )
-                except ValueError as ex:
-                    if "Paper changed externally; update refused" not in str(ex):
-                        raise
-                    save_error.value = "Paper 已在外部修改；未覆盖。请重新打开后决定如何处理。"
-                    page.update()
-                    return
-            else:
-                destination = Path("cache") / f"{paper.code}.md"
-                validated_path(destination, must_exist=False)
-                path = write_paper(
-                    ctx.vault,
-                    paper,
-                    destination=destination,
+            stored = state["paper"]
+            paper = service.paper_save(
+                PaperSaveDto(
+                    edit_token=stored.edit_token,
+                    summary=summary_field.value or "",
+                    display_name=display_name_field.value,
+                    highlights=tuple(
+                        HighlightDto(
+                            display_name=name_field.value,
+                            content=content_field.value or "",
+                        )
+                        for name_field, content_field in highlight_fields
+                    ),
+                    tags=tuple((tags_field.value or "").split(",")),
                 )
-            path = validated_path(path)
-            stored, source_bytes = read_paper_snapshot(path)
-            apply_snapshot(path, stored, source_bytes)
+            )
+            apply_snapshot(paper)
             save_error.value = ""
-            rebuild_after_mutation(path)
             notify(page, "Paper 已保存")
             page.update()
-        except (OSError, ValueError, FileExistsError) as ex:
-            save_error.value = f"无法保存 Paper：{ex}"
+        except ServiceError as ex:
+            if ex.code == "stale_snapshot":
+                save_error.value = "Paper 已在外部修改；未覆盖。请重新打开后决定如何处理。"
+            elif ex.code == "not_found":
+                save_error.value = "Paper 已在外部删除或移动；未保存。请返回本地文件库刷新。"
+            else:
+                save_error.value = f"无法保存 Paper：{ex.message}"
             page.update()
 
     def on_delete(_: ft.ControlEvent) -> None:
-        path = state["path"]
-        if not isinstance(path, Path):
+        paper = state["paper"]
+        if paper.path is None:
             save_error.value = "尚未保存的 Paper 无法删除。"
             page.update()
             return
         try:
-            path = validated_path(path)
-            soft_delete(ctx.vault, str(path))
-            rebuild_after_mutation()
+            result = service.paper_soft_delete(paper.edit_token)
+            if not result.succeeded:
+                raise ServiceError(
+                    "operation_failed",
+                    result.error or "unknown delete error",
+                    "refresh",
+                )
             notify(page, "已移入回收站")
             ctx.open_library()
-        except (OSError, ValueError, FileExistsError) as ex:
-            save_error.value = f"无法删除 Paper：{ex}"
+        except ServiceError as ex:
+            save_error.value = f"无法删除 Paper：{ex.message}"
             page.update()
 
     def on_flashcards(_: ft.ControlEvent) -> None:
-        stored = state["paper"]
-        if not isinstance(stored, Paper):
+        paper = state["paper"]
+        if paper.path is None:
             save_error.value = "请先保存 Paper，再打开 Flashcard。"
             page.update()
             return
-        path = state["path"]
-        if not isinstance(path, Path):
-            save_error.value = "请先保存 Paper，再打开 Flashcard。"
-            page.update()
-            return
-        ctx.open_flashcards(path.relative_to(ctx.vault))
+        ctx.open_flashcards(Path(paper.path))
 
     editor_card = paper_card(
         [
-            ft.Text("新 Paper" if existing is None else "编辑 Paper", size=TEXT_LG, font_family=FONT_DISPLAY),
+            ft.Text("新 Paper" if is_new else "编辑 Paper", size=TEXT_LG, font_family=FONT_DISPLAY),
             code_field,
             display_name_field,
             summary_field,

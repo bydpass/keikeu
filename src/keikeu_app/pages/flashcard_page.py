@@ -29,38 +29,12 @@ from keikeu_app.widgets import (
     primary_button,
     single_line_field,
 )
-from keikeu_core.indexer import rebuild_index
-from keikeu_core.markdown_io import read_paper
-from keikeu_core.models import Paper
-from keikeu_core.vault import resolve_active_paper_path
+from keikeu_bridge import FlashcardDeckDto, ServiceError
 
 if TYPE_CHECKING:
     from keikeu_app.main import AppContext
 
-__all__ = ["build_flashcard_page", "project_cards"]
-
-
-def project_cards(paper: Paper) -> list[str]:
-    """Project a Paper into its immutable Summary-first read-only card order."""
-    return [paper.summary, *[highlight.content for highlight in paper.highlights]]
-
-
-def _paper_label(paper: Paper) -> str:
-    return (
-        f"{paper.display_name} ({paper.code})"
-        if paper.display_name is not None
-        else paper.code
-    )
-
-
-def _card_titles(paper: Paper) -> list[str]:
-    return [
-        "Summary",
-        *[
-            highlight.display_name or f"Highlight {index}"
-            for index, highlight in enumerate(paper.highlights, start=1)
-        ],
-    ]
+__all__ = ["build_flashcard_page"]
 
 
 def _unavailable_page(ctx: "AppContext", message: str) -> ft.Control:
@@ -93,55 +67,20 @@ def build_flashcard_page(
     """Build a selector and one read-only card deck that always starts at page 1."""
     page = ctx.page
     try:
-        entries = rebuild_index(ctx.vault)["papers"]
-    except (OSError, ValueError):
-        entries = []
-
-    requested_path: Path | None = open_path
-    if requested_path is None and entries:
-        first_path = entries[0].get("path")
-        requested_path = Path(first_path) if isinstance(first_path, str) else None
-    if requested_path is None:
-        return _unavailable_page(ctx, "Vault 中还没有可选择的 Paper。")
-
-    def read_selected(relative_path: Path) -> tuple[Path, Paper]:
-        path = resolve_active_paper_path(ctx.vault, relative_path)
-        paper = read_paper(path)
-        if path.stem != paper.code:
-            raise ValueError("Paper filename and frontmatter code do not match")
-        return path, paper
-
-    try:
-        initial_path, initial_paper = read_selected(requested_path)
-    except (OSError, ValueError):
-        return _unavailable_page(ctx, "找不到可读取的 Paper；它可能已被删除、移动或损坏。")
-
-    relative_initial = initial_path.relative_to(ctx.vault)
-    option_labels: dict[str, str] = {}
-    for entry in entries:
-        relative = entry.get("path")
-        code = entry.get("code")
-        display_name = entry.get("display_name")
-        if not isinstance(relative, str) or not isinstance(code, str):
-            continue
-        option_labels[relative] = (
-            f"{display_name} ({code})"
-            if isinstance(display_name, str) and display_name
-            else code
+        initial_deck = ctx.service.flashcard_open(
+            str(open_path) if open_path is not None else None
         )
-    option_labels.setdefault(str(relative_initial), _paper_label(initial_paper))
+    except ServiceError:
+        return _unavailable_page(ctx, "找不到可读取的 Paper；它可能已被删除、移动或损坏。")
 
     paper_selector = ft.Dropdown(
         label="Paper",
-        value=str(relative_initial),
+        value=initial_deck.path,
         width=430,
         dense=True,
         options=[
-            ft.DropdownOption(key=path, text=label)
-            for path, label in sorted(
-                option_labels.items(),
-                key=lambda item: (item[1].casefold(), item[0]),
-            )
+            ft.DropdownOption(key=option.path, text=option.label)
+            for option in initial_deck.options
         ],
         key="flashcard-paper-selector",
     )
@@ -179,7 +118,7 @@ def build_flashcard_page(
             controls=[
                 ft.Text("当前 Summary（仅供对照）", weight=ft.FontWeight.W_600),
                 ft.Text(
-                    initial_paper.summary,
+                    initial_deck.cards[0].content,
                     selectable=True,
                     key="flashcard-summary-text",
                 ),
@@ -192,10 +131,7 @@ def build_flashcard_page(
     next_button = primary_button("下一张", lambda _e: None)
     paper_name = ft.Text("", size=14, color=MUTED, selectable=True)
     state: dict[str, object] = {
-        "path": initial_path,
-        "paper": initial_paper,
-        "cards": project_cards(initial_paper),
-        "titles": _card_titles(initial_paper),
+        "deck": initial_deck,
         "index": 0,
         "show_summary": False,
     }
@@ -222,31 +158,26 @@ def build_flashcard_page(
         render()
 
     def render(*, update: bool = True) -> None:
-        paper = state["paper"]
-        cards = state["cards"]
-        titles = state["titles"]
+        deck = state["deck"]
         current_index = int(state["index"])
-        if (
-            not isinstance(paper, Paper)
-            or not isinstance(cards, list)
-            or not isinstance(titles, list)
-        ):
+        if not isinstance(deck, FlashcardDeckDto):
             raise ValueError("Flashcard state is invalid")
+        cards = deck.cards
         is_highlight = current_index > 0
         state["show_summary"] = bool(state["show_summary"]) and is_highlight
-        paper_name.value = _paper_label(paper)
-        card_kind.value = str(titles[current_index])
-        card_text.value = str(cards[current_index])
+        paper_name.value = deck.paper_label
+        card_kind.value = cards[current_index].title
+        card_text.value = cards[current_index].content
         position_text.value = f"{current_index + 1} / {len(cards)}"
         jump_field.value = str(current_index + 1)
         summary_button.visible = is_highlight
         summary_context.visible = bool(state["show_summary"])
         summary_text = summary_context.content.controls[1]
         if isinstance(summary_text, ft.Text):
-            summary_text.value = paper.summary
+            summary_text.value = cards[0].content
         card_list.controls = [
             ft.Button(
-                content=ft.Text(f"{index + 1}. {title}"),
+                content=ft.Text(f"{index + 1}. {card.title}"),
                 key=f"flashcard-list-{index}",
                 on_click=lambda _e, target=index: select_card(target),
                 bgcolor=ACCENT if index == current_index else SURFACE_WARM,
@@ -257,46 +188,43 @@ def build_flashcard_page(
                     shape=ft.RoundedRectangleBorder(radius=RADIUS_SM),
                 ),
             )
-            for index, title in enumerate(titles)
+            for index, card in enumerate(cards)
         ]
         if update:
             page.update()
 
     def move(delta: int) -> None:
-        cards = state["cards"]
-        if not isinstance(cards, list):
+        deck = state["deck"]
+        if not isinstance(deck, FlashcardDeckDto):
             return
         current_index = int(state["index"])
         next_index = current_index + delta
         if next_index < 0:
             show_notice("已经是第一张。")
             return
-        if next_index >= len(cards):
+        if next_index >= len(deck.cards):
             show_notice("已经是最后一张。")
             return
         select_card(next_index)
 
     def switch_paper(_: object) -> None:
         selected = paper_selector.value
-        previous_path = state["path"]
+        previous_deck = state["deck"]
         if not isinstance(selected, str):
             return
         try:
-            path, paper = read_selected(Path(selected))
-        except (OSError, ValueError) as ex:
-            paper_selector.value = str(
-                previous_path.relative_to(ctx.vault)
-                if isinstance(previous_path, Path)
-                else relative_initial
+            deck = ctx.service.flashcard_open(selected)
+        except ServiceError as ex:
+            paper_selector.value = (
+                previous_deck.path
+                if isinstance(previous_deck, FlashcardDeckDto)
+                else initial_deck.path
             )
-            show_notice(f"无法切换 Paper：{ex}")
+            show_notice(f"无法切换 Paper：{ex.message}")
             return
         state.update(
             {
-                "path": path,
-                "paper": paper,
-                "cards": project_cards(paper),
-                "titles": _card_titles(paper),
+                "deck": deck,
                 "index": 0,
                 "show_summary": False,
             }
@@ -306,9 +234,10 @@ def build_flashcard_page(
 
     def jump(_: object) -> None:
         raw = (jump_field.value or "").strip()
-        cards = state["cards"]
-        if not isinstance(cards, list):
+        deck = state["deck"]
+        if not isinstance(deck, FlashcardDeckDto):
             return
+        cards = deck.cards
         if not raw.isdecimal():
             show_notice(f"请输入 1..{len(cards)} 的整数页码。")
             return
@@ -323,9 +252,9 @@ def build_flashcard_page(
         render()
 
     def return_to_paper(_: object) -> None:
-        path = state["path"]
-        if isinstance(path, Path):
-            ctx.open_paper(path.relative_to(ctx.vault))
+        deck = state["deck"]
+        if isinstance(deck, FlashcardDeckDto):
+            ctx.open_paper(Path(deck.path))
 
     def on_keyboard(event: object) -> None:
         key = str(getattr(event, "key", "")).upper().replace(" ", "").replace("_", "")

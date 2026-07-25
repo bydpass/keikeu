@@ -11,10 +11,11 @@ from typing import Iterable
 import flet as ft
 
 from keikeu_app import main as app_main
-from keikeu_app.pages import migration_page as migration_page_mod
 from keikeu_app.pages.migration_page import build_migration_page
+from keikeu_bridge import KeikeuService, MigrationPreflightDto, MigrationResultDto
+import keikeu_bridge.service as bridge_service_mod
 from keikeu_core.markdown_io import write_paper
-from keikeu_core.migration_v01 import MigrationResult, is_v01_vault
+from keikeu_core.migration_v01 import is_v01_vault
 from keikeu_core.models import Highlight, Paper
 from keikeu_core.vault import (
     capture_vault_selection_token,
@@ -106,18 +107,30 @@ def _file_bytes(root: Path) -> dict[str, bytes]:
     }
 
 
+def _migration_service(
+    vault: Path,
+) -> tuple[KeikeuService, MigrationPreflightDto]:
+    service = KeikeuService(
+        config_path=vault.parent / f".{vault.name}-test-config.json",
+        state_path=vault.parent / f".{vault.name}-test-state.json",
+    )
+    preview = service.vault_inspect(str(vault))
+    assert preview.migration is not None
+    return service, preview.migration
+
+
 def test_startup_detects_v01_before_any_v2_write(tmp_path, monkeypatch):
     vault = _copy_fixture(tmp_path)
     before = _file_bytes(vault)
     page = FakePage()
-    monkeypatch.setattr(app_main, "get_vault", lambda _config: vault)
+    monkeypatch.setattr(bridge_service_mod, "get_vault", lambda _config: vault)
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "init_vault",
         lambda _vault: (_ for _ in ()).throw(AssertionError("must not initialize v0.1")),
     )
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "rebuild_index",
         lambda _vault: (_ for _ in ()).throw(AssertionError("must not index v0.1")),
     )
@@ -132,9 +145,11 @@ def test_preflight_lists_blockers_and_cancel_keeps_legacy_vault_unchanged(tmp_pa
     vault = _copy_fixture(tmp_path)
     before = _file_bytes(vault)
     chosen: list[bool] = []
+    service, preflight = _migration_service(vault)
     root = build_migration_page(
         FakePage(),  # type: ignore[arg-type]
-        vault,
+        service,
+        preflight,
         on_open_migrated=lambda _result: None,
         on_choose_other=lambda: chosen.append(True),
     )
@@ -150,14 +165,14 @@ def test_picker_routes_a_manually_selected_v01_vault_without_writing_it(tmp_path
     vault = _copy_fixture(tmp_path)
     before = _file_bytes(vault)
     page = FakePage()
-    monkeypatch.setattr(app_main, "get_vault", lambda _config: None)
+    monkeypatch.setattr(bridge_service_mod, "get_vault", lambda _config: None)
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "init_vault",
         lambda _vault: (_ for _ in ()).throw(AssertionError("must not initialize v0.1")),
     )
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "set_vault",
         lambda _vault, _config, _selection: (_ for _ in ()).throw(AssertionError("must not configure v0.1")),
     )
@@ -175,10 +190,10 @@ def test_system_directory_chooser_opens_a_v2_vault_with_path_fallback(tmp_path, 
     vault = tmp_path / "selected-vault"
     page = FakePage()
     configured: list[tuple[Path, Path]] = []
-    monkeypatch.setattr(app_main, "get_vault", lambda _config: None)
+    monkeypatch.setattr(bridge_service_mod, "get_vault", lambda _config: None)
     monkeypatch.setattr(app_main, "CONFIG_PATH", tmp_path / "config.json")
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "set_vault",
         lambda selected, config, _selection: configured.append((selected, config)),
     )
@@ -209,7 +224,7 @@ def test_system_directory_chooser_opens_a_v2_vault_with_path_fallback(tmp_path, 
 
 def test_system_directory_chooser_cancel_keeps_path_fallback_visible(tmp_path, monkeypatch):
     page = FakePage()
-    monkeypatch.setattr(app_main, "get_vault", lambda _config: None)
+    monkeypatch.setattr(bridge_service_mod, "get_vault", lambda _config: None)
 
     app_main._build_vault_picker(page)  # type: ignore[attr-defined, arg-type]
     root = page.controls[0]
@@ -244,14 +259,14 @@ def test_valid_vault_preview_is_read_only_until_confirmed(tmp_path, monkeypatch)
     )
     page = FakePage()
     order: list[str] = []
-    monkeypatch.setattr(app_main, "get_vault", lambda _config: None)
+    monkeypatch.setattr(bridge_service_mod, "get_vault", lambda _config: None)
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "rebuild_index",
         lambda _vault: order.append("rebuild") or {"papers": [], "errors": []},
     )
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "set_vault",
         lambda _vault, _config, _selection: order.append("set"),
     )
@@ -283,7 +298,7 @@ def test_confirmed_v2_rejects_ordinary_root_replacement_after_final_validation(
     config_bytes = b'{"vault": "old"}\n'
     config.write_bytes(config_bytes)
     page = FakePage()
-    real_set = app_main.set_vault
+    real_set = bridge_service_mod.set_vault
     shell_calls: list[Path] = []
 
     def replace_root_then_set(selected, config_path, selection) -> None:
@@ -293,7 +308,7 @@ def test_confirmed_v2_rejects_ordinary_root_replacement_after_final_validation(
         real_set(selected, config_path, selection)
 
     monkeypatch.setattr(app_main, "CONFIG_PATH", config)
-    monkeypatch.setattr(app_main, "set_vault", replace_root_then_set)
+    monkeypatch.setattr(bridge_service_mod, "set_vault", replace_root_then_set)
     monkeypatch.setattr(
         app_main,
         "_build_shell",
@@ -322,12 +337,12 @@ def test_path_change_invalidates_the_visible_preview_and_its_old_confirmation(
     page = FakePage()
     order: list[str] = []
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "rebuild_index",
         lambda _vault: order.append("rebuild") or {"papers": [], "errors": []},
     )
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "set_vault",
         lambda _vault, _config, _selection: order.append("set"),
     )
@@ -353,9 +368,9 @@ def test_empty_vault_preview_does_not_initialize_before_confirm(tmp_path, monkey
     vault = tmp_path / "new-vault"
     page = FakePage()
     order: list[str] = []
-    real_init = app_main.init_vault
-    real_rebuild = app_main.rebuild_index
-    monkeypatch.setattr(app_main, "get_vault", lambda _config: None)
+    real_init = bridge_service_mod.init_vault
+    real_rebuild = bridge_service_mod.rebuild_index
+    monkeypatch.setattr(bridge_service_mod, "get_vault", lambda _config: None)
 
     def tracked_init(path: Path) -> None:
         order.append("init")
@@ -365,10 +380,10 @@ def test_empty_vault_preview_does_not_initialize_before_confirm(tmp_path, monkey
         order.append("rebuild")
         return real_rebuild(path)
 
-    monkeypatch.setattr(app_main, "init_vault", tracked_init)
-    monkeypatch.setattr(app_main, "rebuild_index", tracked_rebuild)
+    monkeypatch.setattr(bridge_service_mod, "init_vault", tracked_init)
+    monkeypatch.setattr(bridge_service_mod, "rebuild_index", tracked_rebuild)
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "set_vault",
         lambda _vault, _config, _selection: order.append("set"),
     )
@@ -397,21 +412,21 @@ def test_empty_preview_blocks_if_the_directory_becomes_nonempty_before_confirm(
     vault.mkdir()
     page = FakePage()
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "init_vault",
         lambda _vault: (_ for _ in ()).throw(
             AssertionError("changed candidate must not be initialized")
         ),
     )
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "rebuild_index",
         lambda _vault: (_ for _ in ()).throw(
             AssertionError("changed candidate must not be rebuilt")
         ),
     )
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "set_vault",
         lambda _vault, _config, _selection: (_ for _ in ()).throw(
             AssertionError("changed candidate must not be configured")
@@ -428,7 +443,7 @@ def test_empty_preview_blocks_if_the_directory_becomes_nonempty_before_confirm(
     _button(root, "确认初始化并打开").on_click(None)
 
     assert note.read_text(encoding="utf-8") == "keep"
-    assert any("目标已不再为空" in text for text in _texts(root))
+    assert any("target is no longer empty" in text for text in _texts(root))
 
 
 def test_missing_preview_rejects_a_root_symlink_created_before_confirm(
@@ -438,7 +453,7 @@ def test_missing_preview_rejects_a_root_symlink_created_before_confirm(
     target = tmp_path / "symlink-target"
     page = FakePage()
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "set_vault",
         lambda _vault, _config, _selection: (_ for _ in ()).throw(
             AssertionError("symlink candidate must not be configured")
@@ -464,14 +479,14 @@ def test_valid_v2_preview_reclassifies_before_rebuild_or_switch(tmp_path, monkey
     init_vault(vault)
     page = FakePage()
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "rebuild_index",
         lambda _vault: (_ for _ in ()).throw(
             AssertionError("changed candidate must not be rebuilt")
         ),
     )
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "set_vault",
         lambda _vault, _config, _selection: (_ for _ in ()).throw(
             AssertionError("changed candidate must not be configured")
@@ -489,7 +504,10 @@ def test_valid_v2_preview_reclassifies_before_rebuild_or_switch(tmp_path, monkey
 
     assert not (vault / "keikeu_index.json").exists()
     assert (vault / ".trash" / "cache-moved").is_dir()
-    assert any("不是受支持的 v0.1 或 Paper v2/v3 Vault" in text for text in _texts(root))
+    assert any(
+        "not a supported v0.1 or Paper v2/v3 Vault" in text
+        for text in _texts(root)
+    )
 
 
 def test_valid_home_v2_with_a_damaged_paper_switches_and_exposes_index_error(
@@ -504,7 +522,7 @@ def test_valid_home_v2_with_a_damaged_paper_switches_and_exposes_index_error(
     page = FakePage()
     order: list[str] = []
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "set_vault",
         lambda _vault, _config, _selection: order.append("set"),
     )
@@ -520,7 +538,7 @@ def test_valid_home_v2_with_a_damaged_paper_switches_and_exposes_index_error(
     _button(root, "检查 Vault").on_click(None)
     _button(root, "确认切换并打开").on_click(None)
 
-    index = app_main.rebuild_index(vault)
+    index = bridge_service_mod.rebuild_index(vault)
     assert order == ["set", "shell"]
     assert len(index["errors"]) == 1
 
@@ -546,7 +564,7 @@ def test_v2_index_with_a_v3_paper_rebuilds_v3_and_switches(tmp_path, monkeypatch
     page = FakePage()
     order: list[str] = []
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "set_vault",
         lambda _vault, _config, _selection: order.append("set"),
     )
@@ -572,19 +590,19 @@ def test_nonempty_non_vault_is_rejected_without_mutation(tmp_path, monkeypatch):
     note = candidate / "keep.txt"
     note.write_text("keep me", encoding="utf-8")
     page = FakePage()
-    monkeypatch.setattr(app_main, "get_vault", lambda _config: None)
+    monkeypatch.setattr(bridge_service_mod, "get_vault", lambda _config: None)
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "init_vault",
         lambda _vault: (_ for _ in ()).throw(AssertionError("must not initialize")),
     )
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "rebuild_index",
         lambda _vault: (_ for _ in ()).throw(AssertionError("must not rebuild")),
     )
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "set_vault",
         lambda _vault, _config, _selection: (_ for _ in ()).throw(AssertionError("must not configure")),
     )
@@ -594,7 +612,10 @@ def test_nonempty_non_vault_is_rejected_without_mutation(tmp_path, monkeypatch):
     _text_field(root, "Vault 文件夹路径").value = str(candidate)
     _button(root, "检查 Vault").on_click(None)
 
-    assert any("不是受支持的 v0.1 或 Paper v2/v3 Vault" in text for text in _texts(root))
+    assert any(
+        "not a supported v0.1 or Paper v2/v3 Vault" in text
+        for text in _texts(root)
+    )
     assert note.read_text(encoding="utf-8") == "keep me"
 
 
@@ -607,25 +628,25 @@ def test_picker_rejects_internal_file_symlink_before_format_detection(tmp_path, 
     linked.symlink_to(target)
     config = tmp_path / "config.json"
     page = FakePage()
-    monkeypatch.setattr(app_main, "get_vault", lambda _config: None)
+    monkeypatch.setattr(bridge_service_mod, "get_vault", lambda _config: None)
     monkeypatch.setattr(app_main, "CONFIG_PATH", config)
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "is_v01_vault",
         lambda _vault: (_ for _ in ()).throw(AssertionError("must not detect format")),
     )
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "is_vault",
         lambda _vault: (_ for _ in ()).throw(AssertionError("must not detect format")),
     )
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "rebuild_index",
         lambda _vault: (_ for _ in ()).throw(AssertionError("must not rebuild")),
     )
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "set_vault",
         lambda _vault, _config, _selection: (_ for _ in ()).throw(AssertionError("must not configure")),
     )
@@ -647,12 +668,12 @@ def test_picker_rejects_a_root_symlink_before_format_detection(tmp_path, monkeyp
     root_link.symlink_to(target, target_is_directory=True)
     page = FakePage()
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "is_v01_vault",
         lambda _vault: (_ for _ in ()).throw(AssertionError("must not detect format")),
     )
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "is_vault",
         lambda _vault: (_ for _ in ()).throw(AssertionError("must not detect format")),
     )
@@ -675,22 +696,22 @@ def test_startup_unsafe_non_vault_is_classified_and_rejected_before_copy(
     note.write_text("do not copy", encoding="utf-8")
     page = FakePage()
     calls: list[Path] = []
-    monkeypatch.setattr(app_main, "get_vault", lambda _config: source)
+    monkeypatch.setattr(bridge_service_mod, "get_vault", lambda _config: source)
 
     def reject(path: Path) -> Path:
         calls.append(path)
         raise ValueError("simulated outside Home")
 
-    monkeypatch.setattr(app_main, "require_home_path", reject)
+    monkeypatch.setattr(bridge_service_mod, "require_home_path", reject)
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "copy_vault_no_follow",
         lambda _source, _destination: (_ for _ in ()).throw(
             AssertionError("unsupported source must not be copied")
         ),
     )
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "set_vault",
         lambda _vault, _config, _selection: (_ for _ in ()).throw(
             AssertionError("unsupported source must not be configured")
@@ -699,9 +720,9 @@ def test_startup_unsafe_non_vault_is_classified_and_rejected_before_copy(
 
     app_main.main(page)  # type: ignore[arg-type]
 
-    assert calls == [source.absolute()]
+    assert calls == [source.absolute(), source.absolute()]
     assert any(
-        "不是受支持的 v0.1 或 Paper v2/v3 Vault" in text
+        "not a supported v0.1 or Paper v2/v3 Vault" in text
         for text in _texts(page.controls[0])
     )
     assert not any(
@@ -720,14 +741,14 @@ def test_picker_offers_relocation_for_unsafe_v3(tmp_path, monkeypatch):
         encoding="utf-8",
     )
     page = FakePage()
-    real_guard = app_main.require_home_path
+    real_guard = bridge_service_mod.require_home_path
 
     def simulated_guard(path: Path) -> Path:
         if path == source:
             raise ValueError("simulated outside Home")
         return real_guard(path)
 
-    monkeypatch.setattr(app_main, "require_home_path", simulated_guard)
+    monkeypatch.setattr(bridge_service_mod, "require_home_path", simulated_guard)
     app_main._build_vault_picker(page, show_configured=False)  # type: ignore[attr-defined, arg-type]
     root = page.controls[0]
     _text_field(root, "Vault 文件夹路径").value = str(source)
@@ -771,7 +792,7 @@ def test_unsupported_readable_index_wins_over_leftover_outlines(tmp_path):
     _text_field(root, "Vault 文件夹路径").value = str(vault)
     _button(root, "检查 Vault").on_click(None)
 
-    assert any("index version：4" in text for text in _texts(root))
+    assert any("index version: 4" in text for text in _texts(root))
     assert not any(
         getattr(control, "key", None) == "migration-preflight-card"
         for control in _walk(root)
@@ -787,7 +808,7 @@ def test_corrupt_structural_index_is_rebuilt_after_picker_confirmation(
     page = FakePage()
     order: list[str] = []
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "set_vault",
         lambda _vault, _config, _selection: order.append("set"),
     )
@@ -816,7 +837,7 @@ def test_missing_disposable_index_is_rebuilt_after_picker_confirmation(
     page = FakePage()
     order: list[str] = []
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "set_vault",
         lambda _vault, _config, _selection: order.append("set"),
     )
@@ -843,7 +864,7 @@ def test_configured_corrupt_structural_index_rebuilds_during_normal_open(
     init_vault(vault)
     (vault / "keikeu_index.json").write_text("{broken", encoding="utf-8")
     page = FakePage()
-    monkeypatch.setattr(app_main, "get_vault", lambda _config: vault)
+    monkeypatch.setattr(bridge_service_mod, "get_vault", lambda _config: vault)
 
     app_main.main(page)  # type: ignore[arg-type]
 
@@ -859,9 +880,9 @@ def test_startup_rejects_a_root_symlink_before_shell_or_format_probe(
     init_vault(target)
     root_link.symlink_to(target, target_is_directory=True)
     page = FakePage()
-    monkeypatch.setattr(app_main, "get_vault", lambda _config: root_link)
+    monkeypatch.setattr(bridge_service_mod, "get_vault", lambda _config: root_link)
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "is_v01_vault",
         lambda _vault: (_ for _ in ()).throw(AssertionError("must not detect format")),
     )
@@ -885,7 +906,7 @@ def test_startup_opens_home_vault_with_an_isolated_symlink_error(tmp_path, monke
     (vault / "cache" / "linked.md").symlink_to(target)
     config = tmp_path / "config.json"
     page = FakePage()
-    monkeypatch.setattr(app_main, "get_vault", lambda _config: vault)
+    monkeypatch.setattr(bridge_service_mod, "get_vault", lambda _config: vault)
     monkeypatch.setattr(app_main, "CONFIG_PATH", config)
     opened: list[Path] = []
     monkeypatch.setattr(
@@ -910,17 +931,17 @@ def test_startup_rejects_root_swap_to_home_symlink_after_classification(
     init_vault(vault)
     init_vault(redirect)
     page = FakePage()
-    monkeypatch.setattr(app_main, "get_vault", lambda _config: vault)
-    real_classify = app_main._classify_configured_home_vault
+    monkeypatch.setattr(bridge_service_mod, "get_vault", lambda _config: vault)
+    real_classify = KeikeuService._classify_configured_home_vault
 
-    def classify_then_swap(candidate: Path) -> str:
+    def classify_then_swap(_service: object, candidate: Path) -> str:
         source_kind = real_classify(candidate)
         vault.rename(parked)
         vault.symlink_to(redirect, target_is_directory=True)
         return source_kind
 
     monkeypatch.setattr(
-        app_main,
+        KeikeuService,
         "_classify_configured_home_vault",
         classify_then_swap,
     )
@@ -949,17 +970,17 @@ def test_startup_rejects_v01_ordinary_root_swap_before_migration_gate(
     _remove_preflight_failures(replacement)
     parked = tmp_path / "parked-v01"
     page = FakePage()
-    monkeypatch.setattr(app_main, "get_vault", lambda _config: vault)
-    real_classify = app_main._classify_configured_home_vault
+    monkeypatch.setattr(bridge_service_mod, "get_vault", lambda _config: vault)
+    real_classify = KeikeuService._classify_configured_home_vault
 
-    def classify_then_swap(candidate: Path) -> str:
+    def classify_then_swap(_service: object, candidate: Path) -> str:
         source_kind = real_classify(candidate)
         vault.rename(parked)
         replacement.rename(vault)
         return source_kind
 
     monkeypatch.setattr(
-        app_main,
+        KeikeuService,
         "_classify_configured_home_vault",
         classify_then_swap,
     )
@@ -967,7 +988,7 @@ def test_startup_rejects_v01_ordinary_root_swap_before_migration_gate(
     app_main.main(page)  # type: ignore[arg-type]
 
     root = page.controls[0]
-    assert any("发生变化" in text for text in _texts(root))
+    assert any("changed" in text for text in _texts(root))
     assert _text_field(root, "Vault 文件夹路径").value == str(vault)
     assert not any("创建完整备份并迁移" in text for text in _texts(root))
     assert is_v01_vault(parked)
@@ -983,10 +1004,10 @@ def test_unsafe_v2_copy_rebuilds_then_switches_and_keeps_source(tmp_path, monkey
     page = FakePage()
     order: list[str] = []
     scans: list[Path] = []
-    real_guard = app_main.require_home_path
-    real_copy = app_main.copy_vault_no_follow
-    real_rebuild = app_main.rebuild_index
-    real_scan = app_main.validate_regular_tree_no_follow
+    real_guard = bridge_service_mod.require_home_path
+    real_copy = bridge_service_mod.copy_vault_no_follow
+    real_rebuild = bridge_service_mod.rebuild_index
+    real_scan = bridge_service_mod.validate_regular_tree_no_follow
 
     def simulated_guard(path: Path) -> Path:
         if path == source:
@@ -1010,13 +1031,13 @@ def test_unsafe_v2_copy_rebuilds_then_switches_and_keeps_source(tmp_path, monkey
         order.append("set")
         set_vault(vault, config_path, selection)
 
-    monkeypatch.setattr(app_main, "get_vault", lambda _config: None)
+    monkeypatch.setattr(bridge_service_mod, "get_vault", lambda _config: None)
     monkeypatch.setattr(app_main, "CONFIG_PATH", config)
-    monkeypatch.setattr(app_main, "require_home_path", simulated_guard)
-    monkeypatch.setattr(app_main, "validate_regular_tree_no_follow", tracked_scan)
-    monkeypatch.setattr(app_main, "copy_vault_no_follow", tracked_copy)
-    monkeypatch.setattr(app_main, "rebuild_index", tracked_rebuild)
-    monkeypatch.setattr(app_main, "set_vault", tracked_set)
+    monkeypatch.setattr(bridge_service_mod, "require_home_path", simulated_guard)
+    monkeypatch.setattr(bridge_service_mod, "validate_regular_tree_no_follow", tracked_scan)
+    monkeypatch.setattr(bridge_service_mod, "copy_vault_no_follow", tracked_copy)
+    monkeypatch.setattr(bridge_service_mod, "rebuild_index", tracked_rebuild)
+    monkeypatch.setattr(bridge_service_mod, "set_vault", tracked_set)
     monkeypatch.setattr(
         app_main,
         "_build_shell",
@@ -1048,14 +1069,14 @@ def test_relocation_disables_controls_ignores_duplicate_click_and_recovers_on_fa
     destination = tmp_path / "failed-copy"
     init_vault(source)
     page = FakePage()
-    real_guard = app_main.require_home_path
+    real_guard = bridge_service_mod.require_home_path
 
     def simulated_guard(path: Path) -> Path:
         if path == source:
             raise ValueError("simulated outside Home")
         return real_guard(path)
 
-    monkeypatch.setattr(app_main, "require_home_path", simulated_guard)
+    monkeypatch.setattr(bridge_service_mod, "require_home_path", simulated_guard)
     app_main._build_vault_picker(page, show_configured=False)  # type: ignore[attr-defined, arg-type]
     root = page.controls[0]
     path_field = _text_field(root, "Vault 文件夹路径")
@@ -1084,7 +1105,7 @@ def test_relocation_disables_controls_ignores_duplicate_click_and_recovers_on_fa
         relocate_button.on_click(None)
         raise OSError("simulated copy failure")
 
-    monkeypatch.setattr(app_main, "copy_vault_no_follow", fail_copy)
+    monkeypatch.setattr(bridge_service_mod, "copy_vault_no_follow", fail_copy)
     relocate_button.on_click(None)
 
     assert copy_calls == 1
@@ -1106,16 +1127,16 @@ def test_relocation_rejects_an_existing_destination_symlink_without_resolving_it
     target.mkdir()
     destination.symlink_to(target, target_is_directory=True)
     page = FakePage()
-    real_guard = app_main.require_home_path
+    real_guard = bridge_service_mod.require_home_path
 
     def simulated_guard(path: Path) -> Path:
         if path == source:
             raise ValueError("simulated outside Home")
         return real_guard(path)
 
-    monkeypatch.setattr(app_main, "require_home_path", simulated_guard)
+    monkeypatch.setattr(bridge_service_mod, "require_home_path", simulated_guard)
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "set_vault",
         lambda _vault, _config, _selection: (_ for _ in ()).throw(
             AssertionError("symlink destination must not be selected")
@@ -1151,18 +1172,18 @@ def test_unsafe_v2_validation_failure_does_not_switch_config(tmp_path, monkeypat
     )
     before = _file_bytes(source)
     page = FakePage()
-    real_guard = app_main.require_home_path
+    real_guard = bridge_service_mod.require_home_path
 
     def simulated_guard(path: Path) -> Path:
         if path == source:
             raise ValueError("simulated outside Home")
         return real_guard(path)
 
-    monkeypatch.setattr(app_main, "get_vault", lambda _config: old_vault)
+    monkeypatch.setattr(bridge_service_mod, "get_vault", lambda _config: old_vault)
     monkeypatch.setattr(app_main, "CONFIG_PATH", config)
-    monkeypatch.setattr(app_main, "require_home_path", simulated_guard)
+    monkeypatch.setattr(bridge_service_mod, "require_home_path", simulated_guard)
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "rebuild_index",
         lambda _vault: {"papers": [], "errors": [{"path": "cache/broken.md"}]},
     )
@@ -1185,7 +1206,7 @@ def test_unsafe_v2_validation_failure_does_not_switch_config(tmp_path, monkeypat
     assert get_vault(config) == old_vault.resolve()
     assert _file_bytes(source) == before
     assert destination.exists()
-    assert any("无法验证的 Paper" in text for text in _texts(root))
+    assert any("Vault has 1 invalid Papers" in text for text in _texts(root))
 
 
 def test_unsafe_v01_copy_preflights_before_switch_and_cancel_keeps_copy_selected(
@@ -1205,9 +1226,9 @@ def test_unsafe_v01_copy_preflights_before_switch_and_cancel_keeps_copy_selected
     before = _file_bytes(source)
     page = FakePage()
     order: list[str] = []
-    real_guard = app_main.require_home_path
-    real_copy = app_main.copy_vault_no_follow
-    real_inspect = app_main.inspect_v01_vault
+    real_guard = bridge_service_mod.require_home_path
+    real_copy = bridge_service_mod.copy_vault_no_follow
+    real_inspect = bridge_service_mod.inspect_v01_vault
     real_gate = app_main._build_migration_gate  # type: ignore[attr-defined]
 
     def simulated_guard(path: Path) -> Path:
@@ -1231,12 +1252,12 @@ def test_unsafe_v01_copy_preflights_before_switch_and_cancel_keeps_copy_selected
         order.append("gate")
         real_gate(gate_page, vault, **kwargs)  # type: ignore[arg-type]
 
-    monkeypatch.setattr(app_main, "get_vault", lambda _config: old_vault)
+    monkeypatch.setattr(bridge_service_mod, "get_vault", lambda _config: old_vault)
     monkeypatch.setattr(app_main, "CONFIG_PATH", config)
-    monkeypatch.setattr(app_main, "require_home_path", simulated_guard)
-    monkeypatch.setattr(app_main, "copy_vault_no_follow", tracked_copy)
-    monkeypatch.setattr(app_main, "inspect_v01_vault", tracked_inspect)
-    monkeypatch.setattr(app_main, "set_vault", tracked_set)
+    monkeypatch.setattr(bridge_service_mod, "require_home_path", simulated_guard)
+    monkeypatch.setattr(bridge_service_mod, "copy_vault_no_follow", tracked_copy)
+    monkeypatch.setattr(bridge_service_mod, "inspect_v01_vault", tracked_inspect)
+    monkeypatch.setattr(bridge_service_mod, "set_vault", tracked_set)
     monkeypatch.setattr(app_main, "_build_migration_gate", tracked_gate)
 
     app_main._build_vault_picker(page)  # type: ignore[attr-defined, arg-type]
@@ -1249,7 +1270,7 @@ def test_unsafe_v01_copy_preflights_before_switch_and_cancel_keeps_copy_selected
     confirmation.on_change(None)
     _button(root, "复制、验证并切换").on_click(None)
 
-    assert order == ["copy", "preflight", "set", "gate"]
+    assert order == ["copy", "preflight", "set", "preflight", "gate"]
     assert get_vault(config) == destination.resolve()
     assert _file_bytes(source) == before
     _button(page.controls[0], "选择其他文件夹").on_click(None)
@@ -1270,16 +1291,16 @@ def test_unsafe_v01_preflight_blockers_keep_config_unchanged(tmp_path, monkeypat
     )
     before = _file_bytes(source)
     page = FakePage()
-    real_guard = app_main.require_home_path
+    real_guard = bridge_service_mod.require_home_path
 
     def simulated_guard(path: Path) -> Path:
         if path == source:
             raise ValueError("simulated outside Home")
         return real_guard(path)
 
-    monkeypatch.setattr(app_main, "get_vault", lambda _config: old_vault)
+    monkeypatch.setattr(bridge_service_mod, "get_vault", lambda _config: old_vault)
     monkeypatch.setattr(app_main, "CONFIG_PATH", config)
-    monkeypatch.setattr(app_main, "require_home_path", simulated_guard)
+    monkeypatch.setattr(bridge_service_mod, "require_home_path", simulated_guard)
     monkeypatch.setattr(
         app_main,
         "_build_migration_gate",
@@ -1301,7 +1322,7 @@ def test_unsafe_v01_preflight_blockers_keep_config_unchanged(tmp_path, monkeypat
     assert get_vault(config) == old_vault.resolve()
     assert destination.exists()
     assert _file_bytes(source) == before
-    assert any("v0.1 迁移预检未通过" in text for text in _texts(root))
+    assert any("v0.1 vault cannot be migrated" in text for text in _texts(root))
 
 
 def test_unsafe_v01_rechecks_manifest_inside_bound_selection_before_switch(
@@ -1319,10 +1340,10 @@ def test_unsafe_v01_rechecks_manifest_inside_bound_selection_before_switch(
         config,
         capture_vault_selection_token(old_vault),
     )
-    assert app_main.inspect_v01_vault(source).ready is True
+    assert bridge_service_mod.inspect_v01_vault(source).ready is True
     page = FakePage()
-    real_guard = app_main.require_home_path
-    real_copy = app_main.copy_vault_no_follow
+    real_guard = bridge_service_mod.require_home_path
+    real_copy = bridge_service_mod.copy_vault_no_follow
 
     def simulated_guard(path: Path) -> Path:
         if path == source:
@@ -1337,10 +1358,10 @@ def test_unsafe_v01_rechecks_manifest_inside_bound_selection_before_switch(
         )
         return copied
 
-    monkeypatch.setattr(app_main, "get_vault", lambda _config: old_vault)
+    monkeypatch.setattr(bridge_service_mod, "get_vault", lambda _config: old_vault)
     monkeypatch.setattr(app_main, "CONFIG_PATH", config)
-    monkeypatch.setattr(app_main, "require_home_path", simulated_guard)
-    monkeypatch.setattr(app_main, "copy_vault_no_follow", inject_invalid_cache)
+    monkeypatch.setattr(bridge_service_mod, "require_home_path", simulated_guard)
+    monkeypatch.setattr(bridge_service_mod, "copy_vault_no_follow", inject_invalid_cache)
     monkeypatch.setattr(
         app_main,
         "_build_migration_gate",
@@ -1362,7 +1383,7 @@ def test_unsafe_v01_rechecks_manifest_inside_bound_selection_before_switch(
     assert get_vault(config) == old_vault.resolve()
     assert (destination / "cache" / "injected-invalid.md").is_file()
     assert any("injected-invalid.md" in text for text in _texts(root))
-    assert any("当前配置未修改" in text for text in _texts(root))
+    assert any("verified copy retained" in text for text in _texts(root))
 
 
 def test_unsafe_v01_migration_failure_keeps_safe_copy_selected(tmp_path, monkeypatch):
@@ -1372,18 +1393,18 @@ def test_unsafe_v01_migration_failure_keeps_safe_copy_selected(tmp_path, monkeyp
     config = tmp_path / "config.json"
     before = _file_bytes(source)
     page = FakePage()
-    real_guard = app_main.require_home_path
+    real_guard = bridge_service_mod.require_home_path
 
     def simulated_guard(path: Path) -> Path:
         if path == source:
             raise ValueError("simulated outside Home")
         return real_guard(path)
 
-    monkeypatch.setattr(app_main, "get_vault", lambda _config: None)
+    monkeypatch.setattr(bridge_service_mod, "get_vault", lambda _config: None)
     monkeypatch.setattr(app_main, "CONFIG_PATH", config)
-    monkeypatch.setattr(app_main, "require_home_path", simulated_guard)
+    monkeypatch.setattr(bridge_service_mod, "require_home_path", simulated_guard)
     monkeypatch.setattr(
-        migration_page_mod,
+        bridge_service_mod,
         "migrate_v01_vault",
         lambda _vault, **_kwargs: (_ for _ in ()).throw(OSError("simulated migration failure")),
     )
@@ -1416,7 +1437,7 @@ def test_open_migrated_failure_keeps_the_report_page_and_shows_an_error(
     _remove_preflight_failures(vault)
     page = FakePage()
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "set_vault",
         lambda _vault, _config, _selection: (_ for _ in ()).throw(
             OSError("simulated config failure")
@@ -1429,10 +1450,12 @@ def test_open_migrated_failure_keeps_the_report_page_and_shows_an_error(
     confirmation.value = True
     confirmation.on_change(None)
     _button(root, "创建完整备份并迁移").on_click(None)
-    _button(root, "打开已迁移的 Vault").on_click(None)
 
     assert _by_key(page.controls[0], "migration-preflight-card")
-    assert "simulated config failure" in _texts(page.overlay[-1])[0]
+    assert any("simulated config failure" in text for text in _texts(root))
+    assert not any(
+        text == "打开已迁移的 Vault" for text in _texts(root)
+    )
 
 
 def test_open_migrated_strictly_validates_trash_before_switching_config(
@@ -1443,7 +1466,7 @@ def test_open_migrated_strictly_validates_trash_before_switching_config(
     page = FakePage()
     configured: list[Path] = []
     monkeypatch.setattr(
-        app_main,
+        bridge_service_mod,
         "set_vault",
         lambda selected, _config, _selection: configured.append(selected),
     )
@@ -1461,7 +1484,7 @@ def test_open_migrated_strictly_validates_trash_before_switching_config(
 
     _button(root, "打开已迁移的 Vault").on_click(None)
 
-    assert configured == []
+    assert configured == [vault]
     assert "missing frontmatter" in _texts(page.overlay[-1])[0]
     assert _by_key(page.controls[0], "migration-preflight-card")
 
@@ -1470,11 +1493,13 @@ def test_confirmed_fixture_migration_displays_backup_report_and_open_action(tmp_
     vault = _copy_fixture(tmp_path)
     _remove_preflight_failures(vault)
     before = _file_bytes(vault)
-    completed: list[MigrationResult] = []
+    completed: list[MigrationResultDto] = []
     page = FakePage()
+    service, preflight = _migration_service(vault)
     root = build_migration_page(
         page,  # type: ignore[arg-type]
-        vault,
+        service,
+        preflight,
         on_open_migrated=lambda result: completed.append(result),
         on_choose_other=lambda: None,
     )
@@ -1494,5 +1519,5 @@ def test_confirmed_fixture_migration_displays_backup_report_and_open_action(tmp_
 
     assert len(completed) == 1
     result = completed[0]
-    assert _file_bytes(result.backup_path) == before
-    assert result.report_path.exists()
+    assert _file_bytes(Path(result.backup_path)) == before
+    assert Path(result.report_path).exists()
