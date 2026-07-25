@@ -3,31 +3,105 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>keikeu Design — transition</title>
+  <title>keikeu Design — Road v0.4</title>
   <style>
     :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #1e2523; background: #eceae4; }
-    body { margin: 0; min-height: 100vh; display: grid; place-items: center; }
-    main { box-sizing: border-box; width: min(720px, calc(100% - 32px)); padding: 32px; border: 1px solid #c8c9c2; background: #fffefa; }
-    p { line-height: 1.65; }
-    nav { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 24px; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    main { width: min(1120px, calc(100% - 32px)); margin: 32px auto 64px; }
+    header, section { border: 1px solid #c8c9c2; background: #fffefa; padding: 28px; }
+    section { margin-top: 16px; }
+    h1, h2 { font-family: Georgia, "Times New Roman", serif; }
+    h1 { max-width: 720px; margin: 8px 0 12px; font-size: clamp(2rem, 5vw, 3.6rem); line-height: .98; }
+    h2 { margin-top: 0; }
+    p, li { line-height: 1.6; }
+    .eyebrow, .label { color: #2e5d57; font-size: .75rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    .status { display: inline-block; padding: 5px 9px; border-left: 3px solid #9a4e3f; background: #f4eee9; }
+    .layout { display: grid; grid-template-columns: 72px 260px 1fr; min-height: 260px; border: 1px solid #c8c9c2; }
+    .layout div { padding: 14px; border-right: 1px solid #c8c9c2; }
+    .layout div:last-child { border: 0; }
+    .global { background: #1e2523; color: #fffefa; writing-mode: vertical-rl; }
+    .context { background: #f4f3ee; }
+    .paper { position: relative; background: #fffefa; }
+    .paper::before { content: ""; position: absolute; inset: 14px auto 14px 14px; width: 2px; background: #9a4e3f; }
+    .paper p { margin-left: 14px; }
+    .tokens { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .swatch { min-height: 110px; padding: 12px; border: 1px solid #c8c9c2; display: flex; align-items: end; }
+    .swatch span { padding: 4px 6px; background: #fffefa; color: #1e2523; font: .78rem ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    nav { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 18px; }
     a { color: #2e5d57; }
     .tools { display: none; }
+    @media (max-width: 760px) {
+      .layout { grid-template-columns: 56px 1fr; }
+      .paper { grid-column: 1 / -1; border-top: 1px solid #c8c9c2; min-height: 180px; }
+      .tokens, .two { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 480px) { .tokens, .two { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
   <main>
-    <p>DESIGN TRANSITION</p>
-    <h1>当前没有活跃的下一 Road 视觉规范</h1>
-    <p>Road v0.3 的视觉系统已归档为只读历史。下一 Road 的真实 Vue 组件样张获批后，本页再成为活跃视觉规范。</p>
-    <div class="tools" aria-hidden="true">
-      <input data-doc-search disabled>
-      <button data-theme-toggle disabled>Theme</button>
-    </div>
-    <nav>
-      <a href="../PROJECT.md">当前坐标</a>
-      <a href="../archive/road-v0-3/design/design.html">Road v0.3 视觉归档</a>
-      <a href="interaction.html">交互边界</a>
-    </nav>
+    <header>
+      <p class="eyebrow">Road v0.4 · Visual target</p>
+      <h1>编辑部工作台：安静、密集、可扫描</h1>
+      <p class="status">方向已批准；真实 Vue 组件样张在 CP5 单独确认，完整视觉重建在 Gate A 后验收。</p>
+      <nav>
+        <a href="../PROJECT.md">当前坐标</a>
+        <a href="../../PLAN_revised.md">执行计划</a>
+        <a href="interaction.html">交互 map</a>
+        <a href="../architecture/architecture.html">架构 map</a>
+        <a href="../archive/road-v0-3/design/design.html">Road v0.3 归档</a>
+      </nav>
+      <div class="tools" aria-hidden="true">
+        <input data-doc-search disabled>
+        <button data-theme-toggle disabled>Theme</button>
+      </div>
+    </header>
+
+    <section>
+      <p class="label">Desktop layout</p>
+      <div class="layout" aria-label="72 像素全局栏、260 像素上下文栏和弹性主内容布局">
+        <div class="global">72px Global</div>
+        <div class="context"><strong>260px Context</strong><p>导航、scope、检索与当前目录。</p></div>
+        <div class="paper"><strong>Flexible Paper</strong><p>创作对象、密集列表或明确的全窗口 gate。</p><p><code>K-YYYYMMDD-NNN · cache/path</code></p></div>
+      </div>
+    </section>
+
+    <section>
+      <p class="label">Core tokens</p>
+      <div class="tokens">
+        <div class="swatch" style="background:#eceae4"><span>canvas #ECEAE4</span></div>
+        <div class="swatch" style="background:#fffefa"><span>paper #FFFEFA</span></div>
+        <div class="swatch" style="background:#2e5d57"><span>accent #2E5D57</span></div>
+        <div class="swatch" style="background:#9a4e3f"><span>signal #9A4E3F</span></div>
+        <div class="swatch" style="background:#1e2523"><span>ink #1E2523</span></div>
+        <div class="swatch" style="background:#646b68"><span>muted #646B68</span></div>
+        <div class="swatch" style="background:#a33e3e"><span>danger #A33E3E</span></div>
+        <div class="swatch" style="background:#2f6b50"><span>success #2F6B50</span></div>
+      </div>
+    </section>
+
+    <section class="two">
+      <div>
+        <h2>Typography and detail</h2>
+        <ul>
+          <li>标题：系统 serif；正文：系统 sans。</li>
+          <li>编号与路径：系统 monospace。</li>
+          <li>记忆点：边注式 Paper code/path 与细窄校样线。</li>
+          <li>只用亮色；无外部字体、图片、渐变或卡片套卡。</li>
+        </ul>
+      </div>
+      <div>
+        <h2>Interaction quality</h2>
+        <ul>
+          <li>visible focus、语义 HTML、文本可靠换行。</li>
+          <li>拖放始终有键盘可达的菜单等价路径。</li>
+          <li><code>prefers-reduced-motion</code> 禁用非必要动画。</li>
+          <li>视觉 polish 不得掩盖 loading、empty、error、disabled 和 recovery 状态。</li>
+        </ul>
+      </div>
+    </section>
   </main>
 </body>
 </html>

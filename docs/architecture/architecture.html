@@ -3,31 +3,103 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>keikeu Architecture — transition</title>
+  <title>keikeu Architecture — Road v0.4</title>
   <style>
     :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #1e2523; background: #eceae4; }
-    body { margin: 0; min-height: 100vh; display: grid; place-items: center; }
-    main { box-sizing: border-box; width: min(720px, calc(100% - 32px)); padding: 32px; border: 1px solid #c8c9c2; background: #fffefa; }
-    p { line-height: 1.65; }
-    nav { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 24px; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    main { width: min(1120px, calc(100% - 32px)); margin: 32px auto 64px; }
+    header, section { border: 1px solid #c8c9c2; background: #fffefa; padding: 28px; }
+    section { margin-top: 16px; }
+    h1, h2 { font-family: Georgia, "Times New Roman", serif; }
+    h1 { max-width: 760px; margin: 8px 0 12px; font-size: clamp(2rem, 5vw, 3.6rem); line-height: .98; }
+    h2 { margin: 0 0 18px; }
+    p, li { line-height: 1.6; }
+    .eyebrow, .label { color: #2e5d57; font-size: .75rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    .status { display: inline-block; padding: 5px 9px; border-left: 3px solid #9a4e3f; background: #f4eee9; }
+    .flow { display: grid; gap: 10px; align-items: stretch; }
+    .current { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .target { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .node { min-width: 0; padding: 16px; border-top: 3px solid #2e5d57; background: #f4f3ee; }
+    .node strong, .node span { display: block; }
+    .node span { margin-top: 6px; color: #646b68; font-size: .88rem; overflow-wrap: anywhere; }
+    .arrow { margin: 12px 0; color: #646b68; text-align: center; }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .9em; }
+    nav { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 18px; }
     a { color: #2e5d57; }
     .tools { display: none; }
+    @media (max-width: 820px) {
+      .current, .target, .two { grid-template-columns: 1fr; }
+      .node { border-top: 0; border-left: 3px solid #2e5d57; }
+    }
   </style>
 </head>
 <body>
   <main>
-    <p>ARCHITECTURE TRANSITION</p>
-    <h1>当前运行时仍是已验收的 Python/Flet 单体</h1>
-    <p>Road v0.3 架构与 ADR 已归档。下一 Road 在批准本地调用边界、打包和兼容性方案后，再用新的实现目标替换本页。</p>
-    <div class="tools" aria-hidden="true">
-      <input data-doc-search disabled>
-      <button data-theme-toggle disabled>Theme</button>
-    </div>
-    <nav>
-      <a href="../PROJECT.md">当前坐标</a>
-      <a href="../archive/road-v0-3/architecture/architecture.html">Road v0.3 架构归档</a>
-      <a href="../SPEC.md">产品边界</a>
-    </nav>
+    <header>
+      <p class="eyebrow">Road v0.4 · Architecture target</p>
+      <h1>替换前端，不重写作者资产与 Python Core</h1>
+      <p class="status">CP0：目标已批准，代码仍是 Road v0.3 的 Flet 运行时。</p>
+      <nav>
+        <a href="../PROJECT.md">当前坐标</a>
+        <a href="../SPEC.md">产品边界</a>
+        <a href="../../PLAN_revised.md">执行计划</a>
+        <a href="../../RULE_FOR_UNDERSTANDING.md">理解闸门</a>
+        <a href="decisions/0004-vue-tauri-python-sidecar.md">ADR 0004</a>
+      </nav>
+      <div class="tools" aria-hidden="true">
+        <input data-doc-search disabled>
+        <button data-theme-toggle disabled>Theme</button>
+      </div>
+    </header>
+
+    <section>
+      <p class="label">Current · accepted and runnable</p>
+      <div class="flow current">
+        <div class="node"><strong>Flet UI</strong><span>页面、表单、系统交互</span></div>
+        <div class="node"><strong>Python Core</strong><span>Paper、Vault、Markdown、Index</span></div>
+        <div class="node"><strong>Author assets</strong><span>Markdown / JSON index / Vault</span></div>
+      </div>
+    </section>
+
+    <section>
+      <p class="label">Target · built one boundary at a time</p>
+      <div class="flow target">
+        <div class="node"><strong>Vue 3</strong><span>可见状态与交互</span></div>
+        <div class="node"><strong>Tauri</strong><span>窗口与生命周期</span></div>
+        <div class="node"><strong>Rust host</strong><span>sidecar、队列、窄系统动作</span></div>
+        <div class="node"><strong>JSONL</strong><span>版本化本地消息</span></div>
+        <div class="node"><strong>Application service</strong><span>编排、DTO、opaque session</span></div>
+        <div class="node"><strong>Python Core</strong><span>唯一业务与文件规则</span></div>
+      </div>
+      <p class="arrow">↓ 作者拥有的 Markdown / 可重建 Index / Home-contained Vault</p>
+    </section>
+
+    <section class="two">
+      <div>
+        <h2>边界不变量</h2>
+        <ul>
+          <li>Vue 不读取或写入作者文件，也不持有绝对路径。</li>
+          <li>Rust 不解析 Markdown，不实现搜索、Trash、迁移或 Paper 规则。</li>
+          <li>Python application service 与 JSONL transport 分开。</li>
+          <li><code>keikeu_core</code> 不依赖 GUI、Rust、JSONL 或 stdout。</li>
+          <li>无 localhost、HTTP、WebSocket、后台网络服务或遥测。</li>
+        </ul>
+      </div>
+      <div>
+        <h2>并存与退场</h2>
+        <ol>
+          <li>Application Service</li>
+          <li>Flet 全部改走同一 Service</li>
+          <li>JSONL 与 Rust/Tauri 宿主</li>
+          <li>Vue 功能切片与 Gate A parity</li>
+          <li>Gate B 视觉重建</li>
+          <li>真实作者、bundle、旧系统验证</li>
+          <li>最后删除 Flet</li>
+        </ol>
+      </div>
+    </section>
   </main>
 </body>
 </html>

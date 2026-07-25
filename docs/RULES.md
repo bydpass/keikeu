@@ -8,8 +8,9 @@
 2. `src/` plus passing tests for runtime facts.
 3. [SPEC](SPEC.md) for intended product behavior.
 4. This file for implementation discipline.
-5. [PROJECT](PROJECT.md) for current coordinates.
-6. Generated observations and archive history, which never override active sources.
+5. The Road v0.4 [understanding gate](../RULE_FOR_UNDERSTANDING.md) for checkpoint teaching and review; it never overrides §7 Git authority.
+6. [PROJECT](PROJECT.md) for current coordinates.
+7. Generated observations and archive history, which never override active sources.
 
 When intent and runtime differ, change code, change the active specification, or record a temporary deviation in an ADR. Never let two answers remain active.
 
@@ -17,17 +18,21 @@ During a staged Road, SPEC and the HTML maps may describe the approved target wh
 
 ## 2. Architecture
 
-- The fixed runtime stack is Python `>=3.11,<3.14`, Flet, author-owned Markdown, and rebuildable JSON metadata.
+- The accepted current runtime is Python `>=3.11,<3.14`, Flet, author-owned Markdown, and rebuildable JSON metadata.
+- Road v0.4 targets Vue/Vite JavaScript through a narrow Tauri/Rust host and one JSONL Python sidecar. Flet remains runnable through Gate A and is not removed before product acceptance.
+- The Python application service is transport-agnostic and shared by Flet and JSONL. Rust and Vue do not duplicate product rules.
 - The developer owns architecture, dependencies, data models, build commands, and release artifacts; agent output must remain explainable and reviewable.
-- `keikeu_core` is pure Python and never imports Flet or another GUI toolkit.
+- `keikeu_core` is pure Python and never imports Flet, Vue, Tauri, Rust, JSONL transport, or another GUI toolkit.
 - `markdown_io.py` exclusively owns Paper Markdown parsing and serialization.
 - `vault.py` exclusively owns Home containment, supported Paper-path validation, active/Trash enumeration, code allocation across those paths, and destructive filesystem moves.
-- GUI code calls public core APIs; it never renders Markdown or edits index JSON.
+- GUI code calls the application service; it never renders Markdown or edits index JSON.
 - App pages pass validated Vault-relative Paper paths; they never recover a path by guessing `cache/<code>.md`.
 - Markdown is canonical author content. Index and device state are disposable.
 - Keep explicit files and control flow. Add abstractions only after a second real use exists.
 - Prefer existing code, Python stdlib, platform features, then already-installed dependencies.
 - New runtime dependencies require a concrete MVP need, packaging impact, maintenance risk, and developer approval.
+- No localhost, HTTP, WebSocket, telemetry, updater, or other network behavior is authorized.
+- Rust is limited to Tauri lifecycle, sidecar ownership, JSONL request matching, native directory selection, and Python-validated open/reveal.
 
 ## 3. Author text and privacy
 
