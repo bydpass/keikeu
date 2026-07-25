@@ -40,7 +40,7 @@
     <header>
       <p class="eyebrow">Road v0.4 · Architecture target</p>
       <h1>替换前端，不重写作者资产与 Python Core</h1>
-      <p class="status">CP0：目标已批准，代码仍是 Road v0.3 的 Flet 运行时。</p>
+      <p class="status">CP1：Application Service 已实现；Flet 仍是可运行基线，CP2 才接入新边界。</p>
       <nav>
         <a href="../PROJECT.md">当前坐标</a>
         <a href="../SPEC.md">产品边界</a>
@@ -61,6 +61,7 @@
         <div class="node"><strong>Python Core</strong><span>Paper、Vault、Markdown、Index</span></div>
         <div class="node"><strong>Author assets</strong><span>Markdown / JSON index / Vault</span></div>
       </div>
+      <p><code>src/keikeu_bridge/</code> 已作为旁路边界通过测试；在 CP2 接管 Flet 调用前，不把“已实现”误报为“当前 UI 已接入”。</p>
     </section>
 
     <section>
@@ -70,7 +71,7 @@
         <div class="node"><strong>Tauri</strong><span>窗口与生命周期</span></div>
         <div class="node"><strong>Rust host</strong><span>sidecar、队列、窄系统动作</span></div>
         <div class="node"><strong>JSONL</strong><span>版本化本地消息</span></div>
-        <div class="node"><strong>Application service</strong><span>编排、DTO、opaque session</span></div>
+        <div class="node"><strong>Application service</strong><span>编排、DTO、进程内 opaque handles</span></div>
         <div class="node"><strong>Python Core</strong><span>唯一业务与文件规则</span></div>
       </div>
       <p class="arrow">↓ 作者拥有的 Markdown / 可重建 Index / Home-contained Vault</p>

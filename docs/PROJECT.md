@@ -13,7 +13,7 @@ Updated: 2026-07-25
 | Phase 7.5 lightweight iOS | Quick-test build complete on an independent branch | Responsive shell and app-sandbox Vault were exercised on `codex/fix-ios-device-readiness`. This is a lightweight iOS version for rapid testing, not a step in the macOS Road sequence. |
 | Phase 8.5 / Road v0.3 preparation | Complete | Documentation reform, authority maps, link gate, browser QA, and bounded Graphify trial completed before Road v0.3 construction. The fresh-agent audit remained unperformed and is not retroactively claimed. |
 | Road v0.3 | Product accepted; design archive complete | Phase 0–7 engineering, CP5 macOS candidate smoke, and CP6 real-author scenarios are complete. Retrieval was faster and clear, external-editor handoff was clear, and no unresolved P0/P1 was reported. The [version archive](archive/road-v0-3/README.md) is read-only; no v0.3 tag, commit, or push is implied. |
-| Road v0.4 | CP0 — authority active; stable toolchain blocked | The [Planbook](../PLAN_revised.md), [understanding gate](../RULE_FOR_UNDERSTANDING.md), active SPEC/RULES, three target maps, and ADR 0004 define the frontend-replacement boundary. Runtime code remains unchanged; the selected macOS/Xcode are beta and cannot be frozen under Road rules. |
+| Road v0.4 | CP1 — application boundary implemented | `keikeu_bridge` now owns transport-neutral startup/Vault, Paper, Flashcard, Library, migration, and validated system-target orchestration. Flet remains the runnable baseline and is rewired only in CP2; Vue/Tauri manifests remain blocked on stable tooling and dependency approval. |
 
 Phase 8 product acceptance is complete. Road v0.2 is marked by local annotated tag `v0.2.0` at `d0feac0269a5619f5dbf27c04347ba69c5665b42`; archival remains a separate developer decision. Automated tests, platform smoke, and author acceptance remain distinct evidence.
 
@@ -21,7 +21,7 @@ Phase 7.5 and the macOS Roads are separate tracks. The lightweight iOS test vers
 
 Road v0.3 product decisions, implementation, macOS candidate smoke, and product acceptance are complete. Its detailed SPEC, Planbook, maps, ADRs, and CP6 record are archived. The accepted Python/Flet runtime remains available until a separately approved Road replaces it; archival does not authorize runtime removal or data migration.
 
-Road v0.4 has entered CP0 on branch `codex/road-v04-cp0`. Each checkpoint uses its own `codex/road-v04-cpN` branch created from the previous accepted checkpoint. CP0 changes documentation authority only. No Vue/Tauri scaffold, dependency, lockfile, application service, Vault, config, or device state has changed.
+Road v0.4 CP0 is committed at `8407941` on `codex/road-v04-cp0`. CP1 is implemented on `codex/road-v04-cp1`. Each checkpoint uses its own `codex/road-v04-cpN` branch created from the previous accepted checkpoint.
 
 ## Road v0.4 CP0 toolchain observation
 
@@ -54,10 +54,11 @@ See [SPEC](SPEC.md) for the stable product boundary. The accepted Road v0.3 inte
 | Vault | Home/path validation, one-level active/Trash enumeration, global code allocation, folder/move/Trash operations, copy verification, atomic config | [`vault.py`](../src/keikeu_core/vault.py) | [`test_vault.py`](../tests/test_vault.py) |
 | Index | folder-aware rebuildable Paper/index v3 metadata and isolated path/parse errors | [`indexer.py`](../src/keikeu_core/indexer.py) | [`test_indexer.py`](../tests/test_indexer.py) |
 | v0.1 migration | preflight, external backup, Paper v3 staging, swap | [`migration_v01.py`](../src/keikeu_core/migration_v01.py) | [`test_migration_v01.py`](../tests/test_migration_v01.py) |
+| Application service | UI-neutral startup/Vault, Paper, Flashcard, Library, migration, structured errors, DTOs, and validated system targets | [`service.py`](../src/keikeu_bridge/service.py), [`dto.py`](../src/keikeu_bridge/dto.py) | [`test_bridge_service.py`](../tests/test_bridge_service.py) |
 | App shell | Vault/migration identity gates, vault-relative Paper routing, and custom Library scope sidebar | [`main.py`](../src/keikeu_app/main.py) | [`test_app_pages.py`](../tests/test_app_pages.py) |
 | Paper UI | create/update with Paper and Highlight names, immutable code, drag/menu ordering, delete, handoff | [`paper_page.py`](../src/keikeu_app/pages/paper_page.py) | [`test_app_pages.py`](../tests/test_app_pages.py) |
 | Flashcard UI | named Summary-first projection, Paper selector, page-1 reset, list/arrow/jump navigation | [`flashcard_page.py`](../src/keikeu_app/pages/flashcard_page.py) | [`test_app_pages.py`](../tests/test_app_pages.py) |
-| Device state | disposable once-per-local-day start-card claim; no Flashcard position | [`local_state.py`](../src/keikeu_app/local_state.py) | [`test_local_state.py`](../tests/test_local_state.py) |
+| Device state | disposable once-per-local-day start-card claim; no Flashcard position | [`local_state.py`](../src/keikeu_bridge/local_state.py); Flet compatibility import remains | [`test_local_state.py`](../tests/test_local_state.py) |
 | Library UI | folder scopes, scoped search/sort, selection, drag/menu/batch moves, branch, Trash/recovery, system handoff | [`library_page.py`](../src/keikeu_app/pages/library_page.py) | [`test_app_pages.py`](../tests/test_app_pages.py) |
 
 The active [architecture page](architecture/architecture.html) distinguishes the accepted current Flet runtime from the approved Road v0.4 target; the implemented Road v0.3 lifecycle view is [archived](archive/road-v0-3/architecture/architecture.html).
@@ -91,8 +92,8 @@ Application tests must not be inferred from documentation checks. Platform smoke
 
 ## Open gates
 
-1. Provide a stable macOS/Xcode environment, then approve exact Node, Rust, Python build, Vue, Tauri, test, and PyInstaller versions before changing manifests or lockfiles.
-2. Start CP1 with the transport-agnostic Python application service only; keep the accepted Flet runtime working and do not create the Vue/Tauri scaffold in the same checkpoint.
+1. Start CP2 on `codex/road-v04-cp2` from the accepted CP1 HEAD; rewire Flet to `KeikeuService` without changing behavior, then run full tests and a Flet smoke.
+2. Provide a stable macOS/Xcode environment, then approve exact Node, Rust, Python build, Vue, Tauri, test, and PyInstaller versions before creating frontend/Rust manifests or lockfiles.
 3. Treat commit, tag, push, signing, distribution, and any real-Vault operation as separate developer decisions.
 
 ## Known candidate, not active scope

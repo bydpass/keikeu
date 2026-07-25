@@ -1,6 +1,6 @@
 # Road v0.4：Vue 3 + Tauri 前端替换
 
-> 状态：**ACTIVE · CP0 authority active / stable toolchain blocked**
+> 状态：**ACTIVE · CP1 application boundary complete / CP2 next**
 > 基线：`84efc7e9b718bf06a4e7a09bcd1443ae81a6f80e`（Road v0.3 已验收并归档）
 > 日期：2026-07-25
 
@@ -18,7 +18,7 @@
 ### 目录与依赖
 
 - `frontend/`：Vue/Vite JavaScript、npm lockfile、`src-tauri/` Rust 工程。
-- `src/keikeu_bridge/`：无 GUI 的 Python application service 与 DTO；CP3 再在同一包内加入 opaque token store 和 JSONL dispatcher。application service 与 JSONL transport adapter 必须分开，`keikeu_core` 继续不依赖 Vue、Tauri、Flet 或 stdout。
+- `src/keikeu_bridge/`：无 GUI 的 Python application service、DTO 与进程内 opaque handles；CP3 再加入 JSONL dispatcher，并把现有 handles 绑定 protocol session。application service 与 JSONL transport adapter 必须分开，`keikeu_core` 继续不依赖 Vue、Tauri、Flet 或 stdout。
 - 迁移前先让现有 `keikeu_app` 调用同一 application service；Flet 页面不得继续保有另一套 Vault、保存、迁移或系统动作编排。
 - 前端运行依赖只含 Vue 与 Tauri API；构建依赖为 Vite、Vue plugin 与 Tauri CLI；测试依赖为 Vitest、Vue Test Utils 与 jsdom。不加 Vue Router、Pinia、UI kit、图标库或网络 client。
 - Rust 只用 Tauri、`tauri-build`、`serde`、`serde_json` 及官方 shell/dialog/opener plugin crates；Rust 标准库没有 JSON parser，因此协议解析不能省略 `serde` / `serde_json`。shell 不直接暴露给 Vue，且不安装未被 Vue 直接调用的 plugin JavaScript bindings。Vue 只能调用窄的 Rust commands，例如 bridge request、目录选择、validated open/reveal、runtime status 与 sidecar restart。
@@ -124,10 +124,10 @@
 ### 执行 Checkpoints
 
 - 每个 Checkpoint 使用独立分支 `codex/road-v04-cpN`；下一分支只从前一已验收并提交的 checkpoint HEAD 创建，不在一个分支混合两个 phase。
-- **CP0：**启用 v0.4 权威文档与三张 map，记录当前稳定工具链；依赖与 lockfile 获开发者批准后再冻结。
-- **CP1：**提炼 transport-agnostic Python application service 与 DTO。
+- **CP0（完成）：**启用 v0.4 权威文档与三张 map，记录当前工具链；依赖与 lockfile 获开发者批准后再冻结。
+- **CP1（完成）：**提炼 transport-agnostic Python application service、DTO 与进程内 opaque handles。
 - **CP2：**现有 Flet UI 全部改走 application service，并重跑 v0.3 测试与 smoke。
-- **CP3：**完成 JSONL dispatcher、协议握手、session-bound opaque token 与 contract tests。
+- **CP3：**完成 JSONL dispatcher、协议握手、opaque handle 的 session binding 与 contract tests。
 - **CP4：**完成 Tauri sidecar 生命周期、串行队列、阻塞错误页和窄 Rust commands。
 - **CP5：**完成 Vue synthetic prototype，确认并冻结视觉方向；进入 Gate A。
 - **CP6：**完成 Paper slice。
