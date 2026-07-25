@@ -169,6 +169,10 @@ class KeikeuService:
         """Return the active path for the in-process Flet adapter only."""
         return self._active_vault
 
+    def reset_transient_handles(self) -> None:
+        """Expire previews, edit snapshots, and migration preflights."""
+        self._tokens.clear()
+
     def _put_token(self, value: object) -> str:
         token = secrets.token_urlsafe(24)
         while token in self._tokens:

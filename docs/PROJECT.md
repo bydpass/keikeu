@@ -13,7 +13,7 @@ Updated: 2026-07-25
 | Phase 7.5 lightweight iOS | Quick-test build complete on an independent branch | Responsive shell and app-sandbox Vault were exercised on `codex/fix-ios-device-readiness`. This is a lightweight iOS version for rapid testing, not a step in the macOS Road sequence. |
 | Phase 8.5 / Road v0.3 preparation | Complete | Documentation reform, authority maps, link gate, browser QA, and bounded Graphify trial completed before Road v0.3 construction. The fresh-agent audit remained unperformed and is not retroactively claimed. |
 | Road v0.3 | Product accepted; design archive complete | Phase 0–7 engineering, CP5 macOS candidate smoke, and CP6 real-author scenarios are complete. Retrieval was faster and clear, external-editor handoff was clear, and no unresolved P0/P1 was reported. The [version archive](archive/road-v0-3/README.md) is read-only; no v0.3 tag, commit, or push is implied. |
-| Road v0.4 | CP2 — Flet adapter rewired | The runnable Flet baseline now routes startup/Vault, Paper, Flashcard, Library, migration, and validated system actions through `KeikeuService`; no Flet module imports `keikeu_core`. CP3 JSONL work is next, while Vue/Tauri manifests remain blocked on stable tooling and dependency approval. |
+| Road v0.4 | CP3 — JSONL dispatcher implemented | Protocol v1 now provides a required hello/session handshake, strict request validation, explicit service mappings, session-bound opaque handles, one-response-per-line stdout, and no mutation retries. Flet remains runnable through the same service. CP4 is blocked on stable tooling and dependency approval. |
 
 Phase 8 product acceptance is complete. Road v0.2 is marked by local annotated tag `v0.2.0` at `d0feac0269a5619f5dbf27c04347ba69c5665b42`; archival remains a separate developer decision. Automated tests, platform smoke, and author acceptance remain distinct evidence.
 
@@ -21,13 +21,21 @@ Phase 7.5 and the macOS Roads are separate tracks. The lightweight iOS test vers
 
 Road v0.3 product decisions, implementation, macOS candidate smoke, and product acceptance are complete. Its detailed SPEC, Planbook, maps, ADRs, and CP6 record are archived. The accepted Python/Flet runtime remains available until a separately approved Road replaces it; archival does not authorize runtime removal or data migration.
 
-Road v0.4 CP0 is committed at `8407941` on `codex/road-v04-cp0`; CP1 is committed at `b718ed8` on `codex/road-v04-cp1`; CP2 is implemented on `codex/road-v04-cp2`. Each checkpoint uses its own `codex/road-v04-cpN` branch created from the previous accepted checkpoint.
+Road v0.4 CP0 is committed at `8407941` on `codex/road-v04-cp0`; CP1 at `b718ed8` on `codex/road-v04-cp1`; CP2 at `42dfa68` on `codex/road-v04-cp2`; CP3 is implemented on `codex/road-v04-cp3`. Each checkpoint uses its own `codex/road-v04-cpN` branch created from the previous accepted checkpoint.
 
 ## Road v0.4 CP2 evidence
 
 - `.venv/bin/python -m pytest -q` — `286 passed` on 2026-07-25.
 - The real Flet runtime rendered an isolated Vault picker for about 10 seconds and exited cleanly on Ctrl-C. This smoke bypassed configured Vault and device state, so it did not touch author data or persistent app state.
 - `src/keikeu_app/` has no direct `keikeu_core` import; builder tests now inject and exercise `KeikeuService`.
+
+## Road v0.4 CP3 boundary
+
+- [`protocol.md`](protocol.md) records every method, params/result shape, known errors, mutation/retry rule, session token, service mapping, and a manual hello example.
+- [`protocol.py`](../src/keikeu_bridge/protocol.py) owns validation and dispatch only; [`sidecar.py`](../src/keikeu_bridge/sidecar.py) owns stdin/stdout only. Neither contains Paper, Vault, Markdown, search, Trash, or migration rules.
+- A repeated `system.hello` changes `session_id` and clears transient preview/edit/preflight handles. EOF exits normally; the dispatcher invokes each mutation once and never retries.
+- Host timeouts, crash ownership, request queueing, response-loss `commit_unknown`, and child cleanup remain CP4 Rust responsibilities.
+- `.venv/bin/python -m pytest -q` completed with `321 passed`; an interactive sidecar hello returned one protocol-v1 response and EOF exited with code `0` on 2026-07-25.
 
 ## Road v0.4 CP0 toolchain observation
 
@@ -80,7 +88,7 @@ README
        └─ CONTEXT ──── human manuals / ADRs / read-only archive
 ```
 
-- **Authority:** [SPEC](SPEC.md) owns Road v0.4 product scope; [RULES](RULES.md) owns engineering, interaction, data, Git, and evidence constraints; the [Planbook](../PLAN_revised.md) owns execution order; the [understanding gate](../RULE_FOR_UNDERSTANDING.md) owns checkpoint teaching; [AGENTS](../AGENTS.md) owns agent procedure. Runtime facts come from [`src/`](../src/) and [`tests/`](../tests/).
+- **Authority:** [SPEC](SPEC.md) owns Road v0.4 product scope; [RULES](RULES.md) owns engineering, interaction, data, Git, and evidence constraints; the [Planbook](../PLAN_revised.md) owns execution order; the [understanding gate](../RULE_FOR_UNDERSTANDING.md) owns checkpoint teaching; [AGENTS](../AGENTS.md) owns agent procedure. The [JSONL protocol](protocol.md) records the active local transport contract. Runtime facts come from [`src/`](../src/) and [`tests/`](../tests/).
 - **Views:** [design](design/design.html), [interaction](design/interaction.html), and [architecture](architecture/architecture.html) describe the approved Road v0.4 target and label the current Flet implementation separately.
 - **Evidence:** [acceptance](acceptance/README.md) links completed Road v0.2 evidence and the archived Road v0.3 CP6 record. The frozen [2cc40ba status snapshot](archive/snapshots/feat-complete-road-v0-3-candidate.html) shows the earlier CP5 boundary. [generated](generated/README.md) remains rebuildable observation; the [cold-start audit](cold_start_report.md) is dated historical evidence, not a claim about the transition pages.
 - **Context:** [ADR 0001](architecture/decisions/0001-document-authority.md) explains the authority split. Road v0.3 ADR 0002/0003 and its design set live in the [version archive](archive/road-v0-3/README.md). [Manual](manual/README.md) teaches people; [archive](archive/README.md) preserves superseded records. Neither overrides authority.
@@ -98,8 +106,8 @@ Application tests must not be inferred from documentation checks. Platform smoke
 
 ## Open gates
 
-1. Start CP3 on `codex/road-v04-cp3` from the accepted CP2 HEAD; add the JSONL dispatcher, handshake, session-bound handles, and contract tests without creating frontend/Rust manifests.
-2. Provide a stable macOS/Xcode environment, then approve exact Node, Rust, Python build, Vue, Tauri, test, and PyInstaller versions before CP4 creates frontend/Rust manifests or lockfiles.
+1. Provide a stable macOS/Xcode environment and approve exact Node, Rust, Python build, Vue, Tauri, test, and PyInstaller versions.
+2. Only then create `codex/road-v04-cp4` from the accepted CP3 HEAD and add the Rust/Tauri host, serial queue, lifecycle, and blocking error page.
 3. Treat tag, push, signing, distribution, and any real-Vault operation as separate developer decisions.
 
 ## Known candidate, not active scope

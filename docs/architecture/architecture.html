@@ -40,10 +40,11 @@
     <header>
       <p class="eyebrow">Road v0.4 · Architecture target</p>
       <h1>替换前端，不重写作者资产与 Python Core</h1>
-      <p class="status">CP2：Flet 已全部接入 Application Service；CP3 才加入 JSONL transport。</p>
+      <p class="status">CP3：Flet 与 JSONL adapter 已共享 Application Service；Rust/Tauri host 尚未建立。</p>
       <nav>
         <a href="../PROJECT.md">当前坐标</a>
         <a href="../SPEC.md">产品边界</a>
+        <a href="../protocol.md">JSONL v1</a>
         <a href="../../PLAN_revised.md">执行计划</a>
         <a href="../../RULE_FOR_UNDERSTANDING.md">理解闸门</a>
         <a href="decisions/0004-vue-tauri-python-sidecar.md">ADR 0004</a>
@@ -57,12 +58,12 @@
     <section>
       <p class="label">Current · accepted and runnable</p>
       <div class="flow current">
-        <div class="node"><strong>Flet UI</strong><span>页面、表单、系统交互</span></div>
+        <div class="node"><strong>Flet / JSONL adapters</strong><span>GUI 调用 / 严格本地消息</span></div>
         <div class="node"><strong>Application service</strong><span>编排、DTO、进程内 opaque handles</span></div>
         <div class="node"><strong>Python Core</strong><span>Paper、Vault、Markdown、Index</span></div>
         <div class="node"><strong>Author assets</strong><span>Markdown / JSON index / Vault</span></div>
       </div>
-      <p><code>src/keikeu_bridge/</code> 已接管 Flet 的启动、Vault、Paper、Flashcard、Library、迁移与系统动作；transport 仍未建立。</p>
+      <p><code>src/keikeu_bridge/</code> 同时提供 transport-neutral service 与 JSONL v1 dispatcher；Flet 不经过 JSONL，未来 Rust host 才经过 JSONL。</p>
     </section>
 
     <section>

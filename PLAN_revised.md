@@ -1,6 +1,6 @@
 # Road v0.4：Vue 3 + Tauri 前端替换
 
-> 状态：**ACTIVE · CP2 Flet adapter complete / CP3 next**
+> 状态：**ACTIVE · CP3 JSONL dispatcher complete / CP4 blocked on stable toolchain and dependency approval**
 > 基线：`84efc7e9b718bf06a4e7a09bcd1443ae81a6f80e`（Road v0.3 已验收并归档）
 > 日期：2026-07-25
 
@@ -127,7 +127,7 @@
 - **CP0（完成）：**启用 v0.4 权威文档与三张 map，记录当前工具链；依赖与 lockfile 获开发者批准后再冻结。
 - **CP1（完成）：**提炼 transport-agnostic Python application service、DTO 与进程内 opaque handles。
 - **CP2（完成）：**现有 Flet UI 全部改走 application service，并重跑 v0.3 测试与 smoke。
-- **CP3：**完成 JSONL dispatcher、协议握手、opaque handle 的 session binding 与 contract tests。
+- **CP3（完成）：**完成 JSONL dispatcher、协议握手、opaque handle 的 session binding 与 contract tests。
 - **CP4：**完成 Tauri sidecar 生命周期、串行队列、阻塞错误页和窄 Rust commands。
 - **CP5：**完成 Vue synthetic prototype，确认并冻结视觉方向；进入 Gate A。
 - **CP6：**完成 Paper slice。
