@@ -49,13 +49,8 @@ __all__ = [
 
 
 def close_top_dialog(page: ft.Page) -> bool:
-    """Close the most recently attached open dialog, if one exists."""
-    for control in reversed(page.overlay):
-        if isinstance(control, ft.AlertDialog) and bool(control.open):
-            control.open = False
-            page.update()
-            return True
-    return False
+    """Close the top dialog through Flet's managed dialog stack."""
+    return page.pop_dialog() is not None
 
 
 def _field_style() -> dict[str, object]:

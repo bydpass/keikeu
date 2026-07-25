@@ -56,6 +56,7 @@ class FakePage:
     def __init__(self) -> None:
         self.controls: list[object] = []
         self.overlay: list[object] = []
+        self.dialogs: list[ft.AlertDialog] = []
         self.services: list[object] = []
         self.scroll = ft.ScrollMode.AUTO
         self.update_count = 0
@@ -71,6 +72,21 @@ class FakePage:
 
     def update(self) -> None:
         self.update_count += 1
+
+    def show_dialog(self, dialog: ft.AlertDialog) -> None:
+        if dialog in self.dialogs:
+            raise RuntimeError("Dialog is already opened")
+        dialog.open = True
+        self.dialogs.append(dialog)
+        self.update()
+
+    def pop_dialog(self) -> ft.AlertDialog | None:
+        for dialog in reversed(self.dialogs):
+            if dialog.open:
+                dialog.open = False
+                self.update()
+                return dialog
+        return None
 
     def run_task(self, handler: object, *args: object) -> None:
         self.tasks.append((handler, args))
@@ -1132,10 +1148,10 @@ def test_library_rename_to_existing_folder_requires_merge_confirmation(tmp_path)
     ]
 
     _popup_item(menu, "重命名").on_click(None)
-    rename_dialog = page.overlay[-1]
+    rename_dialog = page.dialogs[-1]
     _text_field(rename_dialog, "文件夹新名称").value = "B"
     _button(rename_dialog, "重命名").on_click(None)
-    merge_dialog = page.overlay[-1]
+    merge_dialog = page.dialogs[-1]
     assert "合并同名文件夹" in _texts(merge_dialog)
     _button(merge_dialog, "确认合并").on_click(None)
 
@@ -1152,10 +1168,10 @@ def test_library_empty_folder_merge_reports_success(tmp_path):
     root = build_library_page(_ctx(page, tmp_path))
 
     _popup_item(_control_by_key(root, "folder-menu-A"), "重命名").on_click(None)
-    rename_dialog = page.overlay[-1]
+    rename_dialog = page.dialogs[-1]
     _text_field(rename_dialog, "文件夹新名称").value = "B"
     _button(rename_dialog, "重命名").on_click(None)
-    _button(page.overlay[-1], "确认合并").on_click(None)
+    _button(page.dialogs[-1], "确认合并").on_click(None)
 
     assert not (tmp_path / "cache" / "A").exists()
     assert "合并文件夹：空文件夹已合并" in _texts(root)
@@ -1224,7 +1240,7 @@ def test_library_permanent_delete_threshold_requires_exact_execute(tmp_path):
     root = build_library_page(_ctx(page, tmp_path), initial_scope="trash")
 
     _button(root, "清空 Trash").on_click(None)
-    dialog = page.overlay[-1]
+    dialog = page.dialogs[-1]
     execute = _text_field(dialog, "输入 execute")
     execute.value = " EXECUTE "
     _button(dialog, "永久删除").on_click(None)
@@ -1248,7 +1264,7 @@ def test_library_single_permanent_delete_uses_confirmation_without_execute(tmp_p
     root = build_library_page(_ctx(page, tmp_path), initial_scope="trash")
 
     _button(root, "永久删除").on_click(None)
-    dialog = page.overlay[-1]
+    dialog = page.dialogs[-1]
 
     assert any(
         "Named (K-20260714-001)" in text for text in _texts(dialog)
@@ -1343,11 +1359,33 @@ def test_escape_closes_the_top_library_dialog(tmp_path):
     init_vault(tmp_path)
     page = FakePage()
     build_library_page(_ctx(page, tmp_path))
-    first = ft.AlertDialog(open=True)
-    second = ft.AlertDialog(open=True)
-    page.overlay.extend([first, second])
+    first = ft.AlertDialog()
+    second = ft.AlertDialog()
+    page.show_dialog(first)
+    page.show_dialog(second)
 
     page.on_keyboard_event(SimpleNamespace(key="Escape", meta=False))
 
     assert first.open is True
     assert second.open is False
+
+
+def test_library_creates_two_folders_with_managed_dialogs(tmp_path):
+    init_vault(tmp_path)
+    page = FakePage()
+    root = build_library_page(_ctx(page, tmp_path))
+
+    _button(root, "新建文件夹").on_click(None)
+    first_dialog = page.dialogs[-1]
+    _text_field(first_dialog, "新文件夹名称").value = "First"
+    _button(first_dialog, "创建").on_click(None)
+
+    _button(root, "新建文件夹").on_click(None)
+    second_dialog = page.dialogs[-1]
+    _text_field(second_dialog, "新文件夹名称").value = "Second"
+    _button(second_dialog, "创建").on_click(None)
+
+    assert (tmp_path / "cache" / "First").is_dir()
+    assert (tmp_path / "cache" / "Second").is_dir()
+    assert first_dialog.open is False
+    assert second_dialog.open is False

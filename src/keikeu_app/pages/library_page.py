@@ -114,14 +114,11 @@ def _folder_from_scope(scope: str) -> str | None:
 
 
 def _show_dialog(page: ft.Page, dialog: ft.AlertDialog) -> None:
-    page.overlay.append(dialog)
-    dialog.open = True
-    page.update()
+    page.show_dialog(dialog)
 
 
-def _close_dialog(page: ft.Page, dialog: ft.AlertDialog) -> None:
-    dialog.open = False
-    page.update()
+def _close_dialog(page: ft.Page) -> None:
+    page.pop_dialog()
 
 
 def _result_summary(action: str, results: Iterable[PathOperationResult]) -> str:
@@ -334,10 +331,10 @@ def build_library_page(
                             permanently_delete_folder(ctx.vault, empty_folder)
                         )
         except (OSError, ValueError) as ex:
-            _close_dialog(page, dialog)
+            _close_dialog(page)
             _recover_from_stale_action("永久删除", ex)
             return
-        _close_dialog(page, dialog)
+        _close_dialog(page)
         _refresh_after_mutation(_result_summary("永久删除", deletion_results))
 
     def _confirm_permanent_delete(
@@ -397,7 +394,7 @@ def build_library_page(
         dialog.actions = [
             ft.TextButton(
                 content=ft.Text("取消"),
-                on_click=lambda _e: _close_dialog(page, dialog),
+                on_click=lambda _e: _close_dialog(page),
             ),
             danger_button("永久删除", confirm),
         ]
@@ -425,14 +422,14 @@ def build_library_page(
                 error.value = f"无法新建文件夹：{ex}"
                 page.update()
                 return
-            _close_dialog(page, dialog)
+            _close_dialog(page)
             _set_operation("文件夹已创建")
             refresh()
 
         dialog.actions = [
             ft.TextButton(
                 content=ft.Text("取消"),
-                on_click=lambda _e: _close_dialog(page, dialog),
+                on_click=lambda _e: _close_dialog(page),
             ),
             ft.Button(content=ft.Text("创建"), on_click=create),
         ]
@@ -441,7 +438,6 @@ def build_library_page(
     def _show_merge_confirmation(
         source: str,
         destination: str,
-        parent_dialog: ft.AlertDialog,
     ) -> None:
         dialog = ft.AlertDialog(
             modal=True,
@@ -457,13 +453,13 @@ def build_library_page(
             try:
                 merge_results = merge_folders(ctx.vault, source, destination)
             except (OSError, ValueError) as ex:
-                _close_dialog(page, dialog)
-                parent_dialog.open = False
+                _close_dialog(page)
+                _close_dialog(page)
                 _recover_from_stale_action("合并文件夹", ex)
                 return
             _cancel_selection_for_scope_change()
-            _close_dialog(page, dialog)
-            parent_dialog.open = False
+            _close_dialog(page)
+            _close_dialog(page)
             message = (
                 _result_summary("合并文件夹", merge_results)
                 if merge_results
@@ -474,7 +470,7 @@ def build_library_page(
         dialog.actions = [
             ft.TextButton(
                 content=ft.Text("取消"),
-                on_click=lambda _e: _close_dialog(page, dialog),
+                on_click=lambda _e: _close_dialog(page),
             ),
             ft.Button(content=ft.Text("确认合并"), on_click=merge),
         ]
@@ -506,7 +502,7 @@ def build_library_page(
                 None,
             )
             if existing is not None:
-                _show_merge_confirmation(folder, existing, dialog)
+                _show_merge_confirmation(folder, existing)
                 return
             try:
                 rename_folder(ctx.vault, folder, requested)
@@ -515,14 +511,14 @@ def build_library_page(
                 page.update()
                 return
             _cancel_selection_for_scope_change()
-            _close_dialog(page, dialog)
+            _close_dialog(page)
             _set_operation("文件夹已重命名")
             refresh()
 
         dialog.actions = [
             ft.TextButton(
                 content=ft.Text("取消"),
-                on_click=lambda _e: _close_dialog(page, dialog),
+                on_click=lambda _e: _close_dialog(page),
             ),
             ft.Button(content=ft.Text("重命名"), on_click=rename),
         ]
