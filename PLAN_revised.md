@@ -1,6 +1,6 @@
 # Road v0.4：Vue 3 + Tauri 前端替换
 
-> 状态：**ACTIVE · CP3 JSONL dispatcher complete / CP4 blocked on stable toolchain and dependency approval**
+> 状态：**ACTIVE · CP4 Tauri host complete / CP5 next**
 > 基线：`84efc7e9b718bf06a4e7a09bcd1443ae81a6f80e`（Road v0.3 已验收并归档）
 > 日期：2026-07-25
 
@@ -27,7 +27,8 @@
 
 ### CP0 依赖批准候选
 
-以下是 2026-07-25 查询到的稳定候选，不代表已经批准或写入仓库。稳定 macOS/Xcode 可用并经开发者确认前，不创建 manifest、lockfile 或脚手架。
+以下精确版本已由开发者于 2026-07-25 批准。当前 macOS 27 / Xcode 27
+beta 仅获准用于 CP4–CP12 工程构建；CP13 兼容验证不受该例外替代。
 
 | 包与精确候选 | 用途 / 类别 | 为什么需要；更轻替代 | 移除范围；进入 `.app` |
 | --- | --- | --- | --- |
@@ -128,7 +129,7 @@
 - **CP1（完成）：**提炼 transport-agnostic Python application service、DTO 与进程内 opaque handles。
 - **CP2（完成）：**现有 Flet UI 全部改走 application service，并重跑 v0.3 测试与 smoke。
 - **CP3（完成）：**完成 JSONL dispatcher、协议握手、opaque handle 的 session binding 与 contract tests。
-- **CP4：**完成 Tauri sidecar 生命周期、串行队列、阻塞错误页和窄 Rust commands。
+- **CP4（完成）：**完成 Tauri sidecar 生命周期、串行队列、阻塞错误页和窄 Rust commands。
 - **CP5：**完成 Vue synthetic prototype，确认并冻结视觉方向；进入 Gate A。
 - **CP6：**完成 Paper slice。
 - **CP7：**完成 Flashcard slice。
@@ -167,10 +168,17 @@ npm --prefix frontend run tauri:build
 git diff --check
 ```
 
+当前批准的 macOS 27 / Xcode 27 beta 工作站存在一个非候选构建限制：
+Rust 1.88 在 Tauri 注入 `MACOSX_DEPLOYMENT_TARGET=13.3` 时无法加载 release
+proc-macro。CP4 用一次性的 `minimumSystemVersion=11.0` CLI config override
+验证了 arm64 bundle 与内嵌 sidecar；仓库正式配置仍为 `13.3`，标准
+`tauri:build` 未通过，因此该临时 bundle 只算 CP4 工程 smoke，不算 CP12
+production bundle 或 CP13 兼容性证据。
+
 ## Assumptions
 
 - Road 名称为 v0.4；产品范围仍是 v0.3，不新增 AI、正文编辑、同步、账户、数据库或文件监听器。
-- npm、JavaScript、单一 light theme、arm64 和 `app.keikeu.desktop` 已锁定；Node、Rust、Python 与构建依赖必须使用项目内版本文件和 lock 精确固定。
+- npm、JavaScript、单一 light theme、arm64 和 `app.keikeu.desktop` 已锁定；Node、Rust、Python 与构建依赖必须使用项目内版本文件和 lock 精确固定。CP4 的 Rust/Cargo 锁定版本为 `1.88.0`。
 - `.app` 未签名、未公证、未启用 App Sandbox；Home containment 仍由 Python Core 强制执行。Tauri 可生成 macOS app bundle，但签名与 entitlement 是独立发行工作。([Tauri macOS bundle](https://v2.tauri.app/distribute/macos-application-bundle/))
 - 用户会提供 arm64 macOS 13.3 构建/验证环境；缺少该环境时，架构与功能工程可以推进，但 13.3 兼容 gate 不得标为完成，也不得对外宣称支持 13.3+。
 - Road v0.4 从干净的 Road v0.3 归档基线建立；后续 checkpoint 若出现既有 dirty 文件，仍按 `docs/RULES.md` Git gate 逐项确认。

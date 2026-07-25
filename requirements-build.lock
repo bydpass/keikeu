@@ -1,0 +1,7 @@
+# Resolved for CP4 on Python 3.13.14 / macOS arm64.
+altgraph==0.17.5
+macholib==1.16.4
+packaging==26.2
+PyInstaller==6.21.0
+pyinstaller-hooks-contrib==2026.6
+setuptools==83.0.0

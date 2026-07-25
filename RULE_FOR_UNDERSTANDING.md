@@ -301,7 +301,7 @@ Unknown error
 
 ---
 
-## 14. 工具链只使用稳定版并精确锁定
+## 14. 工具链精确锁定；Beta 例外不得冒充兼容证据
 
 必须提交并维护：
 
@@ -325,7 +325,7 @@ Xcode
 target triple
 ```
 
-禁止在生产开发环境中使用 beta：
+默认禁止在生产开发环境中使用 beta：
 
 * macOS
 * Xcode
@@ -334,7 +334,11 @@ target triple
 * Tauri prerelease
 * PyInstaller prerelease
 
-实验性工具只能在隔离分支和隔离环境使用，不得成为 Road v0.4 的构建前提。
+实验性工具只能在隔离分支和隔离环境使用，不得成为 Road v0.4 的发布
+兼容性证据。开发者于 2026-07-25 明确批准当前 macOS 27 / Xcode 27 beta
+工作站用于 CP4–CP12 工程构建；该窄例外记录在
+[`ADR-0005`](docs/architecture/decisions/0005-beta-toolchain-engineering-exception.md)，
+不豁免 CP13 的 macOS 13.3+ 构建与启动验证。
 
 ---
 
@@ -437,7 +441,7 @@ Road v0.4 未明确包含的内容一律不顺手加入：
 * Flet 在 Gate A 前失去可运行状态
 * 测试失败被标记为“与本次无关”后继续推进
 * 为赶进度跳过概念说明、回滚点或 smoke
-* 构建只能依赖未锁定或 beta 工具链
+* 构建只能依赖未锁定或未经开发者明确批准的 beta 工具链
 * Agent 用“以后再解释”处理当前黑箱
 
 ---

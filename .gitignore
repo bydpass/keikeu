@@ -25,3 +25,10 @@ build/
 *.app
 *.exe
 *.dmg
+
+# Road v0.4 desktop build outputs
+frontend/node_modules/
+frontend/dist/
+frontend/src-tauri/target/
+frontend/src-tauri/gen/
+frontend/src-tauri/binaries/*

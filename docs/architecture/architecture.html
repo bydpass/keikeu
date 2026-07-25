@@ -40,7 +40,7 @@
     <header>
       <p class="eyebrow">Road v0.4 · Architecture target</p>
       <h1>替换前端，不重写作者资产与 Python Core</h1>
-      <p class="status">CP3：Flet 与 JSONL adapter 已共享 Application Service；Rust/Tauri host 尚未建立。</p>
+      <p class="status">CP4：Rust/Tauri host、串行队列、sidecar 生命周期与阻塞运行闸门已建立；Flet 继续作为回退基线。</p>
       <nav>
         <a href="../PROJECT.md">当前坐标</a>
         <a href="../SPEC.md">产品边界</a>
@@ -63,11 +63,11 @@
         <div class="node"><strong>Python Core</strong><span>Paper、Vault、Markdown、Index</span></div>
         <div class="node"><strong>Author assets</strong><span>Markdown / JSON index / Vault</span></div>
       </div>
-      <p><code>src/keikeu_bridge/</code> 同时提供 transport-neutral service 与 JSONL v1 dispatcher；Flet 不经过 JSONL，未来 Rust host 才经过 JSONL。</p>
+      <p><code>src/keikeu_bridge/</code> 同时提供 transport-neutral service 与 JSONL v1 dispatcher；Flet 不经过 JSONL，Rust host 通过 JSONL 调用同一 service。</p>
     </section>
 
     <section>
-      <p class="label">Target · built one boundary at a time</p>
+      <p class="label">Target · host boundary implemented, business slices next</p>
       <div class="flow target">
         <div class="node"><strong>Vue 3</strong><span>可见状态与交互</span></div>
         <div class="node"><strong>Tauri</strong><span>窗口与生命周期</span></div>

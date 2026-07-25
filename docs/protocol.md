@@ -1,7 +1,7 @@
 # Road v0.4 JSONL Protocol v1
 
-> Current state: CP3 Python dispatcher. Rust/Tauri ownership, timeouts, crash
-> recovery, and `commit_unknown` are CP4 work.
+> Current state: CP4 Python dispatcher plus Rust/Tauri host. Vue business slices
+> begin at CP6.
 
 The sidecar reads one UTF-8 JSON object per stdin line and writes exactly one
 compact JSON response per stdout line. It does not use HTTP, ports, sockets, or
@@ -91,11 +91,24 @@ first if the response was lost.
 the returned path immediately for the requested `open` or `reveal`; it must not
 forward the absolute path to Vue or expose a general shell/open API.
 
+## Rust host
+
+- One Rust worker owns the child and serializes every request. Request IDs are
+  monotonic within a host process.
+- Startup and explicit restart perform `system.hello`; business requests remain
+  blocked until it succeeds. Restart creates a new protocol session.
+- Read, mutation, long-mutation, and hello timeouts are 20, 60, 600, and 10
+  seconds respectively.
+- Public bridge requests use the documented method allow-list.
+  `system.resolve_target` stays internal to validated Rust open/reveal.
+- The WebView capability grants no shell, dialog, or opener plugin permission.
+  Vue can invoke only the registered narrow commands.
+
 ## Lost responses and shutdown
 
 The Python dispatcher calls every method once and never retries. EOF ends the
-sidecar with exit code `0`. CP4 must own child crash detection, read timeout,
-request serialization, and response matching.
+sidecar with exit code `0`. Rust owns child crash detection, timeouts, request
+serialization, response matching, restart, and exit cleanup.
 
 If Rust wrote a mutation and then lost the response, it cannot know whether the
 disk commit happened. It must return `commit_unknown`, must not automatically

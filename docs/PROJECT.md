@@ -13,7 +13,7 @@ Updated: 2026-07-25
 | Phase 7.5 lightweight iOS | Quick-test build complete on an independent branch | Responsive shell and app-sandbox Vault were exercised on `codex/fix-ios-device-readiness`. This is a lightweight iOS version for rapid testing, not a step in the macOS Road sequence. |
 | Phase 8.5 / Road v0.3 preparation | Complete | Documentation reform, authority maps, link gate, browser QA, and bounded Graphify trial completed before Road v0.3 construction. The fresh-agent audit remained unperformed and is not retroactively claimed. |
 | Road v0.3 | Product accepted; design archive complete | Phase 0–7 engineering, CP5 macOS candidate smoke, and CP6 real-author scenarios are complete. Retrieval was faster and clear, external-editor handoff was clear, and no unresolved P0/P1 was reported. The [version archive](archive/road-v0-3/README.md) is read-only; no v0.3 tag, commit, or push is implied. |
-| Road v0.4 | CP3 — JSONL dispatcher implemented | Protocol v1 now provides a required hello/session handshake, strict request validation, explicit service mappings, session-bound opaque handles, one-response-per-line stdout, and no mutation retries. Flet remains runnable through the same service. CP4 is blocked on stable tooling and dependency approval. |
+| Road v0.4 | CP4 — Tauri host complete; CP5 next | The Rust-owned host now starts and owns the packaged Python sidecar, handshakes before becoming ready, serializes requests, blocks on uncertain transport state, and exposes only five narrow Tauri commands. Python Core and Flet remain runnable. |
 
 Phase 8 product acceptance is complete. Road v0.2 is marked by local annotated tag `v0.2.0` at `d0feac0269a5619f5dbf27c04347ba69c5665b42`; archival remains a separate developer decision. Automated tests, platform smoke, and author acceptance remain distinct evidence.
 
@@ -37,19 +37,47 @@ Road v0.4 CP0 is committed at `8407941` on `codex/road-v04-cp0`; CP1 at `b718ed8
 - Host timeouts, crash ownership, request queueing, response-loss `commit_unknown`, and child cleanup remain CP4 Rust responsibilities.
 - `.venv/bin/python -m pytest -q` completed with `321 passed`; an interactive sidecar hello returned one protocol-v1 response and EOF exited with code `0` on 2026-07-25.
 
-## Road v0.4 CP0 toolchain observation
+## Road v0.4 CP4 evidence
 
-Observed on 2026-07-25; these are facts, not an approved lock:
+- Rust owns one sidecar behind a single worker queue. Startup and manual restart
+  perform `system.hello`; mutation response loss becomes `commit_unknown` and
+  is never retried.
+- Vue receives only runtime status, structured bridge results, a directory
+  picker, and validated open/reveal. Its capability grants no shell, dialog, or
+  opener plugin permission; Rust exposes five explicit commands.
+- `cargo test` completed with `10 passed`; Python remained at `321 passed`;
+  Vitest completed with `2 passed`; Vite and documentation checks passed.
+- A PyInstaller arm64 sidecar returned a protocol-v1 hello. Tauri dev and a
+  provisional arm64 `.app` each started the packaged sidecar, and both host and
+  child exited without residue after the smoke.
+- `npm audit --omit=dev` reported zero production vulnerabilities. The complete
+  development tree reports six high findings through the Vue test-utils
+  formatting dependency chain; approved direct versions and lockfiles were not
+  silently changed.
+- The tracked app minimum remains macOS `13.3`. On the approved Xcode 27 beta
+  workstation, standard release compilation at that deployment target fails to
+  load Rust 1.88 proc-macros (`E0463`). A one-run `11.0` config override proved
+  bundle assembly only; that `.app` is not production or CP13 evidence.
+
+## Road v0.4 toolchain
+
+CP0 observed the workstation before approval:
 
 | Tool | Observed | CP0 judgment |
 | --- | --- | --- |
 | Node / npm | `22.23.1` / `10.9.8` | Stable candidate; not locked |
-| Rust / Cargo | `1.83.0` / `1.83.0` | Stable candidate; host `aarch64-apple-darwin`; not locked |
+| Rust / Cargo | `1.83.0` / `1.83.0` | Stable candidate; host `aarch64-apple-darwin`; insufficient for the resolved dependency graph |
 | Python / PyInstaller | `3.13.14` / not installed | Python candidate only; build dependency not approved |
 | macOS | `27.0 (26A5388g)`, arm64 | Beta; prohibited for the production Road environment |
 | Xcode | `27.0 (27A5194q)` from `Xcode-beta.app` | Beta; no stable Xcode installation found |
 
-No version file, manifest, lockfile, package, or selected developer directory changed. CP0 cannot freeze the production toolchain until a stable macOS/Xcode environment is available or the developer explicitly revises the Road rule.
+The developer approved exact Road v0.4 dependencies and the current beta
+macOS/Xcode workstation for CP4–CP12 engineering on 2026-07-25. This narrow
+exception is recorded in [ADR-0005](architecture/decisions/0005-beta-toolchain-engineering-exception.md);
+it does not satisfy the CP13 macOS 13.3+ compatibility gate. CP4 now locks
+Node/npm `22.23.1`/`10.9.8`, Rust/Cargo `1.88.0`/`1.88.0`,
+Python/PyInstaller `3.13.14`/`6.21.0`, and target
+`aarch64-apple-darwin`.
 
 ## Product flow
 
@@ -106,9 +134,13 @@ Application tests must not be inferred from documentation checks. Platform smoke
 
 ## Open gates
 
-1. Provide a stable macOS/Xcode environment and approve exact Node, Rust, Python build, Vue, Tauri, test, and PyInstaller versions.
-2. Only then create `codex/road-v04-cp4` from the accepted CP3 HEAD and add the Rust/Tauri host, serial queue, lifecycle, and blocking error page.
-3. Treat tag, push, signing, distribution, and any real-Vault operation as separate developer decisions.
+1. Commit CP4 on `codex/road-v04-cp4`, then create CP5 only from that HEAD.
+2. Build the CP5 synthetic Vue prototype without reading or mutating a real
+   Vault, and obtain the developer's visual-direction acceptance.
+3. Keep CP13 macOS 13.3+ compatibility separate from beta-workstation
+   engineering evidence.
+4. Treat tag, push, signing, distribution, and any real-Vault operation as
+   separate developer decisions.
 
 ## Known candidate, not active scope
 
