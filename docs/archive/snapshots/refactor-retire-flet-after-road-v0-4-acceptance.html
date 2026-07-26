@@ -1,0 +1,937 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>keikeu Road v0.4 · 完整施工记录</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --canvas: #eceae4;
+      --paper: #fffefa;
+      --ink: #1e2523;
+      --muted: #646b68;
+      --accent: #2e5d57;
+      --accent-soft: #dfe9e6;
+      --signal: #9a4e3f;
+      --signal-soft: #f4e9e5;
+      --rule: #c8c9c2;
+      --success: #2f6b50;
+      --success-soft: #e2eee7;
+      --code: #242a28;
+      --code-ink: #f5f2e9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-padding-top: 52px; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--canvas);
+      line-height: 1.62;
+    }
+
+    a { color: var(--accent); text-underline-offset: 3px; }
+    a:hover { color: var(--signal); }
+    a:focus-visible, summary:focus-visible {
+      outline: 3px solid var(--signal);
+      outline-offset: 3px;
+    }
+
+    code, .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      overflow-wrap: anywhere;
+    }
+
+    code {
+      padding: .08em .3em;
+      background: #f0efe9;
+      border: 1px solid #dedfd8;
+      font-size: .9em;
+    }
+
+    h1, h2, h3 {
+      font-family: Georgia, "Times New Roman", serif;
+      letter-spacing: -.025em;
+      line-height: 1.08;
+    }
+
+    h1 {
+      max-width: 880px;
+      margin: 12px 0 18px;
+      font-size: clamp(2.7rem, 7vw, 6.8rem);
+      font-weight: 500;
+    }
+
+    h2 { margin: 0 0 20px; font-size: clamp(1.9rem, 4vw, 3.2rem); }
+    h3 { margin: 0 0 10px; font-size: 1.35rem; }
+    p { margin: 0 0 14px; }
+
+    .archive-bar {
+      position: relative;
+      z-index: 3;
+      padding: 11px 18px;
+      color: var(--paper);
+      background: var(--signal);
+      font: 700 .75rem/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: .07em;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 230px minmax(0, 1fr);
+      width: min(1480px, 100%);
+      margin: 0 auto;
+    }
+
+    aside {
+      position: sticky;
+      top: 0;
+      align-self: start;
+      height: 100vh;
+      padding: 32px 24px;
+      color: var(--paper);
+      background: var(--ink);
+      overflow-y: auto;
+    }
+
+    aside .mark {
+      display: inline-block;
+      margin-bottom: 26px;
+      padding: 8px 10px;
+      color: var(--ink);
+      background: var(--paper);
+      font: 800 .82rem/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    aside p { color: #bfc7c3; font-size: .85rem; }
+
+    aside nav {
+      display: grid;
+      gap: 2px;
+      margin: 30px 0;
+    }
+
+    aside nav a {
+      padding: 8px 10px;
+      color: #e6ebe8;
+      border-left: 2px solid transparent;
+      text-decoration: none;
+    }
+
+    aside nav a:hover {
+      color: var(--paper);
+      border-left-color: var(--signal);
+      background: #2b3330;
+    }
+
+    aside .boundary {
+      padding-top: 18px;
+      border-top: 1px solid #47504d;
+    }
+
+    main {
+      min-width: 0;
+      padding: 34px clamp(18px, 5vw, 72px) 76px;
+    }
+
+    .hero, section {
+      max-width: 1120px;
+      margin: 0 auto 18px;
+      padding: clamp(24px, 4vw, 48px);
+      background: var(--paper);
+      border: 1px solid var(--rule);
+    }
+
+    .hero {
+      min-height: 620px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border-top: 5px solid var(--signal);
+    }
+
+    .eyebrow, .label {
+      color: var(--accent);
+      font-size: .74rem;
+      font-weight: 800;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    .lede {
+      max-width: 820px;
+      color: var(--muted);
+      font-size: clamp(1.05rem, 2vw, 1.35rem);
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      margin-top: 14px;
+      padding: 7px 11px;
+      color: var(--success);
+      background: var(--success-soft);
+      border-left: 3px solid var(--success);
+      font-weight: 750;
+    }
+
+    .status::before {
+      width: 8px;
+      height: 8px;
+      content: "";
+      background: currentColor;
+      border-radius: 50%;
+    }
+
+    .hero-meta, .stats, .two, .three, .detail-grid, .artifact-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .hero-meta { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 44px; }
+    .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .two, .detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .artifact-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .metric, .card, .artifact {
+      min-width: 0;
+      padding: 18px;
+      background: #f5f4ef;
+      border-top: 3px solid var(--accent);
+    }
+
+    .metric strong {
+      display: block;
+      margin-bottom: 2px;
+      font: 500 clamp(1.7rem, 4vw, 3.2rem)/1 Georgia, "Times New Roman", serif;
+    }
+
+    .metric span, .card p, .artifact p { color: var(--muted); }
+    .card p:last-child, .artifact p:last-child { margin-bottom: 0; }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 8px;
+      margin: 24px 0;
+    }
+
+    .flow-node {
+      min-width: 0;
+      padding: 16px 12px;
+      background: #f3f2ed;
+      border-top: 3px solid var(--accent);
+    }
+
+    .flow-node strong, .flow-node span { display: block; }
+    .flow-node span {
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: .82rem;
+      overflow-wrap: anywhere;
+    }
+
+    .before {
+      padding: 18px;
+      color: var(--muted);
+      background: #f5f4ef;
+      border-left: 3px solid var(--rule);
+    }
+
+    .callout {
+      margin-top: 18px;
+      padding: 18px 20px;
+      background: var(--signal-soft);
+      border-left: 4px solid var(--signal);
+    }
+
+    .stage {
+      margin-top: 32px;
+      padding-left: 20px;
+      border-left: 3px solid var(--accent);
+    }
+
+    .stage-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 18px;
+      margin: 0 0 14px;
+    }
+
+    .stage-head h3 { font-size: 1.75rem; }
+    .stage-head p { color: var(--muted); font-size: .86rem; }
+
+    details {
+      margin-bottom: 8px;
+      background: #fbfaf6;
+      border: 1px solid var(--rule);
+    }
+
+    summary {
+      display: grid;
+      grid-template-columns: 52px minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      padding: 16px;
+      cursor: pointer;
+      list-style: none;
+    }
+
+    summary::-webkit-details-marker { display: none; }
+    summary::after {
+      grid-column: 3;
+      grid-row: 1;
+      align-self: center;
+      margin-left: 8px;
+      color: var(--accent);
+      content: "+";
+      font: 500 1.4rem/1 Georgia, serif;
+    }
+
+    details[open] summary::after { content: "−"; }
+
+    .cp {
+      display: grid;
+      place-items: center;
+      width: 46px;
+      height: 46px;
+      color: var(--paper);
+      background: var(--ink);
+      font: 800 .78rem/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    summary strong { display: block; margin-bottom: 3px; }
+    summary small { display: block; color: var(--muted); }
+
+    .done {
+      grid-column: 3;
+      grid-row: 1;
+      margin-right: 22px;
+      color: var(--success);
+      font-size: .76rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .detail {
+      padding: 4px 18px 20px 82px;
+      border-top: 1px solid var(--rule);
+    }
+
+    .detail h4 {
+      margin: 14px 0 5px;
+      color: var(--accent);
+      font-size: .76rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .detail ul { margin: 6px 0 0; padding-left: 1.2rem; }
+    .detail li + li { margin-top: 5px; }
+
+    .commit {
+      display: inline-block;
+      margin: 4px 5px 0 0;
+      padding: 4px 7px;
+      color: var(--code-ink);
+      background: var(--code);
+      font: .76rem/1.35 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .92rem;
+    }
+
+    th, td {
+      padding: 12px 10px;
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    th {
+      color: var(--accent);
+      font-size: .72rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    td:first-child { font-weight: 750; }
+
+    .pass { color: var(--success); font-weight: 750; }
+    .boundary-text { color: var(--signal); font-weight: 750; }
+
+    .source-list {
+      columns: 2;
+      column-gap: 42px;
+      padding-left: 1.2rem;
+    }
+
+    .source-list li { break-inside: avoid; margin-bottom: 8px; }
+
+    footer {
+      max-width: 1120px;
+      margin: 34px auto 0;
+      color: var(--muted);
+      font-size: .85rem;
+    }
+
+    @media (max-width: 980px) {
+      .shell { grid-template-columns: 1fr; }
+      aside {
+        position: static;
+        width: 100%;
+        height: auto;
+        padding: 18px;
+      }
+      aside .mark { margin: 0 14px 0 0; }
+      aside nav {
+        display: flex;
+        flex-wrap: wrap;
+        margin: 14px 0 0;
+      }
+      aside .boundary { display: none; }
+      main { padding-top: 18px; }
+      .flow { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 720px) {
+      .hero { min-height: auto; }
+      .hero-meta, .stats, .two, .three, .detail-grid, .artifact-grid {
+        grid-template-columns: 1fr;
+      }
+      .flow { grid-template-columns: 1fr; }
+      .flow-node { border-top: 0; border-left: 3px solid var(--accent); }
+      .stage { padding-left: 10px; }
+      summary { grid-template-columns: 46px minmax(0, 1fr) auto; gap: 10px; }
+      .done { display: none; }
+      .detail { padding: 4px 14px 18px; }
+      .source-list { columns: 1; }
+      table, tbody, tr, td { display: block; }
+      thead { display: none; }
+      tr { padding: 10px 0; border-bottom: 1px solid var(--rule); }
+      td { padding: 3px 0; border: 0; }
+      td::before {
+        display: block;
+        color: var(--muted);
+        content: attr(data-label);
+        font-size: .7rem;
+        font-weight: 750;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+      }
+    }
+
+    @media print {
+      .archive-bar, aside { position: static; }
+      .shell { display: block; }
+      aside nav, aside .boundary { display: none; }
+      main { padding: 0; }
+      .hero, section { break-inside: avoid; border-color: #aaa; }
+      details { break-inside: avoid; }
+      details > .detail { display: block; }
+      a { color: inherit; }
+    }
+  </style>
+</head>
+<body>
+  <div class="archive-bar">
+    ARCHIVED · READ ONLY · Snapshot of 9389f9a4e5d71fcf28fc10283c77d47400cd9bf8 · Current status lives in docs/PROJECT.md
+  </div>
+
+  <div class="shell">
+    <aside>
+      <span class="mark">K / ROAD 04</span>
+      <p>Vue / Tauri frontend replacement<br>2026-07-25 → 2026-07-26</p>
+      <nav aria-label="页面目录">
+        <a href="#overview">总览</a>
+        <a href="#architecture">架构替换</a>
+        <a href="#timeline">CP0–CP14</a>
+        <a href="#gates">验收闸门</a>
+        <a href="#incidents">问题与修复</a>
+        <a href="#evidence">证据账本</a>
+        <a href="#final-state">最终状态</a>
+        <a href="#sources">原始记录</a>
+      </nav>
+      <div class="boundary">
+        <p><strong>页面边界</strong></p>
+        <p>这是绑定 CP14 commit 的施工快照，不定义当前产品行为，也不代表 tag、发布、签名或完整 Road 归档。</p>
+        <p><a href="../../PROJECT.md">返回当前 PROJECT</a></p>
+      </div>
+    </aside>
+
+    <main>
+      <header class="hero" id="overview">
+        <div>
+          <p class="eyebrow">keikeu · Road v0.4 · construction snapshot</p>
+          <h1>换掉前端，保住作者资产。</h1>
+          <p class="lede">
+            Road v0.4 把已验收的 Python/Flet 桌面壳逐层替换为
+            Vue 3、Tauri/Rust 与本地 JSONL Python sidecar。施工期间先抽离
+            Application Service，再迁移纵向业务切片，最后分别通过功能、视觉、
+            产品、兼容性和退场闸门。Paper Markdown、Index、Vault 与 Python Core
+            没有被重写。
+          </p>
+          <span class="status">CP0–CP14 全部验收 · Road v0.4 完成</span>
+        </div>
+
+        <div class="hero-meta">
+          <div class="metric"><strong>15</strong><span>独立 checkpoints</span></div>
+          <div class="metric"><strong>18</strong><span>Road commits</span></div>
+          <div class="metric"><strong>81</strong><span>相对 v0.3 基线变更文件</span></div>
+          <div class="metric"><strong>15.7+</strong><span>可证明的最低 macOS</span></div>
+        </div>
+      </header>
+
+      <section>
+        <p class="label">Scope · What changed / what did not</p>
+        <h2>施工目标很窄：只替换桌面呈现与本地调用边界</h2>
+        <div class="two">
+          <article class="card">
+            <h3>被替换</h3>
+            <p>Flet 页面、GUI entry、Flet-only builder tests，以及 UI 直接调用 Python 的旧路径。</p>
+          </article>
+          <article class="card">
+            <h3>被保留</h3>
+            <p>Paper v3 Markdown、可重建索引、Vault layout、Home containment、迁移事务、外部修改拒绝和作者控制边界。</p>
+          </article>
+        </div>
+        <div class="callout">
+          <strong>没有顺手扩产品范围。</strong>
+          Road v0.4 没有加入 AI 代写、正文编辑器、账号、同步、数据库、文件监听、
+          localhost、HTTP、WebSocket、遥测或后台网络服务。
+        </div>
+      </section>
+
+      <section id="architecture">
+        <p class="label">Architecture · final runtime</p>
+        <h2>最终调用链</h2>
+        <div class="flow" aria-label="Road v0.4 最终调用链">
+          <div class="flow-node"><strong>Vue 3</strong><span>可见状态、表单与交互</span></div>
+          <div class="flow-node"><strong>Tauri / Rust</strong><span>窗口、sidecar、队列与窄系统动作</span></div>
+          <div class="flow-node"><strong>JSONL v1</strong><span>版本化本地消息</span></div>
+          <div class="flow-node"><strong>Application Service</strong><span>DTO、编排与 opaque handles</span></div>
+          <div class="flow-node"><strong>Python Core</strong><span>Paper、Vault 与文件规则</span></div>
+          <div class="flow-node"><strong>Author assets</strong><span>Markdown / Index / Vault</span></div>
+        </div>
+        <p class="before mono">退役基线：Flet → Python Core → Paper Markdown / Index / Vault</p>
+        <div class="three">
+          <article class="card"><h3>Vue 的权限</h3><p>只拿窄 DTO 和相对路径；不读写 Markdown，不持有绝对路径，不调用任意 shell。</p></article>
+          <article class="card"><h3>Rust 的权限</h3><p>管理一个 sidecar、串行请求、生命周期、目录选择和已验证的 open/reveal；不实现产品规则。</p></article>
+          <article class="card"><h3>Python 的权威</h3><p>Application Service 编排，Core 独占业务与文件规则；mutation 从不自动重试。</p></article>
+        </div>
+      </section>
+
+      <section id="timeline">
+        <p class="label">Timeline · 15 checkpoints</p>
+        <h2>从抽边界到删旧壳</h2>
+        <p>点击任一 checkpoint 展开施工内容、验证证据与边界。每个 CP 都从前一已验收提交建立独立分支。</p>
+
+        <div class="stage">
+          <div class="stage-head">
+            <h3>Ⅰ · 打地基</h3>
+            <p>CP0–CP4 · authority → service → protocol → host</p>
+          </div>
+
+          <details id="cp0">
+            <summary>
+              <span class="cp">CP0</span>
+              <span><strong>启用 Road 权威，先锁问题再写代码</strong><small>2026-07-25 17:15 · 12 files · +1051 / −92</small></span>
+              <span class="done">accepted</span>
+            </summary>
+            <div class="detail">
+              <span class="commit">8407941 · docs: activate Road v0.4 CP0</span>
+              <div class="detail-grid">
+                <div><h4>施工</h4><ul><li>启用 Planbook、理解规约、SPEC/RULES 与三张 HTML map。</li><li>盘点 Node、Rust、Python、macOS、Xcode 与 target triple。</li><li>列出所有精确依赖、用途、替代与移除范围，等待开发者批准。</li></ul></div>
+                <div><h4>结论</h4><ul><li>Road 只替换前端和本地调用边界。</li><li>每个 checkpoint 独立分支，下一分支从已验收 HEAD 开始。</li><li>beta 工作站不能自行充当最低系统兼容性证据。</li></ul></div>
+              </div>
+            </div>
+          </details>
+
+          <details id="cp1">
+            <summary>
+              <span class="cp">CP1</span>
+              <span><strong>从 Flet 中抽出 transport-agnostic Application Service</strong><small>2026-07-25 17:37 · 10 files · +1643 / −106</small></span>
+              <span class="done">accepted</span>
+            </summary>
+            <div class="detail">
+              <span class="commit">b718ed8 · feat: add Road v0.4 application service</span>
+              <div class="detail-grid">
+                <div><h4>施工</h4><ul><li>新增 UI-neutral service、DTO、结构化错误和进程内 opaque handles。</li><li>把启动、Vault、Paper、Flashcard、Library、迁移与系统目标编排集中到同一边界。</li></ul></div>
+                <div><h4>边界</h4><ul><li>Service 不读 stdin、不写 stdout，也不知道 Vue/Tauri。</li><li>Core 继续独占 Markdown、Index 与 Vault 文件规则。</li></ul></div>
+              </div>
+            </div>
+          </details>
+
+          <details id="cp2">
+            <summary>
+              <span class="cp">CP2</span>
+              <span><strong>让现有 Flet 全部改走新 Service</strong><small>2026-07-25 18:21 · 12 files · +788 / −1074</small></span>
+              <span class="done">accepted</span>
+            </summary>
+            <div class="detail">
+              <span class="commit">42dfa68 · refactor: route Flet through application service</span>
+              <div class="detail-grid">
+                <div><h4>施工</h4><ul><li>删除 Flet 内重复的 Vault、保存、迁移与系统动作编排。</li><li>页面只消费 DTO 并调用 Service，形成可对照的旧 UI adapter。</li></ul></div>
+                <div><h4>证据</h4><ul><li>Python <strong>286 passed</strong>。</li><li>真实 Flet runtime 在隔离状态显示 Vault picker 并干净退出。</li><li>没有读取作者 Vault 或持久配置。</li></ul></div>
+              </div>
+            </div>
+          </details>
+
+          <details id="cp3">
+            <summary>
+              <span class="cp">CP3</span>
+              <span><strong>建立 JSONL v1 dispatcher 与 session 语义</strong><small>2026-07-25 18:40 · 8 files · +1134 / −10</small></span>
+              <span class="done">accepted</span>
+            </summary>
+            <div class="detail">
+              <span class="commit">e72f155 · feat: add JSONL sidecar protocol</span>
+              <div class="detail-grid">
+                <div><h4>施工</h4><ul><li>一行一条 UTF-8 JSON request/response；固定版本、ID、method、params、result 与 error。</li><li><code>system.hello</code> 建立 session；preview/edit/preflight token 与 session 绑定。</li><li>dispatcher 与 stdin/stdout sidecar 分离。</li></ul></div>
+                <div><h4>证据</h4><ul><li>Python <strong>321 passed</strong>。</li><li>手工 hello 返回 protocol v1；EOF 正常退出。</li><li>mutation 只执行一次，不自动重试。</li></ul></div>
+              </div>
+            </div>
+          </details>
+
+          <details id="cp4">
+            <summary>
+              <span class="cp">CP4</span>
+              <span><strong>接上 Tauri/Rust host 与冻结 sidecar</strong><small>2026-07-25 19:56 · 32 files · +9788 / −24</small></span>
+              <span class="done">accepted</span>
+            </summary>
+            <div class="detail">
+              <span class="commit">0d86847 · feat: add Tauri sidecar host</span>
+              <div class="detail-grid">
+                <div><h4>施工</h4><ul><li>Rust 拥有一个 sidecar 与单 worker 队列；负责 hello、超时、crash、restart 和 child cleanup。</li><li>只暴露五个窄 command；Vue 没有任意 shell、文件读写或绝对路径权限。</li><li>PyInstaller 生成 arm64 external binary，Tauri 组合 `.app`。</li></ul></div>
+                <div><h4>证据与限制</h4><ul><li>Rust <strong>10</strong>、Python <strong>321</strong>、Vue <strong>2</strong> tests passed。</li><li>dev 与 provisional `.app` 启动 sidecar，退出无残留。</li><li>beta Xcode 在当时的 13.3 target 触发 proc-macro <code>E0463</code>；一次 11.0 override 只证明组装，不算 production 或兼容性。</li></ul></div>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <div class="stage">
+          <div class="stage-head">
+            <h3>Ⅱ · 纵向切片</h3>
+            <p>CP5–CP9 · visual specimen → Paper → Flashcard → Library → Vault</p>
+          </div>
+
+          <details id="cp5">
+            <summary>
+              <span class="cp">CP5</span>
+              <span><strong>用合成数据确认“编辑部工作台”视觉方向</strong><small>2026-07-25 20:31 · 7 files · +915 / −14</small></span>
+              <span class="done">accepted</span>
+            </summary>
+            <div class="detail">
+              <span class="commit">f19da31 · feat: add Vue workbench prototype</span>
+              <div class="detail-grid">
+                <div><h4>施工</h4><ul><li>只用内存合成 Paper 的真实 Vue 组件样张；不接 bridge、不碰 Vault。</li><li>冻结 72px global、260px context、弹性主内容与暖灰/深青/oxblood tokens。</li><li>样张通过 <code>?prototype=1</code> 动态加载，不进入 production bundle。</li></ul></div>
+                <div><h4>证据</h4><ul><li>Vitest <strong>5 passed</strong>，Vite production build passed。</li><li>1220×780、920×680、768×800、375×812 无水平溢出与 console error。</li><li>对比度 5.41:1–15.48:1；开发者确认视觉方向。</li></ul></div>
+              </div>
+            </div>
+          </details>
+
+          <details id="cp6">
+            <summary>
+              <span class="cp">CP6</span>
+              <span><strong>迁移 Paper 主流程</strong><small>2026-07-25 21:47 · 9 files · +1460 / −28</small></span>
+              <span class="done">accepted</span>
+            </summary>
+            <div class="detail">
+              <span class="commit">b52622f · feat: add Vue Paper slice</span>
+              <div class="detail-grid">
+                <div><h4>施工</h4><ul><li>启动/daily gate、新建、打开、保存、初稿冻结、Highlights、Tags、⌘S、软删除。</li><li>Vue 只回传 opaque <code>edit_token</code>；外部移动、修改与 stale snapshot 由 Python 拒绝。</li></ul></div>
+                <div><h4>证据</h4><ul><li>Vue <strong>15</strong>、Python <strong>321</strong>、Rust <strong>10</strong> tests passed。</li><li>隔离 `.app` 完成 create/save/reopen、键盘排序、错误恢复与 host/child clean exit。</li><li>只使用 copied fixture；临时 Home 删除。</li></ul></div>
+              </div>
+            </div>
+          </details>
+
+          <details id="cp7">
+            <summary>
+              <span class="cp">CP7</span>
+              <span><strong>迁移 Flashcard 只读投影</strong><small>2026-07-25 22:17 · 8 files · +1012 / −38</small></span>
+              <span class="done">accepted</span>
+            </summary>
+            <div class="detail">
+              <span class="commit">067c50c · feat: add Vue Flashcard slice</span>
+              <div class="detail-grid">
+                <div><h4>施工</h4><ul><li>Summary-first、Paper selector、列表/方向键/跳页、Summary context 与返回 Paper。</li><li>卡片位置只在 Vue 内存；每次打开或切换 Paper 都回到 page 1。</li></ul></div>
+                <div><h4>证据</h4><ul><li>Vitest <strong>21 passed</strong>，Vite build passed。</li><li>四种宽度、keyboard、accessibility、console 与返回路径通过。</li><li>本 CP 不冒充 native `.app` smoke。</li></ul></div>
+              </div>
+            </div>
+          </details>
+
+          <details id="cp8">
+            <summary>
+              <span class="cp">CP8</span>
+              <span><strong>迁移 Library read slice</strong><small>2026-07-25 22:55 · 12 files · +1402 / −29</small></span>
+              <span class="done">accepted</span>
+            </summary>
+            <div class="detail">
+              <span class="commit">f12374c · feat: add Vue Library read slice</span>
+              <div class="detail-grid">
+                <div><h4>施工</h4><ul><li>全部/未归类/一层文件夹 scope、搜索、Python-owned 排序、三栏上下文、损坏项与 Trash 隔离。</li><li>系统 open/reveal 仍经 Python resolve 与 Rust 窄执行。</li></ul></div>
+                <div><h4>边界</h4><ul><li>Vue 只保留 selection 和可见状态。</li><li>Unicode NFC+casefold、检索结果与错误项由 Python 返回，避免 JavaScript 规则漂移。</li></ul></div>
+              </div>
+            </div>
+          </details>
+
+          <details id="cp9">
+            <summary>
+              <span class="cp">CP9</span>
+              <span><strong>补齐 Library mutation、Vault 与 migration</strong><small>2026-07-26 00:04 · 12 files · +2179 / −52</small></span>
+              <span class="done">accepted</span>
+            </summary>
+            <div class="detail">
+              <span class="commit">2c2df7c · feat: complete Vue Library and Vault slices</span>
+              <div class="detail-grid">
+                <div><h4>施工</h4><ul><li>move、branch、folder create/rename/merge、Trash/restore、逐项 partial result 与永久删除门槛。</li><li>Vault preview/init/switch/relocate 与 v0.1 preflight/backup/staging/migration。</li><li>危险 mutation 保留显式确认、busy 状态和 <code>commit_unknown</code> 恢复。</li></ul></div>
+                <div><h4>证据</h4><ul><li>Vue <strong>48</strong>、Python <strong>321</strong>、Rust <strong>10</strong> tests passed。</li><li>四宽度 browser QA、可访问性、console 与 overflow passed。</li><li>一次 macOS automation 选到 stale bundle，发现后不把该尝试计入 native 功能证据。</li></ul></div>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <div class="stage">
+          <div class="stage-head">
+            <h3>Ⅲ · 依次验收</h3>
+            <p>CP10–CP12 · behavior → visual → production/product</p>
+          </div>
+
+          <details id="cp10">
+            <summary>
+              <span class="cp">CP10</span>
+              <span><strong>Gate A：Flet / Vue-Tauri 功能等价</strong><small>2026-07-26 00:50 · 4 files · +90 / −9</small></span>
+              <span class="done">accepted</span>
+            </summary>
+            <div class="detail">
+              <span class="commit">992f9ca · docs: record Gate A parity acceptance</span>
+              <div class="detail-grid">
+                <div><h4>验收</h4><ul><li>Vault、daily card、Paper、Flashcard、Library、Trash、v2→v3、Finder 外移、损坏隔离与 handoff 等价矩阵通过。</li><li>relocation、migration、永久删除以自动 contract 证据验收，不重复做破坏性平台动作。</li></ul></div>
+                <div><h4>证据</h4><ul><li>Python <strong>321</strong>、Vue <strong>48</strong>、Rust <strong>10</strong> tests passed。</li><li>current-source `.app` 在 synthetic/copied Vault 上通过。</li><li>没有未解决 P0/P1；开发者确认 Gate A。</li></ul></div>
+              </div>
+            </div>
+          </details>
+
+          <details id="cp11">
+            <summary>
+              <span class="cp">CP11</span>
+              <span><strong>Gate B：完整视觉重建与固定功能栏</strong><small>2026-07-26 01:42 · 12 files · +241 / −127</small></span>
+              <span class="done">accepted</span>
+            </summary>
+            <div class="detail">
+              <span class="commit">908fd85 · feat: complete Gate B visual reconstruction</span>
+              <div class="detail-grid">
+                <div><h4>施工</h4><ul><li>共享 visual tokens、统一标题/上下文/状态/焦点与 140ms 低干扰过渡。</li><li>移除生产界面 CP 编号；保留 Paper、Flashcard、Library、Vault 职责标签。</li><li>首次复核发现全局栏随窗口滚走；改为固定 rail，内部过高时独立滚动，≤520px 使用横栏。</li></ul></div>
+                <div><h4>证据</h4><ul><li>四宽度无溢出；对比度 5.41:1–15.48:1，深色 rail muted 8.44:1。</li><li>隔离 `.app` 显示完整四页与可见 keyboard focus。</li><li>开发者复核固定 rail 后确认 Gate B。</li></ul></div>
+              </div>
+            </div>
+          </details>
+
+          <details id="cp12">
+            <summary>
+              <span class="cp">CP12</span>
+              <span><strong>Production bundle 与真实作者场景 A/B</strong><small>2026-07-26 12:49 · 10 files · +168 / −37</small></span>
+              <span class="done">accepted</span>
+            </summary>
+            <div class="detail">
+              <span class="commit">6efd039 · feat: complete macOS 15 production acceptance</span>
+              <div class="detail-grid">
+                <div><h4>验收</h4><ul><li>无 override production bundle、copied Vault smoke、去标识化真实作者 A/B 与两个 session 均通过。</li><li>三栏定位、视觉层级、键盘路径、外部编辑器边界、Finder 外移、分支与 Trash/restore 通过。</li><li>无未解决 P0/P1。</li></ul></div>
+                <div><h4>边界</h4><ul><li>当时 tracked minimum 为 macOS 15.0，但 beta 工作站 build 不证明 15.0 兼容。</li><li><code>IMKCFRunLoopWakeUpReliable</code> 信息没有对应崩溃、输入失效或数据异常，按非阻塞平台观察记录。</li><li>签名、公证、DMG 与 App Sandbox 不在 Road。</li></ul></div>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <div class="stage">
+          <div class="stage-head">
+            <h3>Ⅳ · 兼容性与退场</h3>
+            <p>CP13–CP14 · stable runner proof → Flet retirement</p>
+          </div>
+
+          <details id="cp13">
+            <summary>
+              <span class="cp">CP13</span>
+              <span><strong>用 macOS 15.7 arm64 runner 建立兼容性证据</strong><small>2026-07-26 13:16–13:44 · 4 commits</small></span>
+              <span class="done">accepted</span>
+            </summary>
+            <div class="detail">
+              <span class="commit">046b54e · add compatibility workflow</span>
+              <span class="commit">1de6d32 · build sidecar before Cargo</span>
+              <span class="commit">a6db6d2 · verify bundled sidecar path</span>
+              <span class="commit">4d510cc · accept compatibility</span>
+              <div class="detail-grid">
+                <div><h4>施工与修复</h4><ul><li>GitHub <code>macos-15</code> arm64 workflow 断言实际 15.7.x、锁定工具链、构建、启动、哈希和 artifact。</li><li>首次 run 暴露 Cargo test 早于 frozen sidecar；调整顺序。</li><li>第二次 run 暴露 bundle 内 sidecar basename；改为复用精确 bundle 路径。</li></ul></div>
+                <div><h4>最终证据</h4><ul><li><a href="https://github.com/bydpass/keikeu/actions/runs/30212594969">run 30212594969</a>：macOS 15.7.7、Xcode 16.4、arm64，全绿。</li><li>同一 artifact 在当前工作站校验哈希后，以 fresh fake Home/copied Vault 复验。</li><li><code>LSMinimumSystemVersion</code> 与 Mach-O <code>minos</code> 均为 15.7；无 P0/P1。</li></ul></div>
+              </div>
+            </div>
+          </details>
+
+          <details id="cp14">
+            <summary>
+              <span class="cp">CP14</span>
+              <span><strong>退役 Flet，重跑最终工程验证</strong><small>2026-07-26 14:16 · 33 files · +280 / −6543</small></span>
+              <span class="done">accepted</span>
+            </summary>
+            <div class="detail">
+              <span class="commit">9389f9a · refactor: retire Flet after Road v0.4 acceptance</span>
+              <div class="detail-grid">
+                <div><h4>删除</h4><ul><li><code>src/keikeu_app/</code> 10 个 tracked 文件。</li><li>Flet-only tests、<code>flet</code> dependency、旧 <code>keikeu</code> GUI entry 与 wheel package。</li><li>两个只供 Flet adapter 使用、已经无调用者的 Service 入口。</li></ul></div>
+                <div><h4>最终证据</h4><ul><li>Python <strong>234</strong>、Vue <strong>48</strong>、Rust <strong>10</strong> tests passed；减少的 87 项全是 Flet-only tests。</li><li>无 override build、frozen hello、launch/relaunch、每日卡只显示一次、host/sidecar clean exit。</li><li>6 个 fixture Markdown 哈希不变；真实 Home、配置和 Vault 未参与。</li><li>CP14 beta 例外只用于最终工程 smoke，使用后到期；兼容性仍只由 CP13 证明。</li></ul></div>
+              </div>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section id="gates">
+        <p class="label">Decision gates · no evidence substitution</p>
+        <h2>六道闸门按顺序关闭</h2>
+        <table>
+          <thead><tr><th>闸门</th><th>判断</th><th>直接证据</th><th>结果</th></tr></thead>
+          <tbody>
+            <tr><td data-label="闸门">理解与依赖</td><td data-label="判断">架构、职责、版本与 beta 例外是否可解释</td><td data-label="直接证据">Planbook、理解规约、ADR-0004/0005、精确 lock</td><td data-label="结果" class="pass">CP0–CP4 通过</td></tr>
+            <tr><td data-label="闸门">Gate A</td><td data-label="判断">v0.3 行为、安全与键盘路径是否等价</td><td data-label="直接证据">等价矩阵、321/48/10、current-source `.app`</td><td data-label="结果" class="pass">CP10 验收</td></tr>
+            <tr><td data-label="闸门">Gate B</td><td data-label="判断">完整视觉重建是否清楚、可达、稳定</td><td data-label="直接证据">四宽度 QA、对比度、固定 rail `.app` smoke</td><td data-label="结果" class="pass">CP11 验收</td></tr>
+            <tr><td data-label="闸门">产品验收</td><td data-label="判断">真实作者 A/B 是否可用且无 P0/P1</td><td data-label="直接证据">有备份、去标识化 real-author 记录</td><td data-label="结果" class="pass">CP12 验收</td></tr>
+            <tr><td data-label="闸门">15.7+ 兼容性</td><td data-label="判断">最老承诺系统能否构建并启动同一 artifact</td><td data-label="直接证据">macOS 15.7.7 arm64 runner + workstation retest</td><td data-label="结果" class="pass">CP13 验收</td></tr>
+            <tr><td data-label="闸门">Flet 退场</td><td data-label="判断">旧壳删除后当前 runtime 是否仍完整</td><td data-label="直接证据">234/48/10、无 override build、launch/relaunch</td><td data-label="结果" class="pass">CP14 验收</td></tr>
+          </tbody>
+        </table>
+        <div class="callout">
+          <strong>关键证据纪律：</strong>
+          CP4–CP12 的 beta 工作站只能证明工程行为；CP12 的 production bundle
+          不能证明最低系统兼容；CP13 稳定 runner 才证明 macOS 15.7+；CP14 的
+          一次性 beta 延长也不能替代或扩大 CP13 结论。
+        </div>
+      </section>
+
+      <section id="incidents">
+        <p class="label">Incidents · what went wrong and how it closed</p>
+        <h2>施工中真正改变路线的六件事</h2>
+        <table>
+          <thead><tr><th>阶段</th><th>发现</th><th>处理</th><th>没有扩大成什么</th></tr></thead>
+          <tbody>
+            <tr><td data-label="阶段">CP0 / CP4</td><td data-label="发现">Rust 1.83 低于依赖图要求；beta Xcode 在 13.3 target 加载 1.88 proc-macro 失败。</td><td data-label="处理">开发者批准并锁 Rust/Cargo 1.88；一次 11.0 override 只验证 provisional 组装。</td><td data-label="边界">不把 provisional bundle 写成 production 或兼容证据。</td></tr>
+            <tr><td data-label="阶段">CP8 / CP9</td><td data-label="发现">macOS automation 选到一个已注册的 stale bundle。</td><td data-label="处理">立即停止动作，该次尝试不计证据；CP10 用 current-source、唯一隔离应用重做。</td><td data-label="边界">不因“窗口打开了”就宣称当前源码 native smoke。</td></tr>
+            <tr><td data-label="阶段">CP11</td><td data-label="发现">承载功能入口的全局栏会随窗口滚走。</td><td data-label="处理">桌面 rail 固定在视口，内部独立滚动；窄屏保留横栏，再建 `.app` 复验。</td><td data-label="边界">没有改行为、数据流或组件职责。</td></tr>
+            <tr><td data-label="阶段">CP12</td><td data-label="发现"><code>IMKCFRunLoopWakeUpReliable</code> mach port 诊断。</td><td data-label="处理">查进程与 unified log；无崩溃、输入失效或数据异常，作为非阻塞平台观察。</td><td data-label="边界">不为无可见症状的系统日志改产品代码。</td></tr>
+            <tr><td data-label="阶段">CP13 run 1</td><td data-label="发现">Cargo tests 早于 frozen sidecar，导致 host 测试缺 external binary。</td><td data-label="处理"><code>1de6d32</code> 把 sidecar build 提前。</td><td data-label="边界">没有放宽测试或跳过 host lifecycle。</td></tr>
+            <tr><td data-label="阶段">CP13 run 2</td><td data-label="发现">Tauri bundle 内 sidecar 名称不是带 target triple 的源文件名。</td><td data-label="处理"><code>a6db6d2</code> 让验证与进程检查复用 bundle 内精确路径。</td><td data-label="边界">没有用模糊进程匹配冒充 clean exit。</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="evidence">
+        <p class="label">Evidence ledger · tests and artifacts</p>
+        <h2>自动检查随着切片增长，旧 UI 退场后收缩</h2>
+        <table>
+          <thead><tr><th>里程碑</th><th>Python</th><th>Vue</th><th>Rust</th><th>平台结论</th></tr></thead>
+          <tbody>
+            <tr><td data-label="里程碑">CP2 · Flet adapter</td><td data-label="Python">286</td><td data-label="Vue">—</td><td data-label="Rust">—</td><td data-label="平台结论">隔离 Flet picker smoke</td></tr>
+            <tr><td data-label="里程碑">CP3 · JSONL</td><td data-label="Python">321</td><td data-label="Vue">—</td><td data-label="Rust">—</td><td data-label="平台结论">手工 hello / EOF</td></tr>
+            <tr><td data-label="里程碑">CP4 · Tauri host</td><td data-label="Python">321</td><td data-label="Vue">2</td><td data-label="Rust">10</td><td data-label="平台结论">provisional engineering smoke</td></tr>
+            <tr><td data-label="里程碑">CP5 / CP6 / CP7</td><td data-label="Python">321</td><td data-label="Vue">5 → 15 → 21</td><td data-label="Rust">10</td><td data-label="平台结论">prototype + Paper `.app` + Flashcard browser QA</td></tr>
+            <tr><td data-label="里程碑">CP9–CP13</td><td data-label="Python">321</td><td data-label="Vue">48</td><td data-label="Rust">10</td><td data-label="平台结论">parity、visual、product、15.7 compatibility</td></tr>
+            <tr><td data-label="里程碑">CP14 · final</td><td data-label="Python">234</td><td data-label="Vue">48</td><td data-label="Rust">10</td><td data-label="平台结论">87 个 Flet-only tests 随旧壳删除</td></tr>
+          </tbody>
+        </table>
+
+        <div class="stats" style="margin-top:22px">
+          <div class="metric"><strong>21,163</strong><span>相对 v0.3 基线新增行</span></div>
+          <div class="metric"><strong>6,884</strong><span>相对 v0.3 基线删除行</span></div>
+          <div class="metric"><strong>0</strong><span>production npm vulnerabilities</span></div>
+          <div class="metric"><strong>0</strong><span>未解决 P0/P1</span></div>
+        </div>
+
+        <h3 style="margin-top:34px">两组 artifact，两个不同结论</h3>
+        <div class="artifact-grid">
+          <article class="artifact">
+            <p class="label">CP13 · compatibility artifact</p>
+            <h3>macOS 15.7.7 runner 构建</h3>
+            <p><strong>main</strong><br><code>b154fc2db565af13bf4fa093d75972e55c19c6cee082a64bb5df0f36a48fc875</code></p>
+            <p><strong>sidecar</strong><br><code>2adccd679f0c417ad279077e26547a407a42f811077038d58c4773f9ef87e5ad</code></p>
+            <p class="pass">证明 macOS 15.7+，并在当前工作站复验同一产物。</p>
+          </article>
+          <article class="artifact">
+            <p class="label">CP14 · post-retirement artifact</p>
+            <h3>beta 工作站最终工程构建</h3>
+            <p><strong>main</strong><br><code>90e427077a21053c0636fd37040f24d4e4ae7722aa4acb138e33d064cb9cfeb7</code></p>
+            <p><strong>sidecar</strong><br><code>b061c5be5ea2ec679b731bd89fa11cc16e195b6cf235a34618f60adbde70c519</code></p>
+            <p class="boundary-text">只证明删 Flet 后仍可 build/smoke；不证明兼容性。</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="final-state">
+        <p class="label">Final state · commit 9389f9a</p>
+        <h2>Road 交付了什么</h2>
+        <div class="three">
+          <article class="card"><h3>唯一桌面 runtime</h3><p>Vue 3 + Vite + JavaScript → Tauri/Rust → JSONL sidecar → Python Service/Core。</p></article>
+          <article class="card"><h3>可证明的平台范围</h3><p>arm64、macOS 15.7+、未签名 `.app`；bundle ID <code>app.keikeu.desktop</code>。</p></article>
+          <article class="card"><h3>作者资产不变</h3><p>Paper schema、Vault layout、Markdown、Index 与迁移语义没有为前端替换而改变。</p></article>
+        </div>
+        <div class="two" style="margin-top:14px">
+          <article class="card">
+            <h3>锁定工具链</h3>
+            <p>Node/npm 22.23.1/10.9.8；Rust/Cargo 1.88.0；Python/PyInstaller 3.13.14/6.21.0；target <code>aarch64-apple-darwin</code>。</p>
+          </article>
+          <article class="card">
+            <h3>仍然不是 release</h3>
+            <p>没有签名、公证、DMG、App Sandbox、移动端交付、CP14 push 或 v0.4 tag。它们仍需独立决策。</p>
+          </article>
+        </div>
+        <div class="callout">
+          <strong>回滚点：</strong>
+          CP14 的代码回滚点是已验收 CP13 <code>4d510cc</code>。撤销旧壳退场不需要
+          转换或恢复 Vault；任何真实作者数据恢复仍必须从已确认备份开始。
+        </div>
+      </section>
+
+      <section id="sources">
+        <p class="label">Source index · where every claim came from</p>
+        <h2>原始施工记录</h2>
+        <ul class="source-list">
+          <li><a href="../../../PLAN_revised.md">Road v0.4 Planbook</a></li>
+          <li><a href="../../../RULE_FOR_UNDERSTANDING.md">理解优先规约</a></li>
+          <li><a href="../../PROJECT.md">PROJECT 当前坐标</a></li>
+          <li><a href="../../SPEC.md">SPEC 产品边界</a></li>
+          <li><a href="../../RULES.md">RULES 工程与证据规则</a></li>
+          <li><a href="../../protocol.md">JSONL v1 protocol</a></li>
+          <li><a href="../../architecture/architecture.html">最终架构 map</a></li>
+          <li><a href="../../design/design.html">视觉系统 map</a></li>
+          <li><a href="../../design/interaction.html">交互与迁移 map</a></li>
+          <li><a href="../../architecture/decisions/0004-vue-tauri-python-sidecar.md">ADR-0004 · Vue/Tauri/Python sidecar</a></li>
+          <li><a href="../../architecture/decisions/0005-beta-toolchain-engineering-exception.md">ADR-0005 · beta 工程例外</a></li>
+          <li><a href="../../acceptance/road_v0_4_cp10.md">CP10 · Gate A evidence</a></li>
+          <li><a href="../../acceptance/road_v0_4_cp11.md">CP11 · Gate B evidence</a></li>
+          <li><a href="../../acceptance/road_v0_4_cp12.md">CP12 · product acceptance</a></li>
+          <li><a href="../../acceptance/road_v0_4_cp13.md">CP13 · macOS 15.7 compatibility</a></li>
+          <li><a href="../../acceptance/road_v0_4_cp14.md">CP14 · Flet retirement</a></li>
+          <li><a href="https://github.com/bydpass/keikeu/actions/runs/30212594969">GitHub Actions run 30212594969</a></li>
+        </ul>
+      </section>
+
+      <footer>
+        Frozen on 2026-07-26 from Road baseline
+        <code>84efc7e9b718bf06a4e7a09bcd1443ae81a6f80e</code> through accepted CP14
+        <code>9389f9a4e5d71fcf28fc10283c77d47400cd9bf8</code>.
+        This page is explanatory history; current truth remains in PROJECT, SPEC, RULES, source and tests.
+      </footer>
+    </main>
+  </div>
+</body>
+</html>

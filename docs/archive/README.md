@@ -35,6 +35,7 @@ Archive files retain historical reasoning and evidence. Their internal links may
 | [`docs-finalize-documentation-reform.html`](snapshots/docs-finalize-documentation-reform.html) | `96567d2` | `docs: finalize documentation reform` |
 | [`docs-stop-at-phase-8.html`](snapshots/docs-stop-at-phase-8.html) | `b31bbc4` | `docs: stop_@_phase_8` |
 | [`feat-complete-road-v0-3-candidate.html`](snapshots/feat-complete-road-v0-3-candidate.html) | `2cc40ba` | `feat: complete Road v0.3 candidate` |
+| [`refactor-retire-flet-after-road-v0-4-acceptance.html`](snapshots/refactor-retire-flet-after-road-v0-4-acceptance.html) | `9389f9a` | `refactor: retire Flet after Road v0.4 acceptance` |
 
 ## Archive rule
 
