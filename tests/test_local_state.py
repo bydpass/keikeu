@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from keikeu_app.local_state import (
+from keikeu_bridge.local_state import (
     claim_daily_card,
     load_last_daily_card_date,
 )

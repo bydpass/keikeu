@@ -121,7 +121,7 @@ host-layer errors, not fabricated by the CP3 Python dispatcher.
 1. Check whether stdout is still one JSON response per input line.
 2. Match `id`, then inspect `error.layer`.
 3. For `jsonl_transport`, check envelope/version/session/params.
-4. For `application_service`, reproduce through the matching service method or
-   Flet path on a synthetic/copied Vault.
+4. For `application_service`, reproduce through the matching service method on
+   a synthetic/copied Vault.
 5. Never paste Summary, Highlight content, real absolute paths, or unknown
    frontmatter into logs.

@@ -27,12 +27,16 @@ Road v0.3 product acceptance and archival are complete. Its detailed product, vi
 Road v0.4 replaces only the desktop presentation and local call boundary:
 
 ```text
-current: Flet → Python Core → Markdown / Index / Vault
-target:  Vue → Tauri/Rust → JSONL sidecar → Python application service
-         → Python Core → Markdown / Index / Vault
+retired baseline: Flet → Python Core → Markdown / Index / Vault
+current runtime:  Vue → Tauri/Rust → JSONL sidecar
+                  → Python application service
+                  → Python Core → Markdown / Index / Vault
 ```
 
-The accepted Python/Flet implementation remains the runtime and rollback baseline until Gate A proves Tauri parity. Road v0.4 does not change Paper schema, Vault layout, Home containment, migration semantics, or the product flow.
+The accepted Python/Flet implementation served as the rollback baseline through
+Gate A, Gate B, product acceptance, and the compatibility gate. CP14 retires
+that shell after those gates passed. Road v0.4 does not change Paper schema,
+Vault layout, Home containment, migration semantics, or the product flow.
 
 ## 4. Frozen behavior
 
@@ -50,7 +54,7 @@ The archived [Road v0.3 SPEC](archive/road-v0-3/SPEC.md) remains the detailed pa
 
 - Vue owns visible state and interaction only. It never reads or writes author files.
 - Rust owns the desktop lifecycle, one Python sidecar, the JSONL queue, native directory selection, and validated system actions.
-- The transport-agnostic Python application service is shared by Flet and JSONL; it owns orchestration and opaque session state.
+- The transport-agnostic Python application service owns orchestration and opaque session state behind JSONL. During migration, Flet used the same service as the parity baseline.
 - `keikeu_core` remains independent of Flet, Vue, Tauri, Rust, JSONL, and stdout.
 - Markdown remains canonical. No localhost, HTTP, WebSocket, account, telemetry, upload, or hidden service is authorized.
 - Road work follows the [understanding gate](../RULE_FOR_UNDERSTANDING.md).
@@ -65,4 +69,4 @@ No AI generation, prose editor, sync, database, file watcher, Router, Pinia, Typ
 2. **Gate B — Visual reconstruction:** the approved editorial workbench direction is applied after parity, with independent visual evidence.
 3. **Product acceptance:** de-identified real-author scenarios A/B and production bundle smoke pass with no unresolved P0/P1.
 4. **Compatibility:** the same arm64 artifact is built and launched on the GitHub arm64 macOS 15.7 runner, then retested on the current workstation, before claiming macOS 15.7+.
-5. **Flet retirement:** only after all prior gates may Flet code, tests, dependency, and GUI entry be removed. Tag, archive, commit, and push remain separate developer decisions.
+5. **Flet retirement:** only after all prior gates may Flet code, tests, dependency, and GUI entry be removed; CP14 performs that retirement and reruns the full checks plus a Tauri launch smoke. Tag, archive, commit, and push remain separate developer decisions.

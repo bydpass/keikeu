@@ -8,7 +8,7 @@
 
 当前代码已经实现 `Paper Markdown → Flashcard → 外部正文编辑器` 核心。Road v0.2 Phase 0–7 工程、macOS 文件服务 smoke，以及 Phase 8 真实 one-shot 与短/中篇跨会话作者验收均已完成，并已以 local annotated tag `v0.2.0` 标记。
 
-Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响应式界面、本机沙盒 Vault 与真机修复验证；它不是 macOS Road 的合入闸门。Road v0.3 的工程、macOS candidate smoke 与 CP6 真实作者验收均已完成；检索更快且清楚、外部编辑器 handoff 清楚，未报告未解决 P0/P1。其设计与验收文档已[只读归档](docs/archive/road-v0-3/README.md)，未创建 v0.3 tag。Road v0.4 已进入 CP0 文档权威启用；当前 Python/Flet 运行时仍是可运行基线，尚未引入 Vue/Tauri 依赖。实时坐标见 [PROJECT](docs/PROJECT.md)。
+Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响应式界面、本机沙盒 Vault 与真机修复验证；它不是 macOS Road 的合入闸门。Road v0.3 的工程、macOS candidate smoke 与 CP6 真实作者验收均已完成；检索更快且清楚、外部编辑器 handoff 清楚，未报告未解决 P0/P1。其设计与验收文档已[只读归档](docs/archive/road-v0-3/README.md)，未创建 v0.3 tag。Road v0.4 的 Gate A、Gate B、产品验收与 macOS 15.7+ 兼容性均已通过；当前唯一桌面运行时为 Vue/Tauri 与本地 Python sidecar，Flet 已在 CP14 退役。实时坐标见 [PROJECT](docs/PROJECT.md)。
 
 ## 当前运行时核心流程
 
@@ -38,14 +38,17 @@ Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响�
 
 ## 开发
 
-要求 Python `>=3.11,<3.14`。
+要求 Python `>=3.11,<3.14`、Node/npm `22.23.1`/`10.9.8` 和
+Rust/Cargo `1.88.0`。
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e ".[dev]"
-python -m pytest
-flet run src/keikeu_app/main.py
+python -m pip install -r requirements-build.lock
+npm --prefix frontend ci
+.venv/bin/python scripts/build_sidecar.py
+npm --prefix frontend run tauri:dev
 ```
 
 ## 仓库地图
@@ -65,11 +68,13 @@ docs/manual/              面向人的补充说明；不定义规范
 docs/generated/           可重建、可删除的观察输出
 docs/archive/             只读历史；不参与冷启动
 src/keikeu_core/          纯 Python 领域与文件逻辑
-src/keikeu_app/           Flet 壳层、页面与设备本地状态
+src/keikeu_bridge/        Application Service、JSONL 协议与 sidecar
+frontend/                 Vue/Vite 界面与 Tauri/Rust 宿主
 tests/                    可验证的实现事实
 ```
 
-硬约束：`keikeu_core` 不得 import Flet。Markdown 读写只由 core 层负责。
+硬约束：`keikeu_core` 不得依赖任何 GUI 或 transport。Markdown 读写只由
+core 层负责。
 
 ## 文档入口
 
@@ -93,7 +98,7 @@ v0.2        macOS Paper / Flashcard Core；产品验收完成，等待 Road 收�
 Phase 7.5   独立轻量 iOS 快速测试版
 Phase 8.5   Road v0.3 准备；下一版 Mac 端前体
 Road v0.3   macOS Paper Library；CP6 product accepted，设计与验收文档已归档
-Road v0.4   Vue/Tauri 前端替换；CP0 文档权威启用中，Flet 仍是运行基线
+Road v0.4   Vue/Tauri 前端替换完成；CP14 已验收
 Pre-Advance 可选 Markdown Outline；不阻塞核心流程
 之后        iPhone/iPad 文件服务能力、Android、Windows
 ```

@@ -18,9 +18,9 @@ During a staged Road, SPEC and the HTML maps may describe the approved target wh
 
 ## 2. Architecture
 
-- The accepted current runtime is Python `>=3.11,<3.14`, Flet, author-owned Markdown, and rebuildable JSON metadata.
-- Road v0.4 targets Vue/Vite JavaScript through a narrow Tauri/Rust host and one JSONL Python sidecar. Flet remains runnable through Gate A and is not removed before product acceptance.
-- The Python application service is transport-agnostic and shared by Flet and JSONL. Rust and Vue do not duplicate product rules.
+- The current desktop runtime is Vue/Vite JavaScript through a narrow Tauri/Rust host and one JSONL Python sidecar, with Python `>=3.11,<3.14`, author-owned Markdown, and rebuildable JSON metadata.
+- Flet was the accepted parity baseline through Gate A and product acceptance; CP14 removes it only after those gates and the macOS 15.7+ compatibility gate passed.
+- The Python application service is transport-agnostic and owns orchestration behind JSONL. Rust and Vue do not duplicate product rules.
 - The developer owns architecture, dependencies, data models, build commands, and release artifacts; agent output must remain explainable and reviewable.
 - `keikeu_core` is pure Python and never imports Flet, Vue, Tauri, Rust, JSONL transport, or another GUI toolkit.
 - `markdown_io.py` exclusively owns Paper Markdown parsing and serialization.

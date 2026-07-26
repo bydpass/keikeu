@@ -48,7 +48,7 @@ Will not edit:
 
 - Make the smallest useful patch; reuse existing code, then stdlib, then installed dependencies.
 - Do not add an abstraction, dependency, service, platform feature, or product capability “for later.”
-- `keikeu_core` never imports Flet; GUI code never writes Markdown or index JSON.
+- `keikeu_core` never imports a GUI or transport; GUI code never writes Markdown or index JSON.
 - Do not silently alter, normalize, upload, expose, or overwrite author content.
 - Migration, delete, recovery, and persistent-config work starts on fixtures or copies, never the only real Vault.
 - Disclose any change to selected Vault, local app state, build signing, or persistent configuration before execution and report the resulting state.
@@ -75,10 +75,11 @@ Use Python `>=3.11,<3.14`, 4-space indentation, type hints on public APIs, `snak
 ```bash
 .venv/bin/python -m pytest
 .venv/bin/python -m compileall -q src
-flet run src/keikeu_app/main.py
+.venv/bin/python scripts/build_sidecar.py
+npm --prefix frontend run tauri:dev
 ```
 
-Core changes need direct tests. UI changes need builder tests and a Flet smoke when possible. Docs-only changes run the repository documentation check and `git diff --check`; say plainly that application tests were not run.
+Core changes need direct tests. UI changes need focused Vitest coverage and a Tauri smoke when possible. Docs-only changes run the repository documentation check and `git diff --check`; say plainly that application tests were not run.
 
 Never claim a test, smoke, device check, backup rehearsal, or acceptance passed unless it ran in the relevant state. Classify problems using `docs/RULES.md`; do not smuggle P2/P3 ideas into the active Phase.
 

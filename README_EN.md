@@ -8,7 +8,7 @@
 
 The code implements the `Paper Markdown → Flashcard → external prose editor` core. Road v0.2 Phases 0–7 engineering, macOS file-service smoke, and Phase 8 real-author one-shot and two-session short/medium acceptance are complete and marked by local annotated tag `v0.2.0`.
 
-Phase 7.5 is an independent lightweight iOS build for rapid testing. Its responsive UI, app-sandbox Vault, and on-device fixes are complete on a separate branch; it is not a merge gate in the macOS Road. Road v0.3 engineering, macOS candidate smoke, and CP6 real-author acceptance are complete: retrieval was faster and clear, the external-editor handoff was clear, and no unresolved P0/P1 was reported. Its design and acceptance records are now [read-only history](docs/archive/road-v0-3/README.md); no v0.3 tag was created. Road v0.4 has entered CP0 documentation-authority activation. The Python/Flet runtime remains the runnable baseline, and no Vue/Tauri dependency has been introduced. See [PROJECT](docs/PROJECT.md) for live coordinates.
+Phase 7.5 is an independent lightweight iOS build for rapid testing. Its responsive UI, app-sandbox Vault, and on-device fixes are complete on a separate branch; it is not a merge gate in the macOS Road. Road v0.3 engineering, macOS candidate smoke, and CP6 real-author acceptance are complete: retrieval was faster and clear, the external-editor handoff was clear, and no unresolved P0/P1 was reported. Its design and acceptance records are now [read-only history](docs/archive/road-v0-3/README.md); no v0.3 tag was created. Road v0.4 Gate A, Gate B, product acceptance, and macOS 15.7+ compatibility have passed. The only desktop runtime is now Vue/Tauri with a local Python sidecar; Flet was retired in CP14. See [PROJECT](docs/PROJECT.md) for live coordinates.
 
 ## Current runtime flow
 
@@ -38,14 +38,17 @@ Stable product boundaries live in [SPEC](docs/SPEC.md); reviewable constraints l
 
 ## Development
 
-Python `>=3.11,<3.14` is required.
+Python `>=3.11,<3.14`, Node/npm `22.23.1`/`10.9.8`, and Rust/Cargo
+`1.88.0` are required.
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e ".[dev]"
-python -m pytest
-flet run src/keikeu_app/main.py
+python -m pip install -r requirements-build.lock
+npm --prefix frontend ci
+.venv/bin/python scripts/build_sidecar.py
+npm --prefix frontend run tauri:dev
 ```
 
 ## Repository map
@@ -65,11 +68,13 @@ docs/manual/              supplementary human guides; never normative
 docs/generated/           rebuildable and disposable observations
 docs/archive/             read-only history; excluded from cold starts
 src/keikeu_core/          pure-Python domain and file logic
-src/keikeu_app/           Flet shell, pages, and device-local state
+src/keikeu_bridge/        application service, JSONL protocol, and sidecar
+frontend/                 Vue/Vite UI and Tauri/Rust host
 tests/                    verifiable implementation facts
 ```
 
-Hard rule: `keikeu_core` must not import Flet. Only the core layer owns Markdown I/O.
+Hard rule: `keikeu_core` must not depend on any GUI or transport. Only the core
+layer owns Markdown I/O.
 
 ## Documentation entry points
 
@@ -93,7 +98,7 @@ v0.2        macOS Paper / Flashcard Core; product acceptance complete, Road clos
 Phase 7.5   independent lightweight iOS rapid-test build
 Phase 8.5   Road v0.3 preparation; precursor to the next Mac version
 Road v0.3   macOS Paper Library; CP6 product accepted, design and acceptance records archived
-Road v0.4   Vue/Tauri frontend replacement; CP0 documentation activation, Flet remains the runtime baseline
+Road v0.4   Vue/Tauri frontend replacement complete; CP14 accepted
 Pre-Advance optional Markdown Outline; never blocks the core flow
 later       iPhone/iPad file-service capability, Android, Windows
 ```

@@ -1,6 +1,6 @@
 # Road v0.4 理解优先规约
 
-> 状态：Active Road v0.4 execution gate
+> 状态：Road v0.4 complete · CP14 accepted 2026-07-26
 > 适用范围：Road v0.4 的 Application Service、Vue、Tauri、Rust、JSONL sidecar、PyInstaller 与 macOS 打包工作。
 > 核心原则：开发者必须拥有项目的解释权。任何无法被开发者理解、检查和回滚的实现，都不算完成。
 
@@ -17,7 +17,7 @@ Road v0.4 中的新技术只允许承担以下职责：
 | Tauri                      | 桌面窗口、应用生命周期与权限边界                |
 | Rust                       | 管理 Tauri、Python sidecar 和少量系统动作 |
 | JSONL                      | Rust 与 Python 之间的结构化消息协议        |
-| Python application service | 编排现有业务能力，供 Flet 与 JSONL 共用      |
+| Python application service | 编排现有业务能力，供 JSONL sidecar 调用；迁移期间也曾供 Flet 对照 |
 | Python Core                | Paper、Vault、Markdown、索引和安全规则    |
 | PyInstaller                | 把 Python sidecar 冻结为可随应用分发的二进制  |
 
@@ -266,7 +266,10 @@ Unknown error
 
 ---
 
-## 12. Flet 在退场前必须始终可运行
+## 12. Flet 退场规则
+
+以下规则约束 Gate A 前的迁移阶段；Gate A、Gate B、产品验收与 macOS 15.7+
+兼容性均已于 CP14 前通过，因此开发者已允许 CP14 删除 Flet。
 
 在 Gate A 完成功能等价验收前：
 
@@ -277,7 +280,8 @@ Unknown error
 * 不得删除 `flet` 依赖
 * 不得修改作者数据格式来迁就 Vue 或 Tauri
 
-新架构失败时，项目必须能退回 Flet，而不需要转换 Vault。
+在上述 gates 通过前，新架构失败时项目必须能退回 Flet，而不需要转换 Vault。
+CP14 的代码回滚点改为已验收的 CP13 commit；Vault 无需转换。
 
 ---
 
@@ -336,9 +340,10 @@ target triple
 
 实验性工具只能在隔离分支和隔离环境使用，不得成为 Road v0.4 的发布
 兼容性证据。开发者于 2026-07-25 明确批准当前 macOS 27 / Xcode 27 beta
-工作站用于 CP4–CP12 工程构建；该窄例外记录在
-[`ADR-0005`](docs/architecture/decisions/0005-beta-toolchain-engineering-exception.md)，
-不豁免 CP13 的 macOS 15.7+ 构建与启动验证。
+工作站用于 CP4–CP12 工程构建，并于 2026-07-26 一次性延长至 CP14 最终
+工程 build/smoke；该窄例外记录在
+[`ADR-0005`](docs/architecture/decisions/0005-beta-toolchain-engineering-exception.md)。
+它不替代或扩大 CP13 的 macOS 15.7+ 兼容性证据。
 
 ---
 

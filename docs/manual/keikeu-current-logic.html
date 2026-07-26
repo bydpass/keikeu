@@ -208,10 +208,10 @@
         <p class="lede">作者把一份创作单元保存成 Paper Markdown。keikeu 用 Flashcard 提取当前 Summary 和 Highlights，帮助作者回忆，然后把正文写作交给外部编辑器。</p>
         <div class="state-row">
           <span class="pill good">Paper Markdown 是主数据</span>
-          <span class="pill good">Core 不依赖 Flet</span>
+          <span class="pill good">Core 不依赖 GUI 或 transport</span>
           <span class="pill">索引可以重建</span>
           <span class="pill">设备状态只记日期</span>
-          <span class="pill warn">CP6 真实作者验收待执行</span>
+          <span class="pill good">Road v0.4 产品与兼容性已验收</span>
         </div>
       </header>
 
@@ -235,8 +235,8 @@
           <p class="notice" data-flow-note>保存后，Paper 既能被作者用普通文本工具检查，也能被 keikeu 重新读取。</p>
           <div class="grid three" style="margin-top:14px">
             <article class="card"><strong>Paper 是一个工作单元</strong><p>它保存一个当前 Summary、按作者顺序排列的 Highlights 和 Tags。它不保存进度、章节正文或任务状态。</p><div class="source">models.py · Paper / Highlight</div></article>
-            <article class="card"><strong>Flashcard 是投影</strong><p>它读取 Paper，按 Summary 在前、Highlights 在后的顺序显示卡片。它不产生另一份创作资产。</p><div class="source">flashcard_page.py · project_cards()</div></article>
-            <article class="card"><strong>文件库负责找回</strong><p>作者用文件夹、搜索、排序、分支、Trash 和恢复管理已有 Paper。</p><div class="source">library_page.py + vault.py + indexer.py</div></article>
+            <article class="card"><strong>Flashcard 是投影</strong><p>它读取 Paper，按 Summary 在前、Highlights 在后的顺序显示卡片。它不产生另一份创作资产。</p><div class="source">FlashcardView.vue + service.py</div></article>
+            <article class="card"><strong>文件库负责找回</strong><p>作者用文件夹、搜索、排序、分支、Trash 和恢复管理已有 Paper。</p><div class="source">LibraryView.vue + service.py + vault.py + indexer.py</div></article>
           </div>
         </section>
 
@@ -259,7 +259,7 @@
             <p class="notice good" data-save-notice>keikeu 保存新内容，然后用新快照更新编辑页。作者下次保存会基于这份快照继续核对。</p>
           </div>
           <div class="grid two" style="margin-top:14px">
-            <article class="card"><h3>编辑页负责拒绝危险保存</h3><p>页面先判断 Summary。编辑已有 Paper 时，页面拒绝不存在的路径，也把打开时的字节交给核心层。核心层发现字节不一致时拒绝覆盖。</p><div class="source">paper_page.py · on_save()</div></article>
+            <article class="card"><h3>编辑页负责拒绝危险保存</h3><p>页面先判断 Summary。编辑已有 Paper 时，Vue 只回传 opaque edit token；Application Service 用打开时保留的快照拒绝不存在、移动或外部修改后的文件。</p><div class="source">PaperView.vue + service.py · paper_save()</div></article>
             <article class="card"><h3>Markdown I/O 负责写入细节</h3><p>它序列化 Paper v3，保留可行的未知 frontmatter，并用临时文件和原子交换处理更新。失败时它优先保留两份内容供作者恢复。</p><div class="source">markdown_io.py · _atomic_compare_exchange_bytes_at()</div></article>
           </div>
         </section>
@@ -323,11 +323,11 @@
           <div class="grid three" style="margin-top:14px">
             <article class="card"><strong>路径防线</strong><p>Vault 只能落在当前用户 Home 内。核心层拒绝 symlink 逃逸和不支持的目录结构。</p><div class="source">vault.py · require_home_path / 路径解析</div></article>
             <article class="card"><strong>代码防线</strong><p>新代码跨活动区和 Trash 分配。发现重复代码时，keikeu 报错并阻止可能覆盖资产的操作。</p><div class="source">vault.py + indexer.py</div></article>
-            <article class="card"><strong>迁移防线</strong><p>旧 v0.1 Vault 先在安全副本上验证，再走显式迁移和备份流程。原始不安全来源保持不动。</p><div class="source">main.py + migration_v01.py</div></article>
+            <article class="card"><strong>迁移防线</strong><p>旧 v0.1 Vault 先在安全副本上验证，再走显式迁移和备份流程。原始不安全来源保持不动。</p><div class="source">VaultView.vue + service.py + migration_v01.py</div></article>
           </div>
         </section>
 
-        <section class="section searchable" id="architecture" data-search="架构 Flet core Markdown Vault indexer model migration UI 分层 模块">
+        <section class="section searchable" id="architecture" data-search="架构 Vue Tauri JSONL Python core Markdown Vault indexer model migration UI 分层 模块">
           <div class="section-head"><div class="step-no">06</div><div><h2>实现分层</h2><p>点击层级，检查每层该做什么，以及它刻意不做什么。</p></div></div>
           <div class="button-row" aria-label="架构层筛选">
             <button type="button" class="choice" data-layer-filter="all" aria-pressed="true">全部</button>
@@ -337,34 +337,34 @@
             <button type="button" class="choice" data-layer-filter="outside" aria-pressed="false">Outside</button>
           </div>
           <div class="architecture">
-            <article class="layer" data-layer="app"><div class="layer-name">APP · Flet</div><div><p class="muted">页面组装、路由、快捷键、可见反馈和 Vault 选择。App 把验证后的相对路径交给 Core。</p><div class="module-list"><span class="module">main.py</span><span class="module">paper_page.py</span><span class="module">flashcard_page.py</span><span class="module">library_page.py</span><span class="module">local_state.py</span></div></div></article>
-            <article class="layer" data-layer="core"><div class="layer-name">CORE · Python</div><div><p class="muted">模型校验、Markdown 解析/序列化、索引重建、文件操作和 v0.1 迁移。Core 不导入 Flet。</p><div class="module-list"><span class="module">models.py</span><span class="module">markdown_io.py</span><span class="module">indexer.py</span><span class="module">vault.py</span><span class="module">migration_v01.py</span></div></div></article>
+            <article class="layer" data-layer="app"><div class="layer-name">APP · Vue / Tauri / JSONL</div><div><p class="muted">Vue 负责可见状态；Rust 管理窗口、sidecar 与窄系统动作；JSONL 把语义请求交给 Python Application Service。</p><div class="module-list"><span class="module">App.vue</span><span class="module">bridge.js</span><span class="module">lib.rs</span><span class="module">protocol.py</span><span class="module">service.py</span></div></div></article>
+            <article class="layer" data-layer="core"><div class="layer-name">CORE · Python</div><div><p class="muted">模型校验、Markdown 解析/序列化、索引重建、文件操作和 v0.1 迁移。Core 不导入 GUI 或 transport。</p><div class="module-list"><span class="module">models.py</span><span class="module">markdown_io.py</span><span class="module">indexer.py</span><span class="module">vault.py</span><span class="module">migration_v01.py</span></div></div></article>
             <article class="layer" data-layer="disk"><div class="layer-name">DISK · 本地文件</div><div><p class="muted">Paper Markdown 承载作者资产。JSON 索引加速检索。设备配置和每日卡片日期放在 Vault 外，并且可丢弃。</p><div class="module-list"><span class="module">cache/*.md</span><span class="module">.trash/cache/*.md</span><span class="module">keikeu_index.json</span><span class="module">config</span><span class="module">state</span></div></div></article>
             <article class="layer" data-layer="outside"><div class="layer-name">OUTSIDE</div><div><p class="muted">作者决定 Vault、系统文件服务和外部编辑器。同步盘、冲突合并、账号、云服务和正文编辑不属于 keikeu。</p><div class="module-list"><span class="module">Finder</span><span class="module">iCloud / Dropbox</span><span class="module">外部 prose editor</span></div></div></article>
           </div>
         </section>
 
-        <section class="section searchable" id="principles" data-search="原则 现状 v0.3 CP6 验收 隐私 author control local first 测试">
+        <section class="section searchable" id="principles" data-search="原则 现状 v0.4 CP14 验收 隐私 author control local first 测试">
           <div class="section-head"><div class="step-no">07</div><div><h2>实现原则与当前状态</h2><p>这些规则约束产品扩张，也让作者在文件出问题时能理解和修复。</p></div></div>
           <div class="grid two">
-            <article class="card"><h3>实现原则</h3><ul class="principle-list"><li>Markdown 保存作者内容，JSON 只做可重建的辅助索引。</li><li>UI 调用公开 Core API，不渲染 Markdown，也不直接编辑索引 JSON。</li><li>保存、迁移、删除和恢复先保护已有文件，再报告失败原因。</li><li>keikeu 不生成、改写、评价、上传或合并作者的创作文本。</li><li>系统功能在边界外处理：正文在外部编辑器，同步和冲突由 provider 负责。</li></ul></article>
-            <article class="card status"><h3>Road v0.3 的当前位置</h3><p>工程实现和 macOS 候选 smoke 已完成。CP6 的真实作者验收流程已经准备好，还没有记录结果。</p><div class="source">PROJECT.md · Current coordinates<br>acceptance/road_v0_3.md</div></article>
+            <article class="card"><h3>实现原则</h3><ul class="principle-list"><li>Markdown 保存作者内容，JSON 只做可重建的辅助索引。</li><li>UI 只调用 Application Service，不渲染 Markdown，也不直接编辑索引 JSON。</li><li>保存、迁移、删除和恢复先保护已有文件，再报告失败原因。</li><li>keikeu 不生成、改写、评价、上传或合并作者的创作文本。</li><li>系统功能在边界外处理：正文在外部编辑器，同步和冲突由 provider 负责。</li></ul></article>
+            <article class="card status"><h3>Road v0.4 的当前位置</h3><p>Gate A、Gate B、production bundle、真实作者场景 A/B、macOS 15.7+ 兼容性与 CP14 Flet 退役均已验收；Road v0.4 完成。</p><div class="source">PROJECT.md · Current coordinates<br>acceptance/road_v0_4_cp14.md</div></article>
           </div>
           <div class="table-wrap" style="margin-top:14px">
             <table>
               <thead><tr><th>结论</th><th>当前状态</th><th>能证明什么</th></tr></thead>
               <tbody>
-                <tr><td>代码实现</td><td>已完成</td><td>源代码与聚焦测试覆盖 Road v0.3 的核心约束。</td></tr>
-                <tr><td>macOS 候选 smoke</td><td>已完成</td><td>合成 Vault 和候选工作流已被检查。</td></tr>
-                <tr><td>真实作者验收</td><td>待执行 CP6</td><td>作者能否更快找回内容、顺利交给外部编辑器。</td></tr>
-                <tr><td>Road 打标或归档</td><td>尚未决定</td><td>需要产品验收结果和开发者决策。</td></tr>
+                <tr><td>代码实现</td><td>已完成</td><td>Vue/Tauri/JSONL/Python 边界覆盖 Road v0.4 的核心约束。</td></tr>
+                <tr><td>macOS 候选与兼容性</td><td>已验收</td><td>同一 arm64 artifact 已在 macOS 15.7 runner 与当前工作站启动。</td></tr>
+                <tr><td>真实作者验收</td><td>已完成</td><td>场景 A/B 验证检索、编辑器交接、视觉层级和作者控制。</td></tr>
+                <tr><td>Road 打标或归档</td><td>尚未授权</td><td>tag、archive 与 push 仍是独立开发者决策。</td></tr>
               </tbody>
             </table>
           </div>
         </section>
       </div>
 
-      <footer class="footer">最终核对：<a href="../SPEC.md">SPEC</a>、<a href="../PROJECT.md">PROJECT</a> 与 <a href="../RULES.md">RULES</a>。运行时事实来自 `src/keikeu_core/`、`src/keikeu_app/` 与对应测试；此页只负责解释。</footer>
+      <footer class="footer">最终核对：<a href="../SPEC.md">SPEC</a>、<a href="../PROJECT.md">PROJECT</a> 与 <a href="../RULES.md">RULES</a>。运行时事实来自 `frontend/`、`src/keikeu_bridge/`、`src/keikeu_core/` 与对应测试；此页只负责解释。</footer>
     </main>
   </div>
 

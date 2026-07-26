@@ -7,11 +7,11 @@
 
 ## Context
 
-Road v0.3 proved the product behavior and Python Core, but its Flet presentation layer is being replaced. The replacement must preserve local Markdown ownership, Home/path protections, failure semantics, and a runnable Flet rollback baseline while adding a browser-style frontend without exposing author files to JavaScript.
+Road v0.3 proved the product behavior and Python Core, but its Flet presentation layer was replaced. The replacement preserved local Markdown ownership, Home/path protections, failure semantics, and a runnable Flet rollback baseline through the acceptance gates while adding a browser-style frontend without exposing author files to JavaScript.
 
 ## Decision
 
-Road v0.4 uses Vue 3/Vite JavaScript for visible UI, a narrow Tauri/Rust host for desktop lifecycle and validated platform actions, and one Rust-owned JSONL Python sidecar. A transport-agnostic Python application service is shared by Flet and the JSONL dispatcher; the existing Python Core remains the only owner of product and filesystem rules.
+Road v0.4 uses Vue 3/Vite JavaScript for visible UI, a narrow Tauri/Rust host for desktop lifecycle and validated platform actions, and one Rust-owned JSONL Python sidecar. A transport-agnostic Python application service was shared by Flet and the JSONL dispatcher during migration; after CP14 it remains behind JSONL only. The existing Python Core remains the only owner of product and filesystem rules.
 
 ## Alternatives considered
 
@@ -35,7 +35,7 @@ Road v0.4 uses Vue 3/Vite JavaScript for visible UI, a narrow Tauri/Rust host fo
 ### Positive
 
 - Python Core, Markdown, indexes, and Vault layout remain reusable and manually repairable.
-- Flet and Tauri can be compared through one application boundary.
+- Flet and Tauri were compared through one application boundary before Flet retirement.
 - Vue receives narrow DTOs and cannot directly read or write author files.
 
 ### Negative

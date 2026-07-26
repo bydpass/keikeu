@@ -1,6 +1,6 @@
 # Phase 8.5 Cold-Start Audit
 
-> Historical audit note: the Road v0.3 maps exercised below were archived on 2026-07-25 in [`archive/road-v0-3/`](archive/road-v0-3/). Current map paths are transition boundaries until the next Road is approved.
+> Historical audit note: the Road v0.3 maps exercised below were archived on 2026-07-25 in [`archive/road-v0-3/`](archive/road-v0-3/). CP14 retired the Flet files named in the original route; current runtime coordinates live in [`PROJECT.md`](PROJECT.md).
 
 - Date: 2026-07-18
 - Branch: `codex/phase-8-5-doc-reform`
@@ -32,14 +32,17 @@ Route:
 ```text
 README
   → PROJECT runtime map
-  → architecture.html / Paper 保存
-  → src/keikeu_app/pages/paper_page.py
+  → architecture.html / runtime boundary
+  → frontend/src/PaperView.vue
+  → src/keikeu_bridge/service.py
   → src/keikeu_core/models.py
   → src/keikeu_core/markdown_io.py
   → src/keikeu_core/indexer.py
 ```
 
-The architecture page links each source directly. No global repository search or archive file is required.
+The original audit reached `src/keikeu_app/pages/paper_page.py`; CP14 replaced
+that retired hop with the Vue/bridge route above. No archive file is required
+for the current route.
 
 Observed responsibilities:
 
@@ -54,12 +57,13 @@ Verdict: structural pass; source reached within two link transitions from the ar
 
 Probe: “Improve the external-modification error wording without changing save behavior.”
 
-Minimum location plan from active maps:
+The original minimum location plan used the now-retired Flet builder. The CP14
+equivalent from active maps is:
 
 1. confirm the interaction requirement in [`interaction.html`](design/interaction.html) § Error and recovery;
-2. change only [`paper_page.py`](../src/keikeu_app/pages/paper_page.py) if wording is the sole behavior;
-3. update the focused builder assertion in [`test_app_pages.py`](../tests/test_app_pages.py); and
-4. run `.venv/bin/python -m pytest tests/test_app_pages.py`.
+2. change only [`PaperView.vue`](../frontend/src/PaperView.vue) if wording is the sole behavior;
+3. update the focused assertion in [`PaperView.test.js`](../frontend/src/PaperView.test.js); and
+4. run `npm --prefix frontend run test -- PaperView.test.js`.
 
 Scope exclusions are evident from [`RULES.md`](RULES.md): do not change Markdown I/O, overwrite policy, Vault state, dependencies, or Phase 8 product scope.
 
@@ -70,7 +74,7 @@ Verdict: structural pass.
 The commands are discoverable in README, PROJECT, and AGENTS at their appropriate level:
 
 ```bash
-.venv/bin/python -m pytest tests/test_app_pages.py
+npm --prefix frontend run test -- PaperView.test.js
 .venv/bin/python scripts/check_docs.py
 ```
 

@@ -13,15 +13,13 @@ Updated: 2026-07-26
 | Phase 7.5 lightweight iOS | Quick-test build complete on an independent branch | Responsive shell and app-sandbox Vault were exercised on `codex/fix-ios-device-readiness`. This is a lightweight iOS version for rapid testing, not a step in the macOS Road sequence. |
 | Phase 8.5 / Road v0.3 preparation | Complete | Documentation reform, authority maps, link gate, browser QA, and bounded Graphify trial completed before Road v0.3 construction. The fresh-agent audit remained unperformed and is not retroactively claimed. |
 | Road v0.3 | Product accepted; design archive complete | Phase 0–7 engineering, CP5 macOS candidate smoke, and CP6 real-author scenarios are complete. Retrieval was faster and clear, external-editor handoff was clear, and no unresolved P0/P1 was reported. The [version archive](archive/road-v0-3/README.md) is read-only; no v0.3 tag, commit, or push is implied. |
-| Road v0.4 | CP13 accepted; CP14 pending | GitHub arm64 macOS 15.7.7 build/launch and current-workstation same-artifact retest passed with no unresolved P0/P1. The developer accepted CP13 on 2026-07-26; Flet retirement moves to CP14. |
+| Road v0.4 | Complete; CP14 accepted | [CP14 evidence](acceptance/road_v0_4_cp14.md) records accepted Flet retirement, Python `234`, Vue `48`, Rust `10`, and the authorized final beta engineering build/launch/relaunch smoke. The one-time exception is consumed; compatibility remains CP13-only evidence. |
 
 Phase 8 product acceptance is complete. Road v0.2 is marked by local annotated tag `v0.2.0` at `d0feac0269a5619f5dbf27c04347ba69c5665b42`; archival remains a separate developer decision. Automated tests, platform smoke, and author acceptance remain distinct evidence.
 
-Phase 7.5 and the macOS Roads are separate tracks. The lightweight iOS test version is not a merge gate for the next macOS Road.
+Road v0.3 product decisions, implementation, macOS candidate smoke, and product acceptance are complete. Its detailed SPEC, Planbook, maps, ADRs, and CP6 record are archived. Its accepted Python/Flet runtime served as the Road v0.4 parity baseline until all replacement gates passed; CP14 retires it without changing or migrating Vault data.
 
-Road v0.3 product decisions, implementation, macOS candidate smoke, and product acceptance are complete. Its detailed SPEC, Planbook, maps, ADRs, and CP6 record are archived. The accepted Python/Flet runtime remains available until a separately approved Road replaces it; archival does not authorize runtime removal or data migration.
-
-Road v0.4 CP0 is committed at `8407941` on `codex/road-v04-cp0`; CP1 at `b718ed8`; CP2 at `42dfa68`; CP3 at `e72f155`; CP4 at `0d86847`; CP5 at `f19da31`; CP6 at `b52622f`; CP7 at `067c50c`; CP8 at `f12374c`; CP9 at `2c2df7c`; CP10 at `992f9ca`; CP11 at `908fd85`; and CP12 at `6efd039`. CP13 workflow candidate `a6db6d2` and its macOS 15.7+ evidence were accepted on `codex/road-v04-cp13`.
+Road v0.4 CP0 is committed at `8407941` on `codex/road-v04-cp0`; CP1 at `b718ed8`; CP2 at `42dfa68`; CP3 at `e72f155`; CP4 at `0d86847`; CP5 at `f19da31`; CP6 at `b52622f`; CP7 at `067c50c`; CP8 at `f12374c`; CP9 at `2c2df7c`; CP10 at `992f9ca`; CP11 at `908fd85`; and CP12 at `6efd039`. CP13 workflow candidate `a6db6d2` and its macOS 15.7+ evidence were accepted in `4d510cc` on `codex/road-v04-cp13`. CP14 was accepted on 2026-07-26 and completes the Road on `codex/road-v04-cp14`; its checkpoint commit is that branch's HEAD.
 
 ## Road v0.4 CP2 evidence
 
@@ -125,12 +123,12 @@ CP0 observed the workstation before approval:
 | Xcode | `27.0 (27A5194q)` from `Xcode-beta.app` | Beta; no stable Xcode installation found |
 
 The developer approved exact Road v0.4 dependencies and the current beta
-macOS/Xcode workstation for CP4–CP12 engineering on 2026-07-25. This narrow
-exception is recorded in [ADR-0005](architecture/decisions/0005-beta-toolchain-engineering-exception.md);
-it does not satisfy the CP13 macOS 15.7+ compatibility gate. CP4 now locks
+macOS/Xcode workstation for CP4–CP12 engineering on 2026-07-25, then granted a
+one-time CP14 final build/smoke extension on 2026-07-26. This narrow exception
+is recorded in [ADR-0005](architecture/decisions/0005-beta-toolchain-engineering-exception.md);
+it does not replace the accepted CP13 macOS 15.7+ compatibility evidence. CP4 locks
 Node/npm `22.23.1`/`10.9.8`, Rust/Cargo `1.88.0`/`1.88.0`,
-Python/PyInstaller `3.13.14`/`6.21.0`, and target
-`aarch64-apple-darwin`.
+Python/PyInstaller `3.13.14`/`6.21.0`, and target `aarch64-apple-darwin`.
 
 ## Product flow
 
@@ -150,17 +148,16 @@ See [SPEC](SPEC.md) for the stable product boundary. The accepted Road v0.3 inte
 | Index | folder-aware rebuildable Paper/index v3 metadata and isolated path/parse errors | [`indexer.py`](../src/keikeu_core/indexer.py) | [`test_indexer.py`](../tests/test_indexer.py) |
 | v0.1 migration | preflight, external backup, Paper v3 staging, swap | [`migration_v01.py`](../src/keikeu_core/migration_v01.py) | [`test_migration_v01.py`](../tests/test_migration_v01.py) |
 | Application service | UI-neutral startup/Vault, Paper, Flashcard, Library, migration, structured errors, DTOs, and validated system targets | [`service.py`](../src/keikeu_bridge/service.py), [`dto.py`](../src/keikeu_bridge/dto.py) | [`test_bridge_service.py`](../tests/test_bridge_service.py) |
-| App shell | Vault/migration identity gates, vault-relative Paper routing, and custom Library scope sidebar | [`main.py`](../src/keikeu_app/main.py) | [`test_app_pages.py`](../tests/test_app_pages.py) |
-| Paper UI | create/update with Paper and Highlight names, immutable code, drag/menu ordering, delete, handoff | [`paper_page.py`](../src/keikeu_app/pages/paper_page.py) | [`test_app_pages.py`](../tests/test_app_pages.py) |
+| JSONL sidecar | versioned envelopes, session-bound tokens, dispatch, stdin/stdout isolation, and one-shot mutations | [`protocol.py`](../src/keikeu_bridge/protocol.py), [`sidecar.py`](../src/keikeu_bridge/sidecar.py) | [`test_bridge_protocol.py`](../tests/test_bridge_protocol.py) |
+| Tauri/Rust host | one sidecar, serialized requests, lifecycle cleanup, native directory picker, and validated open/reveal | [`lib.rs`](../frontend/src-tauri/src/lib.rs) | Cargo tests in the same module |
+| Vue app shell | startup/Vault/migration gates, fixed global navigation, page routing, and runtime recovery | [`App.vue`](../frontend/src/App.vue), [`bridge.js`](../frontend/src/bridge.js) | [`App.test.js`](../frontend/src/App.test.js), [`bridge.test.js`](../frontend/src/bridge.test.js) |
 | Vue Paper slice | Startup/daily gate, Paper DTO form, initial copy, keyboard save, Highlight ordering, soft delete, and structured recovery through the Tauri bridge | [`PaperView.vue`](../frontend/src/PaperView.vue), [`bridge.js`](../frontend/src/bridge.js) | [`PaperView.test.js`](../frontend/src/PaperView.test.js), [`bridge.test.js`](../frontend/src/bridge.test.js) |
-| Flashcard UI | named Summary-first projection, Paper selector, page-1 reset, list/arrow/jump navigation | [`flashcard_page.py`](../src/keikeu_app/pages/flashcard_page.py) | [`test_app_pages.py`](../tests/test_app_pages.py) |
 | Vue Flashcard slice | read-only Summary-first projection, in-memory navigation/reset, Summary context, and selected-Paper return | [`FlashcardView.vue`](../frontend/src/FlashcardView.vue), [`App.vue`](../frontend/src/App.vue) | [`FlashcardView.test.js`](../frontend/src/FlashcardView.test.js), [`App.test.js`](../frontend/src/App.test.js) |
 | Vue Library slice | Python-owned query/mutation results, local selection, partial failures, folder/Trash gates, and validated system handoff | [`LibraryView.vue`](../frontend/src/LibraryView.vue), [`App.vue`](../frontend/src/App.vue) | [`LibraryView.test.js`](../frontend/src/LibraryView.test.js), [`App.test.js`](../frontend/src/App.test.js) |
 | Vue Vault/migration slice | Native directory intent, opaque preview/preflight tokens, explicit relocation/migration confirmation, and blocking unknown-commit recovery | [`VaultView.vue`](../frontend/src/VaultView.vue), [`bridge.js`](../frontend/src/bridge.js) | [`VaultView.test.js`](../frontend/src/VaultView.test.js), [`bridge.test.js`](../frontend/src/bridge.test.js) |
-| Device state | disposable once-per-local-day start-card claim; no Flashcard position | [`local_state.py`](../src/keikeu_bridge/local_state.py); Flet compatibility import remains | [`test_local_state.py`](../tests/test_local_state.py) |
-| Library UI | folder scopes, scoped search/sort, selection, drag/menu/batch moves, branch, Trash/recovery, system handoff | [`library_page.py`](../src/keikeu_app/pages/library_page.py) | [`test_app_pages.py`](../tests/test_app_pages.py) |
+| Device state | disposable once-per-local-day start-card claim; no Flashcard position | [`local_state.py`](../src/keikeu_bridge/local_state.py) | [`test_local_state.py`](../tests/test_local_state.py) |
 
-The active [architecture page](architecture/architecture.html) distinguishes the accepted current Flet runtime from the approved Road v0.4 target; the implemented Road v0.3 lifecycle view is [archived](archive/road-v0-3/architecture/architecture.html).
+The active [architecture page](architecture/architecture.html) describes the single Vue/Tauri/JSONL/Python runtime. The superseded Road v0.3 Flet lifecycle view is [archived](archive/road-v0-3/architecture/architecture.html).
 
 ## Documentation map
 
@@ -174,7 +171,7 @@ README
 ```
 
 - **Authority:** [SPEC](SPEC.md) owns Road v0.4 product scope; [RULES](RULES.md) owns engineering, interaction, data, Git, and evidence constraints; the [Planbook](../PLAN_revised.md) owns execution order; the [understanding gate](../RULE_FOR_UNDERSTANDING.md) owns checkpoint teaching; [AGENTS](../AGENTS.md) owns agent procedure. The [JSONL protocol](protocol.md) records the active local transport contract. Runtime facts come from [`src/`](../src/) and [`tests/`](../tests/).
-- **Views:** [design](design/design.html), [interaction](design/interaction.html), and [architecture](architecture/architecture.html) describe the approved Road v0.4 target and label the current Flet implementation separately.
+- **Views:** [design](design/design.html), [interaction](design/interaction.html), and [architecture](architecture/architecture.html) describe the implemented Road v0.4 runtime and accepted visual system.
 - **Evidence:** [acceptance](acceptance/README.md) links completed Road v0.2 evidence and the archived Road v0.3 CP6 record. The frozen [2cc40ba status snapshot](archive/snapshots/feat-complete-road-v0-3-candidate.html) shows the earlier CP5 boundary. [generated](generated/README.md) remains rebuildable observation; the [cold-start audit](cold_start_report.md) is dated historical evidence, not a claim about the transition pages.
 - **Context:** [ADR 0001](architecture/decisions/0001-document-authority.md) explains the authority split. Road v0.3 ADR 0002/0003 and its design set live in the [version archive](archive/road-v0-3/README.md). [Manual](manual/README.md) teaches people; [archive](archive/README.md) preserves superseded records. Neither overrides authority.
 
@@ -183,16 +180,19 @@ README
 ```bash
 .venv/bin/python -m pytest
 .venv/bin/python -m compileall -q src
+.venv/bin/python scripts/build_sidecar.py
+npm --prefix frontend run test
+npm --prefix frontend run build
+cargo test --manifest-path frontend/src-tauri/Cargo.toml
+npm --prefix frontend run tauri:build
 .venv/bin/python scripts/check_docs.py
-flet run src/keikeu_app/main.py
 ```
 
 Application tests must not be inferred from documentation checks. Platform smoke and author acceptance require their own evidence.
 
-## Open gates
+## Post-Road decisions
 
-1. Retire Flet and run the final audit on the independent CP14 branch.
-2. Treat tag, push, signing, distribution, and any real-Vault operation as separate developer decisions.
+Road v0.4 is complete. Tag, archive, push, signing, distribution, and any real-Vault operation remain separate developer decisions.
 
 ## History boundary
 

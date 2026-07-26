@@ -164,11 +164,6 @@ class KeikeuService:
         self._root_identity: tuple[int, int] | None = None
         self._tokens: dict[str, object] = {}
 
-    @property
-    def active_vault(self) -> Path | None:
-        """Return the active path for the in-process Flet adapter only."""
-        return self._active_vault
-
     def reset_transient_handles(self) -> None:
         """Expire previews, edit snapshots, and migration preflights."""
         self._tokens.clear()
@@ -371,31 +366,6 @@ class KeikeuService:
                 message=message,
                 configured_path=str(raw_vault),
                 preview=preview,
-            )
-
-    def activate_existing_vault(
-        self,
-        vault: Path,
-        *,
-        expected_root_identity: tuple[int, int] | None = None,
-        claim_daily: bool = False,
-        require_clean_papers: bool = False,
-    ) -> StartupDto:
-        """Attach the accepted Flet adapter to one selected Paper Vault."""
-        with _translated_errors():
-            safe_vault, identity = self._pin_home_vault_root(
-                vault,
-                expected_root_identity,
-            )
-            if require_clean_papers:
-                selection = self._validated_rebuild(safe_vault)
-                identity = selection.root_identity
-            elif self._classify_configured_home_vault(safe_vault) != _SOURCE_PAPER:
-                raise ValueError("selected Vault is not a Paper v2/v3 Vault")
-            return self._activate(
-                safe_vault,
-                identity,
-                claim_daily=claim_daily,
             )
 
     @staticmethod
