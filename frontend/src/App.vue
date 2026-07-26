@@ -1,8 +1,14 @@
 <script setup>
-import { onMounted, onUnmounted, ref } from "vue";
+import { defineAsyncComponent, onMounted, onUnmounted, ref } from "vue";
 
 import { getRuntimeStatus, restartSidecar } from "./bridge.js";
 
+const PrototypeView = import.meta.env.DEV
+  ? defineAsyncComponent(() => import("./PrototypeView.vue"))
+  : null;
+const showPrototype =
+  import.meta.env.DEV &&
+  new URLSearchParams(window.location.search).get("prototype") === "1";
 const status = ref({ state: "starting" });
 const restarting = ref(false);
 let refreshTimer;
@@ -40,12 +46,18 @@ async function restart() {
   }
 }
 
-onMounted(refreshStatus);
+onMounted(() => {
+  if (!showPrototype) {
+    refreshStatus();
+  }
+});
 onUnmounted(() => window.clearTimeout(refreshTimer));
 </script>
 
 <template>
-  <main class="runtime-gate" aria-live="polite">
+  <PrototypeView v-if="showPrototype" />
+
+  <main v-else class="runtime-gate" aria-live="polite">
     <section v-if="status.state === 'ready'" class="runtime-panel">
       <p class="eyebrow">Road v0.4 · CP4</p>
       <h1>Python Core 已连接</h1>

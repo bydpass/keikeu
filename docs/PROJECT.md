@@ -13,7 +13,7 @@ Updated: 2026-07-25
 | Phase 7.5 lightweight iOS | Quick-test build complete on an independent branch | Responsive shell and app-sandbox Vault were exercised on `codex/fix-ios-device-readiness`. This is a lightweight iOS version for rapid testing, not a step in the macOS Road sequence. |
 | Phase 8.5 / Road v0.3 preparation | Complete | Documentation reform, authority maps, link gate, browser QA, and bounded Graphify trial completed before Road v0.3 construction. The fresh-agent audit remained unperformed and is not retroactively claimed. |
 | Road v0.3 | Product accepted; design archive complete | Phase 0–7 engineering, CP5 macOS candidate smoke, and CP6 real-author scenarios are complete. Retrieval was faster and clear, external-editor handoff was clear, and no unresolved P0/P1 was reported. The [version archive](archive/road-v0-3/README.md) is read-only; no v0.3 tag, commit, or push is implied. |
-| Road v0.4 | CP4 — Tauri host complete; CP5 next | The Rust-owned host now starts and owns the packaged Python sidecar, handshakes before becoming ready, serializes requests, blocks on uncertain transport state, and exposes only five narrow Tauri commands. Python Core and Flet remain runnable. |
+| Road v0.4 | CP5 complete; CP6 next | The development-only Vue specimen established the editorial-workbench direction with synthetic in-memory data. Automated and responsive browser checks passed, and the developer approved the visual direction on 2026-07-25. |
 
 Phase 8 product acceptance is complete. Road v0.2 is marked by local annotated tag `v0.2.0` at `d0feac0269a5619f5dbf27c04347ba69c5665b42`; archival remains a separate developer decision. Automated tests, platform smoke, and author acceptance remain distinct evidence.
 
@@ -21,7 +21,7 @@ Phase 7.5 and the macOS Roads are separate tracks. The lightweight iOS test vers
 
 Road v0.3 product decisions, implementation, macOS candidate smoke, and product acceptance are complete. Its detailed SPEC, Planbook, maps, ADRs, and CP6 record are archived. The accepted Python/Flet runtime remains available until a separately approved Road replaces it; archival does not authorize runtime removal or data migration.
 
-Road v0.4 CP0 is committed at `8407941` on `codex/road-v04-cp0`; CP1 at `b718ed8` on `codex/road-v04-cp1`; CP2 at `42dfa68` on `codex/road-v04-cp2`; CP3 is implemented on `codex/road-v04-cp3`. Each checkpoint uses its own `codex/road-v04-cpN` branch created from the previous accepted checkpoint.
+Road v0.4 CP0 is committed at `8407941` on `codex/road-v04-cp0`; CP1 at `b718ed8`; CP2 at `42dfa68`; CP3 at `e72f155`; and CP4 at `0d86847`. CP5 is approved on `codex/road-v04-cp5`; its commit becomes the CP6 branch base. Each checkpoint uses its own `codex/road-v04-cpN` branch created from the previous accepted checkpoint.
 
 ## Road v0.4 CP2 evidence
 
@@ -58,6 +58,25 @@ Road v0.4 CP0 is committed at `8407941` on `codex/road-v04-cp0`; CP1 at `b718ed8
   workstation, standard release compilation at that deployment target fails to
   load Rust 1.88 proc-macros (`E0463`). A one-run `11.0` config override proved
   bundle assembly only; that `.app` is not production or CP13 evidence.
+
+## Road v0.4 CP5 review evidence
+
+- The editorial-workbench specimen uses synthetic in-memory Papers only. It
+  never invokes the bridge and labels itself as disconnected from the Vault.
+- The specimen is loaded through a development-only dynamic import at
+  `?prototype=1`. The production bundle contains neither the specimen text nor
+  its scoped CSS.
+- Vitest completed with `5 passed`; the production Vite build and
+  `git diff --check` passed.
+- Browser checks at 1220×780, 920×680, 768×800, and 375×812 found no horizontal
+  overflow or console warning/error. Search, Paper selection, and Highlight
+  move-up worked with local state only.
+- Form controls have labels, buttons have accessible names, landmarks are
+  present, IDs are unique, and the reviewed text color pairs range from 5.41:1
+  to 15.48:1 contrast.
+- No historical screenshot baseline exists, so automated evidence did not
+  approve taste. The developer reviewed and approved the rendered direction on
+  2026-07-25; the tokens and layout rules are frozen for Gate A.
 
 ## Road v0.4 toolchain
 
@@ -134,9 +153,10 @@ Application tests must not be inferred from documentation checks. Platform smoke
 
 ## Open gates
 
-1. Commit CP4 on `codex/road-v04-cp4`, then create CP5 only from that HEAD.
-2. Build the CP5 synthetic Vue prototype without reading or mutating a real
-   Vault, and obtain the developer's visual-direction acceptance.
+1. Commit the approved CP5 diff, then create `codex/road-v04-cp6` only from
+   that checkpoint.
+2. Implement the CP6 Paper slice through the existing narrow bridge without
+   touching a real Vault.
 3. Keep CP13 macOS 13.3+ compatibility separate from beta-workstation
    engineering evidence.
 4. Treat tag, push, signing, distribution, and any real-Vault operation as

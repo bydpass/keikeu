@@ -80,7 +80,7 @@ dd {
   border-top: 4px solid #a33e3e;
 }
 
-button {
+.runtime-panel > button {
   margin-top: 28px;
   padding: 10px 16px;
   border: 1px solid #1e2523;
@@ -90,7 +90,7 @@ button {
   cursor: pointer;
 }
 
-button:disabled {
+.runtime-panel > button:disabled {
   cursor: wait;
   opacity: 0.6;
 }
