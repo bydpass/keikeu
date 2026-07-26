@@ -362,7 +362,7 @@ onMounted(() => {
   <main class="vault-gate">
     <section class="vault-panel" :aria-busy="busy">
       <header>
-        <p class="vault-eyebrow">Road v0.4 · CP9</p>
+        <p class="vault-eyebrow">Road v0.4 · Vault</p>
         <h1>{{ mode.startsWith("migration") ? "迁移旧 Vault" : "打开或创建 Vault" }}</h1>
         <p>Paper Markdown 保留在本地；Vue 只提交路径与确认令牌。</p>
       </header>
@@ -513,13 +513,6 @@ onMounted(() => {
 
 <style scoped>
 .vault-gate {
-  --canvas: #eceae4;
-  --paper: #fffefa;
-  --ink: #1e2523;
-  --muted: #646b68;
-  --accent: #2e5d57;
-  --rule: #c8c9c2;
-  --danger: #a33e3e;
   display: grid;
   min-height: 100vh;
   padding: clamp(18px, 5vw, 64px);
@@ -572,7 +565,7 @@ input[type="text"] {
   border-radius: 0;
   padding: 11px 12px;
   color: var(--ink);
-  background: #fff;
+  background: var(--field);
 }
 
 button {
@@ -651,7 +644,7 @@ code {
 .vault-error {
   border: 1px solid var(--danger);
   padding: 14px;
-  background: #fff7f4;
+  background: var(--danger-soft);
 }
 
 .migration-issues li {

@@ -136,7 +136,7 @@ beta 仅获准用于 CP4–CP12 工程构建；CP13 兼容验证不受该例外�
 - **CP8（完成）：**Library read slice、自动检查与隔离浏览器 QA 已完成；开发者于 2026-07-25 确认验收并提交为 `f12374c`。
 - **CP9（完成）：**Library mutation、Vault 与 migration slice 已验收并提交为 `2c2df7c`。
 - **CP10（完成）：**Flet / Tauri 功能等价矩阵、自动检查与隔离 `.app` smoke 已完成；开发者于 2026-07-26 确认 Gate A 通过。
-- **CP11：**完成完整视觉重建与独立视觉验收，通过 Gate B。
+- **CP11（完成）：**共享 visual tokens、跨页面视觉收口、固定全局功能栏、自动检查与唯一 `.app` 视觉 smoke 已完成；开发者于 2026-07-26 确认 Gate B 通过。
 - **CP12：**完成真实作者场景 A/B 与生产 bundle smoke。
 - **CP13：**完成 arm64 `.app` 和最老承诺系统兼容验证；通过后才宣称 macOS 13.3+。
 - **CP14：**删除 Flet、校准文档并重跑全量检查；tag、archive、push 仍需单独授权。

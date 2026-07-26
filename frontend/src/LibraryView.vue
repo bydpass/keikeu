@@ -591,7 +591,7 @@ onUnmounted(() => {
 <template>
   <main v-if="busy && !view" class="library-gate" aria-live="polite">
     <section>
-      <p class="library-eyebrow">Road v0.4 · CP9</p>
+      <p class="library-eyebrow">Road v0.4 · Library</p>
       <h1>正在读取 Library</h1>
       <p>搜索、排序与 scope 由 Python application service 执行。</p>
     </section>
@@ -599,7 +599,7 @@ onUnmounted(() => {
 
   <main v-else-if="!view" class="library-gate" aria-live="assertive">
     <section class="library-gate-error">
-      <p class="library-eyebrow">Library read slice 已阻塞</p>
+      <p class="library-eyebrow">Library 已阻塞</p>
       <h1>无法读取 Library</h1>
       <p>{{ queryError?.message ?? "本地索引暂时不可用。" }}</p>
       <button type="button" :disabled="busy" @click="refresh">
@@ -631,7 +631,7 @@ onUnmounted(() => {
 
     <aside class="library-context" aria-labelledby="library-scopes-title">
       <header>
-        <p class="library-eyebrow">Road v0.4 · CP9</p>
+        <p class="library-eyebrow">Road v0.4 · Library</p>
         <h1 id="library-scopes-title">Library</h1>
         <p>Python-owned mutations · {{ runtime.core_version }}</p>
       </header>
@@ -948,7 +948,7 @@ onUnmounted(() => {
         <small>{{ actionError.layer }} · {{ actionError.code }}</small>
       </section>
       <p v-if="notice" class="library-notice" aria-live="polite">{{ notice }}</p>
-      <p class="cp9-note">写入由 Python Core 执行；Vue 不直接操作 Markdown 或索引文件。</p>
+      <p class="library-boundary-note">写入由 Python Core 执行；Vue 不直接操作 Markdown 或索引文件。</p>
     </main>
 
     <div
@@ -1053,16 +1053,8 @@ onUnmounted(() => {
 
 <style scoped>
 .library-shell {
-  --canvas: #eceae4;
-  --paper: #fffefa;
-  --ink: #1e2523;
-  --muted: #646b68;
-  --accent: #2e5d57;
-  --signal: #9a4e3f;
-  --rule: #c8c9c2;
-  --danger: #a33e3e;
   display: grid;
-  grid-template-columns: 72px 230px minmax(0, 1fr);
+  grid-template-columns: 72px 260px minmax(0, 1fr);
   min-height: 100vh;
   color: var(--ink);
   background: var(--canvas);
@@ -1101,14 +1093,15 @@ button:disabled {
   min-height: 100vh;
   padding: 32px;
   place-items: center;
-  background: #eceae4;
+  background: var(--canvas);
 }
 
 .library-gate > section {
   width: min(680px, 100%);
   padding: 40px;
-  border: 1px solid #c8c9c2;
-  background: #fffefa;
+  border: 1px solid var(--rule);
+  border-top: 4px solid var(--accent);
+  background: var(--paper);
 }
 
 .library-gate h1 {
@@ -1121,22 +1114,24 @@ button:disabled {
 
 .library-gate button {
   margin-top: 20px;
-  color: #fffefa;
-  background: #2e5d57;
+  color: var(--paper);
+  background: var(--accent);
 }
 
 .library-gate-error {
-  border-top: 4px solid #a33e3e !important;
+  border-top-color: var(--danger) !important;
 }
 
 .library-rail {
-  position: sticky;
-  top: 0;
+  position: fixed;
+  z-index: 1;
+  inset: 0 auto 0 0;
   display: flex;
-  min-height: 100vh;
+  width: 72px;
   flex-direction: column;
   align-items: center;
   gap: 16px;
+  overflow-y: auto;
   padding: 18px 8px;
   color: var(--paper);
   background: var(--ink);
@@ -1159,7 +1154,7 @@ button:disabled {
   border: 0;
   padding: 0;
   place-items: center;
-  color: #b9c0bd;
+  color: var(--rail-muted);
   background: transparent;
   font-weight: 700;
 }
@@ -1172,7 +1167,7 @@ button:disabled {
 .library-destination.is-active {
   border-left: 3px solid var(--signal);
   color: var(--paper);
-  background: #2d3532;
+  background: var(--rail-active);
 }
 
 .library-local {
@@ -1182,10 +1177,11 @@ button:disabled {
 }
 
 .library-context {
+  grid-column: 2;
   min-width: 0;
   padding: 28px 18px;
   border-right: 1px solid var(--rule);
-  background: #f4f3ee;
+  background: var(--soft);
 }
 
 .library-context h1,
@@ -1288,6 +1284,7 @@ button:disabled {
 }
 
 .library-workspace {
+  grid-column: 3;
   min-width: 0;
   padding: 30px clamp(22px, 4vw, 52px) 64px;
 }
@@ -1334,7 +1331,7 @@ button:disabled {
   border: 1px solid var(--rule);
   padding: 10px 11px;
   color: var(--ink);
-  background: #fff;
+  background: var(--field);
 }
 
 .library-toolbar small {
@@ -1374,7 +1371,7 @@ button:disabled {
   gap: 7px;
   padding: 10px 16px;
   border-bottom: 1px solid var(--rule);
-  background: #f4f3ee;
+  background: var(--soft);
 }
 
 .mutation-toolbar button {
@@ -1434,7 +1431,7 @@ button:disabled {
 
 .library-list li.active {
   border-left: 3px solid var(--signal);
-  background: #f4f3ee;
+  background: var(--soft);
 }
 
 .library-list label {
@@ -1530,7 +1527,7 @@ button:disabled {
 }
 
 .trash-note,
-.cp9-note {
+.library-boundary-note {
   color: var(--muted);
   font-size: 0.78rem;
 }
@@ -1568,7 +1565,7 @@ button:disabled {
   margin: 16px 0;
   padding: 14px;
   border: 1px solid var(--danger);
-  background: #fff7f4;
+  background: var(--danger-soft);
 }
 
 .library-error small {
@@ -1577,7 +1574,7 @@ button:disabled {
 }
 
 .library-notice {
-  color: #2f6b50;
+  color: var(--success);
   font-weight: 650;
 }
 
@@ -1622,14 +1619,14 @@ button:disabled {
   border: 1px solid var(--rule);
   padding: 10px;
   color: var(--ink);
-  background: #fff;
+  background: var(--field);
 }
 
 .permanent-warning {
   border: 1px solid var(--danger);
   padding: 12px;
   color: var(--danger);
-  background: #fff7f4;
+  background: var(--danger-soft);
 }
 
 .operation-actions {
@@ -1656,6 +1653,7 @@ button:disabled {
 
   .library-rail {
     grid-row: 1 / span 2;
+    width: 56px;
   }
 
   .library-context {
@@ -1680,9 +1678,11 @@ button:disabled {
 
   .library-rail {
     position: static;
-    min-height: auto;
+    width: auto;
+    height: auto;
     flex-direction: row;
     justify-content: space-between;
+    overflow-y: visible;
   }
 
   .library-local {

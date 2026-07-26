@@ -41,7 +41,7 @@
     <header>
       <p class="eyebrow">Road v0.4 · Interaction target</p>
       <h1>行为保持不变，调用路径逐层替换</h1>
-      <p class="status">CP0：Flet 仍提供全部已验收交互；本页描述 Tauri 达到 parity 时必须保留的流程。</p>
+      <p class="status">CP10：Tauri 已通过 Gate A 功能等价；Flet 保留为回退基线，直到 CP12 产品验收与后续退场 gate 完成。</p>
       <nav>
         <a href="../PROJECT.md">当前坐标</a>
         <a href="../SPEC.md">产品边界</a>
@@ -97,7 +97,7 @@
           <li>Flet 先通过共享 service 保持原行为。</li>
           <li>Paper、Flashcard、Library read、mutation/Vault 分切片迁移。</li>
           <li>每个切片做 Flet/Tauri 对照，不改变字段或动作语义。</li>
-          <li>Gate A 后才进行完整视觉重建；产品验收后才删除 Flet。</li>
+          <li>CP11 已独立完成 Gate B 视觉验收；CP12 产品验收后才允许删除 Flet。</li>
         </ol>
       </div>
     </section>

@@ -155,7 +155,7 @@ onUnmounted(() => window.clearTimeout(refreshTimer));
 
   <main v-else class="runtime-gate" aria-live="polite">
     <section v-if="status.state === 'starting'" class="runtime-panel">
-      <p class="eyebrow">Road v0.4 · CP4</p>
+      <p class="eyebrow">Local desktop · Python sidecar</p>
       <h1>正在启动本地 Core</h1>
       <p>窗口会在握手完成后解除阻塞。</p>
     </section>

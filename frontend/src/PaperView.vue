@@ -388,7 +388,7 @@ onUnmounted(() => {
 <template>
   <main v-if="screen === 'loading'" class="paper-gate" aria-live="polite">
     <section>
-      <p class="paper-eyebrow">Road v0.4 · CP6</p>
+      <p class="paper-eyebrow">Road v0.4 · Paper</p>
       <h1>正在读取本地 Paper</h1>
       <p>Vue 正通过受限本地边界读取启动状态。</p>
     </section>
@@ -417,7 +417,7 @@ onUnmounted(() => {
 
   <main v-else-if="screen === 'error'" class="paper-gate" aria-live="assertive">
     <section class="paper-gate-error">
-      <p class="paper-eyebrow">Paper slice 已阻塞</p>
+      <p class="paper-eyebrow">Paper 已阻塞</p>
       <h1>无法安全读取工作区</h1>
       <p>{{ startupError?.message ?? "本地启动流程未完成。" }}</p>
       <dl v-if="startupError">
@@ -451,7 +451,7 @@ onUnmounted(() => {
 
     <aside class="paper-context" aria-labelledby="paper-list-title">
       <header>
-        <p class="paper-eyebrow">Road v0.4 · CP6</p>
+        <p class="paper-eyebrow">Road v0.4 · Paper</p>
         <h1 id="paper-list-title">Paper 工作台</h1>
         <p>Python Core 已连接 · {{ runtime.core_version }}</p>
       </header>
@@ -615,14 +615,6 @@ onUnmounted(() => {
 
 <style scoped>
 .paper-shell {
-  --canvas: #eceae4;
-  --paper: #fffefa;
-  --ink: #1e2523;
-  --muted: #646b68;
-  --accent: #2e5d57;
-  --signal: #9a4e3f;
-  --rule: #c8c9c2;
-  --danger: #a33e3e;
   display: grid;
   grid-template-columns: 72px 260px minmax(0, 1fr);
   min-height: 100vh;
@@ -663,14 +655,15 @@ button:disabled {
   min-height: 100vh;
   padding: 32px;
   place-items: center;
-  background: #eceae4;
+  background: var(--canvas);
 }
 
 .paper-gate > section {
   width: min(680px, 100%);
   padding: 40px;
-  border: 1px solid #c8c9c2;
-  background: #fffefa;
+  border: 1px solid var(--rule);
+  border-top: 4px solid var(--accent);
+  background: var(--paper);
 }
 
 .paper-gate h1,
@@ -686,13 +679,13 @@ button:disabled {
   display: block;
   margin: 24px 0 8px;
   padding: 10px 18px;
-  border: 1px solid #1e2523;
-  color: #fffefa;
-  background: #2e5d57;
+  border: 1px solid var(--ink);
+  color: var(--paper);
+  background: var(--accent);
 }
 
 .paper-gate-error {
-  border-top: 4px solid #a33e3e !important;
+  border-top-color: var(--danger) !important;
 }
 
 .paper-gate dl {
@@ -700,13 +693,15 @@ button:disabled {
 }
 
 .paper-rail {
-  position: sticky;
-  top: 0;
+  position: fixed;
+  z-index: 1;
+  inset: 0 auto 0 0;
   display: flex;
-  min-height: 100vh;
+  width: 72px;
   flex-direction: column;
   align-items: center;
   gap: 16px;
+  overflow-y: auto;
   padding: 18px 8px;
   color: var(--paper);
   background: var(--ink);
@@ -727,7 +722,7 @@ button:disabled {
   width: 52px;
   min-height: 50px;
   place-items: center;
-  color: #b9c0bd;
+  color: var(--rail-muted);
   font-weight: 700;
 }
 
@@ -745,7 +740,7 @@ button:disabled {
 .paper-destination.is-active {
   border-left: 3px solid var(--signal);
   color: var(--paper);
-  background: #2d3532;
+  background: var(--rail-active);
 }
 
 .paper-local {
@@ -755,10 +750,11 @@ button:disabled {
 }
 
 .paper-context {
+  grid-column: 2;
   min-width: 0;
   padding: 28px 20px;
   border-right: 1px solid var(--rule);
-  background: #f4f3ee;
+  background: var(--soft);
 }
 
 .paper-context h1,
@@ -821,6 +817,7 @@ button:disabled {
 }
 
 .paper-workspace {
+  grid-column: 3;
   min-width: 0;
   padding: 30px clamp(24px, 4vw, 56px) 64px;
 }
@@ -839,7 +836,7 @@ button:disabled {
 }
 
 .paper-workspace-header > span {
-  color: #2f6b50;
+  color: var(--success);
   font-size: 0.78rem;
 }
 
@@ -877,7 +874,7 @@ textarea {
   border: 1px solid var(--rule);
   padding: 10px 11px;
   color: var(--ink);
-  background: #fff;
+  background: var(--field);
 }
 
 textarea {
@@ -887,14 +884,14 @@ textarea {
 
 input[readonly] {
   color: var(--muted);
-  background: #f4f3ee;
+  background: var(--soft);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 .initial-copy {
   padding: 16px;
   border-left: 3px solid var(--accent);
-  background: #f4f3ee;
+  background: var(--soft);
 }
 
 .initial-copy h3,
@@ -965,7 +962,7 @@ input[readonly] {
   gap: 10px;
   padding: 14px;
   border: 1px solid var(--danger);
-  background: #fff7f4;
+  background: var(--danger-soft);
 }
 
 .paper-error small {
@@ -979,7 +976,7 @@ input[readonly] {
 
 .paper-notice {
   margin: 0;
-  color: #2f6b50;
+  color: var(--success);
   font-weight: 650;
 }
 
@@ -1049,6 +1046,7 @@ input[readonly] {
 
   .paper-rail {
     grid-row: 1 / span 2;
+    width: 56px;
   }
 
   .paper-context {
@@ -1069,9 +1067,11 @@ input[readonly] {
 
   .paper-rail {
     position: static;
-    min-height: auto;
+    width: auto;
+    height: auto;
     flex-direction: row;
     justify-content: space-between;
+    overflow-y: visible;
   }
 
   .paper-local {

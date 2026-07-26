@@ -174,7 +174,7 @@ onUnmounted(() => window.removeEventListener("keydown", onWindowKeydown));
 <template>
   <main v-if="busy && !deck" class="flashcard-gate" aria-live="polite">
     <section>
-      <p class="flashcard-eyebrow">Road v0.4 · CP7</p>
+      <p class="flashcard-eyebrow">Road v0.4 · Flashcard</p>
       <h1>正在打开 Flashcard</h1>
       <p>从 Python Core 读取 Summary-first 投影。</p>
     </section>
@@ -212,7 +212,7 @@ onUnmounted(() => window.removeEventListener("keydown", onWindowKeydown));
 
     <aside class="flashcard-context" aria-labelledby="flashcard-list-title">
       <header>
-        <p class="flashcard-eyebrow">Road v0.4 · CP7</p>
+        <p class="flashcard-eyebrow">Road v0.4 · Flashcard</p>
         <h1 id="flashcard-list-title">Flashcard</h1>
         <p>只读投影 · {{ runtime.core_version }}</p>
       </header>
@@ -310,14 +310,6 @@ onUnmounted(() => window.removeEventListener("keydown", onWindowKeydown));
 
 <style scoped>
 .flashcard-shell {
-  --canvas: #eceae4;
-  --paper: #fffefa;
-  --ink: #1e2523;
-  --muted: #646b68;
-  --accent: #2e5d57;
-  --signal: #9a4e3f;
-  --rule: #c8c9c2;
-  --danger: #a33e3e;
   display: grid;
   grid-template-columns: 72px 260px minmax(0, 1fr);
   min-height: 100vh;
@@ -358,14 +350,15 @@ button:disabled {
   min-height: 100vh;
   padding: 32px;
   place-items: center;
-  background: #eceae4;
+  background: var(--canvas);
 }
 
 .flashcard-gate > section {
   width: min(680px, 100%);
   padding: 40px;
-  border: 1px solid #c8c9c2;
-  background: #fffefa;
+  border: 1px solid var(--rule);
+  border-top: 4px solid var(--accent);
+  background: var(--paper);
 }
 
 .flashcard-gate h1 {
@@ -378,22 +371,24 @@ button:disabled {
 
 .flashcard-gate button {
   margin-top: 20px;
-  color: #fffefa;
-  background: #2e5d57;
+  color: var(--paper);
+  background: var(--accent);
 }
 
 .flashcard-gate-error {
-  border-top: 4px solid #a33e3e !important;
+  border-top-color: var(--danger) !important;
 }
 
 .flashcard-rail {
-  position: sticky;
-  top: 0;
+  position: fixed;
+  z-index: 1;
+  inset: 0 auto 0 0;
   display: flex;
-  min-height: 100vh;
+  width: 72px;
   flex-direction: column;
   align-items: center;
   gap: 16px;
+  overflow-y: auto;
   padding: 18px 8px;
   color: var(--paper);
   background: var(--ink);
@@ -416,7 +411,7 @@ button:disabled {
   border: 0;
   padding: 0;
   place-items: center;
-  color: #b9c0bd;
+  color: var(--rail-muted);
   background: transparent;
   font-weight: 700;
 }
@@ -429,7 +424,7 @@ button:disabled {
 .flashcard-destination.is-active {
   border-left: 3px solid var(--signal);
   color: var(--paper);
-  background: #2d3532;
+  background: var(--rail-active);
 }
 
 .flashcard-local {
@@ -439,10 +434,11 @@ button:disabled {
 }
 
 .flashcard-context {
+  grid-column: 2;
   min-width: 0;
   padding: 28px 20px;
   border-right: 1px solid var(--rule);
-  background: #f4f3ee;
+  background: var(--soft);
 }
 
 .flashcard-context h1,
@@ -471,7 +467,7 @@ button:disabled {
   border: 1px solid var(--rule);
   padding: 10px 11px;
   color: var(--ink);
-  background: #fff;
+  background: var(--field);
 }
 
 .flashcard-context h2 {
@@ -513,6 +509,7 @@ button:disabled {
 }
 
 .flashcard-workspace {
+  grid-column: 3;
   min-width: 0;
   padding: 30px clamp(24px, 4vw, 56px) 64px;
 }
@@ -577,7 +574,7 @@ button:disabled {
   margin-top: 12px;
   padding: 16px;
   border-left: 3px solid var(--accent);
-  background: #f4f3ee;
+  background: var(--soft);
 }
 
 .summary-context h3,
@@ -662,6 +659,7 @@ button:disabled {
 
   .flashcard-rail {
     grid-row: 1 / span 2;
+    width: 56px;
   }
 
   .flashcard-context {
@@ -682,9 +680,11 @@ button:disabled {
 
   .flashcard-rail {
     position: static;
-    min-height: auto;
+    width: auto;
+    height: auto;
     flex-direction: row;
     justify-content: space-between;
+    overflow-y: visible;
   }
 
   .flashcard-local {
