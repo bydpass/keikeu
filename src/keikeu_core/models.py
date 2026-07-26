@@ -1,4 +1,4 @@
-"""Paper v2 data structures and validation.
+"""Paper v3 data structures and validation.
 
 The active core deliberately models only durable Paper assets.  Legacy v0.1
 Cache fields are isolated in ``legacy_v01.py`` for the one-shot migrator and
@@ -10,8 +10,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 import re
+import unicodedata
 
-__all__ = ["Paper", "validate_paper_code"]
+__all__ = ["Highlight", "Paper", "validate_display_name", "validate_paper_code"]
 
 
 _PAPER_CODE_RE = re.compile(r"^K-(\d{8})-(\d{3})$")
@@ -33,14 +34,47 @@ def validate_paper_code(code: str) -> str:
     return code
 
 
+def validate_display_name(value: str | None) -> str | None:
+    """Return trimmed optional display text without normalizing author input."""
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise ValueError("display_name must be a string or None")
+    value = value.strip()
+    if not value:
+        return None
+    if len(value) > 200:
+        raise ValueError("display_name must contain at most 200 Unicode code points")
+    if any(unicodedata.category(character) in {"Cc", "Zl", "Zp"} for character in value):
+        raise ValueError("display_name must be one line without control characters")
+    return value
+
+
+@dataclass
+class Highlight:
+    """One ordered writing anchor with an optional author-facing name."""
+
+    content: str
+    display_name: str | None = None
+
+    def __post_init__(self) -> None:
+        self.normalize()
+
+    def normalize(self) -> None:
+        if not isinstance(self.content, str):
+            raise ValueError("Highlight content must be a string")
+        self.display_name = validate_display_name(self.display_name)
+
+
 @dataclass
 class Paper:
-    """A Road v0.2 writing unit without lifecycle state or Outline links."""
+    """A Road v0.3 writing unit without lifecycle state or Outline links."""
 
     code: str
     initial_summary: str
     summary: str
-    highlights: list[str] = field(default_factory=list)
+    display_name: str | None = None
+    highlights: list[Highlight] = field(default_factory=list)
     tags: list[str] = field(default_factory=list)
     created: datetime = field(default_factory=datetime.now)
     updated: datetime = field(default_factory=datetime.now)
@@ -57,13 +91,18 @@ class Paper:
             raise ValueError("summary must not be blank")
         if not isinstance(self.initial_summary, str):
             raise ValueError("initial_summary must be a string")
+        self.display_name = validate_display_name(self.display_name)
         if self.legacy_title is not None and not isinstance(self.legacy_title, str):
             raise ValueError("legacy_title must be a string or None")
         if not isinstance(self.highlights, list) or not all(
-            isinstance(item, str) for item in self.highlights
+            isinstance(item, Highlight) for item in self.highlights
         ):
-            raise ValueError("highlights must be a list of strings")
-        self.highlights = [item for item in self.highlights if item != ""]
+            raise ValueError("highlights must be a list of Highlight values")
+        for highlight in self.highlights:
+            highlight.normalize()
+        self.highlights = [
+            highlight for highlight in self.highlights if highlight.content.strip()
+        ]
         if not isinstance(self.tags, list) or not all(
             isinstance(tag, str) for tag in self.tags
         ):

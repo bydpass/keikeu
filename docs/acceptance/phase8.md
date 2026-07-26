@@ -3,7 +3,7 @@
 > 状态：完成
 > 作者确认日期：2026-07-21
 > 权限：支持性证据；当前状态以 [`../PROJECT.md`](../PROJECT.md) 为准，验收契约以 [`../SPEC.md`](../SPEC.md) §12 为准
-> 更新前记录与 SOP：[`../archive/9114d63153711a7fa55e55bd663b27bfc11828b1/`](../archive/9114d63153711a7fa55e55bd663b27bfc11828b1/)
+> 更新前记录与 SOP：[`../archive/docs-archive-documentation-reform-report/`](../archive/docs-archive-documentation-reform-report/)
 
 ## 结论
 

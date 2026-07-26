@@ -1,208 +1,72 @@
-# keikeu Product Specification
+# keikeu Road v0.4 Product Boundary
 
-> Authority: product purpose, users, scope, durable objects, user-visible behavior, non-goals, and product acceptance. Runtime implementation is proven by `src/` and `tests/`.
+> Authority: Road v0.4 product scope and author-asset constraints. Current runtime facts live in `src/` and `tests/`; current coordinates live in [PROJECT](PROJECT.md); execution order lives in the [Road v0.4 Planbook](../PLAN_revised.md).
 
 ## 1. Definition
 
 keikeu is a private, local-first pre-writing and writing-focus tool for a single fanfiction author.
 
-It serves the moment when inspiration already exists but has not yet become stable prose:
-
 ```text
 existing inspiration → Paper Markdown → Flashcard → external prose editor
 ```
 
-keikeu organizes existing inspiration. It does not generate inspiration, ghostwrite prose, or host the finished work.
+It organizes existing inspiration. It does not generate inspiration, ghostwrite prose, or host finished work.
 
-## 2. Primary user
+## 2. Author control
 
-The primary user:
+- Markdown remains the durable, readable, repairable author asset.
+- Rebuildable indexes and device state are auxiliary, never canonical creative content.
+- keikeu must not silently rewrite, normalize, delete, overwrite, upload, merge, score, or train on author text.
+- The author chooses the Vault and external prose editor.
+- No account, cloud backend, telemetry, hidden remote service, or background sync is authorized.
 
-- writes alone and keeps work private;
-- prefers local, inspectable files;
-- already has fragments, images, dialogue, or scenes in mind;
-- needs a light bridge into prose, not a project-management system;
-- writes one-shots and short/medium work first; and
-- wants final authority over every word.
+## 3. Road objective and baseline
 
-Heavy planners, teams, marketplaces, community operators, and AI-generation users are not primary targets. Long-form and optional Outline work may be explored later without blocking the core flow.
+Road v0.3 product acceptance and archival are complete. Its detailed product, visual, interaction, architecture, decision, and acceptance records are read-only history in the [Road v0.3 archive](archive/road-v0-3/README.md).
 
-## 3. Author asset contract
-
-Author assets belong to the author.
-
-- Paper Markdown is durable, readable, and repairable with ordinary text tools.
-- `keikeu_index.json` is disposable metadata and can be rebuilt.
-- Flashcard position is disposable per-device state outside the Vault.
-- keikeu never silently summarizes, rewrites, normalizes, judges, uploads, or merges creative text.
-- The author-saved current Summary is authoritative; the first successful save also freezes a read-only initial copy.
-
-## 4. Paper
-
-One Paper is one work unit intended to become prose. Its durable creative fields are:
-
-1. **Summary** — required current expression of the work's spark.
-2. **Highlights** — ordered optional writing anchors; each becomes one Flashcard.
-3. **Tags** — flat optional search labels.
-
-It also stores a stable neutral code, the frozen first-save Summary, creation/update timestamps, optional preserved legacy title, and feasible unknown frontmatter.
-
-Paper does not contain a title field, creative-progress status, linked Outline, fixed fandom/relationship taxonomy, prose body, task state, or completion percentage.
-
-### Required behavior
-
-- A blank Summary blocks saving and leaves the prior disk version unchanged.
-- First save copies Summary into the immutable initial Summary.
-- Later saves may edit current Summary but preserve the initial copy.
-- Highlights preserve author order; blank items are omitted.
-- Tags trim outer whitespace and remove exact duplicates while preserving first appearance.
-- Empty Highlights and Tags save successfully with non-blocking guidance.
-- A new neutral code follows `K-YYYYMMDD-NNN`; changing a saved code is an explicit rename that cannot overwrite another file.
-- External deletion, movement, or modification must not be silently overwritten.
-
-### Durable shape
-
-```markdown
----
-type: paper
-schema_version: 2
-code: K-20260713-001
-created: 2026-07-13 17:30
-updated: 2026-07-13 17:45
----
-
-# K-20260713-001
-
-## 初稿副本
-
-[first saved Summary]
-
-## Summary
-
-[current Summary]
-
-## Highlights
-
-1. [ordered anchor]
-
-## Tags
-
-- [flat tag]
-```
-
-Empty optional sections keep their headings so the file remains predictable and hand-repairable.
-
-## 5. Flashcard
-
-Flashcard is a read-only projection, not another asset:
+Road v0.4 replaces only the desktop presentation and local call boundary:
 
 ```text
-cards = [current Summary] + ordered Highlights
+retired baseline: Flet → Python Core → Markdown / Index / Vault
+current runtime:  Vue → Tauri/Rust → JSONL sidecar
+                  → Python application service
+                  → Python Core → Markdown / Index / Vault
 ```
 
-It shows only the current card, `x / n`, previous/next controls, temporary Summary context on Highlight cards, and a return-to-Paper action.
+The accepted Python/Flet implementation served as the rollback baseline through
+Gate A, Gate B, product acceptance, and the compatibility gate. CP14 retires
+that shell after those gates passed. Road v0.4 does not change Paper schema,
+Vault layout, Home containment, migration semantics, or the product flow.
 
-It never provides card editing, adjacent-card previews, completion/skip state, prose input, or writing-progress tracking.
+## 4. Frozen behavior
 
-The last position is stored by Paper code on each device. Missing, corrupt, or out-of-range state falls back safely without changing Paper Markdown.
+Road v0.4 preserves every accepted Road v0.3 capability:
 
-## 6. Library
+- Paper create/open/save, frozen initial Summary, named Highlights, Tags, branching, soft delete, and external-modification rejection.
+- Summary-first Flashcard navigation that always starts at page 1.
+- Folder-aware Library search/sort, batch operations, Trash, restore, permanent-delete gate, and partial results.
+- Vault preview/init/switch/relocate and v0.1 migration with Home containment, copy verification, backup, staging, and explicit confirmation.
+- External-editor open/reveal through a validated platform boundary.
 
-Library is a local retrieval surface, not a project manager. It supports:
+The archived [Road v0.3 SPEC](archive/road-v0-3/SPEC.md) remains the detailed parity checklist. It is historical evidence, not an editable v0.4 source.
 
-- search by Paper code, Summary, and Tags;
-- open Paper or Flashcard;
-- open Markdown through the operating system;
-- reveal a file or Vault where the platform supports it;
-- rebuild the index and isolate damaged Paper errors; and
-- soft-delete and restore Paper without byte loss.
+## 5. Architecture boundaries
 
-It does not provide boards, deadlines, progress filters, graph queries, world-building databases, or complex taxonomy management.
+- Vue owns visible state and interaction only. It never reads or writes author files.
+- Rust owns the desktop lifecycle, one Python sidecar, the JSONL queue, native directory selection, and validated system actions.
+- The transport-agnostic Python application service owns orchestration and opaque session state behind JSONL. During migration, Flet used the same service as the parity baseline.
+- `keikeu_core` remains independent of Flet, Vue, Tauri, Rust, JSONL, and stdout.
+- Markdown remains canonical. No localhost, HTTP, WebSocket, account, telemetry, upload, or hidden service is authorized.
+- Road work follows the [understanding gate](../RULE_FOR_UNDERSTANDING.md).
 
-## 7. Vault and network boundary
+## 6. Explicit exclusions
 
-```text
-vault/
-  cache/<paper-code>.md
-  .trash/cache/
-  keikeu_index.json
+No AI generation, prose editor, sync, database, file watcher, Router, Pinia, TypeScript, UI kit, signing, notarization, DMG, App Sandbox, mobile work, or cross-platform build enters Road v0.4.
 
-device-local, outside vault:
-  config                 selected Vault
-  state                  Flashcard positions
-```
+## 7. Acceptance gates
 
-keikeu has no account, cloud backend, telemetry, provider API, hidden service, or background sync. A user-selected iCloud Drive, Dropbox, or OneDrive folder is treated only as an OS-exposed path. Availability, remote transfer, and conflicts remain provider responsibilities.
-
-Core work must remain usable offline whenever files are locally available. Provider conflict copies are unknown files; keikeu never auto-merges creative text.
-
-## 8. Migration and recovery
-
-v0.1 migration is explicit and reversible once through an external backup:
-
-1. inspect the old Vault without writing;
-2. copy the full Vault to a timestamped location outside the active Vault;
-3. convert Cache files in staging;
-4. validate every converted Paper;
-5. atomically switch only after all conversions pass;
-6. remove old active Outline files only after validation; and
-7. retain a readable report and the external backup.
-
-Any failure leaves the old active Vault intact. Old blank inspiration cannot be guessed from title or notes. Old Outline is not converted or shown; it survives only in the backup.
-
-Soft-deleted current Papers move under `.trash/cache/`. Restore cannot overwrite an active code; the user chooses a new code or cancels.
-
-## 9. Platform allocation
-
-- **macOS:** primary v0.2 acceptance platform; Paper, Library, Flashcard, migration, recovery, and OS file-service folders.
-- **iPhone:** Phase 7.5 is an independent lightweight build for rapid testing of Paper editing and full-screen Flashcard. It uses an app-sandbox local Vault; file-service access remains a later capability and Phase 7.5 is not a gate in the macOS Road.
-- **iPad:** future Paper/Library plus Flashcard beside an external editor using system multitasking.
-
-All platforms use the same Paper model. keikeu never reads the external prose document.
-
-Phase 8.5 is the preparation version before Road v0.3 and the precursor to the next macOS version. It is not a continuation of Phase 7.5.
-
-## 10. Outline position
-
-Outline is not part of Road v0.2. The current flow, navigation, new Vault, Paper save, Library, and Flashcard cannot depend on it.
-
-An optional future Markdown Outline may support mixed or long-form writers, but it must be independently validated, remain subordinate to the Paper → Flashcard flow, and must not resurrect the v0.1 seven-field schema by default.
-
-## 11. Explicit non-goals before acceptance
-
-- AI summary, rewriting, continuation, ranking, or evaluation
-- built-in prose editor or chapter manager
-- keikeu cloud, account, sync engine, or collaboration
-- social feed, publishing, marketplace, or public author/work database
-- external fandom, character, relationship, or work corpus
-- graph/world-building database, canvas, timeline, or scene board
-- mandatory Outline generation or cross-Paper Flashcard deck
-- analytics, profiling, telemetry, or covert background behavior
-
-## 12. Acceptance
-
-### Engineering evidence
-
-Source inspection and tests must cover:
-
-- required Summary and immutable first-save copy;
-- stable Markdown round trips and explicit rename;
-- rebuildable index with damaged-file isolation;
-- safe delete/restore and external-change refusal;
-- Summary-first Flashcard projection and local position fallback;
-- explicit v0.1 preflight, external backup, staging, failure safety, and report;
-- no reachable old Outline workflow; and
-- ordinary local-folder and macOS provider-folder smoke.
-
-Engineering evidence proves implementation behavior, not usefulness.
-
-### Product evidence
-
-Road v0.2 product acceptance requires de-identified real-author results for both:
-
-1. one real one-shot flow: Paper → Flashcard → Paper → external editor; and
-2. one short/medium workflow across two sessions, including Flashcard position and Paper/Flashcard navigation.
-
-The record must state whether Summary-first feels natural, whether returning to Paper is frequent, whether any P0/P1 occurred, and whether the external-editor handoff is clear. Author prose, inspirations, names, relationships, and Vault paths must never enter the record.
-
-Only after P0/P1 is absent or fixed and reverified may the developer decide whether to archive or tag the Road. The supporting record and safe procedure live in [`acceptance/`](acceptance/README.md).
+1. **Gate A — Platform parity:** Tauri produces the same durable results, failure protections, and keyboard paths as Flet on synthetic/copied Vaults.
+2. **Gate B — Visual reconstruction:** the approved editorial workbench direction is applied after parity, with independent visual evidence.
+3. **Product acceptance:** de-identified real-author scenarios A/B and production bundle smoke pass with no unresolved P0/P1.
+4. **Compatibility:** the same arm64 artifact is built and launched on the GitHub arm64 macOS 15.7 runner, then retested on the current workstation, before claiming macOS 15.7+.
+5. **Flet retirement:** only after all prior gates may Flet code, tests, dependency, and GUI entry be removed; CP14 performs that retirement and reruns the full checks plus a Tauri launch smoke. Tag, archive, commit, and push remain separate developer decisions.

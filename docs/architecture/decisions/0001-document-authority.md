@@ -1,5 +1,7 @@
 # ADR 0001: Split Normative Maps from Observed Runtime Facts
 
+> Transition note (2026-07-25): Road v0.3 map content is archived. The active map paths deliberately state that no next-Road design is in force until a new approved design replaces them.
+
 - Status: accepted
 - Date: 2026-07-18
 - Scope: repository documentation

@@ -1,50 +1,70 @@
-"""Contracts for disposable per-device Flashcard state."""
+"""Contracts for disposable per-device daily-card state."""
 
 from __future__ import annotations
 
-from keikeu_app.local_state import (
-    get_card_index,
-    load_card_positions,
-    move_card_position,
-    set_card_index,
+from datetime import date, timedelta
+import json
+from pathlib import Path
+
+import pytest
+
+from keikeu_bridge.local_state import (
+    claim_daily_card,
+    load_last_daily_card_date,
 )
 
 
-_CODE = "K-20260714-001"
+_TODAY = date(2026, 7, 22)
 
 
-def test_missing_or_corrupt_state_starts_from_summary(tmp_path):
+def test_missing_state_claims_today_before_display(tmp_path):
     state_path = tmp_path / "device-state.json"
 
-    assert get_card_index(_CODE, 3, state_path) == 0
-    state_path.write_text("not json", encoding="utf-8")
-    assert get_card_index(_CODE, 3, state_path) == 0
+    assert claim_daily_card(_TODAY, state_path) is True
+    assert load_last_daily_card_date(state_path) == _TODAY
+    assert json.loads(state_path.read_text(encoding="utf-8")) == {
+        "last_daily_card_date": "2026-07-22",
+    }
 
 
-def test_card_position_survives_reload_and_clamps_after_highlights_shrink(tmp_path):
+def test_same_day_is_claimed_only_once(tmp_path):
     state_path = tmp_path / "device-state.json"
-    set_card_index(_CODE, 3, 4, state_path)
+    assert claim_daily_card(_TODAY, state_path) is True
+    original_bytes = state_path.read_bytes()
 
-    assert get_card_index(_CODE, 4, state_path) == 3
-    assert get_card_index(_CODE, 2, state_path) == 1
-    assert load_card_positions(state_path) == {_CODE: 1}
+    assert claim_daily_card(_TODAY, state_path) is False
+    assert state_path.read_bytes() == original_bytes
 
 
-def test_position_moves_to_the_new_code_on_rename(tmp_path):
+def test_next_local_day_claims_again(tmp_path):
     state_path = tmp_path / "device-state.json"
-    replacement = "K-20260714-002"
-    set_card_index(_CODE, 2, 4, state_path)
-    set_card_index(replacement, 0, 4, state_path)
+    claim_daily_card(_TODAY, state_path)
+    tomorrow = _TODAY + timedelta(days=1)
 
-    move_card_position(_CODE, replacement, state_path)
-
-    assert load_card_positions(state_path) == {replacement: 2}
+    assert claim_daily_card(tomorrow, state_path) is True
+    assert load_last_daily_card_date(state_path) == tomorrow
 
 
-def test_deleting_state_only_resets_the_view(tmp_path):
+@pytest.mark.parametrize(
+    "content",
+    [
+        "not json",
+        '{"last_daily_card_date": "not-a-date"}',
+        '{"version": 1, "card_positions": {"K-OLD": 2}}',
+    ],
+)
+def test_corrupt_or_legacy_state_is_empty_and_replaced(tmp_path, content):
     state_path = tmp_path / "device-state.json"
-    set_card_index(_CODE, 1, 3, state_path)
-    state_path.unlink()
+    state_path.write_text(content, encoding="utf-8")
 
-    assert get_card_index(_CODE, 3, state_path) == 0
-    assert not state_path.exists()
+    assert load_last_daily_card_date(state_path) is None
+    assert claim_daily_card(_TODAY, state_path) is True
+    assert load_last_daily_card_date(state_path) == _TODAY
+    assert "card_positions" not in state_path.read_text(encoding="utf-8")
+
+
+def test_state_path_outside_current_home_is_rejected():
+    outside = Path("/private/tmp/keikeu-device-state.json")
+
+    with pytest.raises(ValueError, match="outside current user Home"):
+        claim_daily_card(_TODAY, outside)

@@ -1,0 +1,67 @@
+{
+  "fixture_schema": 1,
+  "frozen_for": "Road v0.3",
+  "synthetic_only": true,
+  "vaults": {
+    "mixed-vault": {
+      "index_contract": "deliberately-stale-v2",
+      "papers": [
+        {
+          "path": "cache/K-20260720-001.md",
+          "schema_version": 2,
+          "expected": "active-root"
+        },
+        {
+          "path": "cache/K-20260720-002.md",
+          "schema_version": 3,
+          "expected": "active-root"
+        },
+        {
+          "path": "cache/夜行列车/K-20260720-003.md",
+          "schema_version": 3,
+          "expected": "active-folder"
+        },
+        {
+          "path": "cache/夜行列车/深层/K-20260720-004.md",
+          "schema_version": 3,
+          "expected": "path-error"
+        },
+        {
+          "path": ".trash/cache/K-20260719-005.md",
+          "schema_version": 2,
+          "expected": "trash-root"
+        },
+        {
+          "path": ".trash/cache/旧车站/K-20260719-006.md",
+          "schema_version": 3,
+          "expected": "trash-folder"
+        }
+      ],
+      "runtime_symlinks": [
+        {
+          "path": "cache/链接目录",
+          "target": "cache/夜行列车",
+          "kind": "internal-directory",
+          "expected": "path-error"
+        },
+        {
+          "path": "cache/K-20260720-099.md",
+          "target": "outside-vault-target.md",
+          "kind": "vault-escape-file",
+          "expected": "path-error"
+        }
+      ]
+    },
+    "unsafe-vault": {
+      "placement_contract": "outside-simulated-home-only",
+      "source_retained": true,
+      "papers": [
+        {
+          "path": "cache/K-20260718-001.md",
+          "schema_version": 2,
+          "expected": "relocation-source"
+        }
+      ]
+    }
+  }
+}

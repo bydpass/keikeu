@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main-window",
+  "description": "The main window can call only registered keikeu Rust commands.",
+  "windows": ["main"],
+  "permissions": []
+}
