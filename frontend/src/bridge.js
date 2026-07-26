@@ -22,3 +22,7 @@ export function getRuntimeStatus() {
 export function restartSidecar() {
   return invoke("restart_sidecar");
 }
+
+export function openSystemTarget(action, relativeTarget) {
+  return invoke("open_system_target", { action, relativeTarget });
+}

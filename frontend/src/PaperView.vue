@@ -14,7 +14,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["runtime-blocked", "open-flashcard"]);
+const emit = defineEmits(["runtime-blocked", "open-flashcard", "open-library"]);
 
 let highlightKey = 0;
 let dailyTimer;
@@ -185,6 +185,13 @@ function openFlashcard() {
     return;
   }
   emit("open-flashcard", paper.value?.path ?? null);
+}
+
+function openLibrary() {
+  if (isBusy.value || !confirmDiscard()) {
+    return;
+  }
+  emit("open-library");
 }
 
 async function createDraft() {
@@ -417,7 +424,13 @@ onUnmounted(() => {
         :disabled="isBusy"
         @click="openFlashcard"
       >F<small>Flash</small></button>
-      <span class="paper-destination" aria-disabled="true">L<small>CP8</small></span>
+      <button
+        class="paper-destination"
+        type="button"
+        aria-label="打开 Library"
+        :disabled="isBusy"
+        @click="openLibrary"
+      >L<small>Library</small></button>
       <span class="paper-local">LOCAL</span>
     </nav>
 

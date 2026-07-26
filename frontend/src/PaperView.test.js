@@ -292,4 +292,20 @@ describe("CP6 Paper slice", () => {
     expect(wrapper.emitted("open-flashcard")[0]).toEqual([stored.path]);
     wrapper.unmount();
   });
+
+  it("uses the same discard gate before opening Library", async () => {
+    installBridge({ draft: paper({ summary: "Saved text" }) });
+    window.confirm.mockReturnValue(false);
+    const wrapper = mount(PaperView, { props: { runtime } });
+    await flushPromises();
+
+    await wrapper.get('[name="summary"]').setValue("Unsaved local edit");
+    await wrapper.get('button[aria-label="打开 Library"]').trigger("click");
+    expect(wrapper.emitted("open-library")).toBeUndefined();
+
+    window.confirm.mockReturnValue(true);
+    await wrapper.get('button[aria-label="打开 Library"]').trigger("click");
+    expect(wrapper.emitted("open-library")).toHaveLength(1);
+    wrapper.unmount();
+  });
 });

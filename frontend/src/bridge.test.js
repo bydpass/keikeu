@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { invoke } from "@tauri-apps/api/core";
-import { bridgeRequest } from "./bridge.js";
+import { bridgeRequest, openSystemTarget } from "./bridge.js";
 
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn(),
@@ -39,5 +39,16 @@ describe("Tauri bridge envelope", () => {
     invoke.mockResolvedValue({ v: 1, id: 8, ok: false, error });
 
     await expect(bridgeRequest("paper.save", {})).rejects.toEqual(error);
+  });
+
+  it("passes only a validated action and relative target to the narrow host command", async () => {
+    invoke.mockResolvedValue(undefined);
+
+    await openSystemTarget("reveal", "cache/Ideas/K-001.md");
+
+    expect(invoke).toHaveBeenCalledWith("open_system_target", {
+      action: "reveal",
+      relativeTarget: "cache/Ideas/K-001.md",
+    });
   });
 });

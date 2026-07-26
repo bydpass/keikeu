@@ -3,11 +3,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import App from "./App.vue";
 import PrototypeView from "./PrototypeView.vue";
-import { bridgeRequest, getRuntimeStatus, restartSidecar } from "./bridge.js";
+import {
+  bridgeRequest,
+  getRuntimeStatus,
+  openSystemTarget,
+  restartSidecar,
+} from "./bridge.js";
 
 vi.mock("./bridge.js", () => ({
   bridgeRequest: vi.fn(),
   getRuntimeStatus: vi.fn(),
+  openSystemTarget: vi.fn(),
   restartSidecar: vi.fn(),
 }));
 
@@ -33,7 +39,14 @@ describe("desktop shell gates", () => {
         return { state: "ready", show_daily_card: false };
       }
       if (method === "library.query") {
-        return { entries: [], errors: [] };
+        return {
+          scope: "all",
+          entries: [],
+          folders: [],
+          trash_folders: [],
+          trash_count: 0,
+          errors: [],
+        };
       }
       if (method === "paper.create_draft") {
         return draftPaper;
@@ -115,7 +128,14 @@ describe("desktop shell gates", () => {
         return { state: "ready", show_daily_card: false };
       }
       if (method === "library.query") {
-        return { entries: [], errors: [] };
+        return {
+          scope: "all",
+          entries: [],
+          folders: [],
+          trash_folders: [],
+          trash_count: 0,
+          errors: [],
+        };
       }
       if (method === "paper.create_draft" || method === "paper.open") {
         return stored;
@@ -152,6 +172,28 @@ describe("desktop shell gates", () => {
     expect(wrapper.text()).toContain("Paper 工作台");
     expect(bridgeRequest).toHaveBeenCalledWith("paper.open", {
       path: stored.path,
+    });
+    wrapper.unmount();
+  });
+
+  it("routes from Paper into the read-only Library", async () => {
+    getRuntimeStatus.mockResolvedValue({
+      state: "ready",
+      app_version: "0.1.0",
+      core_version: "paper-v3/index-v3",
+    });
+    openSystemTarget.mockResolvedValue(undefined);
+
+    const wrapper = mount(App);
+    await flushPromises();
+    await wrapper.get('button[aria-label="打开 Library"]').trigger("click");
+    await flushPromises();
+
+    expect(wrapper.text()).toContain("Folder-aware retrieval");
+    expect(bridgeRequest).toHaveBeenCalledWith("library.query", {
+      scope: "all",
+      search: "",
+      sort: "updated_desc",
     });
     wrapper.unmount();
   });

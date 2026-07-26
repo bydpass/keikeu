@@ -141,4 +141,13 @@ describe("CP7 Flashcard slice", () => {
     });
     wrapper.unmount();
   });
+
+  it("opens Library without persisting the current card position", async () => {
+    const wrapper = mount(FlashcardView, { props: { runtime } });
+    await flushPromises();
+
+    await wrapper.get('button[aria-label="打开 Library"]').trigger("click");
+    expect(wrapper.emitted("open-library")).toHaveLength(1);
+    wrapper.unmount();
+  });
 });

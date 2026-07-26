@@ -3,6 +3,7 @@ import { defineAsyncComponent, onMounted, onUnmounted, ref } from "vue";
 
 import { getRuntimeStatus, restartSidecar } from "./bridge.js";
 import FlashcardView from "./FlashcardView.vue";
+import LibraryView from "./LibraryView.vue";
 import PaperView from "./PaperView.vue";
 
 const PrototypeView = import.meta.env.DEV
@@ -65,6 +66,10 @@ function openPaper(path) {
   destination.value = "paper";
 }
 
+function openLibrary() {
+  destination.value = "library";
+}
+
 onMounted(() => {
   if (!showPrototype) {
     refreshStatus();
@@ -82,14 +87,24 @@ onUnmounted(() => window.clearTimeout(refreshTimer));
     :initial-path="paperPath"
     @runtime-blocked="blockRuntime"
     @open-flashcard="openFlashcard"
+    @open-library="openLibrary"
   />
 
   <FlashcardView
-    v-else-if="status.state === 'ready'"
+    v-else-if="status.state === 'ready' && destination === 'flashcard'"
     :runtime="status"
     :initial-path="flashcardPath"
     @runtime-blocked="blockRuntime"
     @open-paper="openPaper"
+    @open-library="openLibrary"
+  />
+
+  <LibraryView
+    v-else-if="status.state === 'ready'"
+    :runtime="status"
+    @runtime-blocked="blockRuntime"
+    @open-paper="openPaper"
+    @open-flashcard="openFlashcard"
   />
 
   <main v-else class="runtime-gate" aria-live="polite">

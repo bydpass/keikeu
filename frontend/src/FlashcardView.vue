@@ -14,7 +14,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["runtime-blocked", "open-paper"]);
+const emit = defineEmits(["runtime-blocked", "open-paper", "open-library"]);
 
 const deck = ref(null);
 const index = ref(0);
@@ -146,6 +146,10 @@ function returnToPaper() {
   emit("open-paper", deck.value?.path ?? props.initialPath);
 }
 
+function openLibrary() {
+  emit("open-library");
+}
+
 function onWindowKeydown(event) {
   if (["INPUT", "TEXTAREA", "SELECT"].includes(event.target?.tagName)) {
     return;
@@ -197,7 +201,12 @@ onUnmounted(() => window.removeEventListener("keydown", onWindowKeydown));
       <span class="flashcard-destination is-active" aria-current="page">
         F<small>Flash</small>
       </span>
-      <span class="flashcard-destination" aria-disabled="true">L<small>CP8</small></span>
+      <button
+        class="flashcard-destination"
+        type="button"
+        aria-label="打开 Library"
+        @click="openLibrary"
+      >L<small>Library</small></button>
       <span class="flashcard-local">LOCAL</span>
     </nav>
 
