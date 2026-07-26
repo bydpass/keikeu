@@ -270,4 +270,26 @@ describe("CP6 Paper slice", () => {
     ).toHaveLength(1);
     wrapper.unmount();
   });
+
+  it("requires confirmation before leaving an edited Paper for Flashcard", async () => {
+    const stored = paper({
+      path: "cache/K-20260725-001.md",
+      summary: "Saved text",
+    });
+    installBridge({ draft: stored });
+    window.confirm.mockReturnValue(false);
+    const wrapper = mount(PaperView, { props: { runtime } });
+    await flushPromises();
+
+    await wrapper.get('[name="summary"]').setValue("Unsaved local edit");
+    await wrapper.get('button[aria-label="打开 Flashcard"]').trigger("click");
+
+    expect(window.confirm).toHaveBeenCalledOnce();
+    expect(wrapper.emitted("open-flashcard")).toBeUndefined();
+
+    window.confirm.mockReturnValue(true);
+    await wrapper.get('button[aria-label="打开 Flashcard"]').trigger("click");
+    expect(wrapper.emitted("open-flashcard")[0]).toEqual([stored.path]);
+    wrapper.unmount();
+  });
 });

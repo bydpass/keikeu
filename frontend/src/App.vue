@@ -2,6 +2,7 @@
 import { defineAsyncComponent, onMounted, onUnmounted, ref } from "vue";
 
 import { getRuntimeStatus, restartSidecar } from "./bridge.js";
+import FlashcardView from "./FlashcardView.vue";
 import PaperView from "./PaperView.vue";
 
 const PrototypeView = import.meta.env.DEV
@@ -12,6 +13,9 @@ const showPrototype =
   new URLSearchParams(window.location.search).get("prototype") === "1";
 const status = ref({ state: "starting" });
 const restarting = ref(false);
+const destination = ref("paper");
+const flashcardPath = ref(null);
+const paperPath = ref(null);
 let refreshTimer;
 
 async function refreshStatus() {
@@ -51,6 +55,16 @@ function blockRuntime(error) {
   status.value = { state: "blocked", error };
 }
 
+function openFlashcard(path) {
+  flashcardPath.value = path;
+  destination.value = "flashcard";
+}
+
+function openPaper(path) {
+  paperPath.value = path;
+  destination.value = "paper";
+}
+
 onMounted(() => {
   if (!showPrototype) {
     refreshStatus();
@@ -63,9 +77,19 @@ onUnmounted(() => window.clearTimeout(refreshTimer));
   <PrototypeView v-if="showPrototype" />
 
   <PaperView
+    v-else-if="status.state === 'ready' && destination === 'paper'"
+    :runtime="status"
+    :initial-path="paperPath"
+    @runtime-blocked="blockRuntime"
+    @open-flashcard="openFlashcard"
+  />
+
+  <FlashcardView
     v-else-if="status.state === 'ready'"
     :runtime="status"
+    :initial-path="flashcardPath"
     @runtime-blocked="blockRuntime"
+    @open-paper="openPaper"
   />
 
   <main v-else class="runtime-gate" aria-live="polite">

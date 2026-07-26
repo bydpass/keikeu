@@ -3,14 +3,18 @@ import { computed, onMounted, onUnmounted, ref } from "vue";
 
 import { bridgeRequest } from "./bridge.js";
 
-defineProps({
+const props = defineProps({
   runtime: {
     type: Object,
     required: true,
   },
+  initialPath: {
+    type: String,
+    default: null,
+  },
 });
 
-const emit = defineEmits(["runtime-blocked"]);
+const emit = defineEmits(["runtime-blocked", "open-flashcard"]);
 
 let highlightKey = 0;
 let dailyTimer;
@@ -137,8 +141,10 @@ async function enterWorkspace() {
   screen.value = "loading";
   try {
     await loadEntries();
-    const draft = await bridgeRequest("paper.create_draft", {});
-    applyPaper(draft);
+    const nextPaper = props.initialPath
+      ? await bridgeRequest("paper.open", { path: props.initialPath })
+      : await bridgeRequest("paper.create_draft", {});
+    applyPaper(nextPaper);
     screen.value = "editor";
   } catch (error) {
     screen.value = "error";
@@ -172,6 +178,13 @@ function confirmDiscard() {
     !isDirty.value ||
     window.confirm("当前未保存的更改将丢失。是否继续？")
   );
+}
+
+function openFlashcard() {
+  if (isBusy.value || !confirmDiscard()) {
+    return;
+  }
+  emit("open-flashcard", paper.value?.path ?? null);
 }
 
 async function createDraft() {
@@ -397,7 +410,13 @@ onUnmounted(() => {
     <nav class="paper-rail" aria-label="全局工作区">
       <span class="paper-brand" aria-label="keikeu">K</span>
       <span class="paper-destination is-active" aria-current="page">P<small>Paper</small></span>
-      <span class="paper-destination" aria-disabled="true">F<small>CP7</small></span>
+      <button
+        class="paper-destination"
+        type="button"
+        aria-label="打开 Flashcard"
+        :disabled="isBusy"
+        @click="openFlashcard"
+      >F<small>Flash</small></button>
       <span class="paper-destination" aria-disabled="true">L<small>CP8</small></span>
       <span class="paper-local">LOCAL</span>
     </nav>
@@ -682,6 +701,12 @@ button:disabled {
   place-items: center;
   color: #b9c0bd;
   font-weight: 700;
+}
+
+.paper-rail button.paper-destination {
+  border: 0;
+  padding: 0;
+  background: transparent;
 }
 
 .paper-destination small {

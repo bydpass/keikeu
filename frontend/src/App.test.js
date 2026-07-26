@@ -104,6 +104,58 @@ describe("desktop shell gates", () => {
     expect(wrapper.text()).toContain("3 synthetic Papers");
   });
 
+  it("routes between the saved Paper and its Summary-first Flashcard", async () => {
+    const stored = {
+      ...draftPaper,
+      path: "cache/K-20260725-001.md",
+      summary: "Saved Summary.",
+    };
+    bridgeRequest.mockImplementation(async (method, params) => {
+      if (method === "startup.load") {
+        return { state: "ready", show_daily_card: false };
+      }
+      if (method === "library.query") {
+        return { entries: [], errors: [] };
+      }
+      if (method === "paper.create_draft" || method === "paper.open") {
+        return stored;
+      }
+      if (method === "flashcard.open") {
+        return {
+          path: stored.path,
+          paper_label: stored.code,
+          cards: [{ title: "Summary", content: stored.summary }],
+          options: [],
+        };
+      }
+      throw new Error(`Unexpected method: ${method} ${JSON.stringify(params)}`);
+    });
+    getRuntimeStatus.mockResolvedValue({
+      state: "ready",
+      app_version: "0.1.0",
+      core_version: "paper-v3/index-v3",
+    });
+
+    const wrapper = mount(App);
+    await flushPromises();
+    await wrapper.get('button[aria-label="打开 Flashcard"]').trigger("click");
+    await flushPromises();
+
+    expect(wrapper.text()).toContain("Saved Summary.");
+    expect(bridgeRequest).toHaveBeenCalledWith("flashcard.open", {
+      path: stored.path,
+    });
+
+    await wrapper.get('button[aria-label="返回 Paper"]').trigger("click");
+    await flushPromises();
+
+    expect(wrapper.text()).toContain("Paper 工作台");
+    expect(bridgeRequest).toHaveBeenCalledWith("paper.open", {
+      path: stored.path,
+    });
+    wrapper.unmount();
+  });
+
   it("keeps specimen filtering, selection, and reordering in memory", async () => {
     const wrapper = mount(PrototypeView);
 

@@ -1,6 +1,6 @@
 # Road v0.4：Vue 3 + Tauri 前端替换
 
-> 状态：**ACTIVE · CP6 complete / CP7 Flashcard slice next**
+> 状态：**ACTIVE · CP7 complete / CP8 Library read slice next**
 > 基线：`84efc7e9b718bf06a4e7a09bcd1443ae81a6f80e`（Road v0.3 已验收并归档）
 > 日期：2026-07-25
 
@@ -132,7 +132,7 @@ beta 仅获准用于 CP4–CP12 工程构建；CP13 兼容验证不受该例外�
 - **CP4（完成）：**完成 Tauri sidecar 生命周期、串行队列、阻塞错误页和窄 Rust commands。
 - **CP5（完成）：**Vue synthetic prototype 与自动检查已完成；开发者已确认并冻结视觉方向，进入 Gate A。
 - **CP6（完成）：**Paper slice 实现、自动检查、隔离浏览器 QA 与复制 Vault `.app` smoke 已完成；开发者于 2026-07-25 确认验收。
-- **CP7：**完成 Flashcard slice。
+- **CP7（完成）：**Flashcard slice、Vue 自动检查与隔离浏览器 QA 已完成；开发者于 2026-07-25 确认验收。
 - **CP8：**完成 Library read slice。
 - **CP9：**完成 Library mutation、Vault 与 migration slice。
 - **CP10：**完成 Flet / Tauri 功能等价验收，通过 Gate A。
