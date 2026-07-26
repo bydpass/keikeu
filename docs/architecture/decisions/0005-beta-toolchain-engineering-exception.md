@@ -22,9 +22,9 @@ workstation toolchain.
 
 This exception does not prove release compatibility, does not waive CP13, and
 does not authorize signing, notarization, App Sandbox, distribution, or push.
-The current macOS 15.0+ claim still requires building and launching on an
-arm64 macOS 15.0 environment and retesting the same artifact on the current
-machine.
+The current macOS 15.7+ claim requires building and launching on the GitHub
+arm64 `macos-15` runner at its actual 15.7.x version and retesting the same
+artifact on the current machine.
 
 ## Consequences
 
