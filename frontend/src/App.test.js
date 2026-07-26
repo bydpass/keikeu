@@ -5,6 +5,7 @@ import App from "./App.vue";
 import PrototypeView from "./PrototypeView.vue";
 import {
   bridgeRequest,
+  chooseVaultDirectory,
   getRuntimeStatus,
   openSystemTarget,
   restartSidecar,
@@ -12,6 +13,7 @@ import {
 
 vi.mock("./bridge.js", () => ({
   bridgeRequest: vi.fn(),
+  chooseVaultDirectory: vi.fn(),
   getRuntimeStatus: vi.fn(),
   openSystemTarget: vi.fn(),
   restartSidecar: vi.fn(),
@@ -29,6 +31,14 @@ const draftPaper = {
   created: "2026-07-25T12:00:00",
   updated: "2026-07-25T12:00:00",
 };
+
+function buttonByText(wrapper, text) {
+  const button = wrapper.findAll("button").find((item) => item.text() === text);
+  if (!button) {
+    throw new Error(`Button not found: ${text}`);
+  }
+  return button;
+}
 
 describe("desktop shell gates", () => {
   beforeEach(() => {
@@ -195,6 +205,56 @@ describe("desktop shell gates", () => {
       search: "",
       sort: "updated_desc",
     });
+    wrapper.unmount();
+  });
+
+  it("opens the Vault switcher from Library and can cancel without changing state", async () => {
+    getRuntimeStatus.mockResolvedValue({
+      state: "ready",
+      app_version: "0.1.0",
+      core_version: "paper-v3/index-v3",
+    });
+    openSystemTarget.mockResolvedValue(undefined);
+    const wrapper = mount(App);
+    await flushPromises();
+    await wrapper.get('button[aria-label="打开 Library"]').trigger("click");
+    await flushPromises();
+
+    await buttonByText(wrapper, "切换 Vault").trigger("click");
+    expect(wrapper.text()).toContain("打开或创建 Vault");
+    await buttonByText(wrapper, "取消并返回").trigger("click");
+    await flushPromises();
+
+    expect(wrapper.text()).toContain("Folder-aware retrieval");
+    wrapper.unmount();
+  });
+
+  it("routes a startup Vault gate into the CP9 picker", async () => {
+    getRuntimeStatus.mockResolvedValue({
+      state: "ready",
+      app_version: "0.1.0",
+      core_version: "paper-v3/index-v3",
+    });
+    bridgeRequest.mockImplementation(async (method) => {
+      if (method === "startup.load") {
+        return {
+          state: "vault_picker",
+          show_daily_card: false,
+          message: "Vault selection required",
+          configured_path: "",
+          migration: null,
+          preview: null,
+        };
+      }
+      throw new Error(`Unexpected method: ${method}`);
+    });
+
+    const wrapper = mount(App);
+    await flushPromises();
+
+    expect(wrapper.text()).toContain("打开或创建 Vault");
+    expect(wrapper.text()).toContain("Paper Markdown 保留在本地");
+    expect(chooseVaultDirectory).not.toHaveBeenCalled();
     wrapper.unmount();
   });
 

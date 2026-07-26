@@ -58,7 +58,15 @@ function libraryView(overrides = {}) {
   };
 }
 
-describe("CP8 Library read slice", () => {
+function buttonByText(wrapper, text) {
+  const button = wrapper.findAll("button").find((item) => item.text() === text);
+  if (!button) {
+    throw new Error(`Button not found: ${text}`);
+  }
+  return button;
+}
+
+describe("CP8/CP9 Library slice", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     bridgeRequest.mockResolvedValue(libraryView());
@@ -242,5 +250,330 @@ describe("CP8 Library read slice", () => {
       layer: "tauri_host",
     });
     blocked.unmount();
+  });
+
+  it("moves selected Papers once and preserves partial-result failures", async () => {
+    bridgeRequest.mockImplementation(async (method) => {
+      if (method === "library.query") return libraryView();
+      if (method === "library.move") {
+        return [
+          {
+            source: rootEntry.path,
+            destination: "cache/Ideas/K-20260725-001.md",
+            error: null,
+          },
+          {
+            source: folderEntry.path,
+            destination: null,
+            error: "injected provider failure",
+          },
+        ];
+      }
+      throw new Error(`Unexpected method: ${method}`);
+    });
+    const wrapper = mount(LibraryView, { props: { runtime } });
+    await flushPromises();
+    for (const checkbox of wrapper.findAll(".library-list input[type='checkbox']")) {
+      await checkbox.setValue(true);
+    }
+
+    await buttonByText(wrapper, "移动所选").trigger("click");
+    await flushPromises();
+    await wrapper.get(".operation-dialog select").setValue("Ideas");
+    await buttonByText(wrapper, "确认执行").trigger("click");
+    await flushPromises();
+
+    expect(bridgeRequest).toHaveBeenCalledWith("library.move", {
+      paths: [rootEntry.path, folderEntry.path],
+      destination_folder: "Ideas",
+    });
+    expect(wrapper.text()).toContain("移动：1 项成功，1 项失败");
+    expect(wrapper.text()).toContain("injected provider failure");
+    expect(wrapper.text()).toContain("已选择 1");
+    wrapper.unmount();
+  });
+
+  it("uses the same move method for drag and the keyboard-reachable action", async () => {
+    bridgeRequest.mockImplementation(async (method, params) => {
+      if (method === "library.query") return libraryView();
+      if (method === "library.move") {
+        return [{
+          source: params.paths[0],
+          destination: `cache/Ideas/${params.paths[0].split("/").at(-1)}`,
+          error: null,
+        }];
+      }
+      throw new Error(`Unexpected method: ${method}`);
+    });
+    const wrapper = mount(LibraryView, { props: { runtime } });
+    await flushPromises();
+    const transfer = {
+      setData: vi.fn(),
+      getData: vi.fn(() => rootEntry.path),
+    };
+
+    await wrapper.get(".library-list li").trigger("dragstart", {
+      dataTransfer: transfer,
+    });
+    const ideas = wrapper
+      .findAll(".library-scopes button")
+      .find((button) => button.text() === "Ideas");
+    await ideas.trigger("drop", { dataTransfer: transfer });
+    await flushPromises();
+
+    expect(bridgeRequest).toHaveBeenCalledWith("library.move", {
+      paths: [rootEntry.path],
+      destination_folder: "Ideas",
+    });
+    wrapper.unmount();
+  });
+
+  it("soft-deletes an explicit active path and rebuilds only on explicit request", async () => {
+    bridgeRequest.mockImplementation(async (method, params) => {
+      if (method === "library.query") return libraryView();
+      if (method === "library.soft_delete") {
+        return [{
+          source: params.paths[0],
+          destination: `.trash/${params.paths[0]}`,
+          error: null,
+        }];
+      }
+      if (method === "library.rebuild") return libraryView();
+      throw new Error(`Unexpected method: ${method}`);
+    });
+    const wrapper = mount(LibraryView, { props: { runtime } });
+    await flushPromises();
+
+    await wrapper.findAll(".detail-actions button").at(-1).trigger("click");
+    await flushPromises();
+    await buttonByText(wrapper, "确认执行").trigger("click");
+    await flushPromises();
+    expect(bridgeRequest).toHaveBeenCalledWith("library.soft_delete", {
+      paths: [rootEntry.path],
+    });
+
+    await buttonByText(wrapper, "重建索引").trigger("click");
+    await flushPromises();
+    expect(bridgeRequest).toHaveBeenCalledWith("library.rebuild", {
+      scope: "all",
+      search: "",
+      sort: "updated_desc",
+    });
+    wrapper.unmount();
+  });
+
+  it("never retries a branch mutation with an unknown commit result", async () => {
+    bridgeRequest.mockImplementation(async (method) => {
+      if (method === "library.query") return libraryView();
+      if (method === "library.branch") {
+        throw {
+          code: "commit_unknown",
+          layer: "tauri_host",
+          message: "response lost",
+          recovery: "restart_then_reload",
+        };
+      }
+      throw new Error(`Unexpected method: ${method}`);
+    });
+    const wrapper = mount(LibraryView, { props: { runtime } });
+    await flushPromises();
+
+    await buttonByText(wrapper, "复制分支").trigger("click");
+    await flushPromises();
+
+    expect(
+      bridgeRequest.mock.calls.filter(([method]) => method === "library.branch"),
+    ).toHaveLength(1);
+    expect(wrapper.emitted("runtime-blocked")[0][0]).toMatchObject({
+      code: "commit_unknown",
+      layer: "tauri_host",
+    });
+    wrapper.unmount();
+  });
+
+  it("requires exact execute before permanently deleting four Papers", async () => {
+    const trashed = Array.from({ length: 4 }, (_item, index) => ({
+      ...rootEntry,
+      path: `.trash/cache/K-20260725-00${index + 1}.md`,
+      code: `K-20260725-00${index + 1}`,
+      trashed: true,
+    }));
+    const trashView = libraryView({
+      scope: "trash",
+      entries: trashed,
+      folders: [],
+      trash_count: 4,
+      errors: [],
+    });
+    bridgeRequest.mockImplementation(async (method, params) => {
+      if (method === "library.query") return trashView;
+      if (method === "library.permanently_delete") {
+        return params.paths.map((path) => ({
+          source: path,
+          destination: null,
+          error: null,
+        }));
+      }
+      throw new Error(`Unexpected method: ${method}`);
+    });
+    const wrapper = mount(LibraryView, { props: { runtime } });
+    await flushPromises();
+
+    await buttonByText(wrapper, "清空 Trash").trigger("click");
+    await flushPromises();
+    await buttonByText(wrapper, "确认执行").trigger("click");
+    expect(wrapper.text()).toContain("请输入完全一致的小写 execute");
+    expect(bridgeRequest).not.toHaveBeenCalledWith(
+      "library.permanently_delete",
+      expect.anything(),
+    );
+
+    await wrapper.get(".operation-dialog input[type='text']").setValue("execute");
+    await buttonByText(wrapper, "确认执行").trigger("click");
+    await flushPromises();
+    expect(
+      bridgeRequest.mock.calls.filter(
+        ([method]) => method === "library.permanently_delete",
+      ),
+    ).toHaveLength(1);
+    wrapper.unmount();
+  });
+
+  it("creates, renames, merges, and soft-deletes folders through service methods", async () => {
+    const folderView = libraryView({
+      scope: "folder:Ideas",
+      folders: ["Ideas", "Archive"],
+      entries: [folderEntry],
+    });
+    bridgeRequest.mockImplementation(async (method) => {
+      if (method === "library.query") return folderView;
+      if (method === "library.create_folder") return "Notes";
+      if (method === "library.rename_folder") return "Notes";
+      if (method === "library.merge_folders") return [];
+      if (method === "library.soft_delete_folder") {
+        return [
+          {
+            source: folderEntry.path,
+            destination: `.trash/${folderEntry.path}`,
+            error: null,
+          },
+        ];
+      }
+      throw new Error(`Unexpected method: ${method}`);
+    });
+    const wrapper = mount(LibraryView, { props: { runtime } });
+    await flushPromises();
+
+    await buttonByText(wrapper, "新建文件夹").trigger("click");
+    await wrapper.get(".operation-dialog input").setValue("Notes");
+    await buttonByText(wrapper, "确认执行").trigger("click");
+    await flushPromises();
+    expect(bridgeRequest).toHaveBeenCalledWith("library.create_folder", {
+      name: "Notes",
+    });
+
+    await buttonByText(wrapper, "重命名").trigger("click");
+    await wrapper.get(".operation-dialog input").setValue("Notes");
+    await buttonByText(wrapper, "确认执行").trigger("click");
+    await flushPromises();
+    expect(bridgeRequest).toHaveBeenCalledWith("library.rename_folder", {
+      folder: "Ideas",
+      new_name: "Notes",
+    });
+
+    await buttonByText(wrapper, "合并到…").trigger("click");
+    await wrapper.get(".operation-dialog select").setValue("Archive");
+    await buttonByText(wrapper, "确认执行").trigger("click");
+    await flushPromises();
+    expect(bridgeRequest).toHaveBeenCalledWith("library.merge_folders", {
+      source: "Ideas",
+      destination: "Archive",
+    });
+
+    await buttonByText(wrapper, "文件夹移至 Trash").trigger("click");
+    await buttonByText(wrapper, "确认执行").trigger("click");
+    await flushPromises();
+    expect(bridgeRequest).toHaveBeenCalledWith(
+      "library.soft_delete_folder",
+      { folder: "Ideas" },
+    );
+    wrapper.unmount();
+  });
+
+  it("restores a Trash folder and permanently deletes its explicit Papers first", async () => {
+    const trashedEntry = {
+      ...folderEntry,
+      path: ".trash/cache/Ideas/K-20260725-002.md",
+      trashed: true,
+    };
+    const trashView = libraryView({
+      scope: "trash",
+      entries: [trashedEntry],
+      folders: [],
+      trash_folders: ["Ideas"],
+      trash_count: 1,
+      errors: [],
+    });
+    bridgeRequest.mockImplementation(async (method, params) => {
+      if (method === "library.query") return trashView;
+      if (method === "library.restore_folder") {
+        return [{
+          source: ".trash/cache/Ideas",
+          destination: "cache/Ideas",
+          error: null,
+        }];
+      }
+      if (method === "library.restore") {
+        return [{
+          source: trashedEntry.path,
+          destination: folderEntry.path,
+          error: null,
+        }];
+      }
+      if (method === "library.permanently_delete") {
+        return params.paths.map((path) => ({
+          source: path,
+          destination: null,
+          error: null,
+        }));
+      }
+      if (method === "library.permanently_delete_folder") {
+        return {
+          source: ".trash/cache/Ideas",
+          destination: null,
+          error: null,
+        };
+      }
+      throw new Error(`Unexpected method: ${method}`);
+    });
+    const wrapper = mount(LibraryView, { props: { runtime } });
+    await flushPromises();
+
+    await wrapper.findAll(".detail-actions button")[4].trigger("click");
+    await flushPromises();
+    expect(bridgeRequest).toHaveBeenCalledWith("library.restore", {
+      paths: [trashedEntry.path],
+    });
+
+    const folderButtons = wrapper.findAll(".trash-folders button");
+    await folderButtons[0].trigger("click");
+    await flushPromises();
+    expect(bridgeRequest).toHaveBeenCalledWith("library.restore_folder", {
+      folder: "Ideas",
+    });
+
+    await wrapper.findAll(".trash-folders button")[1].trigger("click");
+    await flushPromises();
+    await buttonByText(wrapper, "确认执行").trigger("click");
+    await flushPromises();
+    expect(bridgeRequest).toHaveBeenCalledWith(
+      "library.permanently_delete",
+      { paths: [trashedEntry.path] },
+    );
+    expect(bridgeRequest).toHaveBeenCalledWith(
+      "library.permanently_delete_folder",
+      { folder: "Ideas" },
+    );
+    wrapper.unmount();
   });
 });

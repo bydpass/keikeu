@@ -12,9 +12,19 @@ const props = defineProps({
     type: String,
     default: null,
   },
+  initialStartup: {
+    type: Object,
+    default: null,
+  },
 });
 
-const emit = defineEmits(["runtime-blocked", "open-flashcard", "open-library"]);
+const emit = defineEmits([
+  "runtime-blocked",
+  "open-flashcard",
+  "open-library",
+  "open-vault",
+  "startup-consumed",
+]);
 
 let highlightKey = 0;
 let dailyTimer;
@@ -156,9 +166,14 @@ async function enterWorkspace() {
 
 async function loadStartup() {
   try {
-    startup.value = await bridgeRequest("startup.load", {});
+    startup.value =
+      props.initialStartup ?? await bridgeRequest("startup.load", {});
+    if (props.initialStartup) {
+      emit("startup-consumed");
+    }
     if (startup.value.state !== "ready") {
       screen.value = "startup_gate";
+      emit("open-vault", startup.value);
       return;
     }
     if (startup.value.show_daily_card) {
@@ -396,7 +411,7 @@ onUnmounted(() => {
       <p class="paper-eyebrow">启动 gate · {{ startup?.state }}</p>
       <h1>当前还不能进入 Paper</h1>
       <p>{{ startup?.message || "需要先完成 Vault 或迁移流程。" }}</p>
-      <p>CP9 将接入目录选择、Vault 确认与迁移；此阶段不会绕过安全 gate。</p>
+      <p>请先完成目录确认、Vault 初始化或迁移；安全 gate 不会被绕过。</p>
     </section>
   </main>
 
@@ -570,7 +585,7 @@ onUnmounted(() => {
           >
             <h3 id="delete-confirm-title">确认软删除这个 Paper？</h3>
             <p>
-              它会移动到 Vault 的回收站；CP9 再接入恢复流程。
+              它会移动到 Vault 的 Trash，可在 Library 中恢复。
               <strong v-if="isDirty">当前未保存修改不会写入磁盘。</strong>
             </p>
             <div>

@@ -5,6 +5,7 @@ import { getRuntimeStatus, restartSidecar } from "./bridge.js";
 import FlashcardView from "./FlashcardView.vue";
 import LibraryView from "./LibraryView.vue";
 import PaperView from "./PaperView.vue";
+import VaultView from "./VaultView.vue";
 
 const PrototypeView = import.meta.env.DEV
   ? defineAsyncComponent(() => import("./PrototypeView.vue"))
@@ -17,6 +18,10 @@ const restarting = ref(false);
 const destination = ref("paper");
 const flashcardPath = ref(null);
 const paperPath = ref(null);
+const paperStartup = ref(null);
+const vaultStartup = ref(null);
+const vaultReturnDestination = ref("paper");
+const vaultCanCancel = ref(false);
 let refreshTimer;
 
 async function refreshStatus() {
@@ -42,6 +47,13 @@ async function restart() {
   restarting.value = true;
   try {
     status.value = await restartSidecar();
+    if (status.value.state === "ready") {
+      destination.value = "paper";
+      paperPath.value = null;
+      flashcardPath.value = null;
+      paperStartup.value = null;
+      vaultStartup.value = null;
+    }
   } catch (error) {
     status.value = {
       state: "blocked",
@@ -70,6 +82,26 @@ function openLibrary() {
   destination.value = "library";
 }
 
+function openVault(startup = null) {
+  vaultReturnDestination.value = destination.value;
+  vaultCanCancel.value = startup === null;
+  vaultStartup.value = startup;
+  destination.value = "vault";
+}
+
+function finishVault(startup) {
+  paperStartup.value = startup;
+  paperPath.value = null;
+  vaultStartup.value = null;
+  destination.value = "paper";
+}
+
+function cancelVault() {
+  if (vaultCanCancel.value) {
+    destination.value = vaultReturnDestination.value;
+  }
+}
+
 onMounted(() => {
   if (!showPrototype) {
     refreshStatus();
@@ -85,9 +117,12 @@ onUnmounted(() => window.clearTimeout(refreshTimer));
     v-else-if="status.state === 'ready' && destination === 'paper'"
     :runtime="status"
     :initial-path="paperPath"
+    :initial-startup="paperStartup"
     @runtime-blocked="blockRuntime"
     @open-flashcard="openFlashcard"
     @open-library="openLibrary"
+    @open-vault="openVault"
+    @startup-consumed="paperStartup = null"
   />
 
   <FlashcardView
@@ -100,11 +135,22 @@ onUnmounted(() => window.clearTimeout(refreshTimer));
   />
 
   <LibraryView
-    v-else-if="status.state === 'ready'"
+    v-else-if="status.state === 'ready' && destination === 'library'"
     :runtime="status"
     @runtime-blocked="blockRuntime"
     @open-paper="openPaper"
     @open-flashcard="openFlashcard"
+    @open-vault="openVault"
+  />
+
+  <VaultView
+    v-else-if="status.state === 'ready' && destination === 'vault'"
+    :runtime="status"
+    :initial-startup="vaultStartup"
+    :can-cancel="vaultCanCancel"
+    @runtime-blocked="blockRuntime"
+    @ready="finishVault"
+    @cancel="cancelVault"
   />
 
   <main v-else class="runtime-gate" aria-live="polite">

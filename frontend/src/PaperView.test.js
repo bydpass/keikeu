@@ -91,6 +91,24 @@ describe("CP6 Paper slice", () => {
     expect(wrapper.text()).toContain("当前还不能进入 Paper");
     expect(wrapper.text()).toContain("Vault selection required");
     expect(bridgeRequest).not.toHaveBeenCalledWith("paper.create_draft", {});
+    expect(wrapper.emitted("open-vault")[0][0]).toMatchObject({
+      state: "vault_picker",
+      message: "Vault selection required",
+    });
+    wrapper.unmount();
+  });
+
+  it("consumes a confirmed startup DTO without claiming startup twice", async () => {
+    installBridge();
+    const confirmed = { state: "ready", show_daily_card: false };
+    const wrapper = mount(PaperView, {
+      props: { runtime, initialStartup: confirmed },
+    });
+    await flushPromises();
+
+    expect(wrapper.emitted("startup-consumed")).toHaveLength(1);
+    expect(bridgeRequest).not.toHaveBeenCalledWith("startup.load", {});
+    expect(wrapper.text()).toContain("Paper 工作台");
     wrapper.unmount();
   });
 

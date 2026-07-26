@@ -13,7 +13,7 @@ Updated: 2026-07-25
 | Phase 7.5 lightweight iOS | Quick-test build complete on an independent branch | Responsive shell and app-sandbox Vault were exercised on `codex/fix-ios-device-readiness`. This is a lightweight iOS version for rapid testing, not a step in the macOS Road sequence. |
 | Phase 8.5 / Road v0.3 preparation | Complete | Documentation reform, authority maps, link gate, browser QA, and bounded Graphify trial completed before Road v0.3 construction. The fresh-agent audit remained unperformed and is not retroactively claimed. |
 | Road v0.3 | Product accepted; design archive complete | Phase 0–7 engineering, CP5 macOS candidate smoke, and CP6 real-author scenarios are complete. Retrieval was faster and clear, external-editor handoff was clear, and no unresolved P0/P1 was reported. The [version archive](archive/road-v0-3/README.md) is read-only; no v0.3 tag, commit, or push is implied. |
-| Road v0.4 | CP8 complete; CP9 next | Vue now has Paper, Flashcard, and read-only Library slices. The developer accepted CP8 query state, Trash isolation, system handoff, focused tests, and isolated browser QA on 2026-07-25. |
+| Road v0.4 | CP9 ready for developer review | Vue now covers Paper, Flashcard, Library mutations, Vault selection, and migration gates. CP9 checks passed without touching a real Vault; CP10 remains blocked on CP9 acceptance and commit. |
 
 Phase 8 product acceptance is complete. Road v0.2 is marked by local annotated tag `v0.2.0` at `d0feac0269a5619f5dbf27c04347ba69c5665b42`; archival remains a separate developer decision. Automated tests, platform smoke, and author acceptance remain distinct evidence.
 
@@ -21,7 +21,7 @@ Phase 7.5 and the macOS Roads are separate tracks. The lightweight iOS test vers
 
 Road v0.3 product decisions, implementation, macOS candidate smoke, and product acceptance are complete. Its detailed SPEC, Planbook, maps, ADRs, and CP6 record are archived. The accepted Python/Flet runtime remains available until a separately approved Road replaces it; archival does not authorize runtime removal or data migration.
 
-Road v0.4 CP0 is committed at `8407941` on `codex/road-v04-cp0`; CP1 at `b718ed8`; CP2 at `42dfa68`; CP3 at `e72f155`; CP4 at `0d86847`; CP5 at `f19da31`; CP6 at `b52622f`; and CP7 at `067c50c`. CP8 is accepted on `codex/road-v04-cp8`; its checkpoint hash is reported in the handoff. Each checkpoint uses its own branch created from the previous accepted checkpoint.
+Road v0.4 CP0 is committed at `8407941` on `codex/road-v04-cp0`; CP1 at `b718ed8`; CP2 at `42dfa68`; CP3 at `e72f155`; CP4 at `0d86847`; CP5 at `f19da31`; CP6 at `b52622f`; CP7 at `067c50c`; and CP8 at `f12374c`. CP9 is uncommitted on `codex/road-v04-cp9` pending developer review. Each checkpoint branch starts from the previous accepted checkpoint.
 
 ## Road v0.4 CP2 evidence
 
@@ -98,16 +98,16 @@ Road v0.4 CP0 is committed at `8407941` on `codex/road-v04-cp0`; CP1 at `b718ed8
 - [`FlashcardView.vue`](../frontend/src/FlashcardView.vue) keeps selection, navigation, Summary context, and position in memory; every open resets page 1.
 - Vitest `21`, Vite build, responsive browser QA, accessibility, console, and return-to-Paper checks passed; no real Vault or native `.app` was used.
 
-## Road v0.4 CP8 review evidence
+## Road v0.4 CP8 / CP9 review evidence
 
-- [`LibraryView.vue`](../frontend/src/LibraryView.vue) consumes only
-  Python-sorted `library.query` DTOs; scope/search/sort refreshes clear selection,
-  stale responses are ignored, and Trash entries cannot route into editor views.
-- Folders, three-column context, index errors, in-memory multi-select, keyboard
-  search, and narrow Rust open/reveal are present; every mutation remains CP9.
-- Vitest `32` and Vite build passed. Browser QA at 1220, 768, and 375px found and
-  fixed one CSS overflow; labels, IDs, landmarks, console, and overflow rechecks
-  passed. No real Vault/native `.app` or screenshot baseline was used.
+- CP8 accepted Python-sorted query state, Trash isolation, system handoff, and responsive Library QA; its checkpoint commit is `f12374c`.
+- CP9 adds one-shot Library mutations with partial-result handling and explicit permanent-delete gates, plus Vault preview/init/switch/relocate and migration.
+- Vitest `48`, Python `321`, Rust `10`, compileall, Vite build, and four-width
+  browser QA passed; labels, IDs, landmarks, console, and overflow checks passed.
+- `tauri dev` rebuilt and launched the current Rust host in an isolated Home.
+  macOS automation selected a stale registered release bundle for inspection,
+  so no current-source native functional UI smoke is claimed.
+- No real Vault, dependency, capability, protocol, Core, or Rust source changed.
 
 ## Road v0.4 toolchain
 
@@ -152,7 +152,8 @@ See [SPEC](SPEC.md) for the stable product boundary. The accepted Road v0.3 inte
 | Vue Paper slice | Startup/daily gate, Paper DTO form, initial copy, keyboard save, Highlight ordering, soft delete, and structured recovery through the Tauri bridge | [`PaperView.vue`](../frontend/src/PaperView.vue), [`bridge.js`](../frontend/src/bridge.js) | [`PaperView.test.js`](../frontend/src/PaperView.test.js), [`bridge.test.js`](../frontend/src/bridge.test.js) |
 | Flashcard UI | named Summary-first projection, Paper selector, page-1 reset, list/arrow/jump navigation | [`flashcard_page.py`](../src/keikeu_app/pages/flashcard_page.py) | [`test_app_pages.py`](../tests/test_app_pages.py) |
 | Vue Flashcard slice | read-only Summary-first projection, in-memory navigation/reset, Summary context, and selected-Paper return | [`FlashcardView.vue`](../frontend/src/FlashcardView.vue), [`App.vue`](../frontend/src/App.vue) | [`FlashcardView.test.js`](../frontend/src/FlashcardView.test.js), [`App.test.js`](../frontend/src/App.test.js) |
-| Vue Library slice | Python-owned scope/search/sort results, local selection, read-only Trash, index errors, and validated system handoff | [`LibraryView.vue`](../frontend/src/LibraryView.vue), [`App.vue`](../frontend/src/App.vue) | [`LibraryView.test.js`](../frontend/src/LibraryView.test.js), [`App.test.js`](../frontend/src/App.test.js) |
+| Vue Library slice | Python-owned query/mutation results, local selection, partial failures, folder/Trash gates, and validated system handoff | [`LibraryView.vue`](../frontend/src/LibraryView.vue), [`App.vue`](../frontend/src/App.vue) | [`LibraryView.test.js`](../frontend/src/LibraryView.test.js), [`App.test.js`](../frontend/src/App.test.js) |
+| Vue Vault/migration slice | Native directory intent, opaque preview/preflight tokens, explicit relocation/migration confirmation, and blocking unknown-commit recovery | [`VaultView.vue`](../frontend/src/VaultView.vue), [`bridge.js`](../frontend/src/bridge.js) | [`VaultView.test.js`](../frontend/src/VaultView.test.js), [`bridge.test.js`](../frontend/src/bridge.test.js) |
 | Device state | disposable once-per-local-day start-card claim; no Flashcard position | [`local_state.py`](../src/keikeu_bridge/local_state.py); Flet compatibility import remains | [`test_local_state.py`](../tests/test_local_state.py) |
 | Library UI | folder scopes, scoped search/sort, selection, drag/menu/batch moves, branch, Trash/recovery, system handoff | [`library_page.py`](../src/keikeu_app/pages/library_page.py) | [`test_app_pages.py`](../tests/test_app_pages.py) |
 
@@ -187,8 +188,8 @@ Application tests must not be inferred from documentation checks. Platform smoke
 
 ## Open gates
 
-1. Create `codex/road-v04-cp9` from the accepted CP8 checkpoint HEAD.
-2. Implement Library mutations, Vault flows, and migration as the CP9 slice.
+1. Developer reviews and accepts the uncommitted CP9 diff.
+2. Commit CP9 only after that acceptance, then create CP10 from its exact HEAD.
 3. Keep CP13 macOS 13.3+ compatibility separate from beta-workstation
    engineering evidence.
 4. Treat tag, push, signing, distribution, and any real-Vault operation as

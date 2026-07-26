@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
 
 import { bridgeRequest, openSystemTarget } from "./bridge.js";
 
@@ -10,9 +10,15 @@ defineProps({
   },
 });
 
-const emit = defineEmits(["runtime-blocked", "open-paper", "open-flashcard"]);
+const emit = defineEmits([
+  "runtime-blocked",
+  "open-paper",
+  "open-flashcard",
+  "open-vault",
+]);
 
 const searchInput = ref(null);
+const operationDialog = ref(null);
 const view = ref(null);
 const scope = ref("all");
 const search = ref("");
@@ -23,13 +29,28 @@ const busy = ref(false);
 const queryError = ref(null);
 const actionError = ref(null);
 const notice = ref("");
+const mutationBusy = ref(false);
+const operation = ref(null);
+const operationValue = ref("");
+const operationDestination = ref("");
+const draggedPath = ref(null);
 let queryGeneration = 0;
+let operationReturnFocus = null;
 
 const entries = computed(() => view.value?.entries ?? []);
 const activeEntry = computed(
   () => entries.value.find((entry) => entry.path === activePath.value) ?? null,
 );
 const selectedCount = computed(() => selectedPaths.value.length);
+const currentFolder = computed(() =>
+  scope.value.startsWith("folder:") ? scope.value.slice(7) : null,
+);
+const operationCount = computed(() => operation.value?.paths?.length ?? 0);
+const operationNeedsExecute = computed(
+  () =>
+    operation.value?.type.startsWith("permanent") &&
+    operationCount.value >= 4,
+);
 
 function normalizeError(rawError) {
   if (rawError && typeof rawError === "object") {
@@ -61,9 +82,10 @@ function handleError(rawError, fallback, target) {
     )
   ) {
     emit("runtime-blocked", visible);
-    return;
+    return true;
   }
   target.value = visible;
+  return false;
 }
 
 function isNullableString(value) {
@@ -116,7 +138,7 @@ function clearSelection() {
   selectedPaths.value = [];
 }
 
-async function refresh({ clear = false } = {}) {
+async function refresh({ clear = false, preserveNotice = false } = {}) {
   if (clear) {
     clearSelection();
     activePath.value = null;
@@ -124,7 +146,9 @@ async function refresh({ clear = false } = {}) {
   const generation = ++queryGeneration;
   busy.value = true;
   queryError.value = null;
-  notice.value = "";
+  if (!preserveNotice) {
+    notice.value = "";
+  }
   try {
     const result = validateView(
       await bridgeRequest("library.query", {
@@ -186,6 +210,341 @@ function openFlashcard(path = activeReadablePath()) {
   emit("open-flashcard", path);
 }
 
+async function openOperation(type, { paths = [], folder = null } = {}) {
+  operationReturnFocus = document.activeElement;
+  operation.value = { type, paths: [...paths], folder };
+  operationValue.value = type === "rename-folder" ? folder ?? "" : "";
+  operationDestination.value = "";
+  actionError.value = null;
+  await nextTick();
+  operationDialog.value?.focus();
+}
+
+function closeOperation() {
+  if (!mutationBusy.value) {
+    operation.value = null;
+    nextTick(() => operationReturnFocus?.focus());
+  }
+}
+
+function isOperationReport(value) {
+  return (
+    value &&
+    typeof value.source === "string" &&
+    isNullableString(value.destination) &&
+    isNullableString(value.error)
+  );
+}
+
+function reportRecords(value) {
+  const records = Array.isArray(value) ? value : [value];
+  if (!records.every(isOperationReport)) {
+    throw {
+      code: "operation_failed",
+      layer: "vue_ui",
+      message: "操作结果数据不完整。",
+      recovery: "refresh",
+    };
+  }
+  return records;
+}
+
+function recordReports(action, records) {
+  const succeeded = records.filter((item) => item.error === null);
+  const failed = records.filter((item) => item.error !== null);
+  selectedPaths.value = selectedPaths.value.filter(
+    (path) => !succeeded.some((item) => item.source === path),
+  );
+  notice.value = `${action}：${succeeded.length} 项成功，${failed.length} 项失败。`;
+  if (failed.length > 0) {
+    actionError.value = {
+      code: "partial_result",
+      layer: "application_service",
+      message: failed
+        .map((item) => `${item.source}：${item.error}`)
+        .join("；"),
+      recovery: "review_failed_items",
+    };
+  }
+}
+
+async function requestMutation(method, params, fallback) {
+  mutationBusy.value = true;
+  actionError.value = null;
+  notice.value = "";
+  try {
+    return { ok: true, value: await bridgeRequest(method, params) };
+  } catch (rawError) {
+    const normalized = normalizeError(rawError);
+    const fatal = handleError(rawError, fallback, actionError);
+    if (
+      !fatal &&
+      ["stale_snapshot", "not_found", "conflict"].includes(normalized.code)
+    ) {
+      await refresh({ clear: true, preserveNotice: true });
+    }
+    return { ok: false, value: null };
+  } finally {
+    mutationBusy.value = false;
+  }
+}
+
+async function runReportMutation(method, params, label) {
+  const response = await requestMutation(method, params, `无法${label}`);
+  if (!response.ok) {
+    return false;
+  }
+  try {
+    recordReports(label, reportRecords(response.value));
+  } catch (rawError) {
+    handleError(rawError, `无法确认${label}结果`, actionError);
+    return false;
+  }
+  closeOperation();
+  await refresh({ preserveNotice: true });
+  return true;
+}
+
+async function runNamedMutation(method, params, label) {
+  const response = await requestMutation(method, params, `无法${label}`);
+  if (!response.ok) {
+    return false;
+  }
+  if (typeof response.value !== "string") {
+    handleError(
+      {
+        code: "operation_failed",
+        layer: "vue_ui",
+        message: "文件夹操作结果数据不完整。",
+        recovery: "refresh",
+      },
+      `无法确认${label}结果`,
+      actionError,
+    );
+    return false;
+  }
+  closeOperation();
+  notice.value = `${label}：${response.value}`;
+  await refresh({ clear: true, preserveNotice: true });
+  return true;
+}
+
+async function rebuildLibrary() {
+  const response = await requestMutation(
+    "library.rebuild",
+    { scope: scope.value, search: search.value, sort: sort.value },
+    "无法重建索引",
+  );
+  if (!response.ok) {
+    return;
+  }
+  try {
+    queryGeneration += 1;
+    view.value = validateView(response.value);
+    scope.value = view.value.scope;
+    clearSelection();
+    activePath.value = view.value.entries[0]?.path ?? null;
+    notice.value = "索引已从 Paper Markdown 重建。";
+  } catch (rawError) {
+    handleError(rawError, "无法确认索引重建结果", actionError);
+  }
+}
+
+async function readAllTrash() {
+  return validateView(
+    await bridgeRequest("library.query", {
+      scope: "trash",
+      search: "",
+      sort: sort.value,
+    }),
+  );
+}
+
+async function preparePermanentFolder(folder) {
+  busy.value = true;
+  actionError.value = null;
+  try {
+    const trash = await readAllTrash();
+    openOperation("permanent-folder", {
+      paths: trash.entries
+        .filter((entry) => entry.folder === folder)
+        .map((entry) => entry.path),
+      folder,
+    });
+  } catch (rawError) {
+    handleError(rawError, "无法读取 Trash 文件夹", actionError);
+  } finally {
+    busy.value = false;
+  }
+}
+
+async function prepareClearTrash() {
+  busy.value = true;
+  actionError.value = null;
+  try {
+    const trash = await readAllTrash();
+    openOperation("permanent-all", {
+      paths: trash.entries.map((entry) => entry.path),
+    });
+    operation.value.folders = [...trash.trash_folders];
+  } catch (rawError) {
+    handleError(rawError, "无法读取完整 Trash", actionError);
+  } finally {
+    busy.value = false;
+  }
+}
+
+async function permanentlyDelete(paths, folders, label) {
+  const collected = [];
+  if (paths.length > 0) {
+    const papers = await requestMutation(
+      "library.permanently_delete",
+      { paths },
+      `无法${label}`,
+    );
+    if (!papers.ok) {
+      return;
+    }
+    const reports = reportRecords(papers.value);
+    collected.push(...reports);
+    if (reports.some((item) => item.error !== null)) {
+      recordReports(label, collected);
+      closeOperation();
+      await refresh({ preserveNotice: true });
+      return;
+    }
+  }
+  for (const folder of folders) {
+    const response = await requestMutation(
+      "library.permanently_delete_folder",
+      { folder },
+      `无法永久删除文件夹 ${folder}`,
+    );
+    if (!response.ok) {
+      if (collected.length > 0) {
+        recordReports(label, collected);
+        closeOperation();
+        await refresh({ preserveNotice: true });
+      }
+      return;
+    }
+    collected.push(...reportRecords(response.value));
+  }
+  recordReports(label, collected);
+  closeOperation();
+  await refresh({ preserveNotice: true });
+}
+
+async function executeOperation() {
+  if (!operation.value || mutationBusy.value) {
+    return;
+  }
+  const current = operation.value;
+  if (
+    current.type.startsWith("permanent") &&
+    operationNeedsExecute.value &&
+    operationValue.value.trim() !== "execute"
+  ) {
+    actionError.value = {
+      code: "validation_failed",
+      layer: "vue_ui",
+      message: "请输入完全一致的小写 execute。",
+      recovery: "correct_input",
+    };
+    return;
+  }
+  if (current.type === "move") {
+    await runReportMutation(
+      "library.move",
+      {
+        paths: current.paths,
+        destination_folder: operationDestination.value || null,
+      },
+      "移动",
+    );
+  } else if (current.type === "create-folder") {
+    await runNamedMutation(
+      "library.create_folder",
+      { name: operationValue.value },
+      "创建文件夹",
+    );
+  } else if (current.type === "rename-folder") {
+    await runNamedMutation(
+      "library.rename_folder",
+      { folder: current.folder, new_name: operationValue.value },
+      "重命名文件夹",
+    );
+  } else if (current.type === "merge-folder") {
+    await runReportMutation(
+      "library.merge_folders",
+      { source: current.folder, destination: operationDestination.value },
+      "合并文件夹",
+    );
+  } else if (current.type === "soft-delete") {
+    await runReportMutation(
+      "library.soft_delete",
+      { paths: current.paths },
+      "移至 Trash",
+    );
+  } else if (current.type === "soft-delete-folder") {
+    await runReportMutation(
+      "library.soft_delete_folder",
+      { folder: current.folder },
+      "文件夹移至 Trash",
+    );
+  } else if (current.type === "permanent-paper") {
+    await permanentlyDelete(current.paths, [], "永久删除");
+  } else if (current.type === "permanent-folder") {
+    await permanentlyDelete(current.paths, [current.folder], "永久删除文件夹");
+  } else if (current.type === "permanent-all") {
+    await permanentlyDelete(
+      current.paths,
+      current.folders ?? [],
+      "清空 Trash",
+    );
+  }
+}
+
+async function restorePaths(paths) {
+  await runReportMutation("library.restore", { paths }, "恢复");
+}
+
+async function restoreFolder(folder) {
+  await runReportMutation(
+    "library.restore_folder",
+    { folder },
+    "恢复文件夹",
+  );
+}
+
+async function branchActive() {
+  if (activeEntry.value && !activeEntry.value.trashed) {
+    await runReportMutation(
+      "library.branch",
+      { path: activeEntry.value.path },
+      "创建分支",
+    );
+  }
+}
+
+function onDragStart(event, path) {
+  draggedPath.value = path;
+  event.dataTransfer?.setData("text/plain", path);
+}
+
+async function dropOnFolder(event, destinationFolder) {
+  const path =
+    event.dataTransfer?.getData("text/plain") || draggedPath.value;
+  draggedPath.value = null;
+  if (path) {
+    await runReportMutation(
+      "library.move",
+      { paths: [path], destination_folder: destinationFolder },
+      "移动",
+    );
+  }
+}
+
 async function runSystemAction(action, relativeTarget) {
   actionError.value = null;
   notice.value = "";
@@ -203,7 +562,14 @@ async function runSystemAction(action, relativeTarget) {
 }
 
 function onWindowKeydown(event) {
-  if (event.metaKey && event.key.toLocaleLowerCase() === "f") {
+  if (event.key === "Escape" && operation.value) {
+    event.preventDefault();
+    closeOperation();
+  } else if (
+    !operation.value &&
+    event.metaKey &&
+    event.key.toLocaleLowerCase() === "f"
+  ) {
     event.preventDefault();
     searchInput.value?.focus();
   } else if (event.key === "Escape" && selectedPaths.value.length > 0) {
@@ -225,7 +591,7 @@ onUnmounted(() => {
 <template>
   <main v-if="busy && !view" class="library-gate" aria-live="polite">
     <section>
-      <p class="library-eyebrow">Road v0.4 · CP8</p>
+      <p class="library-eyebrow">Road v0.4 · CP9</p>
       <h1>正在读取 Library</h1>
       <p>搜索、排序与 scope 由 Python application service 执行。</p>
     </section>
@@ -265,9 +631,9 @@ onUnmounted(() => {
 
     <aside class="library-context" aria-labelledby="library-scopes-title">
       <header>
-        <p class="library-eyebrow">Road v0.4 · CP8</p>
+        <p class="library-eyebrow">Road v0.4 · CP9</p>
         <h1 id="library-scopes-title">Library</h1>
-        <p>只读索引 · {{ runtime.core_version }}</p>
+        <p>Python-owned mutations · {{ runtime.core_version }}</p>
       </header>
 
       <nav class="library-scopes" aria-label="Library scopes">
@@ -275,11 +641,15 @@ onUnmounted(() => {
         <button
           type="button"
           :class="{ selected: scope === 'all' }"
+          :disabled="mutationBusy"
           @click="setScope('all')"
         >全部 Paper</button>
         <button
           type="button"
           :class="{ selected: scope === 'unfiled' }"
+          :disabled="mutationBusy"
+          @dragover.prevent
+          @drop.prevent="dropOnFolder($event, null)"
           @click="setScope('unfiled')"
         >未归类</button>
         <p v-if="view.folders.length" class="scope-label">文件夹</p>
@@ -288,27 +658,71 @@ onUnmounted(() => {
           :key="folder"
           type="button"
           :class="{ selected: scope === `folder:${folder}` }"
+          :disabled="mutationBusy"
+          @dragover.prevent
+          @drop.prevent="dropOnFolder($event, folder)"
           @click="setScope(`folder:${folder}`)"
         >{{ folder }}</button>
         <button
           type="button"
           :class="{ selected: scope === 'trash' }"
+          :disabled="mutationBusy"
           @click="setScope('trash')"
         >Trash <span>{{ view.trash_count }}</span></button>
       </nav>
 
+      <section v-if="currentFolder" class="folder-tools">
+        <h2>文件夹操作</h2>
+        <button
+          type="button"
+          :disabled="mutationBusy"
+          @click="openOperation('rename-folder', { folder: currentFolder })"
+        >重命名</button>
+        <button
+          type="button"
+          :disabled="mutationBusy || view.folders.length < 2"
+          @click="openOperation('merge-folder', { folder: currentFolder })"
+        >合并到…</button>
+        <button
+          class="danger-action"
+          type="button"
+          :disabled="mutationBusy"
+          @click="openOperation('soft-delete-folder', { folder: currentFolder })"
+        >文件夹移至 Trash</button>
+      </section>
+
       <section v-if="scope === 'trash' && view.trash_folders.length" class="trash-folders">
         <h2>Trash 文件夹</h2>
         <ul>
-          <li v-for="folder in view.trash_folders" :key="folder">{{ folder }}</li>
+          <li v-for="folder in view.trash_folders" :key="folder">
+            <span>{{ folder }}</span>
+            <button
+              type="button"
+              :aria-label="`恢复文件夹 ${folder}`"
+              :disabled="mutationBusy"
+              @click="restoreFolder(folder)"
+            >恢复</button>
+            <button
+              class="danger-action"
+              type="button"
+              :aria-label="`永久删除文件夹 ${folder}`"
+              :disabled="mutationBusy"
+              @click="preparePermanentFolder(folder)"
+            >永久删除</button>
+          </li>
         </ul>
       </section>
 
-      <button
-        class="reveal-vault"
-        type="button"
-        @click="runSystemAction('reveal', '.')"
-      >在 Finder 中显示 Vault</button>
+      <div class="vault-tools">
+        <button
+          class="reveal-vault"
+          type="button"
+          @click="runSystemAction('reveal', '.')"
+        >在 Finder 中显示 Vault</button>
+        <button type="button" :disabled="mutationBusy" @click="emit('open-vault')">
+          切换 Vault
+        </button>
+      </div>
     </aside>
 
     <main class="library-workspace">
@@ -327,6 +741,7 @@ onUnmounted(() => {
             ref="searchInput"
             v-model="search"
             type="search"
+            :disabled="mutationBusy"
             placeholder="名称、代号、Summary、Tags 或 Highlight 名称"
             @input="updateQuery"
           >
@@ -334,16 +749,24 @@ onUnmounted(() => {
         </label>
         <label>
           <span>排序</span>
-          <select v-model="sort" @change="updateQuery">
+          <select v-model="sort" :disabled="mutationBusy" @change="updateQuery">
             <option value="updated_desc">最近更新</option>
             <option value="created_desc">最近创建</option>
             <option value="created_asc">最早创建</option>
             <option value="name">名称</option>
           </select>
         </label>
-        <button type="button" :disabled="busy" @click="refresh({ clear: true })">
+        <button type="button" :disabled="busy || mutationBusy" @click="refresh({ clear: true })">
           {{ busy ? "读取中…" : "刷新" }}
         </button>
+        <button type="button" :disabled="busy || mutationBusy" @click="rebuildLibrary">
+          {{ mutationBusy ? "写入中…" : "重建索引" }}
+        </button>
+        <button
+          type="button"
+          :disabled="mutationBusy || scope === 'trash'"
+          @click="openOperation('create-folder')"
+        >新建文件夹</button>
       </form>
 
       <section v-if="queryError" class="library-error" aria-live="assertive">
@@ -365,6 +788,41 @@ onUnmounted(() => {
             </div>
           </header>
 
+          <div class="mutation-toolbar">
+            <template v-if="scope !== 'trash'">
+              <button
+                type="button"
+                :disabled="mutationBusy || selectedCount === 0"
+                @click="openOperation('move', { paths: [...selectedPaths] })"
+              >移动所选</button>
+              <button
+                class="danger-action"
+                type="button"
+                :disabled="mutationBusy || selectedCount === 0"
+                @click="openOperation('soft-delete', { paths: [...selectedPaths] })"
+              >移至 Trash</button>
+            </template>
+            <template v-else>
+              <button
+                type="button"
+                :disabled="mutationBusy || selectedCount === 0"
+                @click="restorePaths([...selectedPaths])"
+              >恢复所选</button>
+              <button
+                class="danger-action"
+                type="button"
+                :disabled="mutationBusy || selectedCount === 0"
+                @click="openOperation('permanent-paper', { paths: [...selectedPaths] })"
+              >永久删除所选</button>
+              <button
+                class="danger-action"
+                type="button"
+                :disabled="mutationBusy || view.trash_count === 0"
+                @click="prepareClearTrash"
+              >清空 Trash</button>
+            </template>
+          </div>
+
           <p v-if="entries.length === 0" class="library-empty">
             {{ search ? "当前范围没有符合搜索条件的 Paper。" : scope === "trash" ? "Trash 为空。" : "当前范围没有 Paper。" }}
           </p>
@@ -374,6 +832,8 @@ onUnmounted(() => {
               v-for="entry in entries"
               :key="entry.path"
               :class="{ active: activePath === entry.path }"
+              :draggable="!entry.trashed && !mutationBusy"
+              @dragstart="onDragStart($event, entry.path)"
             >
               <label>
                 <input
@@ -415,28 +875,58 @@ onUnmounted(() => {
             <div class="detail-actions">
               <button
                 type="button"
-                :disabled="activeEntry.trashed"
+                :disabled="activeEntry.trashed || mutationBusy"
                 @click="openPaper(activeEntry.path)"
               >编辑 Paper</button>
               <button
                 type="button"
-                :disabled="activeEntry.trashed"
+                :disabled="activeEntry.trashed || mutationBusy"
                 @click="openFlashcard(activeEntry.path)"
               >打开 Flashcard</button>
               <button
                 type="button"
-                :disabled="activeEntry.trashed"
+                :disabled="activeEntry.trashed || mutationBusy"
                 @click="runSystemAction('open', activeEntry.path)"
               >系统打开</button>
               <button
                 type="button"
-                :disabled="activeEntry.trashed"
+                :disabled="activeEntry.trashed || mutationBusy"
                 @click="runSystemAction('reveal', activeEntry.path)"
               >在 Finder 中显示</button>
+              <template v-if="!activeEntry.trashed">
+                <button
+                  type="button"
+                  :aria-label="`移动 ${activeEntry.display_name || activeEntry.code}`"
+                  :disabled="mutationBusy"
+                  @click="openOperation('move', { paths: [activeEntry.path] })"
+                >移动</button>
+                <button type="button" :disabled="mutationBusy" @click="branchActive">
+                  复制分支
+                </button>
+                <button
+                  class="danger-action"
+                  type="button"
+                  :aria-label="`移至 Trash ${activeEntry.display_name || activeEntry.code}`"
+                  :disabled="mutationBusy"
+                  @click="openOperation('soft-delete', { paths: [activeEntry.path] })"
+                >移至 Trash</button>
+              </template>
+              <template v-else>
+                <button
+                  type="button"
+                  :aria-label="`恢复 ${activeEntry.display_name || activeEntry.code}`"
+                  :disabled="mutationBusy"
+                  @click="restorePaths([activeEntry.path])"
+                >恢复</button>
+                <button
+                  class="danger-action"
+                  type="button"
+                  :aria-label="`永久删除 ${activeEntry.display_name || activeEntry.code}`"
+                  :disabled="mutationBusy"
+                  @click="openOperation('permanent-paper', { paths: [activeEntry.path] })"
+                >永久删除</button>
+              </template>
             </div>
-            <p v-if="activeEntry.trashed" class="trash-note">
-              Trash 内容在 CP8 只读；恢复与永久删除属于 CP9。
-            </p>
           </template>
           <p v-else>选择一个 Paper 查看上下文。</p>
         </aside>
@@ -453,13 +943,111 @@ onUnmounted(() => {
         </ul>
       </section>
 
-      <section v-if="actionError" class="library-error" aria-live="assertive">
+      <section v-if="actionError && !operation" class="library-error" aria-live="assertive">
         <strong>{{ actionError.message }}</strong>
         <small>{{ actionError.layer }} · {{ actionError.code }}</small>
       </section>
       <p v-if="notice" class="library-notice" aria-live="polite">{{ notice }}</p>
-      <p class="cp9-note">移动、分支、文件夹管理、Trash 恢复与永久删除在 CP9 接入。</p>
+      <p class="cp9-note">写入由 Python Core 执行；Vue 不直接操作 Markdown 或索引文件。</p>
     </main>
+
+    <div
+      v-if="operation"
+      class="operation-backdrop"
+      role="presentation"
+      @click.self="closeOperation"
+    >
+      <section
+        ref="operationDialog"
+        class="operation-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="operation-title"
+        tabindex="-1"
+      >
+        <h2 id="operation-title">
+          {{
+            operation.type === "move" ? "移动 Paper"
+              : operation.type === "create-folder" ? "新建文件夹"
+                : operation.type === "rename-folder" ? "重命名文件夹"
+                  : operation.type === "merge-folder" ? "合并文件夹"
+                    : operation.type === "soft-delete" ? "移至 Trash"
+                      : operation.type === "soft-delete-folder" ? "文件夹移至 Trash"
+                        : operation.type === "permanent-all" ? "清空 Trash"
+                          : operation.type === "permanent-folder" ? "永久删除文件夹"
+                            : "永久删除"
+          }}
+        </h2>
+
+        <label v-if="operation.type === 'move'">
+          <span>目标文件夹</span>
+          <select v-model="operationDestination" :disabled="mutationBusy">
+            <option value="">未归类</option>
+            <option v-for="folder in view.folders" :key="folder" :value="folder">
+              {{ folder }}
+            </option>
+          </select>
+        </label>
+
+        <label v-if="['create-folder', 'rename-folder'].includes(operation.type)">
+          <span>文件夹名称</span>
+          <input v-model="operationValue" type="text" :disabled="mutationBusy">
+        </label>
+
+        <label v-if="operation.type === 'merge-folder'">
+          <span>合并目标</span>
+          <select v-model="operationDestination" :disabled="mutationBusy">
+            <option value="" disabled>选择目标文件夹</option>
+            <option
+              v-for="folder in view.folders.filter((item) => item !== operation.folder)"
+              :key="folder"
+              :value="folder"
+            >{{ folder }}</option>
+          </select>
+        </label>
+
+        <p v-if="operation.type === 'soft-delete'">
+          {{ operation.paths.length }} 个 Paper 将移入 Trash，可稍后恢复。
+        </p>
+        <p v-else-if="operation.type === 'soft-delete-folder'">
+          “{{ operation.folder }}”及其中 Paper 将移入 Trash，可逐项恢复。
+        </p>
+        <p v-else-if="operation.type.startsWith('permanent')" class="permanent-warning">
+          将永久删除 {{ operationCount }} 个 Paper；此操作不可恢复。
+        </p>
+
+        <label v-if="operationNeedsExecute">
+          <span>输入小写 execute</span>
+          <input
+            v-model="operationValue"
+            type="text"
+            :disabled="mutationBusy"
+            autocomplete="off"
+          >
+        </label>
+
+        <section v-if="actionError" class="library-error" aria-live="assertive">
+          <strong>{{ actionError.message }}</strong>
+          <small>{{ actionError.layer }} · {{ actionError.code }}</small>
+        </section>
+
+        <div class="operation-actions">
+          <button type="button" :disabled="mutationBusy" @click="closeOperation">
+            取消
+          </button>
+          <button
+            :class="{ 'danger-action': ['soft-delete', 'soft-delete-folder'].includes(operation.type) || operation.type.startsWith('permanent') }"
+            type="button"
+            :disabled="
+              mutationBusy ||
+              (['create-folder', 'rename-folder'].includes(operation.type) && !operationValue.trim()) ||
+              (operation.type === 'merge-folder' && !operationDestination)
+            "
+            @click="executeOperation"
+          >{{ mutationBusy ? "正在执行…" : "确认执行" }}</button>
+        </div>
+      </section>
+    </div>
   </div>
 </template>
 
@@ -654,12 +1242,48 @@ button:disabled {
 }
 
 .trash-folders ul {
+  display: grid;
+  gap: 8px;
   margin: 0;
-  padding-left: 20px;
+  padding: 0;
+  list-style: none;
+}
+
+.trash-folders li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 5px;
+}
+
+.trash-folders button,
+.folder-tools button {
+  padding: 5px 7px;
+  font-size: 0.7rem;
+}
+
+.folder-tools {
+  display: grid;
+  gap: 6px;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid var(--rule);
+}
+
+.folder-tools h2 {
+  margin: 0 0 4px;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .reveal-vault {
   width: 100%;
+}
+
+.vault-tools {
+  display: grid;
+  gap: 7px;
   margin-top: 28px;
 }
 
@@ -688,7 +1312,7 @@ button:disabled {
 
 .library-toolbar {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) minmax(160px, 220px) auto;
+  grid-template-columns: minmax(220px, 1fr) minmax(160px, 220px) repeat(3, auto);
   align-items: end;
   gap: 12px;
   margin: 24px 0;
@@ -744,6 +1368,26 @@ button:disabled {
   border-bottom: 1px solid var(--rule);
 }
 
+.mutation-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--rule);
+  background: #f4f3ee;
+}
+
+.mutation-toolbar button {
+  padding: 6px 9px;
+  border-color: var(--rule);
+  font-size: 0.74rem;
+}
+
+.danger-action {
+  border-color: var(--danger) !important;
+  color: var(--danger);
+}
+
 .library-results h3,
 .library-detail h3,
 .asset-health h3 {
@@ -778,6 +1422,14 @@ button:disabled {
   gap: 8px;
   padding: 12px 14px;
   border-bottom: 1px solid var(--rule);
+}
+
+.library-list li[draggable="true"] {
+  cursor: grab;
+}
+
+.library-list li[draggable="true"]:active {
+  cursor: grabbing;
 }
 
 .library-list li.active {
@@ -929,9 +1581,71 @@ button:disabled {
   font-weight: 650;
 }
 
+.operation-backdrop {
+  position: fixed;
+  z-index: 10;
+  inset: 0;
+  display: grid;
+  padding: 20px;
+  place-items: center;
+  background: rgb(30 37 35 / 58%);
+}
+
+.operation-dialog {
+  width: min(520px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+  border: 1px solid var(--ink);
+  border-top: 4px solid var(--signal);
+  padding: 26px;
+  background: var(--paper);
+}
+
+.operation-dialog h2 {
+  margin: 0 0 18px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.8rem;
+  font-weight: 500;
+}
+
+.operation-dialog label {
+  display: grid;
+  gap: 7px;
+  margin: 16px 0;
+  font-weight: 650;
+}
+
+.operation-dialog input,
+.operation-dialog select {
+  min-width: 0;
+  width: 100%;
+  border: 1px solid var(--rule);
+  padding: 10px;
+  color: var(--ink);
+  background: #fff;
+}
+
+.permanent-warning {
+  border: 1px solid var(--danger);
+  padding: 12px;
+  color: var(--danger);
+  background: #fff7f4;
+}
+
+.operation-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 22px;
+}
+
 @media (max-width: 1080px) {
   .library-stage {
     grid-template-columns: 1fr;
+  }
+
+  .library-toolbar {
+    grid-template-columns: minmax(220px, 1fr) minmax(160px, 220px) repeat(2, auto);
   }
 }
 

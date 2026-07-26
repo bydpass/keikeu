@@ -23,6 +23,10 @@ export function restartSidecar() {
   return invoke("restart_sidecar");
 }
 
+export function chooseVaultDirectory() {
+  return invoke("choose_vault_directory");
+}
+
 export function openSystemTarget(action, relativeTarget) {
   return invoke("open_system_target", { action, relativeTarget });
 }

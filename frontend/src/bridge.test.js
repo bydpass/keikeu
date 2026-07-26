@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { invoke } from "@tauri-apps/api/core";
-import { bridgeRequest, openSystemTarget } from "./bridge.js";
+import {
+  bridgeRequest,
+  chooseVaultDirectory,
+  openSystemTarget,
+} from "./bridge.js";
 
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn(),
@@ -50,5 +54,12 @@ describe("Tauri bridge envelope", () => {
       action: "reveal",
       relativeTarget: "cache/Ideas/K-001.md",
     });
+  });
+
+  it("opens only the registered native Vault directory picker", async () => {
+    invoke.mockResolvedValue("/Users/creator/Vault");
+
+    await expect(chooseVaultDirectory()).resolves.toBe("/Users/creator/Vault");
+    expect(invoke).toHaveBeenCalledWith("choose_vault_directory");
   });
 });
