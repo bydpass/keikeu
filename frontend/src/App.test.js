@@ -3,17 +3,43 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import App from "./App.vue";
 import PrototypeView from "./PrototypeView.vue";
-import { getRuntimeStatus, restartSidecar } from "./bridge.js";
+import { bridgeRequest, getRuntimeStatus, restartSidecar } from "./bridge.js";
 
 vi.mock("./bridge.js", () => ({
+  bridgeRequest: vi.fn(),
   getRuntimeStatus: vi.fn(),
   restartSidecar: vi.fn(),
 }));
+
+const draftPaper = {
+  path: null,
+  edit_token: "edit-draft",
+  code: "K-20260725-001",
+  display_name: null,
+  initial_summary: "",
+  summary: "",
+  highlights: [],
+  tags: [],
+  created: "2026-07-25T12:00:00",
+  updated: "2026-07-25T12:00:00",
+};
 
 describe("desktop shell gates", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     window.history.replaceState({}, "", "/");
+    bridgeRequest.mockImplementation(async (method) => {
+      if (method === "startup.load") {
+        return { state: "ready", show_daily_card: false };
+      }
+      if (method === "library.query") {
+        return { entries: [], errors: [] };
+      }
+      if (method === "paper.create_draft") {
+        return draftPaper;
+      }
+      throw new Error(`Unexpected method: ${method}`);
+    });
   });
 
   it("unblocks only after the host is ready", async () => {
@@ -27,6 +53,7 @@ describe("desktop shell gates", () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain("Python Core 已连接");
+    expect(wrapper.text()).toContain("Paper 工作台");
     expect(wrapper.text()).toContain("paper-v3/index-v3");
   });
 
@@ -55,7 +82,7 @@ describe("desktop shell gates", () => {
     await flushPromises();
 
     expect(restartSidecar).toHaveBeenCalledOnce();
-    expect(wrapper.text()).toContain("Python Core 已连接");
+    expect(wrapper.text()).toContain("Paper 工作台");
   });
 
   it("keeps the synthetic prototype isolated from the bridge", async () => {
@@ -66,6 +93,7 @@ describe("desktop shell gates", () => {
 
     expect(wrapper.find(".runtime-gate").exists()).toBe(false);
     expect(getRuntimeStatus).not.toHaveBeenCalled();
+    expect(bridgeRequest).not.toHaveBeenCalled();
   });
 
   it("renders the CP5 specimen with synthetic data only", () => {

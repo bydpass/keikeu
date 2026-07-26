@@ -2,6 +2,7 @@
 import { defineAsyncComponent, onMounted, onUnmounted, ref } from "vue";
 
 import { getRuntimeStatus, restartSidecar } from "./bridge.js";
+import PaperView from "./PaperView.vue";
 
 const PrototypeView = import.meta.env.DEV
   ? defineAsyncComponent(() => import("./PrototypeView.vue"))
@@ -46,6 +47,10 @@ async function restart() {
   }
 }
 
+function blockRuntime(error) {
+  status.value = { state: "blocked", error };
+}
+
 onMounted(() => {
   if (!showPrototype) {
     refreshStatus();
@@ -57,24 +62,14 @@ onUnmounted(() => window.clearTimeout(refreshTimer));
 <template>
   <PrototypeView v-if="showPrototype" />
 
-  <main v-else class="runtime-gate" aria-live="polite">
-    <section v-if="status.state === 'ready'" class="runtime-panel">
-      <p class="eyebrow">Road v0.4 · CP4</p>
-      <h1>Python Core 已连接</h1>
-      <p>本地宿主和 JSONL sidecar 握手成功。</p>
-      <dl>
-        <div>
-          <dt>应用</dt>
-          <dd>{{ status.app_version }}</dd>
-        </div>
-        <div>
-          <dt>Core</dt>
-          <dd>{{ status.core_version }}</dd>
-        </div>
-      </dl>
-    </section>
+  <PaperView
+    v-else-if="status.state === 'ready'"
+    :runtime="status"
+    @runtime-blocked="blockRuntime"
+  />
 
-    <section v-else-if="status.state === 'starting'" class="runtime-panel">
+  <main v-else class="runtime-gate" aria-live="polite">
+    <section v-if="status.state === 'starting'" class="runtime-panel">
       <p class="eyebrow">Road v0.4 · CP4</p>
       <h1>正在启动本地 Core</h1>
       <p>窗口会在握手完成后解除阻塞。</p>

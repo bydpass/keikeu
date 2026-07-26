@@ -13,7 +13,7 @@ Updated: 2026-07-25
 | Phase 7.5 lightweight iOS | Quick-test build complete on an independent branch | Responsive shell and app-sandbox Vault were exercised on `codex/fix-ios-device-readiness`. This is a lightweight iOS version for rapid testing, not a step in the macOS Road sequence. |
 | Phase 8.5 / Road v0.3 preparation | Complete | Documentation reform, authority maps, link gate, browser QA, and bounded Graphify trial completed before Road v0.3 construction. The fresh-agent audit remained unperformed and is not retroactively claimed. |
 | Road v0.3 | Product accepted; design archive complete | Phase 0–7 engineering, CP5 macOS candidate smoke, and CP6 real-author scenarios are complete. Retrieval was faster and clear, external-editor handoff was clear, and no unresolved P0/P1 was reported. The [version archive](archive/road-v0-3/README.md) is read-only; no v0.3 tag, commit, or push is implied. |
-| Road v0.4 | CP5 complete; CP6 next | The development-only Vue specimen established the editorial-workbench direction with synthetic in-memory data. Automated and responsive browser checks passed, and the developer approved the visual direction on 2026-07-25. |
+| Road v0.4 | CP6 complete; CP7 next | Vue reaches the existing startup and Paper contracts through the narrow Tauri bridge. Focused tests, isolated browser QA, and a copied-Vault `.app` smoke cover the Paper flow; the developer accepted CP6 on 2026-07-25. |
 
 Phase 8 product acceptance is complete. Road v0.2 is marked by local annotated tag `v0.2.0` at `d0feac0269a5619f5dbf27c04347ba69c5665b42`; archival remains a separate developer decision. Automated tests, platform smoke, and author acceptance remain distinct evidence.
 
@@ -21,7 +21,7 @@ Phase 7.5 and the macOS Roads are separate tracks. The lightweight iOS test vers
 
 Road v0.3 product decisions, implementation, macOS candidate smoke, and product acceptance are complete. Its detailed SPEC, Planbook, maps, ADRs, and CP6 record are archived. The accepted Python/Flet runtime remains available until a separately approved Road replaces it; archival does not authorize runtime removal or data migration.
 
-Road v0.4 CP0 is committed at `8407941` on `codex/road-v04-cp0`; CP1 at `b718ed8`; CP2 at `42dfa68`; CP3 at `e72f155`; and CP4 at `0d86847`. CP5 is approved on `codex/road-v04-cp5`; its commit becomes the CP6 branch base. Each checkpoint uses its own `codex/road-v04-cpN` branch created from the previous accepted checkpoint.
+Road v0.4 CP0 is committed at `8407941` on `codex/road-v04-cp0`; CP1 at `b718ed8`; CP2 at `42dfa68`; CP3 at `e72f155`; CP4 at `0d86847`; and CP5 at `f19da31`. CP6 is accepted on `codex/road-v04-cp6`; its checkpoint commit hash is reported in the handoff because a commit cannot record its own hash. Each checkpoint uses its own `codex/road-v04-cpN` branch created from the previous accepted checkpoint.
 
 ## Road v0.4 CP2 evidence
 
@@ -78,6 +78,34 @@ Road v0.4 CP0 is committed at `8407941` on `codex/road-v04-cp0`; CP1 at `b718ed8
   approve taste. The developer reviewed and approved the rendered direction on
   2026-07-25; the tokens and layout rules are frozen for Gate A.
 
+## Road v0.4 CP6 evidence
+
+- [`PaperView.vue`](../frontend/src/PaperView.vue) owns visible Paper state and
+  interaction but never files; [`bridge.js`](../frontend/src/bridge.js) only
+  unwraps the existing envelope. Vue returns opaque `edit_token`, never parses
+  Markdown, guesses paths, or retries mutations.
+- `startup.load` keeps Vault/migration gates blocking; minimal `library.query`
+  results supply Paper paths here, while the complete Library UI remains CP8.
+- Vitest completed with `15 passed`; Python completed with `321 passed`; Rust
+  completed with `10 passed`; Python compileall and the production Vite build
+  passed.
+- Isolated in-memory browser QA at 1220×780, 920×680, 768×800, and 375×812
+  found no horizontal overflow, duplicate IDs, unlabeled form controls, unnamed
+  buttons, or console warning/error. Open, Highlight reorder, `Cmd+S`, required
+  Summary error, and soft-delete confirmation were exercised without a Vault.
+- A current-branch `.app` plus packaged sidecar ran against an isolated HOME
+  and synthetic copied Vault. The smoke covered the daily card with Enter,
+  create/save with real `Cmd+S`, list/open, frozen initial Summary, Highlight
+  reorder by Tab+Enter, external-modification `stale_snapshot`, external-move
+  `not_found`, soft delete into `.trash`, and clean host/child exit.
+- The smoke used the documented one-run `minimumSystemVersion=11.0` override
+  because beta cannot compile tracked `13.3`; this is neither CP12 nor CP13.
+- No CP6 screenshot baseline exists, so visual regression is inconclusive.
+  No real Vault or workstation config/device state was read or changed; the
+  isolated fixture, config, and state were removed after the smoke.
+- No Tauri permission, dependency, Paper schema, Python service/Core, or Rust
+  host code changed.
+
 ## Road v0.4 toolchain
 
 CP0 observed the workstation before approval:
@@ -118,6 +146,7 @@ See [SPEC](SPEC.md) for the stable product boundary. The accepted Road v0.3 inte
 | Application service | UI-neutral startup/Vault, Paper, Flashcard, Library, migration, structured errors, DTOs, and validated system targets | [`service.py`](../src/keikeu_bridge/service.py), [`dto.py`](../src/keikeu_bridge/dto.py) | [`test_bridge_service.py`](../tests/test_bridge_service.py) |
 | App shell | Vault/migration identity gates, vault-relative Paper routing, and custom Library scope sidebar | [`main.py`](../src/keikeu_app/main.py) | [`test_app_pages.py`](../tests/test_app_pages.py) |
 | Paper UI | create/update with Paper and Highlight names, immutable code, drag/menu ordering, delete, handoff | [`paper_page.py`](../src/keikeu_app/pages/paper_page.py) | [`test_app_pages.py`](../tests/test_app_pages.py) |
+| Vue Paper slice | Startup/daily gate, Paper DTO form, initial copy, keyboard save, Highlight ordering, soft delete, and structured recovery through the Tauri bridge | [`PaperView.vue`](../frontend/src/PaperView.vue), [`bridge.js`](../frontend/src/bridge.js) | [`PaperView.test.js`](../frontend/src/PaperView.test.js), [`bridge.test.js`](../frontend/src/bridge.test.js) |
 | Flashcard UI | named Summary-first projection, Paper selector, page-1 reset, list/arrow/jump navigation | [`flashcard_page.py`](../src/keikeu_app/pages/flashcard_page.py) | [`test_app_pages.py`](../tests/test_app_pages.py) |
 | Device state | disposable once-per-local-day start-card claim; no Flashcard position | [`local_state.py`](../src/keikeu_bridge/local_state.py); Flet compatibility import remains | [`test_local_state.py`](../tests/test_local_state.py) |
 | Library UI | folder scopes, scoped search/sort, selection, drag/menu/batch moves, branch, Trash/recovery, system handoff | [`library_page.py`](../src/keikeu_app/pages/library_page.py) | [`test_app_pages.py`](../tests/test_app_pages.py) |
@@ -153,10 +182,9 @@ Application tests must not be inferred from documentation checks. Platform smoke
 
 ## Open gates
 
-1. Commit the approved CP5 diff, then create `codex/road-v04-cp6` only from
-   that checkpoint.
-2. Implement the CP6 Paper slice through the existing narrow bridge without
-   touching a real Vault.
+1. Commit the accepted CP6 checkpoint, then create `codex/road-v04-cp7`
+   from that exact HEAD.
+2. Implement the CP7 Flashcard slice without expanding into CP8 Library.
 3. Keep CP13 macOS 13.3+ compatibility separate from beta-workstation
    engineering evidence.
 4. Treat tag, push, signing, distribution, and any real-Vault operation as
