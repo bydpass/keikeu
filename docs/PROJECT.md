@@ -13,7 +13,7 @@ Updated: 2026-07-26
 | Phase 7.5 lightweight iOS | Quick-test build complete on an independent branch | Responsive shell and app-sandbox Vault were exercised on `codex/fix-ios-device-readiness`. This is a lightweight iOS version for rapid testing, not a step in the macOS Road sequence. |
 | Phase 8.5 / Road v0.3 preparation | Complete | Documentation reform, authority maps, link gate, browser QA, and bounded Graphify trial completed before Road v0.3 construction. The fresh-agent audit remained unperformed and is not retroactively claimed. |
 | Road v0.3 | Product accepted; design archive complete | Phase 0–7 engineering, CP5 macOS candidate smoke, and CP6 real-author scenarios are complete. Retrieval was faster and clear, external-editor handoff was clear, and no unresolved P0/P1 was reported. The [version archive](archive/road-v0-3/README.md) is read-only; no v0.3 tag, commit, or push is implied. |
-| Road v0.4 | CP13 active; GitHub macOS 15.7 runner approved | CP12 product acceptance passed with no unresolved P0/P1. Compatibility remains unclaimed until the arm64 runner build launches there and the same artifact passes current-workstation retest. |
+| Road v0.4 | CP13 accepted; CP14 pending | GitHub arm64 macOS 15.7.7 build/launch and current-workstation same-artifact retest passed with no unresolved P0/P1. The developer accepted CP13 on 2026-07-26; Flet retirement moves to CP14. |
 
 Phase 8 product acceptance is complete. Road v0.2 is marked by local annotated tag `v0.2.0` at `d0feac0269a5619f5dbf27c04347ba69c5665b42`; archival remains a separate developer decision. Automated tests, platform smoke, and author acceptance remain distinct evidence.
 
@@ -21,7 +21,7 @@ Phase 7.5 and the macOS Roads are separate tracks. The lightweight iOS test vers
 
 Road v0.3 product decisions, implementation, macOS candidate smoke, and product acceptance are complete. Its detailed SPEC, Planbook, maps, ADRs, and CP6 record are archived. The accepted Python/Flet runtime remains available until a separately approved Road replaces it; archival does not authorize runtime removal or data migration.
 
-Road v0.4 CP0 is committed at `8407941` on `codex/road-v04-cp0`; CP1 at `b718ed8`; CP2 at `42dfa68`; CP3 at `e72f155`; CP4 at `0d86847`; CP5 at `f19da31`; CP6 at `b52622f`; CP7 at `067c50c`; CP8 at `f12374c`; CP9 at `2c2df7c`; CP10 at `992f9ca`; CP11 at `908fd85`; and CP12 at `6efd039`. CP13 is uncommitted on `codex/road-v04-cp13`.
+Road v0.4 CP0 is committed at `8407941` on `codex/road-v04-cp0`; CP1 at `b718ed8`; CP2 at `42dfa68`; CP3 at `e72f155`; CP4 at `0d86847`; CP5 at `f19da31`; CP6 at `b52622f`; CP7 at `067c50c`; CP8 at `f12374c`; CP9 at `2c2df7c`; CP10 at `992f9ca`; CP11 at `908fd85`; and CP12 at `6efd039`. CP13 workflow candidate `a6db6d2` and its macOS 15.7+ evidence were accepted on `codex/road-v04-cp13`.
 
 ## Road v0.4 CP2 evidence
 
@@ -191,9 +191,8 @@ Application tests must not be inferred from documentation checks. Platform smoke
 
 ## Open gates
 
-1. Complete CP13 macOS 15.7+ compatibility separately from beta-workstation engineering evidence.
-2. Retire Flet only after CP13 passes.
-3. Treat tag, push, signing, distribution, and any real-Vault operation as separate developer decisions.
+1. Retire Flet and run the final audit on the independent CP14 branch.
+2. Treat tag, push, signing, distribution, and any real-Vault operation as separate developer decisions.
 
 ## History boundary
 

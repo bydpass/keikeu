@@ -1,6 +1,6 @@
 # Road v0.4：Vue 3 + Tauri 前端替换
 
-> 状态：**ACTIVE · CP13 compatibility gate / GitHub macOS 15.7 arm64 runner approved**
+> 状态：**ACTIVE · CP13 accepted / CP14 pending**
 > 基线：`84efc7e9b718bf06a4e7a09bcd1443ae81a6f80e`（Road v0.3 已验收并归档）
 > 日期：2026-07-25
 
@@ -138,7 +138,7 @@ beta 仅获准用于 CP4–CP12 工程构建；CP13 兼容验证不受该例外�
 - **CP10（完成）：**Flet / Tauri 功能等价矩阵、自动检查与隔离 `.app` smoke 已完成；开发者于 2026-07-26 确认 Gate A 通过。
 - **CP11（完成）：**共享 visual tokens、跨页面视觉收口、固定全局功能栏、自动检查与唯一 `.app` 视觉 smoke 已完成；开发者于 2026-07-26 确认 Gate B 通过。
 - **CP12（完成）：**发布最低系统锁为 macOS 15.0；production bundle、隔离工程 smoke 与有备份的真实作者场景 A/B 已通过，开发者于 2026-07-26 确认验收。
-- **CP13（进行中）：**开发者已批准 GitHub `macos-15` arm64 runner 与目标 15.7+；等待远程构建/启动及当前工作站同一产物复验。
+- **CP13（完成）：**GitHub arm64 macOS 15.7.7 已完成构建/启动；同一 artifact 在当前工作站的 fake Home/copied Vault 复验通过，无未解决 P0/P1；开发者于 2026-07-26 确认验收。
 - **CP14：**删除 Flet、校准文档并重跑全量检查；tag、archive、push 仍需单独授权。
 
 ## Test Plan
