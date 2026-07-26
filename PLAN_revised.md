@@ -1,6 +1,6 @@
 # Road v0.4：Vue 3 + Tauri 前端替换
 
-> 状态：**ACTIVE · CP9 implementation complete / awaiting developer review**
+> 状态：**ACTIVE · CP12 accepted / CP13 next**
 > 基线：`84efc7e9b718bf06a4e7a09bcd1443ae81a6f80e`（Road v0.3 已验收并归档）
 > 日期：2026-07-25
 
@@ -11,7 +11,7 @@
 - 保持 v0.3 全部产品行为；Markdown、Home 路径保护、外部修改拒绝和迁移事务不变。
 - 先从 Flet 层提炼与传输无关的 Python application service，并让现有 Flet UI 全部改走该边界；边界稳定后，Tauri/JSONL 再复用同一 service。
 - Flet 在纵向迁移期间保留为已验收回退基线。Tauri 完成功能等价与真实作者验收后才删除 Flet UI、测试和依赖。
-- Road 交付 arm64、macOS 13.3+、未签名 `.app`；工程迁移可先在当前稳定构建环境推进，只有在最老承诺系统完成构建与验证后，才宣称 13.3+。签名、公证、DMG、App Sandbox 和移动端另立 Road。
+- Road 交付 arm64、macOS 15.0+、未签名 `.app`；工程迁移可先在当前批准的构建环境推进，只有在最老承诺系统完成构建与验证后，才宣称 15.0+。签名、公证、DMG、App Sandbox 和移动端另立 Road。
 
 ## Architecture and Interfaces
 
@@ -93,7 +93,7 @@ beta 仅获准用于 CP4–CP12 工程构建；CP13 兼容验证不受该例外�
 
 2. **Application boundary、Tauri 基础与视觉确认 gate**
    - 先从 Flet 页面提炼 transport-agnostic Python application service 与 DTO；让现有 Flet UI 全部改走该 service，并通过原有 smoke 与测试，随后才建立 JSONL dispatcher。
-   - 用官方 Vue + JavaScript + npm 模板建立 `frontend/`；bundle identifier 为 `app.keikeu.desktop`，默认窗口 `1220×780`，最小 `920×680`，`minimumSystemVersion=13.3`。
+   - 用官方 Vue + JavaScript + npm 模板建立 `frontend/`；bundle identifier 为 `app.keikeu.desktop`，默认窗口 `1220×780`，最小 `920×680`，`minimumSystemVersion=15.0`。
    - 建立 Rust sidecar worker、协议握手、session 生命周期、请求队列、child cleanup 和阻塞错误页。
    - 先交付只使用合成数据的真实 Vue 组件样张；用户确认后冻结视觉方向、tokens 与布局规则，但完整视觉重建不得阻塞或掩盖功能等价迁移。
    - **Gate A · Platform parity：**先用稳定、朴素的工作台壳完成全部 v0.3 行为等价，不同时改变产品流程、字段结构或动作语义。
@@ -114,8 +114,8 @@ beta 仅获准用于 CP4–CP12 工程构建；CP13 兼容验证不受该例外�
 
 4. **候选、验收与退场**
    - 在 synthetic/copied Vault 上完成 Tauri 全流、Finder 外部移动、launch/relaunch、协议版本不匹配、sidecar crash/EOF、mutation response 丢失和生产 bundle smoke。
-   - 工程迁移 gate 允许先在当前稳定 arm64 macOS 构建环境完成；macOS 13.3+ 是独立 release compatibility gate，不得反向阻塞 application service、JSONL、Tauri 或 Vue 的实现。
-   - 用 arm64 macOS 13.3 环境构建并启动 `.app`，再在当前 arm64 macOS 27 复验同一产物；仅两端均通过才宣称 13.3+。PyInstaller 官方要求在最老支持系统构建以建立兼容性证据。([PyInstaller requirements](https://pyinstaller.org/en/stable/requirements.html))
+   - 工程迁移 gate 允许先在当前批准的 arm64 macOS 构建环境完成；macOS 15.0+ 是独立 release compatibility gate，不得反向阻塞 application service、JSONL、Tauri 或 Vue 的实现。
+   - 用 arm64 macOS 15.0 环境构建并启动 `.app`，再在当前 arm64 macOS 27 复验同一产物；仅两端均通过才宣称 15.0+。PyInstaller 官方要求在最老支持系统构建以建立兼容性证据。([PyInstaller requirements](https://pyinstaller.org/en/stable/requirements.html))
    - 先完成 Gate A 的功能等价验收，再完成 Gate B 的视觉验收；两类结果分别记录，不能用“看起来更好”替代行为证据。
    - 用 Tauri `.app` 重跑去标识化真实作者场景 A/B，并新增三栏定位、视觉层级、键盘路径和外部编辑器边界是否清楚的记录。
    - 无未解决 P0/P1 且产品验收通过后，删除 `keikeu_app`、Flet builder tests、`flet` dependency 和旧 Python `keikeu` GUI entry；最终用户入口为 `.app`。
@@ -137,8 +137,8 @@ beta 仅获准用于 CP4–CP12 工程构建；CP13 兼容验证不受该例外�
 - **CP9（完成）：**Library mutation、Vault 与 migration slice 已验收并提交为 `2c2df7c`。
 - **CP10（完成）：**Flet / Tauri 功能等价矩阵、自动检查与隔离 `.app` smoke 已完成；开发者于 2026-07-26 确认 Gate A 通过。
 - **CP11（完成）：**共享 visual tokens、跨页面视觉收口、固定全局功能栏、自动检查与唯一 `.app` 视觉 smoke 已完成；开发者于 2026-07-26 确认 Gate B 通过。
-- **CP12：**完成真实作者场景 A/B 与生产 bundle smoke。
-- **CP13：**完成 arm64 `.app` 和最老承诺系统兼容验证；通过后才宣称 macOS 13.3+。
+- **CP12（完成）：**发布最低系统锁为 macOS 15.0；production bundle、隔离工程 smoke 与有备份的真实作者场景 A/B 已通过，开发者于 2026-07-26 确认验收。
+- **CP13：**在 macOS 15.0 构建并启动同一 arm64 `.app`，再于当前工作站复验；通过后才宣称 macOS 15.0+。
 - **CP14：**删除 Flet、校准文档并重跑全量检查；tag、archive、push 仍需单独授权。
 
 ## Test Plan
@@ -168,17 +168,16 @@ npm --prefix frontend run tauri:build
 git diff --check
 ```
 
-当前批准的 macOS 27 / Xcode 27 beta 工作站存在一个非候选构建限制：
-Rust 1.88 在 Tauri 注入 `MACOSX_DEPLOYMENT_TARGET=13.3` 时无法加载 release
-proc-macro。CP4 用一次性的 `minimumSystemVersion=11.0` CLI config override
-验证了 arm64 bundle 与内嵌 sidecar；仓库正式配置仍为 `13.3`，标准
-`tauri:build` 未通过，因此该临时 bundle 只算 CP4 工程 smoke，不算 CP12
-production bundle 或 CP13 兼容性证据。
+CP4 在当前 macOS 27 / Xcode 27 beta 工作站注入当时的
+`MACOSX_DEPLOYMENT_TARGET=13.3` 时无法加载 Rust 1.88 release proc-macro，
+所以用一次性的 `minimumSystemVersion=11.0` CLI override 只验证 bundle
+组装。CP12 已把仓库最低系统提高到 `15.0`；必须重新运行无 override 的标准
+`tauri:build`，CP4 临时 bundle 仍不算 production 或兼容性证据。
 
 ## Assumptions
 
 - Road 名称为 v0.4；产品范围仍是 v0.3，不新增 AI、正文编辑、同步、账户、数据库或文件监听器。
 - npm、JavaScript、单一 light theme、arm64 和 `app.keikeu.desktop` 已锁定；Node、Rust、Python 与构建依赖必须使用项目内版本文件和 lock 精确固定。CP4 的 Rust/Cargo 锁定版本为 `1.88.0`。
 - `.app` 未签名、未公证、未启用 App Sandbox；Home containment 仍由 Python Core 强制执行。Tauri 可生成 macOS app bundle，但签名与 entitlement 是独立发行工作。([Tauri macOS bundle](https://v2.tauri.app/distribute/macos-application-bundle/))
-- 用户会提供 arm64 macOS 13.3 构建/验证环境；缺少该环境时，架构与功能工程可以推进，但 13.3 兼容 gate 不得标为完成，也不得对外宣称支持 13.3+。
+- 用户会提供 arm64 macOS 15.0 构建/验证环境；缺少该环境时，架构与功能工程可以推进，但兼容 gate 不得标为完成，也不得对外宣称支持 macOS 15.0+。
 - Road v0.4 从干净的 Road v0.3 归档基线建立；后续 checkpoint 若出现既有 dirty 文件，仍按 `docs/RULES.md` Git gate 逐项确认。

@@ -338,7 +338,7 @@ target triple
 兼容性证据。开发者于 2026-07-25 明确批准当前 macOS 27 / Xcode 27 beta
 工作站用于 CP4–CP12 工程构建；该窄例外记录在
 [`ADR-0005`](docs/architecture/decisions/0005-beta-toolchain-engineering-exception.md)，
-不豁免 CP13 的 macOS 13.3+ 构建与启动验证。
+不豁免 CP13 的 macOS 15.0+ 构建与启动验证。
 
 ---
 

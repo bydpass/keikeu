@@ -47,4 +47,4 @@ Road v0.4 uses Vue 3/Vite JavaScript for visible UI, a narrow Tauri/Rust host fo
 
 - Business rules may drift into Rust or Vue; Road v0.4 rules stop the checkpoint if this occurs.
 - A mutation response may be lost after disk commit; mutations are never automatically retried and surface `commit_unknown`.
-- Old-system support may be overstated; macOS 13.3+ is claimed only after the oldest promised build and launch gate passes.
+- Old-system support may be overstated; macOS 15.0+ is claimed only after the macOS 15.0 build and launch gate passes.

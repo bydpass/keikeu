@@ -64,5 +64,5 @@ No AI generation, prose editor, sync, database, file watcher, Router, Pinia, Typ
 1. **Gate A — Platform parity:** Tauri produces the same durable results, failure protections, and keyboard paths as Flet on synthetic/copied Vaults.
 2. **Gate B — Visual reconstruction:** the approved editorial workbench direction is applied after parity, with independent visual evidence.
 3. **Product acceptance:** de-identified real-author scenarios A/B and production bundle smoke pass with no unresolved P0/P1.
-4. **Compatibility:** the same arm64 artifact is built and launched on the oldest promised macOS environment before claiming macOS 13.3+.
+4. **Compatibility:** the same arm64 artifact is built and launched on macOS 15.0, then retested on the current workstation, before claiming macOS 15.0+.
 5. **Flet retirement:** only after all prior gates may Flet code, tests, dependency, and GUI entry be removed. Tag, archive, commit, and push remain separate developer decisions.

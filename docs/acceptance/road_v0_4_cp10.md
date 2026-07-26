@@ -55,7 +55,7 @@ Vue 没有直接文件能力；Rust 没有 Paper、迁移、搜索或 Trash 规�
 - `.venv/bin/python -m compileall -q src` → passed
 - `npm --prefix frontend run build` → passed
 - 当前源码 `.app` 由已记录的单次 `minimumSystemVersion=11.0` 工程 override 构建；
-  这不是 CP12 production bundle 或 CP13 macOS 13.3+ 兼容证据。
+  这不是 CP12 production bundle 或兼容证据；CP12 后续把最低系统提高到 15.0。
 - 两组有效平台 smoke 的临时 Home/Vault 已删除；真实 Vault、真实配置和真实
   device state 未修改。
 

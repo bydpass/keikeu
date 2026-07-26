@@ -6,6 +6,7 @@
 - [`../archive/road-v0-3/acceptance/road_v0_3.md`](../archive/road-v0-3/acceptance/road_v0_3.md): read-only Road v0.3 CP5 evidence and completed CP6 result.
 - [`road_v0_4_cp10.md`](road_v0_4_cp10.md) — completed CP10 Flet/Vue-Tauri Gate A parity evidence.
 - [`road_v0_4_cp11.md`](road_v0_4_cp11.md) — completed CP11 Gate B visual reconstruction evidence.
+- [`road_v0_4_cp12.md`](road_v0_4_cp12.md) — completed CP12 macOS 15.0 production bundle and real-author A/B evidence.
 - [`../archive/docs-archive-documentation-reform-report/`](../archive/docs-archive-documentation-reform-report/): read-only pre-completion record and the SOP used for the checks.
 
 Do not place prose, inspirations, names, relationships, Vault paths, device identifiers, or secrets here. Acceptance, archive, tag, commit, and push remain separate decisions.

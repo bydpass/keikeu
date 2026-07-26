@@ -30,7 +30,7 @@
     "targets": ["app"],
     "externalBin": ["binaries/keikeu-sidecar"],
     "macOS": {
-      "minimumSystemVersion": "13.3"
+      "minimumSystemVersion": "15.0"
     }
   }
 }
