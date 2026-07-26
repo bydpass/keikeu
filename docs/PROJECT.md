@@ -2,7 +2,7 @@
 
 > Authority: current coordinates, module entry points, documentation index, and next gate. Product behavior belongs in [SPEC](SPEC.md); rules belong in [RULES](RULES.md).
 
-Updated: 2026-07-25
+Updated: 2026-07-26
 
 ## Current coordinates
 
@@ -13,7 +13,7 @@ Updated: 2026-07-25
 | Phase 7.5 lightweight iOS | Quick-test build complete on an independent branch | Responsive shell and app-sandbox Vault were exercised on `codex/fix-ios-device-readiness`. This is a lightweight iOS version for rapid testing, not a step in the macOS Road sequence. |
 | Phase 8.5 / Road v0.3 preparation | Complete | Documentation reform, authority maps, link gate, browser QA, and bounded Graphify trial completed before Road v0.3 construction. The fresh-agent audit remained unperformed and is not retroactively claimed. |
 | Road v0.3 | Product accepted; design archive complete | Phase 0–7 engineering, CP5 macOS candidate smoke, and CP6 real-author scenarios are complete. Retrieval was faster and clear, external-editor handoff was clear, and no unresolved P0/P1 was reported. The [version archive](archive/road-v0-3/README.md) is read-only; no v0.3 tag, commit, or push is implied. |
-| Road v0.4 | CP9 ready for developer review | Vue now covers Paper, Flashcard, Library mutations, Vault selection, and migration gates. CP9 checks passed without touching a real Vault; CP10 remains blocked on CP9 acceptance and commit. |
+| Road v0.4 | CP10 accepted; Gate A passed | Shared-service automation plus isolated `.app` synthetic/copied-Vault smoke found no P0/P1; CP11 visual reconstruction is next. |
 
 Phase 8 product acceptance is complete. Road v0.2 is marked by local annotated tag `v0.2.0` at `d0feac0269a5619f5dbf27c04347ba69c5665b42`; archival remains a separate developer decision. Automated tests, platform smoke, and author acceptance remain distinct evidence.
 
@@ -21,7 +21,7 @@ Phase 7.5 and the macOS Roads are separate tracks. The lightweight iOS test vers
 
 Road v0.3 product decisions, implementation, macOS candidate smoke, and product acceptance are complete. Its detailed SPEC, Planbook, maps, ADRs, and CP6 record are archived. The accepted Python/Flet runtime remains available until a separately approved Road replaces it; archival does not authorize runtime removal or data migration.
 
-Road v0.4 CP0 is committed at `8407941` on `codex/road-v04-cp0`; CP1 at `b718ed8`; CP2 at `42dfa68`; CP3 at `e72f155`; CP4 at `0d86847`; CP5 at `f19da31`; CP6 at `b52622f`; CP7 at `067c50c`; and CP8 at `f12374c`. CP9 is uncommitted on `codex/road-v04-cp9` pending developer review. Each checkpoint branch starts from the previous accepted checkpoint.
+Road v0.4 CP0 is committed at `8407941` on `codex/road-v04-cp0`; CP1 at `b718ed8`; CP2 at `42dfa68`; CP3 at `e72f155`; CP4 at `0d86847`; CP5 at `f19da31`; CP6 at `b52622f`; CP7 at `067c50c`; CP8 at `f12374c`; and CP9 at `2c2df7c`. CP10 is accepted on `codex/road-v04-cp10`; each checkpoint branch starts from the previous accepted checkpoint.
 
 ## Road v0.4 CP2 evidence
 
@@ -98,7 +98,7 @@ Road v0.4 CP0 is committed at `8407941` on `codex/road-v04-cp0`; CP1 at `b718ed8
 - [`FlashcardView.vue`](../frontend/src/FlashcardView.vue) keeps selection, navigation, Summary context, and position in memory; every open resets page 1.
 - Vitest `21`, Vite build, responsive browser QA, accessibility, console, and return-to-Paper checks passed; no real Vault or native `.app` was used.
 
-## Road v0.4 CP8 / CP9 review evidence
+## Road v0.4 CP8–CP10 review evidence
 
 - CP8 accepted Python-sorted query state, Trash isolation, system handoff, and responsive Library QA; its checkpoint commit is `f12374c`.
 - CP9 adds one-shot Library mutations with partial-result handling and explicit permanent-delete gates, plus Vault preview/init/switch/relocate and migration.
@@ -107,7 +107,7 @@ Road v0.4 CP0 is committed at `8407941` on `codex/road-v04-cp0`; CP1 at `b718ed8
 - `tauri dev` rebuilt and launched the current Rust host in an isolated Home.
   macOS automation selected a stale registered release bundle for inspection,
   so no current-source native functional UI smoke is claimed.
-- No real Vault, dependency, capability, protocol, Core, or Rust source changed.
+- [CP10 Gate A evidence](acceptance/road_v0_4_cp10.md) maps the accepted Flet baseline to Python `321`, Vue `48`, Rust `10`, and current-source `.app` synthetic/copied-Vault smoke. No P0/P1 or product-code change was found.
 
 ## Road v0.4 toolchain
 
@@ -188,8 +188,8 @@ Application tests must not be inferred from documentation checks. Platform smoke
 
 ## Open gates
 
-1. Developer reviews and accepts the uncommitted CP9 diff.
-2. Commit CP9 only after that acceptance, then create CP10 from its exact HEAD.
+1. Complete CP11 visual reconstruction and independent Gate B review.
+2. Keep CP12 real-author scenarios and production bundle smoke separate.
 3. Keep CP13 macOS 13.3+ compatibility separate from beta-workstation
    engineering evidence.
 4. Treat tag, push, signing, distribution, and any real-Vault operation as
