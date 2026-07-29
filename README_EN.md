@@ -26,6 +26,10 @@ existing inspiration → Paper Markdown → Flashcard → external prose editor
 
 The [final CP6 record](docs/archive/road-v0-3/acceptance/road_v0_3.md) is stored with the product, visual, interaction, architecture, ADR, and Planbook records in the [version archive](docs/archive/road-v0-3/README.md). Archival does not change the Vault, runtime, or Git history.
 
+## Road v0.4 completion record
+
+The [CP14 acceptance record](docs/acceptance/road_v0_4_cp14.md), [planning archive](docs/archive/road-v0-4/README.md), and [complete construction snapshot](docs/archive/snapshots/refactor-retire-flet-after-road-v0-4-acceptance.html) preserve CP0–CP14, the architecture migration, gates, fixes, test evolution, and compatibility evidence.
+
 ## Product principles
 
 - Local-first; Markdown is the author asset and the JSON index is rebuildable.
@@ -56,8 +60,6 @@ npm --prefix frontend run tauri:dev
 ```text
 README.md                 public entry and real commands
 AGENTS.md                 agent operating discipline and read order
-PLAN_revised.md           Road v0.4 execution plan
-RULE_FOR_UNDERSTANDING.md Road v0.4 understanding and approval gate
 docs/PROJECT.md           current coordinates, module entry points, next gate
 docs/SPEC.md              Road v0.4 product and author-control boundary
 docs/RULES.md             engineering, interaction, data, and evidence rules
@@ -67,6 +69,7 @@ docs/acceptance/          supporting evidence; not an independent status source
 docs/manual/              supplementary human guides; never normative
 docs/generated/           rebuildable and disposable observations
 docs/archive/             read-only history; excluded from cold starts
+docs/archive/road-v0-4/   Road v0.4 planning and understanding-gate archive
 src/keikeu_core/          pure-Python domain and file logic
 src/keikeu_bridge/        application service, JSONL protocol, and sidecar
 frontend/                 Vue/Vite UI and Tauri/Rust host

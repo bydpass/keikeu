@@ -1,5 +1,7 @@
 # Road v0.4 理解优先规约
 
+> **ARCHIVE — READ ONLY.** Road v0.4 已完成；本文件只保留历史理解与审批闸门，不定义当前或未来工作。
+>
 > 状态：Road v0.4 complete · CP14 accepted 2026-07-26
 > 适用范围：Road v0.4 的 Application Service、Vue、Tauri、Rust、JSONL sidecar、PyInstaller 与 macOS 打包工作。
 > 核心原则：开发者必须拥有项目的解释权。任何无法被开发者理解、检查和回滚的实现，都不算完成。
@@ -342,7 +344,7 @@ target triple
 兼容性证据。开发者于 2026-07-25 明确批准当前 macOS 27 / Xcode 27 beta
 工作站用于 CP4–CP12 工程构建，并于 2026-07-26 一次性延长至 CP14 最终
 工程 build/smoke；该窄例外记录在
-[`ADR-0005`](docs/architecture/decisions/0005-beta-toolchain-engineering-exception.md)。
+[`ADR-0005`](../../architecture/decisions/0005-beta-toolchain-engineering-exception.md)。
 它不替代或扩大 CP13 的 macOS 15.7+ 兼容性证据。
 
 ---

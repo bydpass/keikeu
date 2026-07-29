@@ -170,10 +170,11 @@ README
        └─ CONTEXT ──── human manuals / ADRs / read-only archive
 ```
 
-- **Authority:** [SPEC](SPEC.md) owns Road v0.4 product scope; [RULES](RULES.md) owns engineering, interaction, data, Git, and evidence constraints; the [Planbook](../PLAN_revised.md) owns execution order; the [understanding gate](../RULE_FOR_UNDERSTANDING.md) owns checkpoint teaching; [AGENTS](../AGENTS.md) owns agent procedure. The [JSONL protocol](protocol.md) records the active local transport contract. Runtime facts come from [`src/`](../src/) and [`tests/`](../tests/).
+- **Authority:** [SPEC](SPEC.md) owns Road v0.4 product scope; [RULES](RULES.md) owns engineering, interaction, data, Git, and evidence constraints; [AGENTS](../AGENTS.md) owns agent procedure. The completed [Planbook and understanding gate](archive/road-v0-4/README.md) are read-only history. The [JSONL protocol](protocol.md) records the active local transport contract. Runtime facts come from [`src/`](../src/) and [`tests/`](../tests/).
 - **Views:** [design](design/design.html), [interaction](design/interaction.html), and [architecture](architecture/architecture.html) describe the implemented Road v0.4 runtime and accepted visual system.
+- **Working material:** the [Road v0.5 plan and design workspace](design/working-materials.md) records the next Road proposal and its generation context; it does not describe current runtime behavior.
 - **Evidence:** [acceptance](acceptance/README.md) links completed Road v0.2 evidence and the archived Road v0.3 CP6 record. The frozen [2cc40ba status snapshot](archive/snapshots/feat-complete-road-v0-3-candidate.html) shows the earlier CP5 boundary. [generated](generated/README.md) remains rebuildable observation; the [cold-start audit](cold_start_report.md) is dated historical evidence, not a claim about the transition pages.
-- **Context:** [ADR 0001](architecture/decisions/0001-document-authority.md) explains the authority split. Road v0.3 ADR 0002/0003 and its design set live in the [version archive](archive/road-v0-3/README.md). [Manual](manual/README.md) teaches people; [archive](archive/README.md) preserves superseded records. Neither overrides authority.
+- **Context:** [ADR 0001](architecture/decisions/0001-document-authority.md) explains the authority split. Road v0.3 design history lives in its [version archive](archive/road-v0-3/README.md), and Road v0.4 planning history lives in its [planning archive](archive/road-v0-4/README.md). [Manual](manual/README.md) teaches people; [archive](archive/README.md) preserves superseded records. Neither overrides authority.
 
 ## Commands
 

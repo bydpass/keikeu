@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "keikeu-v05-prototype.html",
+  "entry": "keikeu-v05-prototype.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-07-29T03:18:09.104Z",
+  "updatedAt": "2026-07-29T03:18:09.104Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

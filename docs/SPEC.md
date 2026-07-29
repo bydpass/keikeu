@@ -1,6 +1,6 @@
 # keikeu Road v0.4 Product Boundary
 
-> Authority: Road v0.4 product scope and author-asset constraints. Current runtime facts live in `src/` and `tests/`; current coordinates live in [PROJECT](PROJECT.md); execution order lives in the [Road v0.4 Planbook](../PLAN_revised.md).
+> Authority: Road v0.4 product scope and author-asset constraints. Current runtime facts live in `src/` and `tests/`; current coordinates live in [PROJECT](PROJECT.md). The completed execution plan is read-only history in the [Road v0.4 planning archive](archive/road-v0-4/README.md).
 
 ## 1. Definition
 
@@ -57,7 +57,7 @@ The archived [Road v0.3 SPEC](archive/road-v0-3/SPEC.md) remains the detailed pa
 - The transport-agnostic Python application service owns orchestration and opaque session state behind JSONL. During migration, Flet used the same service as the parity baseline.
 - `keikeu_core` remains independent of Flet, Vue, Tauri, Rust, JSONL, and stdout.
 - Markdown remains canonical. No localhost, HTTP, WebSocket, account, telemetry, upload, or hidden service is authorized.
-- Road work follows the [understanding gate](../RULE_FOR_UNDERSTANDING.md).
+- Road construction followed the archived [understanding gate](archive/road-v0-4/RULE_FOR_UNDERSTANDING.md).
 
 ## 6. Explicit exclusions
 

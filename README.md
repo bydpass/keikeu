@@ -28,7 +28,7 @@ Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响�
 
 ## Road v0.4 完成记录
 
-[CP14 验收记录](docs/acceptance/road_v0_4_cp14.md)与[完整施工 snapshot](docs/archive/snapshots/refactor-retire-flet-after-road-v0-4-acceptance.html)共同记录 CP0–CP14、架构迁移、验收闸门、问题修复、测试演进与兼容性证据。Road v0.4 至此彻底完成；tag、push、签名与分发仍是独立决定。
+[CP14 验收记录](docs/acceptance/road_v0_4_cp14.md)、[计划文档归档](docs/archive/road-v0-4/README.md)与[完整施工 snapshot](docs/archive/snapshots/refactor-retire-flet-after-road-v0-4-acceptance.html)共同记录 CP0–CP14、架构迁移、验收闸门、问题修复、测试演进与兼容性证据。Road v0.4 至此彻底完成；tag、push、签名与分发仍是独立决定。
 
 ## 产品原则
 
@@ -60,8 +60,6 @@ npm --prefix frontend run tauri:dev
 ```text
 README.md                 外部入口与运行命令
 AGENTS.md                 Agent 操作纪律与读图顺序
-PLAN_revised.md           Road v0.4 执行计划
-RULE_FOR_UNDERSTANDING.md Road v0.4 理解与审批闸门
 docs/PROJECT.md           当前坐标、模块入口、下一闸门
 docs/SPEC.md              Road v0.4 产品与作者控制边界
 docs/RULES.md             工程、交互、数据与证据规则
@@ -71,6 +69,7 @@ docs/acceptance/          支持性验收记录；不独立定义状态
 docs/manual/              面向人的补充说明；不定义规范
 docs/generated/           可重建、可删除的观察输出
 docs/archive/             只读历史；不参与冷启动
+docs/archive/road-v0-4/   Road v0.4 计划书与理解闸门归档
 src/keikeu_core/          纯 Python 领域与文件逻辑
 src/keikeu_bridge/        Application Service、JSONL 协议与 sidecar
 frontend/                 Vue/Vite 界面与 Tauri/Rust 宿主

@@ -13,8 +13,6 @@ Protect author control, local durability, privacy, and beginner-maintainability.
 | Product scope and acceptance | `docs/SPEC.md` |
 | Current phase and next gate | `docs/PROJECT.md` |
 | Engineering, interaction, data, evidence rules | `docs/RULES.md` |
-| Road v0.4 execution plan | `PLAN_revised.md` |
-| Road v0.4 understanding gate | `RULE_FOR_UNDERSTANDING.md` |
 | Module and lifecycle map | `docs/architecture/architecture.html` |
 | Visual system | `docs/design/design.html` |
 | User flows and states | `docs/design/interaction.html` |

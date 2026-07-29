@@ -8,9 +8,8 @@
 2. `src/` plus passing tests for runtime facts.
 3. [SPEC](SPEC.md) for intended product behavior.
 4. This file for implementation discipline.
-5. The Road v0.4 [understanding gate](../RULE_FOR_UNDERSTANDING.md) for checkpoint teaching and review; it never overrides §7 Git authority.
-6. [PROJECT](PROJECT.md) for current coordinates.
-7. Generated observations and archive history, which never override active sources.
+5. [PROJECT](PROJECT.md) for current coordinates.
+6. Generated observations and archive history, which never override active sources.
 
 When intent and runtime differ, change code, change the active specification, or record a temporary deviation in an ADR. Never let two answers remain active.
 

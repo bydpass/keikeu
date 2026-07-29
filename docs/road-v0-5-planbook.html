@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<!-- Adapted from Kami long-doc.html for the keikeu Road v0.5 planbook. -->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Road v0.5：Quiet Desk</title>
+<meta name="author" content="keikeu">
+<meta name="description" content="keikeu v0.5 UI 舒心性、交互易用性与工程 routine 的施工计划">
+<meta name="keywords" content="keikeu, Road v0.5, Paper Desk, Flashcard, Library">
+<meta name="generator" content="Kami">
+<style>
+  @page {
+    size: A4;
+    margin: 20mm 22mm 22mm;
+    background: #f5f4ed;
+
+    @top-right {
+      content: string(section-title);
+      font-family: "Songti SC", "STSong", "Noto Serif CJK SC", Georgia, serif;
+      font-size: 8pt;
+      color: #6b6a64;
+    }
+
+    @bottom-center {
+      content: counter(page) "  ·  Road v0.5";
+      font-family: "Songti SC", "STSong", "Noto Serif CJK SC", Georgia, serif;
+      font-size: 9pt;
+      color: #6b6a64;
+    }
+  }
+
+  @page:first {
+    @top-right { content: ""; }
+    @bottom-center { content: ""; }
+  }
+
+  :root {
+    --parchment: #f5f4ed;
+    --ivory: #faf9f5;
+    --near-black: #141413;
+    --dark-warm: #3d3d3a;
+    --olive: #504e49;
+    --stone: #6b6a64;
+    --brand: #1b365d;
+    --border: #e8e6dc;
+    --border-soft: #e5e3d8;
+    --tag-bg: #e4ecf5;
+    --serif: "Songti SC", "STSong", "Noto Serif CJK SC", "Source Han Serif SC", Georgia, serif;
+    --sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    --mono: "SF Mono", "JetBrains Mono", Consolas, "Songti SC", monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--parchment); }
+
+  body {
+    color: var(--near-black);
+    font-family: var(--serif);
+    font-size: 10pt;
+    line-height: 1.55;
+    letter-spacing: 0.3pt;
+    widows: 3;
+    orphans: 3;
+  }
+
+  .cover {
+    min-height: 240mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding-top: 38mm;
+    break-after: page;
+  }
+
+  .cover-eyebrow,
+  .chapter-num,
+  .takeaway-label,
+  .meta-label {
+    font-family: var(--sans);
+    color: var(--brand);
+    font-size: 9pt;
+    font-weight: 600;
+    letter-spacing: 1pt;
+    text-transform: uppercase;
+  }
+
+  .cover-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 8pt;
+    margin-bottom: 18pt;
+  }
+
+  .cover-eyebrow::before {
+    content: "";
+    width: 9pt;
+    height: 1.5pt;
+    border-radius: 1pt;
+    background: var(--brand);
+  }
+
+  .cover-title {
+    max-width: 150mm;
+    font-size: 36pt;
+    font-weight: 500;
+    line-height: 1.12;
+    letter-spacing: 0;
+    margin-bottom: 16pt;
+  }
+
+  .cover-sub {
+    max-width: 135mm;
+    color: var(--olive);
+    font-size: 14pt;
+    line-height: 1.5;
+  }
+
+  .cover-line {
+    width: 24mm;
+    height: 2pt;
+    margin: 24pt 0;
+    background: var(--brand);
+  }
+
+  .cover-meta {
+    color: var(--stone);
+    font-family: var(--sans);
+    font-size: 9pt;
+    line-height: 1.5;
+  }
+
+  .cover-meta strong {
+    color: var(--dark-warm);
+    font-weight: 600;
+  }
+
+  .toc { break-after: page; }
+  .toc h1 { margin-bottom: 18pt; }
+
+  .toc-item {
+    display: grid;
+    grid-template-columns: 28pt 1fr;
+    gap: 8pt;
+    padding: 7pt 0;
+    border-bottom: 0.3pt dotted var(--border);
+    font-size: 11pt;
+  }
+
+  .toc-num { color: var(--brand); font-weight: 500; }
+  .toc-title {
+    display: flex;
+    justify-content: space-between;
+    gap: 12pt;
+    color: var(--near-black);
+    text-decoration: none;
+  }
+
+  .toc-title::after {
+    content: target-counter(attr(href), page);
+    color: var(--stone);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .chapter { break-before: page; }
+  .chapter-num { margin-bottom: 6pt; }
+
+  h1 {
+    string-set: section-title content();
+    margin: 0 0 10pt;
+    padding-left: 8pt;
+    border-left: 2.5pt solid var(--brand);
+    border-radius: 1.5pt;
+    font-size: 22pt;
+    font-weight: 500;
+    line-height: 1.2;
+    break-after: avoid;
+  }
+
+  h2 {
+    margin: 22pt 0 8pt;
+    font-size: 16pt;
+    font-weight: 500;
+    line-height: 1.25;
+    break-after: avoid;
+  }
+
+  h3 {
+    margin: 15pt 0 5pt;
+    color: var(--dark-warm);
+    font-size: 13pt;
+    font-weight: 500;
+    line-height: 1.3;
+    break-after: avoid;
+  }
+
+  p {
+    margin: 0 0 9pt;
+    widows: 2;
+    orphans: 2;
+  }
+
+  .lead {
+    color: var(--dark-warm);
+    font-size: 11pt;
+    line-height: 1.55;
+    margin-bottom: 13pt;
+  }
+
+  strong { font-weight: 500; }
+  .hl { color: var(--brand); font-weight: 500; }
+
+  ul, ol {
+    margin: 6pt 0 10pt;
+    padding-left: 20pt;
+  }
+
+  li { margin-bottom: 3pt; }
+  li::marker { color: var(--brand); }
+
+  .exec-summary,
+  .takeaway,
+  .callout {
+    background: var(--ivory);
+    border-radius: 4pt;
+    break-inside: avoid;
+  }
+
+  .exec-summary {
+    padding: 14pt 18pt;
+    border-left: 1.4pt solid var(--brand);
+  }
+
+  .takeaway,
+  .callout {
+    margin: 12pt 0;
+    padding: 10pt 14pt;
+  }
+
+  .callout { border-left: 2pt solid var(--brand); }
+  .takeaway-label { margin-bottom: 4pt; }
+
+  .flow {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    align-items: center;
+    gap: 5pt;
+    margin: 16pt 0;
+    break-inside: avoid;
+  }
+
+  .flow-step {
+    min-height: 42pt;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6pt;
+    background: var(--ivory);
+    border-radius: 4pt;
+    text-align: center;
+    color: var(--dark-warm);
+    font-size: 9pt;
+  }
+
+  .flow-arrow {
+    color: var(--brand);
+    text-align: center;
+    font-family: var(--sans);
+  }
+
+  figure {
+    margin: 13pt 0;
+    break-inside: avoid;
+  }
+
+  figure img {
+    display: block;
+    width: 100%;
+    max-height: 105mm;
+    object-fit: contain;
+    object-position: top center;
+    border-radius: 4pt;
+  }
+
+  figcaption {
+    margin-top: 6pt;
+    color: var(--stone);
+    font-family: var(--sans);
+    font-size: 9pt;
+    line-height: 1.45;
+    text-align: center;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 11pt 0;
+    font-size: 9pt;
+  }
+
+  th {
+    padding: 5pt 7pt;
+    border-bottom: 1pt solid var(--border);
+    color: var(--dark-warm);
+    font-weight: 500;
+    text-align: left;
+  }
+
+  td {
+    padding: 5pt 7pt;
+    border-bottom: 0.3pt solid var(--border-soft);
+    vertical-align: top;
+  }
+
+  .compact th,
+  .compact td {
+    padding: 3pt 5pt;
+    font-size: 8.4pt;
+    line-height: 1.4;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14pt;
+    margin: 12pt 0;
+  }
+
+  .module {
+    padding: 10pt 12pt;
+    background: var(--ivory);
+    border-radius: 4pt;
+    break-inside: avoid;
+  }
+
+  .module h3 { margin-top: 0; }
+
+  .tag {
+    display: inline-block;
+    margin: 2pt 3pt 2pt 0;
+    padding: 1pt 5pt;
+    border-radius: 2pt;
+    background: var(--tag-bg);
+    color: var(--brand);
+    font-family: var(--sans);
+    font-size: 8.5pt;
+  }
+
+  .references {
+    font-size: 8.6pt;
+    line-height: 1.45;
+    word-break: break-word;
+  }
+
+  .coverage-sep {
+    position: absolute;
+    left: -9999px;
+  }
+
+  code {
+    font-family: var(--mono);
+    font-size: 8.8pt;
+    color: var(--dark-warm);
+  }
+
+  @media screen {
+    body {
+      max-width: 210mm;
+      margin: 0 auto;
+      padding: 20mm 22mm 22mm;
+    }
+  }
+
+  @media screen and (max-width: 720px) {
+    body { padding: 28px 18px 44px; font-size: 15px; }
+    .cover { min-height: 88svh; padding-top: 44px; }
+    .cover-title { font-size: 42px; }
+    .cover-sub { font-size: 19px; max-width: 100%; }
+    h1 { font-size: 30px; }
+    h2 { font-size: 23px; }
+    .two-col { grid-template-columns: 1fr; }
+    .flow { grid-template-columns: 1fr; }
+    .flow-arrow { transform: rotate(90deg); }
+    .table-wrap { overflow-x: auto; }
+    table { min-width: 620px; }
+  }
+</style>
+</head>
+<body>
+
+<section class="cover">
+  <div>
+    <div class="cover-eyebrow">Road v0.5：Quiet Desk</div>
+    <div class="cover-title">Quiet Desk<br>安静工作台</div>
+    <div class="cover-line"></div>
+    <div class="cover-sub">UI 舒心性、交互易用性与工程 routine 的施工计划</div>
+  </div>
+  <div class="cover-meta">
+    <strong>keikeu</strong><br>
+    READY FOR CP0 · 尚未开始施工<br>
+    2026.07.29 · macOS main workstation
+  </div>
+</section>
+
+<section class="toc">
+  <div class="chapter-num">Contents</div>
+  <h1>目录</h1>
+  <div class="toc-item"><span class="toc-num">01</span><a class="toc-title" href="#summary">执行摘要</a></div>
+  <div class="toc-item"><span class="toc-num">02</span><a class="toc-title" href="#boundary">产品边界与体验主线</a></div>
+  <div class="toc-item"><span class="toc-num">03</span><a class="toc-title" href="#paper"><span class="coverage-sep">·</span>Paper Desk 与保存基线</a></div>
+  <div class="toc-item"><span class="toc-num">04</span><a class="toc-title" href="#departure">离开保护与内容安全</a></div>
+  <div class="toc-item"><span class="toc-num">05</span><a class="toc-title" href="#memory"><span class="coverage-sep">·</span>Flashcard 与 Library<span class="coverage-sep">·</span></a></div>
+  <div class="toc-item"><span class="toc-num">06</span><a class="toc-title" href="#visual">全部页面共用同一视觉系统</a></div>
+  <div class="toc-item"><span class="toc-num">07</span><a class="toc-title" href="#routine"><span class="coverage-sep">·</span>Routine 与施工 checkpoints<span class="coverage-sep">·</span></a></div>
+  <div class="toc-item"><span class="toc-num">08</span><a class="toc-title" href="#acceptance">验收、证据与风险边界</a></div>
+</section>
+
+<section class="chapter" id="summary">
+  <div class="chapter-num">01 · Executive Summary</div>
+  <h1>执行摘要</h1>
+  <p class="lead">
+    v0.5 不扩大 keikeu 的产品边界，只把 Daily Card、Paper、Flashcard、Library、Vault、迁移与 Core 恢复页面整理成同一条安静、清楚、可信的本地创作路径。签名、公证与公开分发明确留给 v0.6。
+  </p>
+  <div class="exec-summary">
+    <div class="takeaway-label">Five locked calls</div>
+    <ul>
+      <li><span class="coverage-sep">·</span>Paper 只编辑名称、Summary、Highlights 与 Tags，原始草稿保持锁定只读。</li>
+      <li>保存建立新 baseline，dirty 离开只提供「放弃更改」与「继续编辑」两个原生选择。</li>
+      <li>Flashcard 第 1 张只显示 Summary，之后每张只显示 1 个刚保存的 Highlight。</li>
+      <li>Library 保持 v0.4 功能，只修复返回时的搜索、排序、选择与滚动上下文。</li>
+      <li>全部页面共用一套视觉语言，并以两轮各 30 分钟的真实 dogfood 结束本 Road。</li>
+    </ul>
+  </div>
+  <h2>完成不等于增加功能</h2>
+  <p>
+    v0.5 的完成标准很土：用户马上知道哪里可编辑，不怕点错导航，保存与放弃符合直觉，鼠标和键盘都顺手，连续使用半小时不烦，正常交互不会丢内容。
+  </p>
+  <div class="callout">
+    <strong>一句话边界：</strong>这一轮把已经能做的事做好，不把 keikeu 变成 AI 写作工具、社区平台、云服务或 Notion 替代品。
+  </div>
+</section>
+
+<section class="chapter" id="boundary">
+  <div class="chapter-num">02 · Product Boundary</div>
+  <h1>产品边界与体验主线</h1>
+  <p class="lead">
+    v0.5 的价值不是增加页面，而是让用户从 Daily Card 到外部编辑器的每一步都能预测下一次点击会发生什么。所有工作必须服务于现有 1 条主路径，不能借 UI 改造扩展产品定位。
+  </p>
+  <div class="flow" aria-label="keikeu v0.5 main workflow">
+    <div class="flow-step">Daily Card</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Paper Desk<br>整理并保存</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Flashcard / Library<br>再到外部编辑器</div>
+  </div>
+  <figcaption><span class="meta-label">workflow</span> · 一条路径、三个主工作面，任何新动作都必须减少犹豫或内容风险。</figcaption>
+  <p>
+    主路径固定为 Daily Card、新建 Paper、整理并保存、进入 Flashcard、回到 Library、再前往外部编辑器。Paper 是主工作台，Flashcard 是专注阅读面，Library 是检索与组织面，三者不新增第二套内容来源。
+  </p>
+  <h2>Included</h2>
+  <ul>
+    <li>4 类 Paper 编辑、只读原稿、保存基线与离开保护。</li>
+    <li>Summary-first Flashcard 与 Library 内存上下文。</li>
+    <li>Daily Card、Vault、迁移和 Core 恢复页在内的全页面视觉收口。</li>
+    <li>项目本地 routine skill 与 checkpoint evidence。</li>
+  </ul>
+  <h2>Excluded</h2>
+  <p>
+    本轮明确排除 AI 写作、云同步、账号、社区、数据库、Router、Pinia、UI kit 与拖拽库。可分发的 macOS alpha、签名、公证、安装包与跨版本兼容性证据进入 v0.6，不占用 v0.5 的验收预算。
+  </p>
+</section>
+
+<section class="chapter" id="paper">
+  <div class="chapter-num">03 · Paper Desk</div>
+  <h1>Paper Desk 与保存基线</h1>
+  <p class="lead">
+    Paper 必须让用户在 5 秒内看懂哪里可编辑、哪里只读、当前是否保存。保存的唯一语义是建立新 baseline，失败或结果未知都不能擦除用户正在看的内容。
+  </p>
+  <figure>
+    <img src="design/keikeu_opendesign/keikeu-v05-paper.png" alt="keikeu v0.5 Paper Desk 最终视觉原型">
+    <figcaption><span class="meta-label">ui-screenshot</span> · 最终原型把输入边界交给排版与横线，原稿和系统信息退到次级位置。</figcaption>
+  </figure>
+  <p>
+    编辑区只包含名称、Summary、Highlights 与 Tags。输入以横线、留白与纸面层级组织，原始草稿显示锁定状态。Highlights 支持新增、删除和鼠标或触控板拖动排序，v0.5 不承诺键盘重排。
+  </p>
+  <p>
+    任一受控字段偏离最近成功保存的 snapshot 后，顶部显示未保存。保存按钮与 Cmd+S 调用同一函数，只有成功结果才能更新 baseline。外部修改、stale snapshot 与 commit_unknown 继续遵守 v0.4 边界。
+  </p>
+</section>
+
+<section class="chapter" id="departure">
+  <div class="chapter-num">04 · Departure Guard</div>
+  <h1>离开保护与内容安全</h1>
+  <p class="lead">
+    dirty departure 只问一个问题：放弃最近保存之后的改动，还是留在原地继续编辑。去掉「保存并前往」后，导航与保存不再被一个对话框悄悄捆在一起。
+  </p>
+  <div class="two-col">
+    <div class="module">
+      <h3>放弃更改</h3>
+      <p>恢复最近一次成功保存的 baseline，再执行原本的导航、Paper 切换、Vault 切换或关闭窗口。</p>
+    </div>
+    <div class="module">
+      <h3>继续编辑</h3>
+      <p>取消原动作，留在当前 Paper。内容、当前页面与 baseline 都不改变。</p>
+    </div>
+  </div>
+  <p>
+    前往 Flashcard 或 Library、切换或新建 Paper、切换 Vault 与关闭窗口都进入同一个 navigation guard。放弃更改会恢复最近一次成功保存的 baseline 后再执行原动作，继续编辑则取消原动作且不改变当前内容。
+  </p>
+  <h2>Platform contract</h2>
+  <p>
+    Tauri production 使用官方 dialog plugin 的二选一确认并设置明确按钮文字，浏览器开发环境才使用 window.confirm fallback。正常交互保证不丢内容，但进程崩溃、断电与 mutation 结果未知不纳入本轮承诺。
+  </p>
+  <div class="takeaway">
+    <div class="takeaway-label">Data rule</div>
+    保存失败不更新 baseline，不清空表单，不显示成功。<code>commit_unknown</code> 不自动重试。
+  </div>
+</section>
+
+<section class="chapter" id="memory">
+  <div class="chapter-num">05 · Focus and Context</div>
+  <h1>Flashcard 与 Library</h1>
+  <p class="lead">
+    Flashcard 负责一次只看一个记忆单位，Library 负责回来时不要忘记用户刚才在找什么。两页都必须消费最近成功保存的 Paper，不能读取另一份前端临时真相。
+  </p>
+  <div class="two-col">
+    <div class="module">
+      <div class="meta-label">Flashcard</div>
+      <h3>先整体，再细节</h3>
+      <ul>
+        <li>第 1 张只显示 Summary。</li>
+        <li>之后每张只显示 1 个 Highlight。</li>
+        <li>Summary context 可手动展开。</li>
+        <li>每次进入从第 1 张开始。</li>
+      </ul>
+    </div>
+    <div class="module">
+      <div class="meta-label">Library</div>
+      <h3>回来时不丢上下文</h3>
+      <div>
+        <span class="tag">scope</span>
+        <span class="tag">query</span>
+        <span class="tag">sort</span>
+        <span class="tag">active</span>
+        <span class="tag">selection</span>
+        <span class="tag">scroll</span>
+      </div>
+    </div>
+  </div>
+  <p>
+    Flashcard 第 1 张只显示 Summary，第 2 张开始每张只显示 1 个 Highlight。Highlight 卡片可手动展开 Summary context，默认收起。每次进入从第 1 张开始，dirty Paper 必须先经过离开保护。
+  </p>
+  <p>
+    Library 不重做功能，保留 scope、search query、sort order、active item、batch selection 与 scroll position。返回时恢复这些内存上下文，成功切换 Vault 或应用重启后重置，不新增偏好存储。
+  </p>
+  <div class="callout">
+    名称、Summary 与 Highlights 只有一个持久化来源：最近成功保存的 Paper。
+  </div>
+</section>
+
+<section class="chapter" id="visual">
+  <div class="chapter-num">06 · Whole-App Visual</div>
+  <h1>全部页面共用同一视觉系统</h1>
+  <p class="lead">
+    全局视觉不只包含三个主页面。Vault、迁移、Daily Card、loading、empty、Core blocked 与 recovery 页面必须看起来属于同一个产品，否则用户最需要信任时反而会进入另一套界面。
+  </p>
+  <div class="two-col">
+    <div>
+      <h2>Visual language</h2>
+      <p>
+        生产实现沿用最终原型的暖纸色、近黑文字、墨蓝焦点、暖灰分隔、衬线标题与无衬线控件。删除 demo 数据与设计原则面板，不使用渐变、玻璃、硬阴影、卡片套卡或装饰性圆角药丸。
+      </p>
+      <p>
+        本轮真实窗口验收只覆盖 1220×780 与 920×680。所有页面检查横向溢出、文字裁切、焦点可见性、动作层级与 reduced motion。视觉调整不得改动 Python Core、Markdown schema、DTO 或 JSONL protocol。
+      </p>
+    </div>
+    <div>
+      <h2>Coverage</h2>
+      <ul>
+        <li>Daily Card、Paper、Flashcard、Library</li>
+        <li>Vault 选择、初始化、切换</li>
+        <li>migration preflight、执行、结果、失败</li>
+        <li>Core startup、protocol mismatch</li>
+        <li>sidecar crash、session expired</li>
+        <li>commit_unknown、loading、empty、error</li>
+        <li>确认与 destructive action gate</li>
+      </ul>
+    </div>
+  </div>
+  <div class="takeaway">
+    <div class="takeaway-label">Constraint</div>
+    最终原型是视觉方向，不是生产模板。真实数据、现有动作和 v0.4 安全边界仍由当前实现与权威文档决定。
+  </div>
+</section>
+
+<section class="chapter" id="routine">
+  <div class="chapter-num">07 · Engineering Routine</div>
+  <h1>Routine 与施工 checkpoints</h1>
+  <p class="lead">
+    v0.5 同时建立一条轻量工程 routine，让以后每个 keikeu 变更都有相同的读图、Git、测试和交付证据。Routine 是项目本地 skill，不是新的流程平台。
+  </p>
+  <p>
+    CP0 创建 .agents/skills/keikeu-routine，仅含 SKILL.md 与 agents/openai.yaml，并使用 skill-creator quick validation。它引用 AGENTS、SPEC 与 RULES，不复制权威，不增加 Git hooks、CI gate、后台 agent、scripts 或 assets。
+  </p>
+  <p>
+    施工依次为 CP1 Paper、CP2 baseline 与离开保护、CP3 Flashcard、CP4 Library context、CP5 全页面视觉、CP6 dogfood。每个 checkpoint 只完成一条行为链，先过 focused tests 与真实尺寸，再进入下一步。
+  </p>
+  <div class="table-wrap">
+    <table class="compact">
+      <thead>
+        <tr><th>CP</th><th>交付</th><th>Exit gate</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>0</td><td>Authority、routine、dialog contract</td><td>skill validation + CP1 可用</td></tr>
+        <tr><td>1</td><td>Paper Desk</td><td>5 秒识别编辑区</td></tr>
+        <tr><td>2</td><td>Baseline、dirty guard</td><td>保存与放弃语义稳定</td></tr>
+        <tr><td>3</td><td>Flashcard</td><td>Summary-first、1 highlight</td></tr>
+        <tr><td>4</td><td>Library context</td><td>返回不乱，换 Vault 重置</td></tr>
+        <tr><td>5</td><td>Whole-app visual</td><td>全部页面同一语言</td></tr>
+        <tr><td>6</td><td>Two dogfood runs</td><td>无 P0/P1，修完 top 3</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <figcaption><span class="meta-label">checkpoint-table</span> · 顺序先锁语义，再接保存保护，最后统一视觉，避免一次同时调行为与外观。</figcaption>
+  <div class="callout">
+    Routine 固定 8 个动作：读 authority 与 callers、Git preflight、声明范围、找 root cause、最小 patch、focused check、隔离真实数据、检查 final diff 与 risks。
+  </div>
+</section>
+
+<section class="chapter" id="acceptance">
+  <div class="chapter-num">08 · Acceptance</div>
+  <h1>验收、证据与风险边界</h1>
+  <p class="lead">
+    v0.5 的完成标准是用户连续使用 30 分钟仍觉得顺手，并且正常交互不会丢内容。自动测试证明实现没有明显回归，但不能替代真实 .app dogfood 与开发者接受。
+  </p>
+  <p>
+    每个 UI checkpoint 保留 focused Vitest、1220×780 与 920×680 截图，涉及桌面 API 时运行 Tauri .app smoke。Vault、迁移、delete 与 recovery 只在 fixture、copy 或 synthetic data 上验证。
+  </p>
+  <p>
+    最终构建唯一可识别的 keikeu .app，连续使用 30 分钟，修复全部 P0/P1 与最烦的 3 件事，再完整重跑 30 分钟。macOS 27 beta 与 Xcode 27 beta 获准用于工程 build 和 dogfood，但不自动构成 release 兼容性证据。
+  </p>
+  <h2>Acceptance bar</h2>
+  <ol>
+    <li>马上看懂哪里可编辑。</li>
+    <li>不怕点错导航。</li>
+    <li>保存和放弃符合直觉。</li>
+    <li>鼠标和键盘都顺手。</li>
+    <li>连续使用半小时不烦。</li>
+    <li>正常交互不会丢内容。</li>
+  </ol>
+  <h2>Risk controls</h2>
+  <div class="table-wrap">
+    <table class="compact">
+      <tbody>
+        <tr><td>原生确认差异</td><td>官方 dialog plugin + 真实 .app smoke</td></tr>
+        <tr><td>baseline 漂移</td><td>只有成功保存更新 baseline</td></tr>
+        <tr><td>跨 Vault 旧上下文</td><td>switch 与 restart 明确 reset</td></tr>
+        <tr><td>beta 工具链误读</td><td>工程批准与 release 证据分开</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <h2>References</h2>
+  <ul class="references">
+    <li>docs/design/keikeu_opendesign/keikeu-v05-prototype.html</li>
+    <li>docs/SPEC.md · docs/PROJECT.md · docs/RULES.md</li>
+    <li>docs/architecture/architecture.html</li>
+    <li>docs/design/interaction.html · docs/design/design.html</li>
+    <li>https://v2.tauri.app/plugin/dialog/</li>
+  </ul>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,1421 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>keikeu · Road v0.5 Quiet Desk</title>
+  <style>
+    /* ─── kami (紙/纸) tokens ────────────────────────────────────── */
+    :root {
+      --bg: #ece9de;             /* deepened parchment — page / desktop */
+      --surface: #f6f4ed;        /* warm ivory — cards, lifted containers */
+      --surface-warm: #dfdcd0;   /* deepened warm sand — button bg, secondary surfaces */
+      --fg: #0f0f0e;             /* deepened near-black — primary text */
+      --fg-2: #2e2e2b;           /* deepened dark warm — secondary text */
+      --muted: #43423d;          /* deepened olive — subtext, captions */
+      --meta: #5c5b56;           /* deepened stone — tertiary, dates, metadata */
+      --border: #d9d5ca;
+      --border-soft: #d3cfc5;
+      --accent: #1b365d;         /* ink blue — single chromatic move */
+      --accent-on: #faf9f5;      /* ivory — fg on accent bg */
+      --accent-hover: #1b365d;
+      --accent-active: #142a48;
+      --accent-light: #2d5a8a;
+      --success: #3e5c2f;        /* deepened warm forest */
+      --danger: #7a2e26;         /* deepened warm terracotta */
+      --tag-bg-soft: #d9e2ed;    /* solid hex — ink at 0.18 over deepened parchment */
+      --tag-bg-base: #ccd8e6;
+      --elev-ring: 0 0 0 1px var(--border);
+      --elev-ring-accent: 0 0 0 1px var(--accent);
+      --elev-raised: 0 4px 24px rgba(0,0,0,0.08);
+      --radius-xs: 2px;
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --font-display: "TsangerJinKai02", "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", Georgia, serif;
+      --font-body: "TsangerJinKai02", "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", Georgia, serif;
+      --font-mono: "JetBrains Mono", "SF Mono", "Fira Code", Consolas, Monaco, "TsangerJinKai02", "Source Han Serif SC", monospace;
+      --nav-w: 72px;
+      --ctx-w: 260px;
+      --dark-surface: #22211f;   /* deepened warm charcoal for nav rail */
+      --dark-fg: #b8b4aa;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0; padding: 24px;
+      background: var(--bg);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.55;
+      color: var(--fg);
+      display: flex; justify-content: center; align-items: flex-start;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── app window ────────────────────────────────────────────── */
+    .app-window {
+      width: 1200px; height: 768px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0;
+      overflow: hidden;
+      display: flex;
+      box-shadow: var(--elev-raised);
+    }
+
+    /* ─── global nav rail ───────────────────────────────────────── */
+    .nav-rail {
+      width: var(--nav-w); min-width: var(--nav-w);
+      background: var(--dark-surface);
+      display: flex; flex-direction: column; align-items: center;
+      padding-top: 16px; gap: 4px;
+    }
+    .nav-rail .brand {
+      color: var(--accent-on);
+      font-family: var(--font-display);
+      font-size: 13px; font-weight: 500;
+      letter-spacing: 0.02em;
+      margin-bottom: 16px;
+      writing-mode: horizontal-tb;
+      text-align: center;
+    }
+    .nav-item {
+      width: 44px; height: 44px;
+      display: grid; place-items: center;
+      border-radius: var(--radius-xs);
+      color: var(--dark-fg);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      position: relative;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.06); color: var(--accent-on); }
+    .nav-item.active { background: rgba(27,54,93,0.18); color: var(--accent-on); }
+    .nav-item.active::before {
+      content: ""; position: absolute; left: 0; top: 10px; bottom: 10px;
+      width: 3px; background: var(--accent); border-radius: 0 2px 2px 0;
+    }
+    .nav-item svg { width: 20px; height: 20px; }
+    .nav-spacer { flex: 1; }
+    .nav-item.toggle { margin-bottom: 8px; }
+
+    /* ─── main area ─────────────────────────────────────────────── */
+    .main-area { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+    /* ─── screen header bar ─────────────────────────────────────── */
+    .screen-header {
+      height: 44px; min-height: 44px;
+      display: flex; align-items: center;
+      padding: 0 20px;
+      border-bottom: 1px solid var(--border-soft);
+      background: var(--surface);
+    }
+    .screen-header .screen-title {
+      font-family: var(--font-display);
+      font-size: 15px; font-weight: 500;
+      color: var(--fg);
+    }
+    .screen-header .header-actions {
+      margin-left: auto; display: flex; align-items: center; gap: 8px;
+    }
+
+    /* ─── screen body ───────────────────────────────────────────── */
+    .screen-body { flex: 1; display: flex; min-height: 0; }
+
+    /* ─── context sidebar ───────────────────────────────────────── */
+    .context-sidebar {
+      width: var(--ctx-w); min-width: var(--ctx-w);
+      background: var(--bg);
+      border-right: 1px solid var(--border-soft);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .context-sidebar .sidebar-header {
+      padding: 14px 16px 8px;
+      font-family: var(--font-mono);
+      font-size: 11px; letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--meta);
+    }
+    .context-sidebar .sidebar-list {
+      flex: 1; overflow-y: auto;
+      padding: 0 8px 8px;
+    }
+
+    /* ─── recent paper item ─────────────────────────────────────── */
+    .paper-item {
+      padding: 10px 12px;
+      border-radius: 0;
+      cursor: pointer;
+      margin-bottom: 2px;
+      transition: background 0.1s;
+    }
+    .paper-item:hover { background: rgba(0,0,0,0.04); }
+    .paper-item.active { background: rgba(27,54,93,0.08); }
+    .paper-item .paper-item-name {
+      font-size: 13px; font-weight: 500;
+      color: var(--fg);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .paper-item .paper-item-summary {
+      font-size: 12px; color: var(--muted);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+
+    /* ─── paper area (flexible) ─────────────────────────────────── */
+    .paper-area {
+      flex: 1; background: var(--surface);
+      overflow-y: auto; overflow-x: hidden;
+      padding: 28px 28px;
+      position: relative;
+    }
+
+    /* ─── paper header ──────────────────────────────────────────── */
+    .paper-header {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 6px;
+    }
+    .paper-title {
+      font-family: var(--font-display);
+      font-size: var(--text-2xl, 32px); font-weight: 500;
+      line-height: 1.2;
+      color: var(--fg);
+      padding: 2px 0;
+      flex: 1; min-width: 0;
+      user-select: none;
+    }
+    .save-badge {
+      font-family: var(--font-mono);
+      font-size: 11px; letter-spacing: 0.03em;
+      padding: 2px 7px; border-radius: var(--radius-xs);
+      white-space: nowrap;
+    }
+    .save-badge.saved { color: var(--success); background: #EEF2F7; }
+    .save-badge.unsaved { color: var(--danger); background: rgba(138,58,48,0.08); }
+
+    /* ─── paper code line ───────────────────────────────────────── */
+    .paper-code {
+      font-family: var(--font-mono);
+      font-size: 11px; color: var(--meta);
+      margin-bottom: 20px; padding-left: 4px;
+    }
+
+    /* ─── form section ──────────────────────────────────────────── */
+    .form-section { margin-bottom: 20px; }
+    .form-label {
+      font-family: var(--font-mono);
+      font-size: 11px; letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 6px;
+      display: block;
+    }
+    .form-input, .form-textarea {
+      width: 100%;
+      padding: 8px 4px;
+      border: none;
+      border-bottom: 1px solid var(--border);
+      border-left: 2px solid transparent;
+      border-radius: 0;
+      background: transparent;
+      color: var(--fg);
+      font: inherit; font-size: 13px;
+      outline: none;
+      transition: border-bottom-color 0.15s, border-left-color 0.15s;
+    }
+    .form-input:focus, .form-textarea:focus {
+      border-bottom-color: var(--accent);
+      border-left-color: var(--accent);
+    }
+    .form-textarea { min-height: 80px; resize: vertical; line-height: 1.55; }
+    .form-input.readonly, .form-textarea.readonly {
+      background: transparent;
+      color: var(--muted);
+      cursor: default;
+      border-bottom-color: transparent;
+    }
+
+    /* ─── tag chips (kami — squared index-ticket labels) ────────── */
+    .tag-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 2px 7px;
+      border-radius: var(--radius-xs);
+      font: 500 12px/1 var(--font-body);
+      color: var(--accent);
+      background: var(--tag-bg-soft);
+      letter-spacing: 0.4px;
+    }
+    .tag-delete {
+      background: none; border: none;
+      color: var(--meta); cursor: pointer;
+      font-size: 13px; padding: 0; line-height: 1;
+      transition: color 0.1s;
+    }
+    .tag-delete:hover { color: var(--danger); }
+
+    /* ─── highlight list ────────────────────────────────────────── */
+    .highlight-item {
+      display: flex; align-items: flex-start; gap: 8px;
+      padding: 6px 0;
+    }
+    .highlight-item .hl-grip {
+      color: var(--border); cursor: grab;
+      font-family: var(--font-mono); font-size: 12px;
+      padding-top: 7px; user-select: none;
+    }
+    .highlight-item .hl-inputs { flex: 1; min-width: 0; display: flex; gap: 8px; }
+    .highlight-item .hl-name { width: 100px; min-width: 100px; }
+    .highlight-item .hl-content { flex: 1; }
+    .hl-delete {
+      background: none; border: none;
+      color: var(--border); cursor: pointer;
+      font-size: 14px; padding: 0 2px; line-height: 1;
+      align-self: center;
+      transition: color 0.1s;
+    }
+    .hl-delete:hover { color: var(--danger); }
+    .add-row {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 4px;
+      color: var(--muted); cursor: pointer;
+      font-size: 12px;
+      border: none; border-bottom: 1px dashed var(--border);
+      background: transparent;
+      transition: color 0.1s, border-color 0.1s;
+    }
+    .add-row:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ─── disclosure ────────────────────────────────────────────── */
+    .disclosure {
+      margin-top: 20px;
+      border-top: 1px solid var(--border-soft);
+    }
+    .disclosure summary {
+      padding: 8px 4px;
+      font-family: var(--font-mono);
+      font-size: 11px; letter-spacing: 0.04em;
+      color: var(--meta);
+      cursor: pointer;
+      user-select: none;
+    }
+    .disclosure summary:hover { color: var(--fg-2); }
+    .disclosure .disclosure-body {
+      padding: 6px 4px 10px;
+      font-family: var(--font-mono);
+      font-size: 11px; color: var(--meta);
+      line-height: 1.6;
+    }
+    .disclosure .disclosure-body span { display: block; }
+    .disclosure .disclosure-body .kv { color: var(--fg-2); }
+
+    /* ─── draft toggle button ──────────────────────────────────── */
+    .draft-toggle-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 12px;
+      border: none;
+      border-radius: var(--radius-xs);
+      font-family: var(--font-mono);
+      font-size: 11px; letter-spacing: 0.05em;
+      color: var(--muted);
+      background: var(--surface-warm);
+      cursor: pointer;
+    }
+    .draft-toggle-btn:hover { color: var(--accent); background: var(--border-soft); }
+    .draft-toggle-btn .lock-icon { width: 12px; height: 12px; flex-shrink: 0; }
+    .draft-content {
+      display: none;
+      margin-top: 8px;
+      padding: 12px 14px;
+      border-left: 2px solid var(--border-soft);
+      background: var(--bg);
+      font-size: 12px; line-height: 1.7;
+      color: var(--muted);
+      white-space: pre-wrap;
+    }
+    .draft-content.open { display: block; }
+
+    /* ─── btn (kami — ring shadows, ink-blue primary) ───────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 14px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font: 500 12px/1 var(--font-body);
+      letter-spacing: 0.4px;
+      cursor: pointer;
+      transition: box-shadow 0.2s;
+      box-shadow: var(--elev-ring);
+      background: var(--surface-warm);
+      color: var(--fg-2);
+      outline: none;
+    }
+    .btn:hover { box-shadow: var(--elev-raised); }
+    .btn:focus-visible { box-shadow: 0 0 0 2px var(--accent-active); }
+    .btn-primary {
+      background: var(--accent); color: var(--accent-on);
+      box-shadow: var(--elev-ring-accent);
+    }
+    .btn-primary:hover { box-shadow: var(--elev-raised); }
+    .btn-danger { color: var(--danger); }
+    .btn-danger:hover { box-shadow: 0 0 0 1px var(--danger); background: rgba(138,58,48,0.06); }
+    .btn-sm { padding: 4px 10px; font-size: 11px; }
+
+    /* ─── dirty state: buttons lose all animation ──────────────── */
+    .dirty-state .btn, .dirty-state .btn:hover {
+      transition: none; box-shadow: var(--elev-ring);
+    }
+    .dirty-state .btn-primary, .dirty-state .btn-primary:hover {
+      transition: none; box-shadow: var(--elev-ring-accent);
+    }
+    .kbd {
+      font-family: var(--font-mono);
+      font-size: 10px; color: var(--meta);
+      margin-left: 2px;
+    }
+
+    /* ─── flashcard stage ───────────────────────────────────────── */
+    .flashcard-layout { display: flex; flex: 1; min-height: 0; }
+    .flashcard-sidebar {
+      width: 220px; min-width: 220px;
+      background: var(--bg);
+      border-right: 1px solid var(--border-soft);
+      padding: 12px;
+      overflow-y: auto;
+    }
+    .flashcard-sidebar .card-list-item {
+      padding: 10px 12px;
+      border-radius: 0;
+      cursor: pointer;
+      font-size: 13px;
+      margin-bottom: 2px;
+      color: var(--muted);
+    }
+    .card-list-item:hover { background: rgba(0,0,0,0.04); color: var(--fg); }
+    .card-list-item.active {
+      background: rgba(27,54,93,0.08);
+      color: var(--fg); font-weight: 500;
+    }
+    .card-list-item .card-num {
+      font-family: var(--font-mono); font-size: 11px;
+      margin-right: 6px; color: var(--accent);
+    }
+
+    .flashcard-stage {
+      flex: 1; display: grid; place-items: center;
+      background: var(--bg);
+      padding: 40px;
+    }
+    .flashcard-card {
+      width: 520px; max-width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xs);
+      padding: 36px 32px;
+      box-shadow: var(--elev-ring);
+    }
+    .flashcard-card .card-title {
+      font-family: var(--font-display);
+      font-size: 22px; font-weight: 500;
+      margin-bottom: 20px; color: var(--fg);
+    }
+    .flashcard-card .card-summary {
+      font-size: 15px; line-height: 1.55;
+      color: var(--fg);
+      margin-bottom: 16px;
+    }
+    .flashcard-card .card-source {
+      font-family: var(--font-mono);
+      font-size: 11px; color: var(--muted);
+      margin-bottom: 8px;
+      padding: 4px 8px;
+      background: var(--tag-bg-soft);
+      border-radius: var(--radius-xs);
+      display: inline-block;
+    }
+    .flashcard-card .card-content {
+      font-size: 14px; line-height: 1.55;
+      color: var(--fg);
+      padding-left: 14px;
+      border-left: 2px solid var(--accent);
+    }
+    .flashcard-nav {
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      margin-top: 24px; padding-top: 16px;
+      border-top: 1px solid var(--border-soft);
+    }
+    .flashcard-nav .page-indicator {
+      font-family: var(--font-mono);
+      font-size: 12px; color: var(--meta);
+      min-width: 48px; text-align: center;
+    }
+    .flashcard-back { margin-top: 12px; text-align: center; }
+
+    /* ─── library shelf ─────────────────────────────────────────── */
+    .library-layout { display: flex; flex: 1; min-height: 0; flex-direction: column; }
+    .library-toolbar {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border-soft);
+      background: var(--surface);
+    }
+    .search-field {
+      flex: 1; max-width: 400px;
+      padding: 7px 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xs);
+      font: inherit; font-size: 13px;
+      background: var(--surface);
+      color: var(--fg);
+      outline: none;
+    }
+    .search-field:focus { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    .sort-select {
+      padding: 6px 8px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xs);
+      font: inherit; font-size: 12px;
+      background: var(--surface);
+      color: var(--fg);
+      cursor: pointer;
+      outline: none;
+    }
+    .library-body { display: flex; flex: 1; min-height: 0; }
+    .library-list {
+      flex: 1; overflow-y: auto;
+      background: var(--surface);
+    }
+    .library-row {
+      display: grid; grid-template-columns: 24px 1fr 140px 80px;
+      gap: 12px; align-items: center;
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--border-soft);
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .library-row:hover { background: var(--bg); }
+    .library-row.selected { background: rgba(27,54,93,0.06); }
+    .library-row .check-col { text-align: center; }
+    .library-row input[type="checkbox"] { accent-color: var(--accent); cursor: pointer; }
+    .library-row .row-name { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .library-row .row-folder { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .library-row .row-date {
+      font-family: var(--font-mono); font-size: 11px;
+      color: var(--meta); text-align: right;
+    }
+
+    .library-preview {
+      width: 260px; min-width: 260px;
+      background: var(--bg);
+      border-left: 1px solid var(--border-soft);
+      padding: 16px;
+      overflow-y: auto;
+    }
+    .library-preview .preview-name {
+      font-family: var(--font-display);
+      font-size: 17px; font-weight: 500;
+      margin-bottom: 8px;
+    }
+    .library-preview .preview-meta {
+      font-family: var(--font-mono);
+      font-size: 11px; color: var(--meta);
+      margin-bottom: 12px; line-height: 1.6;
+    }
+    .library-preview .preview-summary {
+      font-size: 13px; line-height: 1.55;
+      color: var(--fg);
+    }
+    .library-actions { display: flex; gap: 6px; margin-top: 12px; }
+
+    .library-footer {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 20px;
+      border-top: 1px solid var(--border-soft);
+      background: var(--surface);
+    }
+    .result-count {
+      font-family: var(--font-mono);
+      font-size: 11px; color: var(--meta);
+    }
+    .bulk-tools { margin-left: auto; display: flex; gap: 6px; }
+
+    /* ─── principles panel ──────────────────────────────────────── */
+    .principles-panel {
+      width: 0; overflow: hidden;
+      background: var(--bg);
+      border-left: 1px solid var(--border-soft);
+      transition: width 0.2s;
+      font-size: 12px;
+    }
+    .principles-panel.open { width: 200px; min-width: 200px; }
+    .principles-panel .principles-inner { padding: 16px; width: 200px; }
+    .principles-panel h4 {
+      font-family: var(--font-mono);
+      font-size: 11px; letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin: 0 0 12px;
+    }
+    .principles-panel .principle {
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-soft);
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .principles-panel .principle strong {
+      display: block;
+      font-weight: 500;
+      color: var(--fg);
+      margin-bottom: 2px;
+    }
+
+    /* ─── scrollbar ─────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--meta); }
+
+    /* ─── hidden screen ─────────────────────────────────────────── */
+    .screen { display: none; flex-direction: column; flex: 1; min-height: 0; }
+    .screen.active { display: flex; }
+
+    /* ─── transition ────────────────────────────────────────────── */
+    .paper-area, .flashcard-stage, .library-list, .library-preview {
+      transition: opacity 0.1s;
+    }
+
+    /* ─── lock marker & archival proof ──────────────────────────── */
+    .lock-icon {
+      display: inline-block; width: 11px; height: 11px;
+      vertical-align: -2px; margin-right: 3px;
+      opacity: 0.4;
+    }
+    .form-textarea.archival {
+      color: var(--muted);
+      cursor: default;
+      resize: none;
+      border: none;
+      border-left: 2px solid var(--border-soft);
+      padding: 8px 12px;
+      font-size: 12px;
+      line-height: 1.7;
+      background: var(--bg);
+    }
+
+    /* ─── dirty-state paper-slip modal ──────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(15,15,14,0.30);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 100;
+    }
+    .modal-overlay.hidden { display: none; }
+    .paper-slip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xs);
+      width: 340px; height: 340px;
+      padding: 28px 26px;
+      display: flex; flex-direction: column;
+      box-shadow: var(--elev-raised);
+    }
+    .paper-slip h3 {
+      font-family: var(--font-display);
+      font-size: 18px; font-weight: 500;
+      margin: 0 0 6px; color: var(--fg);
+    }
+    .paper-slip p {
+      font-size: 13px; color: var(--muted);
+      margin: 0 0 20px; line-height: 1.5;
+    }
+    .paper-slip .slip-actions {
+      margin-top: auto;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    /* modal buttons: zero animation, zero border, zero hover change */
+    .paper-slip .btn, .paper-slip .btn-slip, .paper-slip .btn-slip-default, .paper-slip .btn-slip-subtle {
+      transition: none !important;
+      width: 100%; justify-content: center;
+      padding: 8px 16px; font-size: 13px;
+      border: none !important;
+      box-shadow: none !important;
+    }
+    .paper-slip .btn:hover,
+    .paper-slip .btn-slip:hover,
+    .paper-slip .btn-slip-default:hover,
+    .paper-slip .btn-slip-subtle:hover {
+      transition: none !important;
+      box-shadow: none !important;
+      color: inherit !important;
+      background: inherit !important;
+      transform: none !important;
+    }
+    .btn-slip-default {
+      background: var(--accent); color: var(--accent-on);
+      border: none; border-radius: var(--radius-sm);
+    }
+    .btn-slip-subtle {
+      background: transparent; color: var(--muted);
+      border: none; border-radius: var(--radius-sm);
+    }
+
+    /* ─── flashcard last-page hint ─────────────────────────────── */
+    .last-page-hint {
+      display: none;
+      text-align: center; font-size: 12px; color: var(--muted);
+      margin-top: 8px;
+    }
+    .last-page-hint.visible { display: block; }
+  </style>
+</head>
+<body>
+
+<div class="app-window" id="app">
+
+  <!-- Global nav rail -->
+  <nav class="nav-rail" data-od-id="nav-rail">
+    <div class="brand">keikeu</div>
+
+    <div class="nav-item active" data-screen="paper" title="纸桌" onclick="switchScreen('paper')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    </div>
+
+    <div class="nav-item" data-screen="flashcard" title="卡片台" onclick="switchScreen('flashcard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="14" height="14" rx="1"/><path d="M8 3h10a1 1 0 0 1 1 1v10"/><line x1="10" y1="9" x2="14" y2="9"/><line x1="10" y1="12" x2="12" y2="12"/></svg>
+    </div>
+
+    <div class="nav-item" data-screen="library" title="书架" onclick="switchScreen('library')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+    </div>
+
+    <div class="nav-spacer"></div>
+
+    <div class="nav-item toggle" data-screen="principles" title="设计原则" id="principlesToggle" onclick="togglePrinciples()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </div>
+  </nav>
+
+  <!-- Main area -->
+  <div class="main-area">
+
+    <!-- ═══ SCREEN 1: PAPER DESK ═══ -->
+    <div class="screen active" id="screen-paper" data-od-id="paper-desk">
+      <div class="screen-header">
+        <span class="screen-title">Paper Desk · 纸桌</span>
+        <div class="header-actions">
+          <span class="save-badge saved" id="saveBadge">已保存至 Markdown</span>
+        </div>
+      </div>
+      <div class="screen-body">
+        <aside class="context-sidebar">
+          <div class="sidebar-header">最近 Paper</div>
+          <div class="sidebar-list" id="recentPapers">
+            <div class="paper-item active">
+              <div class="paper-item-name">Moonlight Ticket</div>
+              <div class="paper-item-summary">月光夜车票根与少年时代约定</div>
+            </div>
+            <div class="paper-item">
+              <div class="paper-item-name">冬夜炉火</div>
+              <div class="paper-item-summary">雪夜客栈偶遇与一碗热汤</div>
+            </div>
+            <div class="paper-item">
+              <div class="paper-item-name">旧书店二楼</div>
+              <div class="paper-item-summary">二手书堆中发现的手写信</div>
+            </div>
+            <div class="paper-item">
+              <div class="paper-item-name">蝉鸣车站</div>
+              <div class="paper-item-summary">夏日午后无人站台的告别</div>
+            </div>
+            <div class="paper-item">
+              <div class="paper-item-name">海港凌晨</div>
+              <div class="paper-item-summary">渔港黎明时分的汽笛与雾</div>
+            </div>
+          </div>
+        </aside>
+
+        <div class="paper-area" id="paperArea">
+          <!-- Title + save state -->
+          <div class="paper-header">
+            <div class="paper-title">Moonlight Ticket</div>
+          </div>
+
+          <!-- Paper code (non-editable display) -->
+          <div class="paper-code">K-20260728-001</div>
+
+          <!-- Name -->
+          <div class="form-section">
+            <label class="form-label">名称</label>
+            <input class="form-input" value="Moonlight Ticket" oninput="markDirty()" id="paperNameInput">
+          </div>
+
+          <!-- Summary -->
+          <div class="form-section">
+            <label class="form-label">摘要</label>
+            <textarea class="form-textarea" oninput="markDirty()" id="summaryInput">月光穿过夜行列车的车窗，照亮了手中一张单程票的存根。车厢里昏黄的灯光随着铁轨的节奏摇晃，对座的陌生人递来半只橘子，说他也在找那个只在午夜有月光的车站。十年后，那张票根还在日记本里夹着，橘子的香气却再也记不清了。</textarea>
+          </div>
+
+          <!-- Highlights -->
+          <div class="form-section">
+            <label class="form-label">亮点</label>
+            <div id="highlightsList">
+              <div class="highlight-item">
+                <span class="hl-grip">⋮⋮</span>
+                <div class="hl-inputs">
+                  <input class="form-input hl-name" value="铁轨的节奏" oninput="markDirty()">
+                  <input class="form-input hl-content" value="车厢里昏黄的灯光随着铁轨的节奏摇晃" oninput="markDirty()">
+                </div>
+                <button class="hl-delete" onclick="deleteHighlight(this)" title="删除">×</button>
+              </div>
+              <div class="highlight-item">
+                <span class="hl-grip">⋮⋮</span>
+                <div class="hl-inputs">
+                  <input class="form-input hl-name" value="对座的陌生人" oninput="markDirty()">
+                  <input class="form-input hl-content" value="对座的陌生人递来半只橘子，说他也在找那个只在午夜有月光的车站" oninput="markDirty()">
+                </div>
+                <button class="hl-delete" onclick="deleteHighlight(this)" title="删除">×</button>
+              </div>
+              <div class="highlight-item">
+                <span class="hl-grip">⋮⋮</span>
+                <div class="hl-inputs">
+                  <input class="form-input hl-name" value="十年后" oninput="markDirty()">
+                  <input class="form-input hl-content" value="十年后，那张票根还在日记本里夹着，橘子的香气却再也记不清了" oninput="markDirty()">
+                </div>
+                <button class="hl-delete" onclick="deleteHighlight(this)" title="删除">×</button>
+              </div>
+              <button class="add-row" style="width:100%" onclick="addHighlight()">+ 添加亮点</button>
+            </div>
+          </div>
+
+          <!-- Tags -->
+          <div class="form-section">
+            <label class="form-label">标签</label>
+            <div class="tag-row" id="tagRow">
+              <span class="tag-chip">旅途<button class="tag-delete" onclick="deleteTag(this)" title="删除">×</button></span>
+              <span class="tag-chip">月光<button class="tag-delete" onclick="deleteTag(this)" title="删除">×</button></span>
+              <span class="tag-chip">成长<button class="tag-delete" onclick="deleteTag(this)" title="删除">×</button></span>
+              <span class="tag-chip">记忆<button class="tag-delete" onclick="deleteTag(this)" title="删除">×</button></span>
+              <span class="tag-chip">少年<button class="tag-delete" onclick="deleteTag(this)" title="删除">×</button></span>
+              <button class="add-row" style="width:100%" onclick="addTag()">+ 添加标签</button>
+            </div>
+          </div>
+
+          <!-- Save + Open Flashcard -->
+          <div style="margin-bottom:12px; display:flex; gap:8px;">
+            <button class="btn btn-primary" id="saveBtn" onclick="doSave()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              保存
+              <span class="kbd">⌘S</span>
+            </button>
+            <button class="btn" onclick="switchScreen('flashcard')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="14" height="14" rx="1"/><path d="M8 3h10a1 1 0 0 1 1 1v10"/><line x1="10" y1="9" x2="14" y2="9"/><line x1="10" y1="12" x2="12" y2="12"/></svg>
+              打开速记卡
+            </button>
+          </div>
+
+          <!-- Original Draft — toggle via light button, default hidden -->
+          <div class="form-section" data-od-id="original-draft">
+            <button class="draft-toggle-btn" onclick="toggleDraft()" id="draftToggleBtn">
+              <svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              原始草稿 · 归档只读
+            </button>
+            <div class="draft-content" id="draftContent">月光从车窗斜斜地落进来的时候，我正在看手里的票根。上面的字迹已经被手指摩挲得有些模糊了——Moonlight Ticket，单程，无座。这趟车只在这个季节开，也只在这个时刻经过这片山。
+
+车厢里人不多。对座的男人看起来四十出头，穿着一件洗得发白的深蓝色工装。他从口袋里摸出两个橘子，剥了一个，递了半个过来。
+
+"你也在找那个站？"
+
+我不知道他指的是哪个站，但我点了点头。橘子的汁水溅在指尖上，甜的，微凉的。
+
+列车驶过一个又一个只有灯光没有名字的小站。月光一会儿亮一会儿暗，像是云层在跟车厢捉迷藏。对座的人不知道什么时候睡着了，半个橘子还握在手里，手指松松地拢着。
+
+我在下一站下了车。其实我也不知道那是不是我要找的地方，只是觉得该下车了。站台上只有一盏灯，检票员看了看我的票，什么也没说，侧身让开了路。
+
+后来我在日记本里夹了那张票根。每隔几年翻出来看看，上面的字更模糊了。可每次看到，还是会想起那天夜里的橘子味，甜的，微凉的，和列车摇晃的节奏搅在一起。那位穿工装的男人后来再也没有见过。
+
+也许根本就没有那个只在午夜有月光的车站。也许只是那天夜里，我们都恰好需要相信，世界上还有这样一个地方。</div>
+          </div>
+
+          <!-- File Information disclosure -->
+          <details class="disclosure" data-od-id="file-information">
+            <summary>文件信息</summary>
+            <div class="disclosure-body">
+              <span><span class="kv">系统路径</span> /Users/…/Vault/active/K-20260728-001.md</span>
+              <span><span class="kv">创建时间</span> 2026-07-28 02:14</span>
+              <span><span class="kv">最后修改</span> 2026-07-28 15:42</span>
+              <span><span class="kv">Paper 版本</span> 当前</span>
+              <span><span class="kv">Markdown 大小</span> 0.0037 MB</span>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ SCREEN 2: FLASHCARD STAGE ═══ -->
+    <div class="screen" id="screen-flashcard" data-od-id="flashcard-stage">
+      <div class="screen-header">
+        <span class="screen-title">Flashcard Stage · 卡片台</span>
+        <div class="header-actions">
+          <span class="save-badge saved">Moonlight Ticket</span>
+        </div>
+      </div>
+      <div class="flashcard-layout">
+        <!-- Card list sidebar -->
+        <div class="flashcard-sidebar">
+          <div class="sidebar-header">卡片列表</div>
+          <div class="card-list-item active" onclick="selectFlashcard(0)">
+            <span class="card-num">01</span>摘要
+          </div>
+          <div class="card-list-item" onclick="selectFlashcard(1)">
+            <span class="card-num">02</span>铁轨的节奏
+          </div>
+          <div class="card-list-item" onclick="selectFlashcard(2)">
+            <span class="card-num">03</span>对座的陌生人
+          </div>
+          <div class="card-list-item" onclick="selectFlashcard(3)">
+            <span class="card-num">04</span>十年后
+          </div>
+        </div>
+
+        <!-- Centered card -->
+        <div class="flashcard-stage" id="flashcardStage">
+          <div class="flashcard-card" id="flashcardCard">
+            <div class="card-title">Moonlight Ticket</div>
+
+            <!-- Summary-first (page 0 shows summary only) -->
+            <div class="card-summary">
+              月光穿过夜行列车的车窗，照亮了手中一张单程票的存根。车厢里昏黄的灯光随着铁轨的节奏摇晃，对座的陌生人递来半只橘子，说他也在找那个只在午夜有月光的车站。十年后，那张票根还在日记本里夹着，橘子的香气却再也记不清了。
+            </div>
+
+            <!-- Highlight content (hidden on page 0) -->
+            <div class="card-source" style="display:none">亮点 · 铁轨的节奏</div>
+            <div class="card-content" style="display:none">
+              车厢里昏黄的灯光随着铁轨的节奏摇晃
+            </div>
+
+            <!-- Navigation -->
+            <div class="flashcard-nav">
+              <button class="btn btn-sm" id="flashcardPrev" disabled onclick="navigateFlashcard(-1)">← 上一页</button>
+              <span class="page-indicator" id="flashcardPageNum">1 / 4</span>
+              <button class="btn btn-sm" id="flashcardNext" onclick="navigateFlashcard(1)">下一页 →</button>
+            </div>
+
+            <!-- Last-page hint -->
+            <div class="last-page-hint" id="lastPageHint">已经是最后一页</div>
+
+            <div class="flashcard-back">
+              <button class="btn" onclick="switchScreen('paper')">← 返回 Paper</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ SCREEN 3: LIBRARY SHELF ═══ -->
+    <div class="screen" id="screen-library" data-od-id="library-shelf">
+      <div class="screen-header">
+        <span class="screen-title">Library Shelf · 书架</span>
+        <div class="header-actions">
+          <span class="save-badge saved" style="background:transparent;color:var(--meta);border:1px solid var(--border-soft)">索引就绪</span>
+        </div>
+      </div>
+      <div class="library-layout">
+        <!-- Toolbar -->
+        <div class="library-toolbar">
+          <input class="search-field" type="search" placeholder="搜索 Paper…" value="" id="libSearch" oninput="filterLibrary()">
+          <select class="sort-select" id="libSort" onchange="sortLibrary()">
+            <option value="updated_desc">最近更新</option>
+            <option value="created_desc">最近创建</option>
+            <option value="name_asc">名称 A–Z</option>
+          </select>
+          <span class="result-count" id="libCount">5 个结果</span>
+        </div>
+
+        <!-- List + preview -->
+        <div class="library-body">
+          <div class="library-list" id="libraryList">
+            <div class="library-row" data-path="K-20260728-001" onclick="selectLibraryItem(this, event)">
+              <div class="check-col"><input type="checkbox" onclick="event.stopPropagation(); updateSelection()"></div>
+              <div class="row-name">Moonlight Ticket</div>
+              <div class="row-folder">active</div>
+              <div class="row-date">今天</div>
+            </div>
+            <div class="library-row" data-path="K-20260725-003" onclick="selectLibraryItem(this, event)">
+              <div class="check-col"><input type="checkbox" onclick="event.stopPropagation(); updateSelection()"></div>
+              <div class="row-name">冬夜炉火</div>
+              <div class="row-folder">active</div>
+              <div class="row-date">07-25</div>
+            </div>
+            <div class="library-row" data-path="K-20260720-002" onclick="selectLibraryItem(this, event)">
+              <div class="check-col"><input type="checkbox" onclick="event.stopPropagation(); updateSelection()"></div>
+              <div class="row-name">蝉鸣车站</div>
+              <div class="row-folder">active/archive</div>
+              <div class="row-date">07-20</div>
+            </div>
+            <div class="library-row" data-path="K-20260715-001" onclick="selectLibraryItem(this, event)">
+              <div class="check-col"><input type="checkbox" onclick="event.stopPropagation(); updateSelection()"></div>
+              <div class="row-name">海港凌晨</div>
+              <div class="row-folder">active</div>
+              <div class="row-date">07-15</div>
+            </div>
+            <div class="library-row" data-path="K-20260710-004" onclick="selectLibraryItem(this, event)">
+              <div class="check-col"><input type="checkbox" onclick="event.stopPropagation(); updateSelection()"></div>
+              <div class="row-name">旧书店二楼</div>
+              <div class="row-folder">Trash</div>
+              <div class="row-date">07-10</div>
+            </div>
+          </div>
+
+          <!-- Preview pane -->
+          <div class="library-preview" id="libPreview">
+            <div class="preview-name">选择一项以预览</div>
+            <div class="preview-meta" style="color:var(--muted)">点击列表中的 Paper 查看详情</div>
+            <div class="preview-summary" style="color:var(--muted); font-size:12px;">
+              选中后显示摘要、标签与路径信息。
+            </div>
+            <div class="library-actions" id="libActions" style="display:none">
+              <button class="btn btn-sm">移动</button>
+              <button class="btn btn-sm">复制</button>
+              <button class="btn btn-sm btn-danger">移至废纸篓</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="library-footer">
+          <span class="result-count" id="libFooterCount">5 项 · 已选 0 项</span>
+          <div class="bulk-tools" id="bulkTools" style="display:none">
+            <button class="btn btn-sm">批量移动</button>
+            <button class="btn btn-sm">批量导出</button>
+            <button class="btn btn-sm btn-danger">批量删除</button>
+          </div>
+
+          <!-- Vault Status disclosure -->
+          <details class="disclosure" style="margin:0; border:0; margin-left:auto;" data-od-id="vault-status">
+            <summary>仓库状态</summary>
+            <div class="disclosure-body">
+              <span><span class="kv">路径</span> /Users/…/keikeu-vault</span>
+              <span><span class="kv">Paper 总计</span> 5 活跃 · 1 回收站</span>
+              <span><span class="kv">索引版本</span> 当前 · 就绪</span>
+              <span><span class="kv">上次重建</span> 2026-07-28 02:14</span>
+              <span><span class="kv">索引健康</span> 正常</span>
+              <div style="margin-top:6px; display:flex; gap:4px;">
+                <button class="btn btn-sm" style="font-size:11px;">重建索引</button>
+              </div>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Principles panel -->
+  <aside class="principles-panel" id="principlesPanel" data-od-id="principles-panel">
+    <div class="principles-inner">
+      <h4>设计原则</h4>
+      <div class="principle">
+        <strong>一屏一意图</strong>
+        每个视图只做一件事——编辑、聚焦或检索。
+      </div>
+      <div class="principle">
+        <strong>绝不丢失未保存内容</strong>
+        未保存的修改始终可见；保存前不离开。
+      </div>
+      <div class="principle">
+        <strong>保留导航上下文</strong>
+        搜索、排序、选择及滚动位置在视图切换后保持。
+      </div>
+      <div class="principle">
+        <strong>工程细节保持安静</strong>
+        系统路径、时间戳等收进折叠区域，不抢占视野。
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+  <!-- Dirty-state paper-slip modal -->
+  <div class="modal-overlay hidden" id="dirtyModal">
+    <div class="paper-slip">
+      <h3>有未保存的修改</h3>
+      <p>当前 Paper 有未保存的更改。<br>离开前请选择如何处理。</p>
+      <div class="slip-actions">
+        <button class="btn btn-slip btn-slip-default" id="slipContinue">继续编辑</button>
+        <button class="btn btn-slip" id="slipSaveGo" style="width:100%; justify-content:center; padding:8px 16px; font-size:13px; border-radius:var(--radius-md);">保存并前往</button>
+        <button class="btn btn-slip btn-slip-subtle" id="slipDiscard">放弃更改</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  let currentScreen = 'paper';
+  let flashcardIdx = 0;
+  const flashcardData = [
+    { title: '摘要', source: '', content: '月光穿过夜行列车的车窗，照亮了手中一张单程票的存根。车厢里昏黄的灯光随着铁轨的节奏摇晃，对座的陌生人递来半只橘子，说他也在找那个只在午夜有月光的车站。十年后，那张票根还在日记本里夹着，橘子的香气却再也记不清了。' },
+    { title: '铁轨的节奏', source: '亮点', content: '车厢里昏黄的灯光随着铁轨的节奏摇晃，月光一会儿亮一会儿暗，像是云层在跟车厢捉迷藏。' },
+    { title: '对座的陌生人', source: '亮点', content: '对座的陌生人递来半只橘子，说他也在找那个只在午夜有月光的车站。对座的人不知道什么时候睡着了，半个橘子还握在手里，手指松松地拢着。' },
+    { title: '十年后', source: '亮点', content: '十年后，那张票根还在日记本里夹着，橘子的香气却再也记不清了。后来我在日记本里夹了那张票根。每隔几年翻出来看看，上面的字更模糊了。' }
+  ];
+
+  /* ─── Snapshot / restore for Discard ──────────── */
+  let baseline = null;
+
+  function toggleDraft() {
+    const content = document.getElementById('draftContent');
+    content.classList.toggle('open');
+  }
+
+  function captureSnapshot() {
+    var hlItems = document.querySelectorAll('#highlightsList .highlight-item');
+    var hlData = [];
+    hlItems.forEach(function(el) {
+      var n = el.querySelector('.hl-name');
+      var c = el.querySelector('.hl-content');
+      hlData.push({ name: n ? n.value : '', content: c ? c.value : '' });
+    });
+    var tagChips = document.querySelectorAll('#tagRow .tag-chip');
+    var tagTexts = [];
+    tagChips.forEach(function(el) {
+      tagTexts.push(el.childNodes[0].textContent.trim());
+    });
+    baseline = {
+      name: document.getElementById('paperNameInput').value,
+      summary: document.getElementById('summaryInput').value,
+      highlights: hlData,
+      tags: tagTexts,
+      flashcardData: flashcardData.map(function(d) { return { title: d.title, source: d.source, content: d.content }; })
+    };
+  }
+
+  function restoreFromSnapshot() {
+    if (!baseline) return;
+    document.getElementById('paperNameInput').value = baseline.name;
+    document.getElementById('summaryInput').value = baseline.summary;
+
+    // Rebuild highlights DOM
+    var hlList = document.getElementById('highlightsList');
+    hlList.querySelectorAll('.highlight-item').forEach(function(el) { el.remove(); });
+    var hlAddBtn = hlList.querySelector('.add-row');
+    baseline.highlights.forEach(function(hl) {
+      var item = document.createElement('div');
+      item.className = 'highlight-item';
+      var grip = document.createElement('span');
+      grip.className = 'hl-grip';
+      grip.textContent = '⋮⋮';
+      var inputs = document.createElement('div');
+      inputs.className = 'hl-inputs';
+      var ni = document.createElement('input');
+      ni.className = 'form-input hl-name';
+      ni.value = hl.name;
+      ni.setAttribute('oninput', 'markDirty()');
+      var ci = document.createElement('input');
+      ci.className = 'form-input hl-content';
+      ci.value = hl.content;
+      ci.setAttribute('oninput', 'markDirty()');
+      inputs.appendChild(ni);
+      inputs.appendChild(ci);
+      var del = document.createElement('button');
+      del.className = 'hl-delete';
+      del.textContent = '×';
+      del.title = '删除';
+      del.setAttribute('onclick', 'deleteHighlight(this)');
+      item.appendChild(grip);
+      item.appendChild(inputs);
+      item.appendChild(del);
+      hlList.insertBefore(item, hlAddBtn);
+    });
+
+    // Rebuild tags DOM
+    var tagRow = document.getElementById('tagRow');
+    tagRow.querySelectorAll('.tag-chip').forEach(function(el) { el.remove(); });
+    var tagAdd = tagRow.querySelector('.add-row');
+    baseline.tags.forEach(function(t) {
+      var chip = document.createElement('span');
+      chip.className = 'tag-chip';
+      chip.appendChild(document.createTextNode(t));
+      var del = document.createElement('button');
+      del.className = 'tag-delete';
+      del.textContent = '×';
+      del.title = '删除';
+      del.setAttribute('onclick', 'deleteTag(this)');
+      chip.appendChild(del);
+      tagRow.insertBefore(chip, tagAdd);
+    });
+
+    // Restore flashcardData
+    flashcardData.length = 0;
+    baseline.flashcardData.forEach(function(d) {
+      flashcardData.push({ title: d.title, source: d.source, content: d.content });
+    });
+    flashcardIdx = 0;
+    if (currentScreen === 'flashcard') renderFlashcard();
+
+    // Clear dirty state
+    isDirty = false;
+    var b = document.getElementById('saveBadge');
+    b.textContent = '已保存至 Markdown';
+    b.className = 'save-badge saved';
+    document.getElementById('paperArea').classList.remove('dirty-state');
+  }
+
+  function syncToDataModel() {
+    var name = document.getElementById('paperNameInput').value;
+    document.querySelector('.paper-title').textContent = name;
+    var summary = document.getElementById('summaryInput').value;
+    flashcardData[0].content = summary;
+    flashcardData.length = 1;
+    var hlItems = document.querySelectorAll('#highlightsList .highlight-item');
+    hlItems.forEach(function(el) {
+      var n = el.querySelector('.hl-name');
+      var c = el.querySelector('.hl-content');
+      flashcardData.push({ title: n ? n.value : '', source: '亮点', content: c ? c.value : '' });
+    });
+  }
+
+  function switchScreen(name) {
+    if (currentScreen === 'paper' && isDirty && name !== 'paper') {
+      pendingScreen = name;
+      document.getElementById('dirtyModal').classList.remove('hidden');
+      return;
+    }
+    doSwitchScreen(name);
+  }
+
+  function doSwitchScreen(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const target = document.getElementById('screen-' + name);
+    if (target) target.classList.add('active');
+
+    document.querySelectorAll('.nav-item[data-screen]').forEach(n => n.classList.remove('active'));
+    const navItem = document.querySelector('.nav-item[data-screen="' + name + '"]');
+    if (navItem) navItem.classList.add('active');
+
+    currentScreen = name;
+    if (name === 'flashcard') renderFlashcard();
+  }
+
+  function togglePrinciples() {
+    const panel = document.getElementById('principlesPanel');
+    const btn = document.getElementById('principlesToggle');
+    panel.classList.toggle('open');
+    btn.classList.toggle('active');
+  }
+
+  /* ─── Paper Desk ──────────────────────────────── */
+  let isDirty = false;
+
+  function markDirty() {
+    if (isDirty) return;
+    isDirty = true;
+    var b = document.getElementById('saveBadge');
+    b.textContent = '未保存';
+    b.className = 'save-badge unsaved';
+    document.getElementById('paperArea').classList.add('dirty-state');
+  }
+
+  function doSave() {
+    syncToDataModel();
+    captureSnapshot();
+    isDirty = false;
+    var b = document.getElementById('saveBadge');
+    b.textContent = '已保存至 Markdown';
+    b.className = 'save-badge saved';
+    document.getElementById('paperArea').classList.remove('dirty-state');
+    var btn = document.getElementById('saveBtn');
+    btn.style.background = 'var(--success)';
+    btn.style.borderColor = 'var(--success)';
+    setTimeout(function() { btn.style.background = ''; btn.style.borderColor = ''; }, 600);
+  }
+
+  // ⌘S keyboard shortcut
+  document.addEventListener('keydown', function(e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+      e.preventDefault();
+      if (currentScreen === 'paper' && isDirty) doSave();
+    }
+  });
+
+  // Recent papers click
+  document.querySelectorAll('#recentPapers .paper-item').forEach(item => {
+    item.addEventListener('click', function() {
+      document.querySelectorAll('#recentPapers .paper-item').forEach(i => i.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  /* ─── Flashcard Stage ──────────────────────────── */
+  function renderFlashcard() {
+    const d = flashcardData[flashcardIdx];
+    const card = document.getElementById('flashcardCard');
+    const total = flashcardData.length;
+
+    const paperName = document.querySelector('.paper-title').textContent;
+    card.querySelector('.card-title').textContent = paperName;
+    document.querySelector('#screen-flashcard .save-badge').textContent = paperName;
+
+    if (flashcardIdx === 0) {
+      card.querySelector('.card-summary').innerHTML = d.content;
+      card.querySelector('.card-summary').style.fontSize = '15px';
+      card.querySelector('.card-source').style.display = 'none';
+      card.querySelector('.card-content').style.display = 'none';
+    } else {
+      card.querySelector('.card-summary').innerHTML = '<span style="color:var(--muted);font-size:13px;">' + flashcardData[0].content.substring(0, 80) + '…</span>';
+      card.querySelector('.card-summary').style.fontSize = '';
+      card.querySelector('.card-source').style.display = 'inline-block';
+      card.querySelector('.card-source').textContent = d.source + ' · ' + d.title;
+      card.querySelector('.card-content').style.display = 'block';
+      card.querySelector('.card-content').textContent = d.content;
+    }
+
+    document.getElementById('flashcardPageNum').textContent = (flashcardIdx + 1) + ' / ' + total;
+    document.getElementById('flashcardPrev').disabled = flashcardIdx === 0;
+    document.getElementById('flashcardNext').disabled = flashcardIdx === total - 1;
+
+    // Last-page hint
+    var hint = document.getElementById('lastPageHint');
+    hint.classList.toggle('visible', flashcardIdx === total - 1);
+
+    document.querySelectorAll('.flashcard-sidebar .card-list-item').forEach((el, i) => {
+      el.classList.toggle('active', i === flashcardIdx);
+    });
+  }
+
+  function selectFlashcard(idx) {
+    flashcardIdx = idx;
+    renderFlashcard();
+  }
+
+  function navigateFlashcard(dir) {
+    const next = flashcardIdx + dir;
+    if (next >= 0 && next < flashcardData.length) {
+      flashcardIdx = next;
+      renderFlashcard();
+    }
+  }
+
+  // Initialize flashcard on page load
+  renderFlashcard();
+  captureSnapshot();
+
+  /* ─── Highlight add / delete ───────────────────── */
+  function addHighlight() {
+    var list = document.getElementById('highlightsList');
+    var addBtn = list.querySelector('.add-row');
+    var item = document.createElement('div');
+    item.className = 'highlight-item';
+    item.innerHTML = '<span class="hl-grip">⋮⋮</span>' +
+      '<div class="hl-inputs">' +
+      '<input class="form-input hl-name" placeholder="别名" oninput="markDirty()">' +
+      '<input class="form-input hl-content" placeholder="原文摘录…" oninput="markDirty()">' +
+      '</div>' +
+      '<button class="hl-delete" onclick="deleteHighlight(this)" title="删除">×</button>';
+    list.insertBefore(item, addBtn);
+    markDirty();
+    // Update flashcard data
+    flashcardData.push({ title: '新亮点', source: '亮点', content: '' });
+  }
+
+  function deleteHighlight(el) {
+    var item = el.closest('.highlight-item');
+    var list = document.getElementById('highlightsList');
+    var items = list.querySelectorAll('.highlight-item');
+    var idx = Array.prototype.indexOf.call(items, item);
+    item.remove();
+    markDirty();
+    // Remove from flashcard data (index 0 is Summary, highlights start at 1)
+    if (idx >= 0) flashcardData.splice(idx + 1, 1);
+    if (flashcardIdx >= flashcardData.length) flashcardIdx = Math.max(0, flashcardData.length - 1);
+    if (currentScreen === 'flashcard') renderFlashcard();
+  }
+
+  /* ─── Tag add / delete ─────────────────────────── */
+  function addTag() {
+    var row = document.getElementById('tagRow');
+    var addBtn = row.querySelector('.add-row');
+    var chip = document.createElement('span');
+    chip.className = 'tag-chip';
+    chip.innerHTML = '新标签<button class="tag-delete" onclick="deleteTag(this)" title="删除">×</button>';
+    row.insertBefore(chip, addBtn);
+    markDirty();
+  }
+
+  function deleteTag(el) {
+    el.closest('.tag-chip').remove();
+    markDirty();
+  }
+
+  /* ─── Library Shelf ────────────────────────────── */
+  let selectedLibPath = null;
+  let pendingScreen = null;
+
+  function selectLibraryItem(row, evt) {
+    document.querySelectorAll('.library-row').forEach(r => r.classList.remove('selected'));
+    row.classList.add('selected');
+    selectedLibPath = row.dataset.path;
+
+    // Update preview
+    const name = row.querySelector('.row-name').textContent;
+    const folder = row.querySelector('.row-folder').textContent;
+    const date = row.querySelector('.row-date').textContent;
+    const preview = document.getElementById('libPreview');
+    preview.querySelector('.preview-name').textContent = name;
+    preview.querySelector('.preview-meta').innerHTML =
+      '<span>文件夹：' + folder + '</span><br><span>更新：' + date + '</span>';
+    preview.querySelector('.preview-summary').textContent =
+      name === 'Moonlight Ticket' ? '月光夜车票根与少年时代约定。Summary 记录初始灵感——一张单程票、一个陌生人、半只橘子。' :
+      name === '冬夜炉火' ? '雪夜客栈偶遇与一碗热汤。' :
+      name === '蝉鸣车站' ? '夏日午后无人站台的告别。' :
+      name === '海港凌晨' ? '渔港黎明时分的汽笛与雾。' :
+      '二手书堆中发现的手写信。';
+
+    document.getElementById('libActions').style.display = 'flex';
+  }
+
+  function updateSelection() {
+    const checked = document.querySelectorAll('#libraryList input[type="checkbox"]:checked').length;
+    document.getElementById('libFooterCount').textContent = '5 项 · 已选 ' + checked + ' 项';
+    document.getElementById('bulkTools').style.display = checked >= 2 ? 'flex' : 'none';
+  }
+
+  function filterLibrary() {
+    const q = document.getElementById('libSearch').value.toLowerCase();
+    let count = 0;
+    document.querySelectorAll('#libraryList .library-row').forEach(row => {
+      const name = row.querySelector('.row-name').textContent.toLowerCase();
+      const match = !q || name.includes(q);
+      row.style.display = match ? '' : 'none';
+      if (match) count++;
+    });
+    document.getElementById('libCount').textContent = count + ' 个结果';
+  }
+
+  function sortLibrary() {
+    var sort = document.getElementById('libSort').value;
+    document.getElementById('libCount').textContent = '5 个结果 · ' +
+      (sort === 'updated_desc' ? '最近更新' : sort === 'created_desc' ? '最近创建' : '名称 A–Z');
+  }
+
+  /* ─── Dirty-state modal ────────────────────────── */
+  function initModal() {
+    document.getElementById('slipContinue').addEventListener('click', function() {
+      document.getElementById('dirtyModal').classList.add('hidden');
+    });
+    document.getElementById('slipSaveGo').addEventListener('click', function() {
+      doSave();
+      document.getElementById('dirtyModal').classList.add('hidden');
+      if (pendingScreen) { var s = pendingScreen; pendingScreen = null; doSwitchScreen(s); }
+    });
+    document.getElementById('slipDiscard').addEventListener('click', function() {
+      restoreFromSnapshot();
+      document.getElementById('dirtyModal').classList.add('hidden');
+      if (pendingScreen) { var s = pendingScreen; pendingScreen = null; doSwitchScreen(s); }
+    });
+  }
+
+  initModal();
+</script>
+
+</body>
+</html>
