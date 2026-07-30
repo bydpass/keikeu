@@ -53,7 +53,7 @@ function installBridge({
   });
 }
 
-describe("CP6 Paper slice", () => {
+describe("Road v0.5 Paper Desk", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     vi.spyOn(window, "confirm").mockReturnValue(true);
@@ -148,8 +148,35 @@ describe("CP6 Paper slice", () => {
       highlights: [{ display_name: "Breath", content: "A held breath." }],
       tags: ["rain", " station"],
     });
-    expect(wrapper.text()).toContain("Paper 已保存");
+    expect(wrapper.text()).toContain("已保存至 Markdown");
     expect(wrapper.text()).toContain("First summary");
+    wrapper.unmount();
+  });
+
+  it("makes the four editable regions obvious and keeps the original draft locked", async () => {
+    installBridge({
+      draft: paper({
+        path: "cache/K-20260725-001.md",
+        display_name: "Night Bus",
+        initial_summary: "Frozen first draft",
+        summary: "Saved summary",
+        tags: ["rain"],
+      }),
+    });
+    const wrapper = mount(PaperView, { props: { runtime } });
+    await flushPromises();
+
+    expect(wrapper.find('[name="code"]').exists()).toBe(false);
+    expect(wrapper.get('[name="display_name"]').element.readOnly).toBe(false);
+    expect(wrapper.get('[name="summary"]').element.readOnly).toBe(false);
+    expect(wrapper.get('[name="tags"]').element.readOnly).toBe(false);
+    expect(wrapper.text()).toContain("Highlights");
+    expect(wrapper.get("details.initial-copy").attributes("open")).toBeUndefined();
+    expect(wrapper.get("details.initial-copy summary").text()).toContain("归档只读");
+    expect(wrapper.text()).toContain("已保存至 Markdown");
+
+    await wrapper.get('[name="summary"]').setValue("Unsaved summary");
+    expect(wrapper.get(".paper-save-state").text()).toBe("未保存");
     wrapper.unmount();
   });
 
@@ -184,6 +211,37 @@ describe("CP6 Paper slice", () => {
     await wrapper.get(".paper-editor").trigger("submit");
     await flushPromises();
 
+    const saveCall = bridgeRequest.mock.calls.find(([method]) => method === "paper.save");
+    expect(saveCall[1].highlights).toEqual([
+      { display_name: "Second", content: "Two" },
+      { display_name: "First", content: "One" },
+    ]);
+    wrapper.unmount();
+  });
+
+  it("reorders Highlights with the native drag handle", async () => {
+    const stored = paper({
+      path: "cache/K-20260725-003.md",
+      summary: "Saved summary",
+      highlights: [
+        { display_name: "First", content: "One" },
+        { display_name: "Second", content: "Two" },
+      ],
+    });
+    installBridge({ draft: stored, saved: stored });
+    const wrapper = mount(PaperView, { props: { runtime } });
+    await flushPromises();
+
+    const dataTransfer = {
+      effectAllowed: "",
+      setData: vi.fn(),
+    };
+    await wrapper.findAll(".highlight-grip")[0].trigger("dragstart", { dataTransfer });
+    await wrapper.findAll(".paper-highlights li")[1].trigger("drop");
+    await wrapper.get(".paper-editor").trigger("submit");
+    await flushPromises();
+
+    expect(dataTransfer.setData).toHaveBeenCalledWith("text/plain", expect.any(String));
     const saveCall = bridgeRequest.mock.calls.find(([method]) => method === "paper.save");
     expect(saveCall[1].highlights).toEqual([
       { display_name: "Second", content: "Two" },

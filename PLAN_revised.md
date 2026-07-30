@@ -1,6 +1,6 @@
 # Road v0.5：Quiet Desk UI Reform and Routine Set
 
-> 状态：**CP0 PASSED · COMMIT PENDING**
+> 状态：**CP1 PASSED BY ADVANCE YOLO · COMMIT PENDING**
 >
 > 目标分支：`road_v05_ui_reform_and_routine_set`
 >
@@ -243,7 +243,7 @@ CP0 record — 2026-07-29:
 - active authority map 已接入本 Planbook，v0.4 SPEC 继续约束当前 runtime。
 - JavaScript 与 Rust dialog plugin 均精确锁定为 `2.7.2`；实际类型声明确认 `confirm()`、`okLabel` 与 `cancelLabel` 可用。
 - documentation check、48 个 Vitest、Vite production build、10 个 Rust tests 与 `git diff --check` 通过。
-- 自动检查与 routine 开发者逐段验收已通过；开发者于 2026-07-29 明确通过 CP0。首次真实使用与至多 1 次修正保留为 CP1 入口门禁。
+- 自动检查与 routine 开发者逐段验收已通过；开发者于 2026-07-29 明确通过 CP0，并由 `aic` 提交为 `11c2149`。
 
 ### CP1 · Paper Desk
 
@@ -264,6 +264,14 @@ Exit gate:
 - 用户能在 5 秒内指出可编辑区域。
 - 鼠标和键盘可完成保存前的全部必要操作，排序除外。
 - focused Vitest 与默认、最小尺寸截图通过。
+
+CP1 record — 2026-07-29:
+
+- `PaperView` 直接复用现有 DTO 与保存流，改为名称、Summary、Highlights、Tags 四个横线式编辑区；系统编号改为只读 metadata，原始草稿默认折叠且不可编辑。
+- Highlights 使用原生 drag/drop 把手；新增、删除、上移、下移继续提供鼠标与键盘路径，未增加依赖或第二套标签状态。
+- focused Vitest `13`、全量 Vitest `50` 与 Vite production build 通过；真实指针拖动把前两条 Highlight 成功换位，保存后 baseline 状态回到「已保存至 Markdown」。
+- 合成 DTO 浏览器 QA 在 [`1220×780`](docs/acceptance/road-v0-5/cp1-paper-1220x780.png) 与 [`920×680`](docs/acceptance/road-v0-5/cp1-paper-920x680.png) 无横向溢出或裁字；键盘 focus probe 确认字段获得 `3px solid` accent outline，editable hover 另有明确底线反馈。最小窗口将边注移到编辑区之后。
+- CP1 不依赖桌面 API，因此未运行 Tauri smoke；真实 Vault、真实 Home 与作者内容未参与。开发者已事先声明 CP1 YOLO，exit gate 据此通过。
 
 ### CP2 · Baseline and departure protection
 

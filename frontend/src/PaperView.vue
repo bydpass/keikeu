@@ -40,11 +40,18 @@ const actionError = ref(null);
 const startupError = ref(null);
 const deletePending = ref(false);
 const enteringWorkspace = ref(false);
+const draggedHighlightKey = ref(null);
 
 const isBusy = computed(() => busyAction.value !== "");
 const isDirty = computed(
   () => paper.value !== null && serializeForm(form.value) !== savedForm.value,
 );
+const saveStateLabel = computed(() => {
+  if (isDirty.value) {
+    return "未保存";
+  }
+  return paper.value?.path ? "已保存至 Markdown" : "尚未写入 Markdown";
+});
 
 function blankForm() {
   return {
@@ -253,6 +260,30 @@ function moveHighlight(index, offset) {
   form.value.highlights.splice(destination, 0, item);
 }
 
+function startHighlightDrag(event, key) {
+  if (isBusy.value) {
+    event.preventDefault();
+    return;
+  }
+  draggedHighlightKey.value = key;
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", String(key));
+  }
+}
+
+function dropHighlight(targetIndex) {
+  const sourceIndex = form.value.highlights.findIndex(
+    ({ key }) => key === draggedHighlightKey.value,
+  );
+  draggedHighlightKey.value = null;
+  if (sourceIndex < 0 || sourceIndex === targetIndex) {
+    return;
+  }
+  const [item] = form.value.highlights.splice(sourceIndex, 1);
+  form.value.highlights.splice(targetIndex, 0, item);
+}
+
 function removeHighlight(index) {
   form.value.highlights.splice(index, 1);
 }
@@ -293,7 +324,7 @@ async function savePaper() {
       tags: form.value.tags.split(","),
     });
     applyPaper(stored);
-    notice.value = "Paper 已保存。";
+    notice.value = "已保存至 Markdown。";
     await refreshEntriesAfterMutation();
   } catch (error) {
     handleError(error, "无法保存 Paper");
@@ -481,46 +512,67 @@ onUnmounted(() => {
     <main class="paper-workspace">
       <header class="paper-workspace-header">
         <div>
-          <p class="paper-eyebrow">{{ paper?.path ? "编辑 Paper" : "新 Paper" }}</p>
+          <p class="paper-eyebrow">Paper Desk</p>
           <h2>{{ form.displayName || paper?.code }}</h2>
+          <p class="paper-code-line">{{ paper?.code }}</p>
         </div>
-        <span :class="{ dirty: isDirty }">{{ isDirty ? "尚未保存" : "磁盘状态已同步" }}</span>
+        <span class="paper-save-state" :class="{ dirty: isDirty }">
+          {{ saveStateLabel }}
+        </span>
       </header>
 
       <div class="paper-stage">
         <form class="paper-editor" @submit.prevent="savePaper">
-          <label>
-            <span>系统编号</span>
-            <input :value="paper?.code" name="code" readonly>
+          <label class="paper-field">
+            <span>名称</span>
+            <input
+              v-model="form.displayName"
+              name="display_name"
+              maxlength="120"
+              placeholder="给这张 Paper 一个名称"
+            >
           </label>
-          <label>
-            <span>Paper 名称（可选）</span>
-            <input v-model="form.displayName" name="display_name" maxlength="120">
-          </label>
-          <label>
+
+          <label class="paper-field">
             <span>Summary <b aria-hidden="true">*</b></span>
-            <textarea v-model="form.summary" name="summary" rows="5" required />
+            <textarea
+              v-model="form.summary"
+              name="summary"
+              rows="6"
+              required
+              placeholder="整理这张 Paper 的故事整体"
+            />
           </label>
 
-          <section class="initial-copy" aria-labelledby="initial-copy-title">
-            <h3 id="initial-copy-title">初稿副本（只读）</h3>
-            <p>{{ paper?.initial_summary || "初稿副本会在首次保存后冻结，只读保留。" }}</p>
-          </section>
-
-          <fieldset class="paper-highlights">
-            <legend>Highlights（可选）</legend>
-            <p>顺序会成为 Flashcard 顺序；按钮路径可由键盘完成。</p>
+          <fieldset class="paper-highlights paper-field">
+            <legend>Highlights</legend>
+            <p>每条会成为一张 Flashcard。可拖动把手排序，键盘仍可使用上移和下移。</p>
             <ol>
-              <li v-for="(highlight, index) in form.highlights" :key="highlight.key">
-                <span class="highlight-number">{{ String(index + 1).padStart(2, "0") }}</span>
+              <li
+                v-for="(highlight, index) in form.highlights"
+                :key="highlight.key"
+                :class="{ dragging: draggedHighlightKey === highlight.key }"
+                @dragover.prevent
+                @drop.prevent="dropHighlight(index)"
+              >
+                <span
+                  class="highlight-grip"
+                  :draggable="!isBusy"
+                  :title="`拖动 Highlight ${index + 1} 排序`"
+                  aria-hidden="true"
+                  @dragstart="startHighlightDrag($event, highlight.key)"
+                  @dragend="draggedHighlightKey = null"
+                >
+                  ⋮⋮
+                </span>
                 <div class="highlight-fields">
                   <label>
-                    <span>Highlight {{ index + 1 }} 命名（可选）</span>
-                    <input v-model="highlight.displayName">
+                    <span>Highlight {{ index + 1 }} 名称</span>
+                    <input v-model="highlight.displayName" placeholder="可选名称">
                   </label>
                   <label>
                     <span>Highlight {{ index + 1 }} 内容</span>
-                    <textarea v-model="highlight.content" rows="3" />
+                    <textarea v-model="highlight.content" rows="2" placeholder="一次只记一个亮点" />
                   </label>
                 </div>
                 <div class="highlight-actions" :aria-label="`Highlight ${index + 1} 排序`">
@@ -543,9 +595,13 @@ onUnmounted(() => {
             <button type="button" :disabled="isBusy" @click="addHighlight">+ 添加 Highlight</button>
           </fieldset>
 
-          <label>
-            <span>Tags（用逗号分隔）</span>
-            <input v-model="form.tags" name="tags">
+          <label class="paper-field">
+            <span>Tags</span>
+            <input
+              v-model="form.tags"
+              name="tags"
+              placeholder="用逗号分隔，例如：旅途, 月光"
+            >
           </label>
 
           <section v-if="actionError" class="paper-error" aria-live="assertive">
@@ -568,7 +624,7 @@ onUnmounted(() => {
 
           <div class="paper-actions">
             <button class="primary-action" type="submit" :disabled="isBusy">
-              {{ busyAction === "save" ? "正在保存…" : "保存 · ⌘S" }}
+              {{ busyAction === "save" ? "正在保存…" : "保存  ⌘S" }}
             </button>
             <button
               type="button"
@@ -597,6 +653,11 @@ onUnmounted(() => {
               </button>
             </div>
           </section>
+
+          <details class="initial-copy">
+            <summary>原始草稿 · 归档只读</summary>
+            <p>{{ paper?.initial_summary || "首次保存后，原始草稿会锁定在这里。" }}</p>
+          </details>
         </form>
 
         <aside class="paper-margin" aria-label="Paper 边注">
@@ -824,7 +885,7 @@ button:disabled {
 
 .paper-workspace-header {
   display: flex;
-  align-items: end;
+  align-items: start;
   justify-content: space-between;
   gap: 20px;
   padding-bottom: 18px;
@@ -833,6 +894,26 @@ button:disabled {
 
 .paper-workspace-header h2 {
   font-size: clamp(2rem, 4vw, 3.2rem);
+}
+
+.paper-code-line {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font: 0.72rem ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.paper-save-state {
+  margin-top: 4px;
+  padding: 3px 7px;
+  color: var(--success);
+  background: var(--soft);
+  font: 0.7rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: nowrap;
+}
+
+.paper-save-state.dirty {
+  color: var(--signal);
+  background: var(--danger-soft);
 }
 
 .paper-workspace-header > span {
@@ -853,14 +934,11 @@ button:disabled {
 
 .paper-editor {
   display: grid;
-  gap: 22px;
-  padding: 28px;
-  border: 1px solid var(--rule);
-  border-top: 3px solid var(--signal);
-  background: var(--paper);
+  gap: 28px;
+  padding: 8px 0;
 }
 
-.paper-editor > label,
+.paper-field,
 .highlight-fields label {
   display: grid;
   gap: 7px;
@@ -868,13 +946,23 @@ button:disabled {
   font-weight: 650;
 }
 
+.paper-field > span,
+.paper-highlights > legend {
+  color: var(--accent);
+  font: 700 0.72rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 input,
 textarea {
   width: 100%;
-  border: 1px solid var(--rule);
-  padding: 10px 11px;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  border-left: 2px solid transparent;
+  padding: 9px 5px;
   color: var(--ink);
-  background: var(--field);
+  background: transparent;
 }
 
 textarea {
@@ -882,26 +970,43 @@ textarea {
   line-height: 1.55;
 }
 
-input[readonly] {
+input::placeholder,
+textarea::placeholder {
   color: var(--muted);
-  background: var(--soft);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  opacity: 0.72;
+}
+
+input:hover,
+textarea:hover {
+  border-bottom-color: var(--signal);
+}
+
+input:focus,
+textarea:focus {
+  border-bottom-color: var(--accent);
+  border-left-color: var(--accent);
 }
 
 .initial-copy {
-  padding: 16px;
-  border-left: 3px solid var(--accent);
+  padding-top: 6px;
+  border-top: 1px solid var(--rule);
+  color: var(--muted);
+}
+
+.initial-copy summary {
+  padding: 8px 4px;
+  cursor: pointer;
+  font: 0.72rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.04em;
+}
+
+.initial-copy p {
+  margin: 4px 0 0;
+  padding: 12px 14px;
+  border-left: 2px solid var(--rule);
   background: var(--soft);
-}
-
-.initial-copy h3,
-.initial-copy p {
-  margin: 0;
-}
-
-.initial-copy p {
-  margin-top: 8px;
-  line-height: 1.55;
+  font-size: 0.8rem;
+  line-height: 1.7;
   white-space: pre-wrap;
 }
 
@@ -928,18 +1033,33 @@ input[readonly] {
 
 .paper-highlights li {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr);
+  grid-template-columns: 28px minmax(0, 1fr);
   gap: 12px;
-  padding: 14px 0;
+  padding: 10px 0 14px;
   border-top: 1px solid var(--rule);
 }
 
-.highlight-number {
-  font: 0.74rem ui-monospace, SFMono-Regular, Menlo, monospace;
+.paper-highlights li.dragging {
+  opacity: 0.48;
+}
+
+.highlight-grip {
+  align-self: start;
+  border: 0;
+  padding: 8px 2px;
+  color: var(--muted);
+  background: transparent;
+  cursor: grab;
+  font: 0.72rem ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.highlight-grip:active {
+  cursor: grabbing;
 }
 
 .highlight-fields {
   display: grid;
+  grid-template-columns: minmax(110px, 0.35fr) minmax(0, 1fr);
   gap: 12px;
 }
 
@@ -954,6 +1074,16 @@ input[readonly] {
   padding: 5px 8px;
   border-color: var(--rule);
   font-size: 0.72rem;
+}
+
+.paper-highlights > button {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px dashed var(--rule);
+  padding: 8px 4px;
+  color: var(--muted);
+  text-align: left;
+  background: transparent;
 }
 
 .paper-error,
@@ -1035,7 +1165,10 @@ input[readonly] {
   }
 
   .paper-margin {
-    order: -1;
+    padding-top: 16px;
+    padding-left: 0;
+    border-top: 1px solid var(--rule);
+    border-left: 0;
   }
 }
 
@@ -1057,6 +1190,10 @@ input[readonly] {
   .paper-workspace {
     grid-column: 2;
     padding: 24px 18px 48px;
+  }
+
+  .highlight-fields {
+    grid-template-columns: 1fr;
   }
 }
 
