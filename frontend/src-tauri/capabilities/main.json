@@ -1,7 +1,12 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "main-window",
-  "description": "The main window can call only registered keikeu Rust commands.",
+  "description": "The main window can call registered keikeu commands and the reviewed close guard APIs.",
   "windows": ["main"],
-  "permissions": []
+  "permissions": [
+    "core:event:allow-listen",
+    "core:event:allow-unlisten",
+    "core:window:allow-destroy",
+    "dialog:allow-message"
+  ]
 }

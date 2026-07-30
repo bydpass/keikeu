@@ -1,6 +1,6 @@
 # Road v0.5：Quiet Desk UI Reform and Routine Set
 
-> 状态：**CP1 PASSED BY ADVANCE YOLO · COMMIT PENDING**
+> 状态：**CP2 PASSED BY ADVANCE YOLO · COMMIT PENDING**
 >
 > 目标分支：`road_v05_ui_reform_and_routine_set`
 >
@@ -215,7 +215,7 @@ Deliverables:
 Dialog binding lock:
 
 - JavaScript binding 精确锁定为 `@tauri-apps/plugin-dialog@2.7.2`，与 Rust `tauri-plugin-dialog = "=2.7.2"` 配对。
-- CP2 使用异步 `confirm()` 与自定义 `okLabel`、`cancelLabel`；Tauri capability 只增加稳定权限 `dialog:allow-message`。
+- CP2 使用异步 `confirm()` 与自定义 `okLabel`、`cancelLabel`；Tauri capability 只增加经当前生成 schema 核对的 `dialog:allow-message`、event listen/unlisten 与 window destroy 权限。
 - CP0 不改 Vue caller 或 capability。`window.confirm` 只保留为 CP2 的非 Tauri 浏览器 fallback。
 
 Routine 的强制 checkpoint：
@@ -288,6 +288,15 @@ Exit gate:
 - 继续编辑不改变内容或当前页面。
 - 保存失败不清空输入。
 - 没有 mutation 自动重试。
+
+CP2 record — 2026-07-29:
+
+- `PaperView` 以完整表单 clone 保存最近成功 baseline；导航、Paper 新建/切换、Vault 切换与窗口关闭全部进入同一个异步 `requestDeparture()`。已保存 Paper 的 Vault picker 取消路径保留当前 path；未保存 Draft 不开放直接 Vault 切换。
+- 「继续编辑」不改表单或页面；「放弃更改」先恢复最近成功 baseline，再执行原动作。保存失败与 `commit_unknown` 不更新 baseline，也不重试 `paper.save`。
+- Tauri 使用原生 `confirm()`，按钮精确为「放弃更改」与「继续编辑」；浏览器只保留 `window.confirm` fallback。窗口关闭先同步阻止，再由同一 guard 决定是否 `destroy()`。
+- Markdown 已耐久写入后，偶发索引刷新失败不再被误报为 Paper 保存失败；服务只尝试一次索引刷新，Markdown 继续作为权威。
+- focused Vitest `33`、全量 Vitest `57`、Python `235`、Rust `10`、Vite production build 与 compileall 通过。合成 Tauri smoke 验证导航和关闭窗口两条原生路径：继续编辑保留 dirty 内容，放弃更改允许导航或销毁窗口。
+- [`1220×780`](docs/acceptance/road-v0-5/cp2-departure-1220x780.png) 与 [`920×680`](docs/acceptance/road-v0-5/cp2-departure-920x680.png) Tauri 实际窗口无横向溢出或裁字；测试未读取或改写真实 Vault、真实配置或作者内容。开发者已事先声明 CP2 YOLO，exit gate 据此通过。
 
 ### CP3 · Flashcard synchronization
 

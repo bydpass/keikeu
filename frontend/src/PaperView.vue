@@ -1,7 +1,11 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from "vue";
 
-import { bridgeRequest } from "./bridge.js";
+import {
+  bridgeRequest,
+  confirmDiscardChanges,
+  registerWindowCloseGuard,
+} from "./bridge.js";
 
 const props = defineProps({
   runtime: {
@@ -28,13 +32,15 @@ const emit = defineEmits([
 
 let highlightKey = 0;
 let dailyTimer;
+let unlistenClose;
 const screen = ref("loading");
 const startup = ref(null);
 const entries = ref([]);
 const paper = ref(null);
 const form = ref(blankForm());
-const savedForm = ref("");
+const baselineForm = ref(blankForm());
 const busyAction = ref("");
+const departurePending = ref(false);
 const notice = ref("");
 const actionError = ref(null);
 const startupError = ref(null);
@@ -42,9 +48,13 @@ const deletePending = ref(false);
 const enteringWorkspace = ref(false);
 const draggedHighlightKey = ref(null);
 
-const isBusy = computed(() => busyAction.value !== "");
+const isBusy = computed(
+  () => busyAction.value !== "" || departurePending.value,
+);
 const isDirty = computed(
-  () => paper.value !== null && serializeForm(form.value) !== savedForm.value,
+  () =>
+    paper.value !== null &&
+    serializeForm(form.value) !== serializeForm(baselineForm.value),
 );
 const saveStateLabel = computed(() => {
   if (isDirty.value) {
@@ -83,6 +93,15 @@ function serializeForm(value) {
   });
 }
 
+function cloneForm(value) {
+  return {
+    displayName: value.displayName,
+    summary: value.summary,
+    tags: value.tags,
+    highlights: value.highlights.map((highlight) => ({ ...highlight })),
+  };
+}
+
 function applyPaper(nextPaper) {
   const nextForm = {
     displayName: nextPaper.display_name ?? "",
@@ -92,9 +111,13 @@ function applyPaper(nextPaper) {
   };
   paper.value = nextPaper;
   form.value = nextForm;
-  savedForm.value = serializeForm(nextForm);
+  baselineForm.value = cloneForm(nextForm);
   actionError.value = null;
   deletePending.value = false;
+}
+
+function restoreBaseline() {
+  form.value = cloneForm(baselineForm.value);
 }
 
 function normalizeError(error) {
@@ -195,47 +218,66 @@ async function loadStartup() {
   }
 }
 
-function confirmDiscard() {
-  return (
-    !isDirty.value ||
-    window.confirm("当前未保存的更改将丢失。是否继续？")
-  );
+async function requestDeparture(action = null) {
+  if (isBusy.value) {
+    return false;
+  }
+  departurePending.value = true;
+  try {
+    if (isDirty.value) {
+      let discard;
+      try {
+        discard = await confirmDiscardChanges();
+      } catch (error) {
+        handleError(error, "无法确认是否放弃更改");
+        return false;
+      }
+      if (!discard) {
+        return false;
+      }
+      restoreBaseline();
+    }
+    await action?.();
+    return true;
+  } finally {
+    departurePending.value = false;
+  }
 }
 
 function openFlashcard() {
-  if (isBusy.value || !confirmDiscard()) {
-    return;
-  }
-  emit("open-flashcard", paper.value?.path ?? null);
+  return requestDeparture(() => {
+    emit("open-flashcard", paper.value?.path ?? null);
+  });
 }
 
 function openLibrary() {
-  if (isBusy.value || !confirmDiscard()) {
-    return;
-  }
-  emit("open-library");
+  return requestDeparture(() => {
+    emit("open-library");
+  });
 }
 
-async function createDraft() {
-  if (isBusy.value || !confirmDiscard()) {
-    return;
-  }
-  busyAction.value = "draft";
-  notice.value = "";
-  try {
-    const draft = await bridgeRequest("paper.create_draft", {});
-    applyPaper(draft);
-  } catch (error) {
-    handleError(error, "无法新建 Paper");
-  } finally {
-    busyAction.value = "";
-  }
+function openVault() {
+  return requestDeparture(() => {
+    emit("open-vault", null, paper.value.path);
+  });
 }
 
-async function openPaper(path, { discard = false } = {}) {
-  if (isBusy.value || (!discard && !confirmDiscard())) {
-    return;
-  }
+function createDraft() {
+  return requestDeparture(async () => {
+    busyAction.value = "draft";
+    notice.value = "";
+    try {
+      const draft = await bridgeRequest("paper.create_draft", {});
+      applyPaper(draft);
+    } catch (error) {
+      handleError(error, "无法新建 Paper");
+    } finally {
+      busyAction.value = "";
+    }
+  });
+}
+
+async function loadPaper(path) {
   busyAction.value = "open";
   notice.value = "";
   try {
@@ -245,6 +287,10 @@ async function openPaper(path, { discard = false } = {}) {
   } finally {
     busyAction.value = "";
   }
+}
+
+function openPaper(path) {
+  return requestDeparture(() => loadPaper(path));
 }
 
 function addHighlight() {
@@ -335,7 +381,8 @@ async function savePaper() {
 
 async function reopenCurrent() {
   if (paper.value?.path) {
-    await openPaper(paper.value.path, { discard: true });
+    restoreBaseline();
+    await loadPaper(paper.value.path);
   }
 }
 
@@ -405,14 +452,22 @@ function onWindowKeydown(event) {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener("keydown", onWindowKeydown);
+  try {
+    unlistenClose = await registerWindowCloseGuard(requestDeparture);
+  } catch (error) {
+    screen.value = "error";
+    handleError(error, "无法启用窗口关闭保护", startupError);
+    return;
+  }
   loadStartup();
 });
 
 onUnmounted(() => {
   window.clearTimeout(dailyTimer);
   window.removeEventListener("keydown", onWindowKeydown);
+  unlistenClose?.();
 });
 </script>
 
@@ -488,6 +543,15 @@ onUnmounted(() => {
       </header>
       <button class="new-paper" type="button" :disabled="isBusy" @click="createDraft">
         + 新建 Paper
+      </button>
+      <button
+        class="vault-switch"
+        type="button"
+        :disabled="isBusy || paper?.path == null"
+        title="保存 Paper 后可切换 Vault"
+        @click="openVault"
+      >
+        切换 Vault
       </button>
       <section>
         <h2>最近的 Paper <span>{{ entries.length }}</span></h2>

@@ -82,10 +82,13 @@ function openLibrary() {
   destination.value = "library";
 }
 
-function openVault(startup = null) {
+function openVault(startup = null, returnPaperPath = undefined) {
   vaultReturnDestination.value = destination.value;
   vaultCanCancel.value = startup === null;
   vaultStartup.value = startup;
+  if (returnPaperPath !== undefined) {
+    paperPath.value = returnPaperPath;
+  }
   destination.value = "vault";
 }
 

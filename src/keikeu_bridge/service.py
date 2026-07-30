@@ -702,7 +702,11 @@ class KeikeuService:
             state.path = path.relative_to(vault)
             state.paper = stored
             state.source_bytes = source_bytes
-            rebuild_index(vault)
+            try:
+                rebuild_index(vault)
+            except (OSError, ValueError, UnicodeError):
+                # Markdown is canonical; a disposable index cannot undo this save.
+                pass
             return self._paper_dto(request.edit_token, state)
 
     def paper_soft_delete(self, edit_token: str) -> OperationReportDto:

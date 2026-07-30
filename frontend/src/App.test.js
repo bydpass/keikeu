@@ -6,16 +6,20 @@ import PrototypeView from "./PrototypeView.vue";
 import {
   bridgeRequest,
   chooseVaultDirectory,
+  confirmDiscardChanges,
   getRuntimeStatus,
   openSystemTarget,
+  registerWindowCloseGuard,
   restartSidecar,
 } from "./bridge.js";
 
 vi.mock("./bridge.js", () => ({
   bridgeRequest: vi.fn(),
   chooseVaultDirectory: vi.fn(),
+  confirmDiscardChanges: vi.fn(),
   getRuntimeStatus: vi.fn(),
   openSystemTarget: vi.fn(),
+  registerWindowCloseGuard: vi.fn(),
   restartSidecar: vi.fn(),
 }));
 
@@ -43,6 +47,8 @@ function buttonByText(wrapper, text) {
 describe("desktop shell gates", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    confirmDiscardChanges.mockResolvedValue(true);
+    registerWindowCloseGuard.mockResolvedValue(vi.fn());
     window.history.replaceState({}, "", "/");
     bridgeRequest.mockImplementation(async (method) => {
       if (method === "startup.load") {
@@ -226,6 +232,55 @@ describe("desktop shell gates", () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain("Folder-aware retrieval");
+    wrapper.unmount();
+  });
+
+  it("returns to the same saved Paper after canceling a Vault switch", async () => {
+    const stored = {
+      ...draftPaper,
+      path: "cache/K-20260725-001.md",
+      summary: "Saved Paper context",
+    };
+    bridgeRequest.mockImplementation(async (method, params) => {
+      if (method === "startup.load") {
+        return { state: "ready", show_daily_card: false };
+      }
+      if (method === "library.query") {
+        return {
+          scope: "all",
+          entries: [],
+          folders: [],
+          trash_folders: [],
+          trash_count: 0,
+          errors: [],
+        };
+      }
+      if (method === "paper.create_draft" || method === "paper.open") {
+        return stored;
+      }
+      throw new Error(`Unexpected method: ${method} ${JSON.stringify(params)}`);
+    });
+    getRuntimeStatus.mockResolvedValue({
+      state: "ready",
+      app_version: "0.1.0",
+      core_version: "paper-v3/index-v3",
+    });
+
+    const wrapper = mount(App);
+    await flushPromises();
+    await buttonByText(wrapper, "切换 Vault").trigger("click");
+    await flushPromises();
+    expect(wrapper.text()).toContain("打开或创建 Vault");
+
+    await buttonByText(wrapper, "取消并返回").trigger("click");
+    await flushPromises();
+
+    expect(bridgeRequest).toHaveBeenCalledWith("paper.open", {
+      path: stored.path,
+    });
+    expect(wrapper.get('[name="summary"]').element.value).toBe(
+      "Saved Paper context",
+    );
     wrapper.unmount();
   });
 

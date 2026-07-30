@@ -137,6 +137,30 @@ def test_paper_save_freezes_initial_summary_and_preserves_unknown_frontmatter(
     }
 
 
+def test_paper_save_does_not_report_index_refresh_failure_as_save_failure(
+    service_and_vault,
+    monkeypatch,
+):
+    service, vault = service_and_vault
+    refresh_attempts = 0
+
+    def fail_index_refresh(_vault: Path) -> dict[str, object]:
+        nonlocal refresh_attempts
+        refresh_attempts += 1
+        raise OSError("injected index refresh failure")
+
+    monkeypatch.setattr(
+        "keikeu_bridge.service.rebuild_index",
+        fail_index_refresh,
+    )
+
+    saved = _save_paper(service, "Durable Markdown")
+
+    assert refresh_attempts == 1
+    assert saved.summary == "Durable Markdown"
+    assert read_paper(vault / str(saved.path)).summary == "Durable Markdown"
+
+
 def test_paper_save_returns_stable_error_for_external_change(service_and_vault):
     service, vault = service_and_vault
     saved = _save_paper(service, "Original")
