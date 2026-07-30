@@ -539,7 +539,10 @@ onUnmounted(() => {
       <span class="paper-local">LOCAL</span>
     </nav>
 
-    <aside class="paper-context" aria-labelledby="paper-list-title">
+    <aside
+      class="paper-context fixed-context-rail"
+      aria-labelledby="paper-list-title"
+    >
       <header>
         <p class="paper-eyebrow">Road v0.5 · Paper</p>
         <h1 id="paper-list-title">Paper 工作台</h1>
@@ -1265,6 +1268,9 @@ textarea:focus {
   }
 
   .paper-context {
+    position: static;
+    width: auto;
+    overflow-y: visible;
     border-right: 0;
     border-bottom: 1px solid var(--rule);
   }

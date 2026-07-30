@@ -1,6 +1,6 @@
 # Road v0.5：Quiet Desk UI Reform and Routine Set
 
-> 状态：**CP6 PASSED · FOLLOW-UP CHECKPOINT AUTHORIZED BY ADVANCE YOLO**
+> 状态：**CP6 COMMITTED @ 4753d1d · CP7 PASSED BY ADVANCE YOLO · CP7 COMMIT PENDING**
 >
 > 目标分支：`road_v05_ui_reform_and_routine_set`
 >
@@ -198,6 +198,7 @@ Library 本轮不重做信息架构或文件能力。必须保持：
 | CP4 | `ui/cp4-library-context` |
 | CP5 | `ui/cp5-whole-app-visual` |
 | CP6 | `qa/cp6-dogfood-acceptance` |
+| CP7 | `ui/cp7-fixed-sidebars-no-bounce` |
 
 Commit 必须先得到明确授权，再按 `docs/RULES.md` §7 精确 stage、检查 cached diff 并调用 `aic`。最终 checkpoint 通过并 commit 后，另建 `docs/archive/snapshots/road-v0-5.html` closeout change，按 `docs/RULES.md` §8 汇总全部 CP 记录；不把该 snapshot 冒充产品验收。
 
@@ -384,7 +385,7 @@ CP6 record — 2026-07-30:
 - 独立 Agent dogfood 已完成两轮 30 分钟记录；未发现 P0/P1，Round 1 最烦的 3 件事已修复并在 Round 2 复验。
 - [`CP6 report`](docs/acceptance/road-v0-5/cp6-dogfood/report.md) 记录 candidate hash、隔离数据、页面路径、Core/迁移恢复与自动检查；后续 P2 修复让未落盘 Draft 可直接进入 Vault picker，dirty Draft 仍走同一离开保护。
 - 全局 `--rule` 从 `#d9d5ca` 加深为 `#b8b2a6`，覆盖 Paper、Flashcard、Library、Vault/迁移与 Core 状态页；当前源码 Tauri 在 `1220×780` 与 `920×680` 复验通过。
-- 开发者已明确通过 CP6；后续 checkpoint 已由 advance YOLO 授权，因此 Road 保持打开，不归档、不打 tag。
+- 开发者已明确通过 CP6；checkpoint 已由 `aic` 提交为 `4753d1d`。后续 checkpoint 已由 advance YOLO 授权，因此 Road 保持打开，不归档、不打 tag。
 
 Exit gate:
 
@@ -395,6 +396,33 @@ Exit gate:
 - 连续用半小时不烦。
 - 正常交互不会丢内容。
 - 开发者已确认 CP6 产品验收；Road 仅在后续 checkpoint 完成后才可归档或打 tag。
+
+### CP7 · Fixed sidebars and bounded scrolling
+
+Deliverables:
+
+- 所有滚动容器在顶部或底部都不产生 overscroll bounce 或 scroll chaining。
+- 所有滚动容器隐藏原生滚动条外观，但保留鼠标、触控板与键盘滚动。
+- Paper、Flashcard 与 Library 的上下文栏固定在全局栏右侧；主内容滚动时两级导航不移动。
+- Flashcard 卡片较多时，只滚动卡片列表，标题与 Paper selector 保持固定。
+- 保留 Library 现有 window scroll 保存/恢复语义，并保留既有窄屏 document flow。
+
+CP7 record — 2026-07-30:
+
+- 共享样式用原生 CSS `overscroll-behavior: none` 覆盖 root 与 nested scroll container，以 `scrollbar-width: none` 和 `::-webkit-scrollbar { display: none; }` 隐藏滚动条外观，并以单一 `.fixed-context-rail` 复用既有 `72px + 260px` 两级栏几何；未增加 JS wheel handler、依赖或新状态。
+- Paper 与 Library 继续使用 window/document 作为主滚动容器，因此 CP4 的 Library scroll-context 语义未改。Flashcard 只给卡片列表设置 bounded `overflow-y: auto`，标题与 Paper selector 不参与滚动。
+- focused Vitest `39`、全量 Vitest `64`、Python `235`、Rust `10`、Vite production build、compileall 与 sidecar build 通过。
+- 当前源码 Tauri 使用 fake `HOME`、fake `TMPDIR` 与包含 36 个 synthetic Highlights 的 Paper v3 Vault，在 `1220×780` 与 `920×680` 完成实际窗口检查：Paper/Library 主滚动位置变化时上下文栏位置不变；Flashcard 第 `37 / 37` 张可由独立列表滚动到达并打开；滚动条外观不显示，最小窗口没有水平溢出。见 [`CP7 report`](docs/acceptance/road-v0-5/cp7-fixed-sidebars/report.md)。
+- 顶/底越界探针分别钳位为 `1` 与 `0`；最终隔离 Tauri host 与 sidecar 已退出，已有开发进程未被停止；未读取或改写真实 Vault、真实配置或作者内容。
+- 开发者已事先声明 CP7 YOLO，exit gate 据此通过。CP7 尚未得到 commit 授权；Road closeout snapshot、tag 与 push 仍未执行。
+
+Exit gate:
+
+- Paper、Library 主内容滚动时，两级侧栏不移动。
+- Flashcard 长列表独立滚动，Summary 与最后一个 Highlight 都可到达。
+- 根滚动与嵌套滚动在顶/底不越界，不把滚动链传给外层。
+- 滚动条外观隐藏，鼠标、触控板与键盘滚动仍可用。
+- `1220×780` 与 `920×680` 无水平溢出，鼠标和键盘动作仍可达。
 
 ## 7. Test and evidence plan
 

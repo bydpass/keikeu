@@ -89,6 +89,8 @@ describe("CP8/CP9 Library slice", () => {
     expect(wrapper.text()).toContain("A train waits outside the city.");
     expect(wrapper.text()).toContain("2026-07-25 12:00");
     expect(wrapper.text()).not.toContain("2026-07-25T12:00:00");
+    const context = wrapper.get(".library-context");
+    expect(context.classes()).toContain("fixed-context-rail");
     wrapper.unmount();
   });
 

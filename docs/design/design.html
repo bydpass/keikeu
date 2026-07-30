@@ -45,7 +45,7 @@
     <header>
       <p class="eyebrow">Road v0.5 · Quiet Desk</p>
       <h1>不让 keikeu 变大，只让它更顺、更安静、更可信</h1>
-      <p class="status">本页定义 v0.5 全应用视觉规范；工程检查与后续 CP6 dogfood、产品验收是彼此独立的结论。</p>
+      <p class="status">本页定义 v0.5 全应用视觉规范；CP6 产品验收已完成，CP7 固定侧栏与滚动边界已通过 advance-YOLO 工程门禁，checkpoint commit 仍待单独授权。</p>
       <nav>
         <a href="../PROJECT.md">当前坐标</a>
         <a href="../../PLAN_revised.md">Road v0.5 Planbook</a>
@@ -63,7 +63,7 @@
       <p class="label">Quiet Desk layout</p>
       <div class="layout" aria-label="窄全局栏、上下文栏和弹性纸面工作区">
         <div class="global">Quiet Rail</div>
-        <div class="context"><strong>Context</strong><p>导航、scope、搜索、排序与当前选择。</p></div>
+        <div class="context"><strong>Context</strong><p>导航、scope、搜索、排序与当前选择；桌面布局固定在 Quiet Rail 右侧。</p></div>
         <div class="paper"><strong>Paper Surface</strong><p>用横线、留白和纸面层级区分可编辑、只读与恢复区域。</p><p><code>K-YYYYMMDD-NNN · local Markdown</code></p></div>
       </div>
     </section>
@@ -100,6 +100,7 @@
           <li>ink blue 只标记焦点、主动作与当前上下文；危险动作保留独立颜色和说明。</li>
           <li>visible focus、语义 HTML、可靠换行；<code>prefers-reduced-motion</code> 关闭非必要动画。</li>
           <li><code>1220×780</code> 与 <code>920×680</code> 均不得横向溢出或裁切文字。</li>
+          <li>Paper、Flashcard 与 Library 的上下文栏固定；长 Flashcard 列表独立滚动，所有滚动边界无回弹；隐藏滚动条外观但保留鼠标、触控板与键盘滚动。</li>
           <li>无渐变、玻璃、硬阴影、嵌套卡片墙或装饰性药丸。</li>
         </ul>
       </div>

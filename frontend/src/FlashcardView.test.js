@@ -77,6 +77,30 @@ describe("CP7 Flashcard slice", () => {
     wrapper.unmount();
   });
 
+  it("keeps a long card list inside the fixed context rail", async () => {
+    const longDeck = {
+      ...firstDeck,
+      cards: Array.from({ length: 36 }, (_, cardIndex) => ({
+        title: cardIndex === 0 ? "Summary" : `Highlight ${cardIndex}`,
+        content: `Card content ${cardIndex}`,
+      })),
+    };
+    bridgeRequest.mockResolvedValue(longDeck);
+    const wrapper = mount(FlashcardView, { props: { runtime } });
+    await flushPromises();
+    const context = wrapper.get(".flashcard-context");
+    const buttons = wrapper.findAll(".flashcard-list button");
+
+    expect(context.classes()).toContain("fixed-context-rail");
+    expect(buttons).toHaveLength(36);
+
+    await buttons.at(-1).trigger("click");
+
+    expect(buttons.at(-1).attributes("aria-current")).toBe("page");
+    expect(wrapper.text()).toContain("Card content 35");
+    wrapper.unmount();
+  });
+
   it("supports arrow keys and validated page jumps without leaving the deck", async () => {
     const wrapper = mount(FlashcardView, { props: { runtime } });
     await flushPromises();

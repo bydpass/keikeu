@@ -210,7 +210,10 @@ onUnmounted(() => window.removeEventListener("keydown", onWindowKeydown));
       <span class="flashcard-local">LOCAL</span>
     </nav>
 
-    <aside class="flashcard-context" aria-labelledby="flashcard-list-title">
+    <aside
+      class="flashcard-context fixed-context-rail"
+      aria-labelledby="flashcard-list-title"
+    >
       <header>
         <p class="flashcard-eyebrow">Road v0.5 · Flashcard</p>
         <h1 id="flashcard-list-title">Flashcard</h1>
@@ -441,8 +444,12 @@ button:disabled {
 }
 
 .flashcard-context {
+  display: flex;
   grid-column: 2;
   min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
   padding: 28px 20px;
   border-right: 1px solid var(--rule);
   background: var(--soft);
@@ -486,9 +493,20 @@ button:disabled {
   text-transform: uppercase;
 }
 
+.flashcard-context > nav {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
 .flashcard-list {
   display: grid;
+  min-height: 0;
+  flex: 1;
+  align-content: start;
   gap: 6px;
+  overflow-y: auto;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -680,6 +698,9 @@ button:disabled {
   }
 
   .flashcard-context {
+    position: static;
+    width: auto;
+    overflow: visible;
     border-right: 0;
     border-bottom: 1px solid var(--rule);
   }

@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
 import { flushPromises, mount } from "@vue/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -7,6 +10,8 @@ import {
   confirmDiscardChanges,
   registerWindowCloseGuard,
 } from "./bridge.js";
+
+const globalStyles = readFileSync(resolve(process.cwd(), "src/style.css"), "utf8");
 
 vi.mock("./bridge.js", () => ({
   bridgeRequest: vi.fn(),
@@ -205,6 +210,18 @@ describe("Road v0.5 Paper Desk", () => {
     expect(wrapper.text()).toContain("已保存至 Markdown");
     expect(wrapper.text()).toContain("2026-07-25 12:00");
     expect(wrapper.text()).not.toContain("2026-07-25T12:00:00");
+    const context = wrapper.get(".paper-context");
+    expect(context.classes()).toContain("fixed-context-rail");
+    expect(globalStyles).toMatch(
+      /\*\s*\{[^}]*overscroll-behavior:\s*none;/,
+    );
+    expect(globalStyles).toMatch(/\*\s*\{[^}]*scrollbar-width:\s*none;/);
+    expect(globalStyles).toMatch(
+      /\*::-webkit-scrollbar\s*\{[^}]*display:\s*none;/,
+    );
+    expect(globalStyles).toMatch(
+      /\.fixed-context-rail\s*\{[^}]*position:\s*fixed;[^}]*overflow-y:\s*auto;/,
+    );
 
     await wrapper.get('[name="summary"]').setValue("Unsaved summary");
     expect(wrapper.get(".paper-save-state").text()).toBe("未保存");

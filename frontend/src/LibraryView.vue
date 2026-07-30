@@ -677,7 +677,10 @@ onUnmounted(() => {
       <span class="library-local">LOCAL</span>
     </nav>
 
-    <aside class="library-context" aria-labelledby="library-scopes-title">
+    <aside
+      class="library-context fixed-context-rail"
+      aria-labelledby="library-scopes-title"
+    >
       <header>
         <p class="library-eyebrow">Road v0.5 · Library</p>
         <h1 id="library-scopes-title">Library</h1>
@@ -1737,6 +1740,9 @@ button:disabled {
   }
 
   .library-context {
+    position: static;
+    width: auto;
+    overflow-y: visible;
     border-right: 0;
     border-bottom: 1px solid var(--rule);
   }
