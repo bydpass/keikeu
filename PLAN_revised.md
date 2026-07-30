@@ -1,6 +1,6 @@
 # Road v0.5：Quiet Desk UI Reform and Routine Set
 
-> 状态：**CP6 COMMITTED @ 4753d1d · CP7 PASSED BY ADVANCE YOLO · CP7 COMMIT PENDING**
+> 状态：**ROAD v0.5 COMPLETE · CP7 COMMITTED @ d900953 · ARCHIVED**
 >
 > 目标分支：`road_v05_ui_reform_and_routine_set`
 >
@@ -414,7 +414,7 @@ CP7 record — 2026-07-30:
 - focused Vitest `39`、全量 Vitest `64`、Python `235`、Rust `10`、Vite production build、compileall 与 sidecar build 通过。
 - 当前源码 Tauri 使用 fake `HOME`、fake `TMPDIR` 与包含 36 个 synthetic Highlights 的 Paper v3 Vault，在 `1220×780` 与 `920×680` 完成实际窗口检查：Paper/Library 主滚动位置变化时上下文栏位置不变；Flashcard 第 `37 / 37` 张可由独立列表滚动到达并打开；滚动条外观不显示，最小窗口没有水平溢出。见 [`CP7 report`](docs/acceptance/road-v0-5/cp7-fixed-sidebars/report.md)。
 - 顶/底越界探针分别钳位为 `1` 与 `0`；最终隔离 Tauri host 与 sidecar 已退出，已有开发进程未被停止；未读取或改写真实 Vault、真实配置或作者内容。
-- 开发者已事先声明 CP7 YOLO，exit gate 据此通过。CP7 尚未得到 commit 授权；Road closeout snapshot、tag 与 push 仍未执行。
+- 开发者先以 advance YOLO 覆盖 CP7，随后在隐藏滚动条条件完成后明确通过；checkpoint 由 `aic` 提交为 `d900953`。Tag 与 push 未执行。
 
 Exit gate:
 
@@ -423,6 +423,13 @@ Exit gate:
 - 根滚动与嵌套滚动在顶/底不越界，不把滚动链传给外层。
 - 滚动条外观隐藏，鼠标、触控板与键盘滚动仍可用。
 - `1220×780` 与 `920×680` 无水平溢出，鼠标和键盘动作仍可达。
+
+### Road closeout — 2026-07-30
+
+- CP0–CP7 形成从 `11c2149` 到 `d900953` 的 8 个线性 checkpoint commits；每个 CP 均有独立 branch 与开发者明确通过或 advance-YOLO gate。
+- CP6 产品验收与 CP7 最终 UI 条件均已通过，无未解决 P0/P1。
+- [`Road v0.5 archive snapshot`](docs/archive/snapshots/road-v0-5.html) 绑定最终 checkpoint `d900953ea5c546be82eabf4788f3d27c2b569c49`，并在后续独立 closeout change 中创建。
+- 开发者已明确授权归档整个 Road v0.5。归档不代表 tag、push、签名、公证、DMG 或公开分发。
 
 ## 7. Test and evidence plan
 

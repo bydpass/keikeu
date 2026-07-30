@@ -8,7 +8,7 @@
 
 当前代码已经实现 `Paper Markdown → Flashcard → 外部正文编辑器` 核心。Road v0.2 Phase 0–7 工程、macOS 文件服务 smoke，以及 Phase 8 真实 one-shot 与短/中篇跨会话作者验收均已完成，并已以 local annotated tag `v0.2.0` 标记。
 
-Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响应式界面、本机沙盒 Vault 与真机修复验证；它不是 macOS Road 的合入闸门。Road v0.3 的工程、macOS candidate smoke 与 CP6 真实作者验收均已完成；检索更快且清楚、外部编辑器 handoff 清楚，未报告未解决 P0/P1。其设计与验收文档已[只读归档](docs/archive/road-v0-3/README.md)，未创建 v0.3 tag。**Road v0.4 已彻底完成**：Gate A、Gate B、产品验收与 macOS 15.7+ 兼容性均已通过；当前唯一桌面运行时为 Vue/Tauri 与本地 Python sidecar，Flet 已在 CP14 退役。实时坐标见 [PROJECT](docs/PROJECT.md)。
+Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响应式界面、本机沙盒 Vault 与真机修复验证；它不是 macOS Road 的合入闸门。Road v0.3 的工程、macOS candidate smoke 与 CP6 真实作者验收均已完成；检索更快且清楚、外部编辑器 handoff 清楚，未报告未解决 P0/P1。其设计与验收文档已[只读归档](docs/archive/road-v0-3/README.md)，未创建 v0.3 tag。**Road v0.4 已彻底完成**：Gate A、Gate B、产品验收与 macOS 15.7+ 兼容性均已通过；当前唯一桌面运行时为 Vue/Tauri 与本地 Python sidecar，Flet 已在 CP14 退役。**Road v0.5 也已完成并归档**：Paper Desk、保存基线、离开保护、Flashcard/Library 连贯性、全应用 Quiet Desk 视觉与固定滚动语义均已验收。实时坐标见 [PROJECT](docs/PROJECT.md)。
 
 ## 当前运行时核心流程
 
@@ -29,6 +29,10 @@ Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响�
 ## Road v0.4 完成记录
 
 [CP14 验收记录](docs/acceptance/road_v0_4_cp14.md)、[计划文档归档](docs/archive/road-v0-4/README.md)与[完整施工 snapshot](docs/archive/snapshots/refactor-retire-flet-after-road-v0-4-acceptance.html)共同记录 CP0–CP14、架构迁移、验收闸门、问题修复、测试演进与兼容性证据。Road v0.4 至此彻底完成；tag、push、签名与分发仍是独立决定。
+
+## Road v0.5 完成记录
+
+[Road v0.5 施工 snapshot](docs/archive/snapshots/road-v0-5.html) 绑定最终 checkpoint `d900953`，记录 CP0–CP7 的 branch、commit、范围、改动、检查、QA、遗漏与风险。Road v0.5 已完成并归档；未创建 tag 或 push，签名、公证、DMG 与公开分发仍属于后续独立决定。
 
 ## 产品原则
 
@@ -61,9 +65,9 @@ npm --prefix frontend run tauri:dev
 README.md                 外部入口与运行命令
 AGENTS.md                 Agent 操作纪律与读图顺序
 docs/PROJECT.md           当前坐标、模块入口、下一闸门
-docs/SPEC.md              Road v0.4 产品与作者控制边界
+docs/SPEC.md              Road v0.5 产品与作者控制边界
 docs/RULES.md             工程、交互、数据与证据规则
-docs/design/              Road v0.4 活跃视觉与交互 map
+docs/design/              Road v0.5 已验收视觉与交互 map
 docs/architecture/        Road v0.4 活跃架构 map 与 ADR
 docs/acceptance/          支持性验收记录；不独立定义状态
 docs/manual/              面向人的补充说明；不定义规范
@@ -86,9 +90,9 @@ core 层负责。
 | 稳定产品目的与作者控制边界 | [SPEC](docs/SPEC.md) |
 | 当前做到哪、下一步是什么 | [PROJECT](docs/PROJECT.md) |
 | 修改时不可违反什么 | [RULES](docs/RULES.md) |
-| Road v0.4 架构目标与当前实现 | [Architecture map](docs/architecture/architecture.html) |
-| Road v0.4 视觉方向 | [Design map](docs/design/design.html) |
-| Road v0.4 交互与迁移顺序 | [Interaction map](docs/design/interaction.html) |
+| 当前架构实现 | [Architecture map](docs/architecture/architecture.html) |
+| Road v0.5 视觉规范 | [Design map](docs/design/design.html) |
+| Road v0.5 交互规范 | [Interaction map](docs/design/interaction.html) |
 | Agent 如何工作 | [AGENTS](AGENTS.md) |
 | 人工阅读的设计、Git 与伦理说明 | [Human manuals](docs/manual/README.md) |
 | 历史为何这样演变 | [Archive](docs/archive/README.md) |
@@ -102,6 +106,7 @@ Phase 7.5   独立轻量 iOS 快速测试版
 Phase 8.5   Road v0.3 准备；下一版 Mac 端前体
 Road v0.3   macOS Paper Library；CP6 product accepted，设计与验收文档已归档
 Road v0.4   Vue/Tauri 前端替换完成；CP14 已验收
+Road v0.5   Quiet Desk UI 与交互收口完成；CP7 已验收并归档
 Pre-Advance 可选 Markdown Outline；不阻塞核心流程
 之后        iPhone/iPad 文件服务能力、Android、Windows
 ```

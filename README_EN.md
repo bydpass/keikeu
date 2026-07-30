@@ -8,7 +8,7 @@
 
 The code implements the `Paper Markdown → Flashcard → external prose editor` core. Road v0.2 Phases 0–7 engineering, macOS file-service smoke, and Phase 8 real-author one-shot and two-session short/medium acceptance are complete and marked by local annotated tag `v0.2.0`.
 
-Phase 7.5 is an independent lightweight iOS build for rapid testing. Its responsive UI, app-sandbox Vault, and on-device fixes are complete on a separate branch; it is not a merge gate in the macOS Road. Road v0.3 engineering, macOS candidate smoke, and CP6 real-author acceptance are complete: retrieval was faster and clear, the external-editor handoff was clear, and no unresolved P0/P1 was reported. Its design and acceptance records are now [read-only history](docs/archive/road-v0-3/README.md); no v0.3 tag was created. Road v0.4 Gate A, Gate B, product acceptance, and macOS 15.7+ compatibility have passed. The only desktop runtime is now Vue/Tauri with a local Python sidecar; Flet was retired in CP14. See [PROJECT](docs/PROJECT.md) for live coordinates.
+Phase 7.5 is an independent lightweight iOS build for rapid testing. Its responsive UI, app-sandbox Vault, and on-device fixes are complete on a separate branch; it is not a merge gate in the macOS Road. Road v0.3 engineering, macOS candidate smoke, and CP6 real-author acceptance are complete: retrieval was faster and clear, the external-editor handoff was clear, and no unresolved P0/P1 was reported. Its design and acceptance records are now [read-only history](docs/archive/road-v0-3/README.md); no v0.3 tag was created. Road v0.4 Gate A, Gate B, product acceptance, and macOS 15.7+ compatibility have passed. The only desktop runtime is now Vue/Tauri with a local Python sidecar; Flet was retired in CP14. Road v0.5 is also complete and archived: Paper Desk, save baselines, departure protection, Flashcard/Library continuity, the whole-app Quiet Desk visual system, and fixed scrolling behavior are accepted. See [PROJECT](docs/PROJECT.md) for live coordinates.
 
 ## Current runtime flow
 
@@ -29,6 +29,10 @@ The [final CP6 record](docs/archive/road-v0-3/acceptance/road_v0_3.md) is stored
 ## Road v0.4 completion record
 
 The [CP14 acceptance record](docs/acceptance/road_v0_4_cp14.md), [planning archive](docs/archive/road-v0-4/README.md), and [complete construction snapshot](docs/archive/snapshots/refactor-retire-flet-after-road-v0-4-acceptance.html) preserve CP0–CP14, the architecture migration, gates, fixes, test evolution, and compatibility evidence.
+
+## Road v0.5 completion record
+
+The [Road v0.5 construction snapshot](docs/archive/snapshots/road-v0-5.html) binds final checkpoint `d900953` and records CP0–CP7 branches, commits, scope, changes, checks, QA, omissions, and risks. Road v0.5 is complete and archived. No tag or push was created; signing, notarization, DMG packaging, and public distribution remain separate decisions.
 
 ## Product principles
 
@@ -61,9 +65,9 @@ npm --prefix frontend run tauri:dev
 README.md                 public entry and real commands
 AGENTS.md                 agent operating discipline and read order
 docs/PROJECT.md           current coordinates, module entry points, next gate
-docs/SPEC.md              Road v0.4 product and author-control boundary
+docs/SPEC.md              Road v0.5 product and author-control boundary
 docs/RULES.md             engineering, interaction, data, and evidence rules
-docs/design/              active Road v0.4 visual and interaction maps
+docs/design/              accepted Road v0.5 visual and interaction maps
 docs/architecture/        active Road v0.4 architecture map and ADRs
 docs/acceptance/          supporting evidence; not an independent status source
 docs/manual/              supplementary human guides; never normative
@@ -86,9 +90,9 @@ layer owns Markdown I/O.
 | Stable product purpose and author-control boundary | [SPEC](docs/SPEC.md) |
 | Current state and next gate | [PROJECT](docs/PROJECT.md) |
 | Rules a change must obey | [RULES](docs/RULES.md) |
-| Road v0.4 target architecture and current runtime | [Architecture map](docs/architecture/architecture.html) |
-| Road v0.4 visual direction | [Design map](docs/design/design.html) |
-| Road v0.4 interaction and migration order | [Interaction map](docs/design/interaction.html) |
+| Current architecture | [Architecture map](docs/architecture/architecture.html) |
+| Road v0.5 visual specification | [Design map](docs/design/design.html) |
+| Road v0.5 interaction specification | [Interaction map](docs/design/interaction.html) |
 | How agents work | [AGENTS](AGENTS.md) |
 | Human-facing design, Git, and ethics guides | [Human manuals](docs/manual/README.md) |
 | Historical rationale and snapshots | [Archive](docs/archive/README.md) |
@@ -102,6 +106,7 @@ Phase 7.5   independent lightweight iOS rapid-test build
 Phase 8.5   Road v0.3 preparation; precursor to the next Mac version
 Road v0.3   macOS Paper Library; CP6 product accepted, design and acceptance records archived
 Road v0.4   Vue/Tauri frontend replacement complete; CP14 accepted
+Road v0.5   Quiet Desk UI and interaction closeout complete; CP7 accepted and archived
 Pre-Advance optional Markdown Outline; never blocks the core flow
 later       iPhone/iPad file-service capability, Android, Windows
 ```

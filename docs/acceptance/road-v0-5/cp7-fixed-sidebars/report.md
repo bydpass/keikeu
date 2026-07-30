@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-30  
 **Branch:** `ui/cp7-fixed-sidebars-no-bounce`  
-**Gate:** Passed by advance YOLO; commit not yet authorized
+**Gate:** Passed by developer; committed as `d900953`
 
 ## Scope
 

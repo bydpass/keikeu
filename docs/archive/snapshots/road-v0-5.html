@@ -1,0 +1,756 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>keikeu Road v0.5 · 完整施工记录</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --canvas: #e7e3d8;
+      --paper: #f7f4ea;
+      --soft: #eee9dc;
+      --ink: #171612;
+      --muted: #625f56;
+      --accent: #193c68;
+      --rule: #b8b2a6;
+      --success: #365d31;
+      --danger: #8b3e31;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 24px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--canvas);
+      line-height: 1.58;
+    }
+
+    a {
+      color: var(--accent);
+      text-underline-offset: 3px;
+    }
+
+    a:focus-visible,
+    summary:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    code,
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      overflow-wrap: anywhere;
+    }
+
+    h1,
+    h2,
+    h3 {
+      font-family: Georgia, "Times New Roman", serif;
+      font-weight: 500;
+      letter-spacing: -.025em;
+      line-height: 1.08;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 16px 0 20px;
+      font-size: clamp(3rem, 8vw, 7rem);
+    }
+
+    h2 {
+      margin: 0 0 18px;
+      font-size: clamp(2rem, 4vw, 3.4rem);
+    }
+
+    h3 {
+      margin: 0 0 8px;
+      font-size: 1.45rem;
+    }
+
+    p { margin: 0 0 14px; }
+
+    .archive-bar {
+      padding: 11px 18px;
+      color: var(--paper);
+      background: var(--danger);
+      font: 800 .72rem/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: .08em;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 230px minmax(0, 1fr);
+      width: min(1480px, 100%);
+      margin: 0 auto;
+    }
+
+    aside {
+      position: sticky;
+      top: 0;
+      align-self: start;
+      height: 100vh;
+      padding: 30px 22px;
+      color: var(--paper);
+      background: var(--ink);
+      overflow-y: auto;
+    }
+
+    aside .mark {
+      display: inline-block;
+      margin-bottom: 24px;
+      padding: 8px 10px;
+      color: var(--ink);
+      background: var(--paper);
+      font: 800 .78rem/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    aside p {
+      color: #c8c3b6;
+      font-size: .84rem;
+    }
+
+    aside nav {
+      display: grid;
+      gap: 3px;
+      margin: 28px 0;
+    }
+
+    aside nav a {
+      padding: 8px 10px;
+      color: var(--paper);
+      border-left: 2px solid transparent;
+      text-decoration: none;
+    }
+
+    aside nav a:hover {
+      border-left-color: #7393ba;
+      background: #292824;
+    }
+
+    aside .boundary {
+      padding-top: 18px;
+      border-top: 1px solid #4a4841;
+    }
+
+    main {
+      min-width: 0;
+      padding: 32px clamp(18px, 5vw, 68px) 72px;
+    }
+
+    .hero,
+    section {
+      max-width: 1120px;
+      margin: 0 auto 18px;
+      padding: clamp(24px, 4vw, 46px);
+      background: var(--paper);
+      border: 1px solid var(--rule);
+    }
+
+    .hero {
+      min-height: 600px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border-top: 5px solid var(--accent);
+    }
+
+    .eyebrow,
+    .label {
+      color: var(--accent);
+      font-size: .73rem;
+      font-weight: 800;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    .lede {
+      max-width: 850px;
+      color: var(--muted);
+      font-size: clamp(1.05rem, 2vw, 1.35rem);
+    }
+
+    .status {
+      display: inline-block;
+      width: fit-content;
+      margin-top: 14px;
+      padding: 7px 11px;
+      color: var(--success);
+      background: #e3eadc;
+      border-left: 3px solid var(--success);
+      font-weight: 800;
+    }
+
+    .metrics,
+    .two,
+    .three {
+      display: grid;
+      gap: 14px;
+    }
+
+    .metrics {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-top: 42px;
+    }
+
+    .two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    .metric,
+    .card {
+      min-width: 0;
+      padding: 18px;
+      background: var(--soft);
+      border-top: 3px solid var(--accent);
+    }
+
+    .metric strong {
+      display: block;
+      margin-bottom: 4px;
+      font: 500 clamp(1.8rem, 4vw, 3.2rem)/1 Georgia, serif;
+    }
+
+    .metric span,
+    .card p {
+      color: var(--muted);
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 22px;
+    }
+
+    .flow div {
+      padding: 15px 12px;
+      background: var(--soft);
+      border-top: 3px solid var(--accent);
+    }
+
+    .flow strong,
+    .flow span {
+      display: block;
+    }
+
+    .flow span {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: .82rem;
+    }
+
+    .cp-card {
+      margin-top: 14px;
+      border: 1px solid var(--rule);
+      background: #fbf8ef;
+    }
+
+    .cp-card header {
+      display: grid;
+      grid-template-columns: 58px minmax(0, 1fr) auto;
+      gap: 15px;
+      align-items: center;
+      padding: 17px;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .cp-number {
+      display: grid;
+      place-items: center;
+      width: 48px;
+      height: 48px;
+      color: var(--paper);
+      background: var(--ink);
+      font: 800 .8rem/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    .gate {
+      color: var(--success);
+      font-size: .74rem;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .coordinate {
+      margin: 0;
+      color: var(--muted);
+      font-size: .8rem;
+    }
+
+    .cp-body {
+      padding: 18px;
+    }
+
+    .cp-body .commit {
+      display: block;
+      margin-bottom: 16px;
+      padding: 8px 10px;
+      color: var(--paper);
+      background: #292824;
+      font-size: .76rem;
+    }
+
+    .cp-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr 1fr;
+      gap: 18px;
+    }
+
+    .cp-grid h4 {
+      margin: 0 0 6px;
+      color: var(--accent);
+      font-size: .72rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .cp-grid p,
+    .cp-grid ul {
+      margin: 0;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    .cp-grid ul {
+      padding-left: 1.15rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .91rem;
+    }
+
+    th,
+    td {
+      padding: 12px 10px;
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    th {
+      color: var(--accent);
+      font-size: .71rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .callout {
+      margin-top: 18px;
+      padding: 18px 20px;
+      background: #eee3dc;
+      border-left: 4px solid var(--danger);
+    }
+
+    footer {
+      max-width: 1120px;
+      margin: 30px auto 0;
+      color: var(--muted);
+      font-size: .84rem;
+    }
+
+    @media (max-width: 980px) {
+      .shell { grid-template-columns: 1fr; }
+      aside {
+        position: static;
+        width: 100%;
+        height: auto;
+        padding: 18px;
+      }
+      aside .mark { margin: 0 12px 0 0; }
+      aside nav {
+        display: flex;
+        flex-wrap: wrap;
+        margin: 14px 0 0;
+      }
+      aside .boundary { display: none; }
+      main { padding-top: 18px; }
+      .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 720px) {
+      .hero { min-height: auto; }
+      .metrics,
+      .two,
+      .three,
+      .cp-grid {
+        grid-template-columns: 1fr;
+      }
+      .flow { grid-template-columns: 1fr; }
+      .cp-card header { grid-template-columns: 52px minmax(0, 1fr); }
+      .gate { grid-column: 2; }
+      table,
+      tbody,
+      tr,
+      td {
+        display: block;
+      }
+      thead { display: none; }
+      tr {
+        padding: 10px 0;
+        border-bottom: 1px solid var(--rule);
+      }
+      td {
+        padding: 3px 0;
+        border: 0;
+      }
+      td::before {
+        display: block;
+        color: var(--muted);
+        content: attr(data-label);
+        font-size: .69rem;
+        font-weight: 800;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+      }
+    }
+
+    @media print {
+      .archive-bar,
+      aside {
+        position: static;
+      }
+      .shell { display: block; }
+      aside nav,
+      aside .boundary {
+        display: none;
+      }
+      main { padding: 0; }
+      .hero,
+      section,
+      .cp-card {
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="archive-bar">
+    ARCHIVED · READ ONLY · Target d900953ea5c546be82eabf4788f3d27c2b569c49 · Current state lives in docs/PROJECT.md
+  </div>
+
+  <div class="shell">
+    <aside>
+      <span class="mark">K / ROAD 05</span>
+      <p>Quiet Desk UI reform<br>2026-07-29 → 2026-07-30</p>
+      <nav aria-label="页面目录">
+        <a href="#overview">总览</a>
+        <a href="#scope">范围</a>
+        <a href="#flow">产品路径</a>
+        <a href="#checkpoints">CP0–CP7</a>
+        <a href="#evidence">证据边界</a>
+        <a href="#final-state">最终状态</a>
+        <a href="#sources">原始记录</a>
+      </nav>
+      <div class="boundary">
+        <p><strong>页面边界</strong></p>
+        <p>这是绑定最终 checkpoint commit 的只读施工快照，不定义当前产品行为，也不代表 tag、push、签名、公证或公开分发。</p>
+        <p><a href="../../PROJECT.md">返回当前 PROJECT</a></p>
+      </div>
+    </aside>
+
+    <main>
+      <header class="hero" id="overview">
+        <div>
+          <p class="eyebrow">keikeu · Road v0.5 · closeout snapshot</p>
+          <h1>没有变大。只是更顺、更安静、更可信。</h1>
+          <p class="lede">
+            Road v0.5 没有扩展产品边界。它把已有的 Paper → Flashcard → Library
+            路径整理成一套更容易理解、更不容易误操作的 Quiet Desk：
+            明确编辑与只读区域，用成功保存建立 baseline，在离开前保护未保存内容，
+            让 Flashcard 只读取保存后的 Paper，并让整个应用共享同一视觉与滚动语义。
+          </p>
+          <span class="status">CP0–CP7 完成 · CP6 产品验收通过 · Road v0.5 已归档</span>
+        </div>
+
+        <div class="metrics">
+          <div class="metric"><strong>8</strong><span>线性 checkpoints</span></div>
+          <div class="metric"><strong>8</strong><span>checkpoint commits</span></div>
+          <div class="metric"><strong>69</strong><span>相对 pre-CP0 基线变更文件</span></div>
+          <div class="metric"><strong>0</strong><span>未解决 P0 / P1</span></div>
+        </div>
+      </header>
+
+      <section id="scope">
+        <p class="label">Scope · product judgment</p>
+        <h2>这轮只修体验，不加产品</h2>
+        <div class="two">
+          <article class="card">
+            <h3>完成</h3>
+            <p>Paper Desk、保存基线、离开保护、Summary-first Flashcard、Library 内存上下文、全应用 Quiet Desk 视觉、固定侧栏与受控 overscroll 边界。</p>
+          </article>
+          <article class="card">
+            <h3>明确没有做</h3>
+            <p>AI 写作、云同步、账号、社区、数据库、遥测、后台网络服务、签名、公证、DMG、公开分发或跨平台发布。</p>
+          </article>
+        </div>
+        <div class="callout">
+          <strong>作者控制没有改变。</strong>
+          Markdown 仍是 durable author asset；Vue 不写 Markdown，索引仍可重建，
+          Vault、迁移、删除与恢复继续受原有 Python Core 和显式确认边界约束。
+        </div>
+      </section>
+
+      <section id="flow">
+        <p class="label">Flow · accepted path</p>
+        <h2>从杂乱灵感到可执行创作动作</h2>
+        <div class="flow" aria-label="Road v0.5 最终产品路径">
+          <div><strong>Daily Card</strong><span>进入当日 Paper</span></div>
+          <div><strong>Paper Desk</strong><span>整理名称、Summary、Highlights、Tags</span></div>
+          <div><strong>Save</strong><span>成功写入建立新 baseline</span></div>
+          <div><strong>Flashcard</strong><span>Summary-first，一次一个 Highlight</span></div>
+          <div><strong>Library</strong><span>保留查询与选择上下文</span></div>
+        </div>
+      </section>
+
+      <section id="checkpoints">
+        <p class="label">Ledger · CP0–CP7</p>
+        <h2>八个 checkpoint，一条线性历史</h2>
+        <p>每项记录 branch、完整 commit、施工内容、实际检查、QA 结果和已知边界。检查数来自对应 checkpoint 的当时记录，不在本 closeout 中重跑。</p>
+
+        <article class="cp-card" id="cp0">
+          <header>
+            <span class="cp-number">CP0</span>
+            <div>
+              <h3>Authority and routine</h3>
+              <p class="coordinate mono">process/cp0-authority-routine</p>
+            </div>
+            <span class="gate">developer passed</span>
+          </header>
+          <div class="cp-body">
+            <code class="commit">11c2149fca30b8e32c4c58bd327450f223778db0 · feat(keikeu-routine): add skill and Road v0.5 CP0 authority updates</code>
+            <div class="cp-grid">
+              <div><h4>Scope / changes</h4><p>启用 Planbook 权威，加入项目本地 routine，收紧 AGENTS/RULES 流程，并锁定原生离开确认所需的 dialog binding。</p></div>
+              <div><h4>Checks</h4><p>Skill quick validation、Vitest 48、Vite build、Rust 10、documentation check、diff check。</p></div>
+              <div><h4>QA / boundary</h4><p>开发者逐段核对并明确通过。没有加入 hooks、CI、后台 agent；尚未改 Vue caller 或产品行为。</p></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="cp-card" id="cp1">
+          <header>
+            <span class="cp-number">CP1</span>
+            <div>
+              <h3>Paper Desk</h3>
+              <p class="coordinate mono">ui/cp1-paper-desk</p>
+            </div>
+            <span class="gate">advance YOLO</span>
+          </header>
+          <div class="cp-body">
+            <code class="commit">a2ff5cb8af7ffce689aa7cb06a75dcfc892e5d79 · feat(paper): implement Paper Desk UI with drag-and-drop highlights</code>
+            <div class="cp-grid">
+              <div><h4>Scope / changes</h4><p>建立名称、Summary、Highlights、Tags 四个横线式编辑区；原始草稿只读；dirty/save 状态明确；原生拖动与按钮都可重排 Highlight。</p></div>
+              <div><h4>Checks</h4><p>Focused Vitest 13、full Vitest 50、Vite build、指针拖动/保存 probe、1220×780 与 920×680 browser/focus QA。</p></div>
+              <div><h4>QA / boundary</h4><p>Advance YOLO 通过。该 CP 未增加桌面 API，因此没有 Tauri smoke；只使用 synthetic DTO，没有真实 Vault 或作者内容。</p></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="cp-card" id="cp2">
+          <header>
+            <span class="cp-number">CP2</span>
+            <div>
+              <h3>Save baseline and departure protection</h3>
+              <p class="coordinate mono">ui/cp2-departure-protection</p>
+            </div>
+            <span class="gate">advance YOLO</span>
+          </header>
+          <div class="cp-body">
+            <code class="commit">30b54ac2579755106a6f59e7dc96b42c7ba1a5d9 · feat(departure-guard): add async confirm dialogs and baseline restore</code>
+            <div class="cp-grid">
+              <div><h4>Scope / changes</h4><p>所有导航、Paper/Vault 切换与窗口关闭共用一个 baseline 和 departure guard；放弃只回到最近成功保存；原生二选一替代不可用的应用内三选一。</p></div>
+              <div><h4>Checks</h4><p>Focused Vitest 33、full 57、Python 235、Rust 10、build、compileall、隔离 Tauri smoke、两个窗口尺寸。</p></div>
+              <div><h4>QA / boundary</h4><p>Advance YOLO 通过。没有扩展 crash、断电或 commit-unknown 自动恢复，也没有 mutation retry；只用隔离合成数据。</p></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="cp-card" id="cp3">
+          <header>
+            <span class="cp-number">CP3</span>
+            <div>
+              <h3>Saved-Paper Flashcard projection</h3>
+              <p class="coordinate mono">ui/cp3-flashcard-sync</p>
+            </div>
+            <span class="gate">advance YOLO</span>
+          </header>
+          <div class="cp-body">
+            <code class="commit">c7b9caf192198a342718b316cfdb25fe0530b4c6 · feat(flashcard): restrict flashcard to saved papers and add highlight cards</code>
+            <div class="cp-grid">
+              <div><h4>Scope / changes</h4><p>Flashcard 只加载成功保存的 Paper；第 1 张 Summary，之后每张一个 Highlight；Summary context 手动展开；每次打开从第 1 张开始。</p></div>
+              <div><h4>Checks</h4><p>Focused Vitest 31、service pytest 1、full Vitest 57、Python 235、build、compileall、docs、两个尺寸 browser render。</p></div>
+              <div><h4>QA / boundary</h4><p>Advance YOLO 通过。没有新增 desktop/lifecycle API，所以未将 browser render 冒充 Tauri smoke；没有真实数据。</p></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="cp-card" id="cp4">
+          <header>
+            <span class="cp-number">CP4</span>
+            <div>
+              <h3>Library context continuity</h3>
+              <p class="coordinate mono">ui/cp4-library-context</p>
+            </div>
+            <span class="gate">advance YOLO</span>
+          </header>
+          <div class="cp-body">
+            <code class="commit">371f4e8d1e1b5882d30399d1f5ac2f2768c14461 · feat(library): preserve context across view switches</code>
+            <div class="cp-grid">
+              <div><h4>Scope / changes</h4><p>使用 Vue KeepAlive 保留 scope、query、sort、active item、batch selection 与 scroll；Vault 成功切换或 runtime restart 后重置；修复离开时的 scroll timing。</p></div>
+              <div><h4>Checks</h4><p>Focused Vitest 27、full 60、Python 235、Rust 10、build、compileall、docs、两个尺寸 browser 与临时隔离 Tauri。</p></div>
+              <div><h4>QA / boundary</h4><p>Advance YOLO 通过。上下文只在当前进程内；没有 Router、Pinia 或持久偏好；仅使用合成数据。</p></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="cp-card" id="cp5">
+          <header>
+            <span class="cp-number">CP5</span>
+            <div>
+              <h3>Whole-app Quiet Desk visual pass</h3>
+              <p class="coordinate mono">ui/cp5-whole-app-visual</p>
+            </div>
+            <span class="gate">advance YOLO</span>
+          </header>
+          <div class="cp-body">
+            <code class="commit">1e87ad44875fe1eb62b1b6f506d975344ae2e9dc · feat(ui): adopt Quiet Desk design system across all views</code>
+            <div class="cp-grid">
+              <div><h4>Scope / changes</h4><p>把 warm paper、ink blue、serif hierarchy、清楚焦点和动作层级应用到 Paper、Flashcard、Library、Vault/migration 与 Core 状态页。</p></div>
+              <div><h4>Checks</h4><p>26 组 browser state/size；五类页面 1220×780/920×680；合成 Tauri navigation；Vitest 60、Python 235、Rust 10、build、compileall、docs、diff check。</p></div>
+              <div><h4>QA / boundary</h4><p>Advance YOLO 通过。视觉与 taste evidence 仅来自 synthetic state；未打开系统 picker；不构成 release 或跨平台证据。</p></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="cp-card" id="cp6">
+          <header>
+            <span class="cp-number">CP6</span>
+            <div>
+              <h3>Dogfood, friction fixes, and product acceptance</h3>
+              <p class="coordinate mono">qa/cp6-dogfood-acceptance</p>
+            </div>
+            <span class="gate">developer accepted</span>
+          </header>
+          <div class="cp-body">
+            <code class="commit">4753d1d56c29dc4b2f672efc8ae1ae87a35258eb · feat: complete CP6 dogfood acceptance and UX fixes</code>
+            <div class="cp-grid">
+              <div><h4>Scope / changes</h4><p>完成两轮 30 分钟独立 dogfood；修复边界无效动作、中文 Summary validation、时间可读性、未落盘 Draft 的 Vault 切换，并加深全局分界线。</p></div>
+              <div><h4>Checks</h4><p>Vitest 63、Python 235、Rust 10、build、compileall、sidecar build、docs、diff check，以及当前源码 Tauri P2 follow-up。</p></div>
+              <div><h4>QA / boundary</h4><p>开发者明确验收；未发现 P0/P1。使用 copied/synthetic data；真实迁移、更广 Finder/editor 行为、签名与分发仍未证明。</p></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="cp-card" id="cp7">
+          <header>
+            <span class="cp-number">CP7</span>
+            <div>
+              <h3>Fixed rails and bounded scrolling</h3>
+              <p class="coordinate mono">ui/cp7-fixed-sidebars-no-bounce</p>
+            </div>
+            <span class="gate">developer passed</span>
+          </header>
+          <div class="cp-body">
+            <code class="commit">d900953ea5c546be82eabf4788f3d27c2b569c49 · feat(ui): add fixed context rails, bounded scrolling, and hidden scrollbar</code>
+            <div class="cp-grid">
+              <div><h4>Scope / changes</h4><p>用原生 CSS 禁止 overscroll、隐藏 scrollbar chrome；固定 Paper/Library/Flashcard context rail；长 Flashcard list 独立滚动；保留窄屏 document flow 与 Library scroll semantics。</p></div>
+              <div><h4>Checks</h4><p>Focused Vitest 39、full 64、Python 235、Rust 10、build、compileall、sidecar、docs、diff check；当前源码 Tauri native wheel 与两个窗口尺寸。</p></div>
+              <div><h4>QA / boundary</h4><p>先由 advance YOLO 覆盖，最终隐藏滚动条条件完成后由开发者明确通过。Physical trackpad feel 未独立记录；没有 Core、Vault、schema 或 persistence 变更。</p></div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section id="evidence">
+        <p class="label">Evidence · what each conclusion means</p>
+        <h2>工程、平台、产品与归档分开记账</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Conclusion</th>
+              <th>Evidence</th>
+              <th>Boundary</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td data-label="Conclusion">Engineering complete</td>
+              <td data-label="Evidence">Checkpoint source inspection、focused/full tests、build 与 documentation checks。</td>
+              <td data-label="Boundary">不自动证明真实文件服务、产品舒适性或 release readiness。</td>
+            </tr>
+            <tr>
+              <td data-label="Conclusion">Current-source Tauri smoke</td>
+              <td data-label="Evidence">隔离 synthetic Vault、真实 WebView/sidecar 生命周期、1220×780 与 920×680。</td>
+              <td data-label="Boundary">不证明 provider 同步、签名、公证、安装或其他 macOS 版本。</td>
+            </tr>
+            <tr>
+              <td data-label="Conclusion">Product accepted</td>
+              <td data-label="Evidence">CP6 两轮 dogfood、三项摩擦修复、P2 follow-up、开发者明确验收；CP7 最终条件明确通过。</td>
+              <td data-label="Boundary">验收仅覆盖 Road v0.5 已声明的当前 macOS 工作站体验。</td>
+            </tr>
+            <tr>
+              <td data-label="Conclusion">Road archived</td>
+              <td data-label="Evidence">本页绑定最终 checkpoint commit，并由后续独立 closeout change 写入 archive index。</td>
+              <td data-label="Boundary">归档不等于 tag、push、签名、发布或公开分发。</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="final-state">
+        <p class="label">Final state · 2026-07-30</p>
+        <h2>Road v0.5 结束在体验收口，不结束在功能扩张</h2>
+        <div class="three">
+          <article class="card"><h3>产品</h3><p>Paper 是清楚的主工作台；保存与放弃符合最近 baseline；Flashcard 与 Library 不再各说各话。</p></article>
+          <article class="card"><h3>界面</h3><p>所有页面共享 Quiet Desk 视觉；边界更清楚；两级侧栏稳定；应用 overscroll 边界且不显示 scrollbar chrome。物理触控板手感未单独记录。</p></article>
+          <article class="card"><h3>工程</h3><p>项目本地 routine 生效；八个 checkpoint 可逐个解释和回滚；没有新增数据库、网络服务或架构层。</p></article>
+        </div>
+        <div class="callout">
+          <strong>仍未完成：</strong>
+          tag、push、签名、公证、DMG、公开下载、跨版本兼容性更新、iOS/Android/Windows 工作。
+          这些属于后续独立决定；“可分发的 macOS alpha”仍是 v0.6 方向。
+        </div>
+      </section>
+
+      <section id="sources">
+        <p class="label">Sources · authoritative and supporting records</p>
+        <h2>从这里回到当前事实</h2>
+        <div class="two">
+          <article class="card">
+            <h3>当前权威</h3>
+            <p><a href="../../PROJECT.md">PROJECT</a> · <a href="../../SPEC.md">SPEC</a> · <a href="../../RULES.md">RULES</a> · <a href="../../../PLAN_revised.md">Road v0.5 Planbook</a></p>
+          </article>
+          <article class="card">
+            <h3>支持证据</h3>
+            <p><a href="../../acceptance/road-v0-5/cp6-dogfood/report.md">CP6 dogfood report</a> · <a href="../../acceptance/road-v0-5/cp7-fixed-sidebars/report.md">CP7 fixed-sidebars report</a> · <a href="../../design/design.html">Design map</a> · <a href="../../design/interaction.html">Interaction map</a></p>
+          </article>
+        </div>
+      </section>
+
+      <footer>
+        <p>
+          Snapshot target:
+          <code>d900953ea5c546be82eabf4788f3d27c2b569c49</code>.
+          本 HTML 由目标 commit 之后的独立 closeout change 添加，因此不属于目标 commit 本身。
+          它不包含完整 diff、作者内容、敏感路径、设备标识或 provider payload。
+        </p>
+      </footer>
+    </main>
+  </div>
+</body>
+</html>

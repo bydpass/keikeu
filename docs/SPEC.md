@@ -1,6 +1,6 @@
-# keikeu Road v0.4 Product Boundary
+# keikeu Road v0.5 Product Boundary
 
-> Authority: Road v0.4 product scope and author-asset constraints. Current runtime facts live in `src/` and `tests/`; current coordinates live in [PROJECT](PROJECT.md). The completed execution plan is read-only history in the [Road v0.4 planning archive](archive/road-v0-4/README.md).
+> Authority: accepted Road v0.5 product scope and author-asset constraints. Current runtime facts live in `src/` and `tests/`; current coordinates live in [PROJECT](PROJECT.md). The completed checkpoint history is summarized in the [Road v0.5 snapshot](archive/snapshots/road-v0-5.html).
 
 ## 1. Definition
 
@@ -22,9 +22,7 @@ It organizes existing inspiration. It does not generate inspiration, ghostwrite 
 
 ## 3. Road objective and baseline
 
-Road v0.3 product acceptance and archival are complete. Its detailed product, visual, interaction, architecture, decision, and acceptance records are read-only history in the [Road v0.3 archive](archive/road-v0-3/README.md).
-
-Road v0.4 replaces only the desktop presentation and local call boundary:
+Road v0.4 completed the desktop presentation and local call-boundary replacement:
 
 ```text
 retired baseline: Flet → Python Core → Markdown / Index / Vault
@@ -33,14 +31,11 @@ current runtime:  Vue → Tauri/Rust → JSONL sidecar
                   → Python Core → Markdown / Index / Vault
 ```
 
-The accepted Python/Flet implementation served as the rollback baseline through
-Gate A, Gate B, product acceptance, and the compatibility gate. CP14 retires
-that shell after those gates passed. Road v0.4 does not change Paper schema,
-Vault layout, Home containment, migration semantics, or the product flow.
+Road v0.5 keeps that architecture and makes the existing workflow calmer, clearer, and safer to operate. It does not change Paper schema, Vault layout, Home containment, migration semantics, or the product flow.
 
-## 4. Frozen behavior
+## 4. Accepted behavior
 
-Road v0.4 preserves every accepted Road v0.3 capability:
+Road v0.5 preserves every accepted Road v0.4 capability:
 
 - Paper create/open/save, frozen initial Summary, named Highlights, Tags, branching, soft delete, and external-modification rejection.
 - Summary-first Flashcard navigation that always starts at page 1.
@@ -48,7 +43,14 @@ Road v0.4 preserves every accepted Road v0.3 capability:
 - Vault preview/init/switch/relocate and v0.1 migration with Home containment, copy verification, backup, staging, and explicit confirmation.
 - External-editor open/reveal through a validated platform boundary.
 
-The archived [Road v0.3 SPEC](archive/road-v0-3/SPEC.md) remains the detailed parity checklist. It is historical evidence, not an editable v0.4 source.
+Road v0.5 adds these accepted interaction rules without expanding product scope:
+
+- Paper Desk visibly separates editable name, Summary, Highlights, and Tags from the locked original draft.
+- A successful save establishes the newest baseline. Save failure preserves the form and old baseline.
+- Dirty navigation, Paper/Vault switching, and window close share one native two-choice departure guard: discard to the latest baseline or continue editing.
+- Flashcard reads only the latest saved Paper, starts with Summary, then shows one Highlight per card.
+- Library preserves scope, query, sort, active item, batch selection, and scroll only within the current process; Vault switch or runtime restart resets it.
+- All pages share the Quiet Desk visual system. Paper, Flashcard, and Library context rails remain fixed in supported desktop layouts; long Flashcard lists scroll independently; overscroll bounce and scrollbar chrome are suppressed without disabling ordinary scrolling.
 
 ## 5. Architecture boundaries
 
@@ -57,16 +59,16 @@ The archived [Road v0.3 SPEC](archive/road-v0-3/SPEC.md) remains the detailed pa
 - The transport-agnostic Python application service owns orchestration and opaque session state behind JSONL. During migration, Flet used the same service as the parity baseline.
 - `keikeu_core` remains independent of Flet, Vue, Tauri, Rust, JSONL, and stdout.
 - Markdown remains canonical. No localhost, HTTP, WebSocket, account, telemetry, upload, or hidden service is authorized.
-- Road construction followed the archived [understanding gate](archive/road-v0-4/RULE_FOR_UNDERSTANDING.md).
+- Road v0.5 changes no architecture boundary; its execution followed [RULES](RULES.md) and the completed [Planbook](../PLAN_revised.md).
 
 ## 6. Explicit exclusions
 
-No AI generation, prose editor, sync, database, file watcher, Router, Pinia, TypeScript, UI kit, signing, notarization, DMG, App Sandbox, mobile work, or cross-platform build enters Road v0.4.
+No AI generation, prose editor, sync, account, community, database, file watcher, Router, Pinia, TypeScript, UI kit, signing, notarization, DMG, public distribution, App Sandbox, mobile work, or cross-platform build enters Road v0.5.
 
 ## 7. Acceptance gates
 
-1. **Gate A — Platform parity:** Tauri produces the same durable results, failure protections, and keyboard paths as Flet on synthetic/copied Vaults.
-2. **Gate B — Visual reconstruction:** the approved editorial workbench direction is applied after parity, with independent visual evidence.
-3. **Product acceptance:** de-identified real-author scenarios A/B and production bundle smoke pass with no unresolved P0/P1.
-4. **Compatibility:** the same arm64 artifact is built and launched on the GitHub arm64 macOS 15.7 runner, then retested on the current workstation, before claiming macOS 15.7+.
-5. **Flet retirement:** only after all prior gates may Flet code, tests, dependency, and GUI entry be removed; CP14 performs that retirement and reruns the full checks plus a Tauri launch smoke. Tag, archive, commit, and push remain separate developer decisions.
+1. **Checkpoint engineering:** CP0–CP7 each pass their declared focused checks and independent developer or advance-YOLO gate.
+2. **Desktop UI evidence:** supported `1220×780` and `920×680` layouts remain reachable without horizontal overflow; desktop-dependent behavior receives isolated current-source Tauri evidence.
+3. **Product acceptance:** two 30-minute dogfood rounds complete, the three most annoying issues are fixed and rechecked, and no unresolved P0/P1 remains.
+4. **Final UI gate:** fixed rails, bounded Flashcard scrolling, hidden scrollbar chrome, and no-overscroll behavior pass the developer's final condition.
+5. **Road closeout:** final checkpoint `d900953` is committed and the developer authorizes the separate read-only Road snapshot. Tag, push, signing, notarization, DMG, and distribution remain separate decisions.

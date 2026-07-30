@@ -4,7 +4,7 @@
 
 ## Why this exists
 
-Phase 8.5 originally replaced overlapping root documents, Road notebooks, prototypes, and status pages with explicit active authorities and non-normative [human manuals](../manual/README.md). Road v0.3's version-specific design set lives in [`road-v0-3/`](road-v0-3/); the completed Road v0.4 Planbook and understanding gate live in [`road-v0-4/`](road-v0-4/). Current entry points are:
+Phase 8.5 originally replaced overlapping root documents, Road notebooks, prototypes, and status pages with explicit active authorities and non-normative [human manuals](../manual/README.md). Road v0.3's version-specific design set lives in [`road-v0-3/`](road-v0-3/); the completed Road v0.4 Planbook and understanding gate live in [`road-v0-4/`](road-v0-4/); Road v0.5 construction is preserved in [`road-v0-5.html`](snapshots/road-v0-5.html). Current entry points are:
 
 - stable product and author-control boundary → [`docs/SPEC.md`](../SPEC.md)
 - current coordinates → [`docs/PROJECT.md`](../PROJECT.md)
@@ -37,9 +37,10 @@ Archive files retain historical reasoning and evidence. Their internal links may
 | [`docs-stop-at-phase-8.html`](snapshots/docs-stop-at-phase-8.html) | `b31bbc4` | `docs: stop_@_phase_8` |
 | [`feat-complete-road-v0-3-candidate.html`](snapshots/feat-complete-road-v0-3-candidate.html) | `2cc40ba` | `feat: complete Road v0.3 candidate` |
 | [`refactor-retire-flet-after-road-v0-4-acceptance.html`](snapshots/refactor-retire-flet-after-road-v0-4-acceptance.html) | `9389f9a` | `refactor: retire Flet after Road v0.4 acceptance` |
+| [`road-v0-5.html`](snapshots/road-v0-5.html) | `d900953` | `feat(ui): add fixed context rails, bounded scrolling, and hidden scrollbar` |
 
 ## Archive rule
 
 Do not update a historical document to match current behavior. If history needs correction, add a dated note beside it. If a current authority is incomplete, fix the active authority rather than reviving an archive file.
 
-Commit-bound archive directories and snapshot files use the target commit subject in kebab-case. Conventional type and scope words remain in the name; punctuation becomes a hyphen or a word such as `at`. Each archived directory or page retains the full target hash in its header or body.
+Road closeout snapshots required by [`RULES.md` §8](../RULES.md#8-evidence) use `road-v<version>.html`. Other commit-bound archive directories and snapshot files use the target commit subject in kebab-case. Conventional type and scope words remain in the name; punctuation becomes a hyphen or a word such as `at`. Each archived directory or page retains the full target hash in its header or body.
