@@ -22,6 +22,7 @@ const paperStartup = ref(null);
 const vaultStartup = ref(null);
 const vaultReturnDestination = ref("paper");
 const vaultCanCancel = ref(false);
+const libraryContextGeneration = ref(0);
 let refreshTimer;
 
 async function refreshStatus() {
@@ -53,6 +54,7 @@ async function restart() {
       flashcardPath.value = null;
       paperStartup.value = null;
       vaultStartup.value = null;
+      libraryContextGeneration.value += 1;
     }
   } catch (error) {
     status.value = {
@@ -96,6 +98,7 @@ function finishVault(startup) {
   paperStartup.value = startup;
   paperPath.value = null;
   vaultStartup.value = null;
+  libraryContextGeneration.value += 1;
   destination.value = "paper";
 }
 
@@ -116,45 +119,49 @@ onUnmounted(() => window.clearTimeout(refreshTimer));
 <template>
   <PrototypeView v-if="showPrototype" />
 
-  <PaperView
-    v-else-if="status.state === 'ready' && destination === 'paper'"
-    :runtime="status"
-    :initial-path="paperPath"
-    :initial-startup="paperStartup"
-    @runtime-blocked="blockRuntime"
-    @open-flashcard="openFlashcard"
-    @open-library="openLibrary"
-    @open-vault="openVault"
-    @startup-consumed="paperStartup = null"
-  />
+  <template v-else-if="status.state === 'ready'">
+    <PaperView
+      v-if="destination === 'paper'"
+      :runtime="status"
+      :initial-path="paperPath"
+      :initial-startup="paperStartup"
+      @runtime-blocked="blockRuntime"
+      @open-flashcard="openFlashcard"
+      @open-library="openLibrary"
+      @open-vault="openVault"
+      @startup-consumed="paperStartup = null"
+    />
 
-  <FlashcardView
-    v-else-if="status.state === 'ready' && destination === 'flashcard'"
-    :runtime="status"
-    :initial-path="flashcardPath"
-    @runtime-blocked="blockRuntime"
-    @open-paper="openPaper"
-    @open-library="openLibrary"
-  />
+    <FlashcardView
+      v-if="destination === 'flashcard'"
+      :runtime="status"
+      :initial-path="flashcardPath"
+      @runtime-blocked="blockRuntime"
+      @open-paper="openPaper"
+      @open-library="openLibrary"
+    />
 
-  <LibraryView
-    v-else-if="status.state === 'ready' && destination === 'library'"
-    :runtime="status"
-    @runtime-blocked="blockRuntime"
-    @open-paper="openPaper"
-    @open-flashcard="openFlashcard"
-    @open-vault="openVault"
-  />
+    <KeepAlive :key="libraryContextGeneration">
+      <LibraryView
+        v-if="destination === 'library'"
+        :runtime="status"
+        @runtime-blocked="blockRuntime"
+        @open-paper="openPaper"
+        @open-flashcard="openFlashcard"
+        @open-vault="openVault"
+      />
+    </KeepAlive>
 
-  <VaultView
-    v-else-if="status.state === 'ready' && destination === 'vault'"
-    :runtime="status"
-    :initial-startup="vaultStartup"
-    :can-cancel="vaultCanCancel"
-    @runtime-blocked="blockRuntime"
-    @ready="finishVault"
-    @cancel="cancelVault"
-  />
+    <VaultView
+      v-if="destination === 'vault'"
+      :runtime="status"
+      :initial-startup="vaultStartup"
+      :can-cancel="vaultCanCancel"
+      @runtime-blocked="blockRuntime"
+      @ready="finishVault"
+      @cancel="cancelVault"
+    />
+  </template>
 
   <main v-else class="runtime-gate" aria-live="polite">
     <section v-if="status.state === 'starting'" class="runtime-panel">

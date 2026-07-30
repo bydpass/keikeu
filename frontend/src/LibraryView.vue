@@ -1,5 +1,13 @@
 <script setup>
-import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
+import {
+  computed,
+  nextTick,
+  onActivated,
+  onDeactivated,
+  onMounted,
+  onUnmounted,
+  ref,
+} from "vue";
 
 import { bridgeRequest, openSystemTarget } from "./bridge.js";
 
@@ -36,6 +44,9 @@ const operationDestination = ref("");
 const draggedPath = ref(null);
 let queryGeneration = 0;
 let operationReturnFocus = null;
+let activatedOnce = false;
+let libraryActive = false;
+let savedScrollY = 0;
 
 const entries = computed(() => view.value?.entries ?? []);
 const activeEntry = computed(
@@ -203,11 +214,18 @@ function activeReadablePath() {
 }
 
 function openPaper(path = activeReadablePath()) {
+  savedScrollY = window.scrollY;
   emit("open-paper", path);
 }
 
 function openFlashcard(path = activeReadablePath()) {
+  savedScrollY = window.scrollY;
   emit("open-flashcard", path);
+}
+
+function openVault() {
+  savedScrollY = window.scrollY;
+  emit("open-vault");
 }
 
 async function openOperation(type, { paths = [], folder = null } = {}) {
@@ -578,11 +596,41 @@ function onWindowKeydown(event) {
 }
 
 onMounted(() => {
+  libraryActive = true;
   window.addEventListener("keydown", onWindowKeydown);
   refresh();
 });
 
+onActivated(async () => {
+  libraryActive = true;
+  window.addEventListener("keydown", onWindowKeydown);
+  if (!activatedOnce) {
+    activatedOnce = true;
+    await nextTick();
+    if (libraryActive) {
+      window.scrollTo({ top: savedScrollY });
+    }
+    return;
+  }
+  await nextTick();
+  if (libraryActive) {
+    window.scrollTo({ top: savedScrollY });
+  }
+  await refresh();
+  await nextTick();
+  if (libraryActive) {
+    window.scrollTo({ top: savedScrollY });
+  }
+});
+
+onDeactivated(() => {
+  libraryActive = false;
+  queryGeneration += 1;
+  window.removeEventListener("keydown", onWindowKeydown);
+});
+
 onUnmounted(() => {
+  libraryActive = false;
   queryGeneration += 1;
   window.removeEventListener("keydown", onWindowKeydown);
 });
@@ -719,7 +767,7 @@ onUnmounted(() => {
           type="button"
           @click="runSystemAction('reveal', '.')"
         >在 Finder 中显示 Vault</button>
-        <button type="button" :disabled="mutationBusy" @click="emit('open-vault')">
+        <button type="button" :disabled="mutationBusy" @click="openVault">
           切换 Vault
         </button>
       </div>

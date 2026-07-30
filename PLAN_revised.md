@@ -1,6 +1,6 @@
 # Road v0.5：Quiet Desk UI Reform and Routine Set
 
-> 状态：**CP3 PASSED BY ADVANCE YOLO · COMMIT PENDING**
+> 状态：**CP4 PASSED BY ADVANCE YOLO · COMMIT PENDING**
 >
 > 目标分支：`road_v05_ui_reform_and_routine_set`
 >
@@ -335,6 +335,15 @@ Exit gate:
 - v0.4 Library 功能矩阵无回归。
 - 返回上下文不跳动。
 - 无 Router、Pinia 或新的持久化偏好。
+
+CP4 record — 2026-07-29:
+
+- `App` 只用 Vue 原生 `KeepAlive` 缓存 Library；Paper、Flashcard 与 Vault 仍按原生命周期卸载。成功切换 Vault 或 Core restart-ready 会销毁旧缓存并建立默认上下文，Vault 取消不会重置。
+- scope、query、sort、active item、batch selection 与 window scroll 六项内存上下文，经 Library → Paper → Library、Library → Flashcard → Library 与 Vault 取消后均恢复；重新激活仍以原查询参数刷新 Python 投影。
+- Library 停用后解绑 `Escape` 与 `⌘F`；实际浏览器 smoke 发现 DOM 收缩会在 `onDeactivated` 前把 `scrollY` 压回 `0`，因此改在三个离开动作发出前保存位置，激活后先恢复、刷新后再校准，避免查询等待造成可见跳动或隐藏页面异步误滚动。
+- focused Vitest `27`、全量 Vitest `60`、Python `235`、Rust `10`、Vite production build、compileall 与 documentation check 通过；v0.4 Library 功能矩阵未回归。
+- [`1220×780`](docs/acceptance/road-v0-5/cp4-library-context-1220x780.png) 与 [`920×680`](docs/acceptance/road-v0-5/cp4-library-context-920x680.png) 合成浏览器往返均恢复相同六项上下文且无横向溢出。临时合成 Tauri 在两个窗口尺寸各完成 Paper → Library 往返，并以可访问 heading 确认 `Ideas` scope 仍在。
+- smoke 注入与临时入口已删除，未调用真实 Vault、真实配置或作者内容；无 Router、Pinia、依赖或持久偏好。开发者已事先声明 CP4 YOLO，exit gate 据此通过。
 
 ### CP5 · Whole-app visual pass
 

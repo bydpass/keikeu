@@ -36,6 +36,53 @@ const draftPaper = {
   updated: "2026-07-25T12:00:00",
 };
 
+const libraryRootEntry = {
+  path: "cache/K-20260725-001.md",
+  code: "K-20260725-001",
+  display_name: "Night Train",
+  folder: null,
+  summary: "A train waits outside the city.",
+  tags: ["night", "rain"],
+  highlight_names: ["Window"],
+  created: "2026-07-25T12:00:00",
+  updated: "2026-07-25T13:00:00",
+  trashed: false,
+};
+
+const libraryFolderEntry = {
+  path: "cache/Ideas/K-20260725-002.md",
+  code: "K-20260725-002",
+  display_name: "Blue Hour",
+  folder: "Ideas",
+  summary: "Blue hour settles over the harbour.",
+  tags: ["harbour"],
+  highlight_names: ["Signal"],
+  created: "2026-07-25T14:00:00",
+  updated: "2026-07-25T15:00:00",
+  trashed: false,
+};
+
+const storedFolderPaper = {
+  ...draftPaper,
+  path: libraryFolderEntry.path,
+  code: libraryFolderEntry.code,
+  display_name: libraryFolderEntry.display_name,
+  summary: libraryFolderEntry.summary,
+  highlights: [{ display_name: "Signal", content: "Saved signal." }],
+};
+
+function appLibraryView(overrides = {}) {
+  return {
+    scope: "all",
+    entries: [libraryRootEntry, libraryFolderEntry],
+    folders: ["Ideas"],
+    trash_folders: [],
+    trash_count: 0,
+    errors: [],
+    ...overrides,
+  };
+}
+
 function buttonByText(wrapper, text) {
   const button = wrapper.findAll("button").find((item) => item.text() === text);
   if (!button) {
@@ -44,12 +91,126 @@ function buttonByText(wrapper, text) {
   return button;
 }
 
+async function openLibrary(wrapper) {
+  await wrapper.get('button[aria-label="打开 Library"]').trigger("click");
+  await flushPromises();
+}
+
+async function setLibraryContext(wrapper) {
+  await buttonByText(wrapper, "Ideas").trigger("click");
+  await flushPromises();
+  await wrapper.get('input[type="search"]').setValue("harbour");
+  await flushPromises();
+  await wrapper.get(".library-toolbar select").setValue("name");
+  await flushPromises();
+  await wrapper.findAll(".library-row")[1].trigger("click");
+  await wrapper
+    .get(`input[aria-label="选择 ${libraryRootEntry.display_name}"]`)
+    .setValue(true);
+  window.scrollY = 420;
+}
+
+function expectLibraryContext(wrapper) {
+  expect(wrapper.get(".library-scopes button.selected").text()).toBe("Ideas");
+  expect(wrapper.get('input[type="search"]').element.value).toBe("harbour");
+  expect(wrapper.get(".library-toolbar select").element.value).toBe("name");
+  expect(wrapper.get(".library-detail h3").text()).toBe("Blue Hour");
+  expect(
+    wrapper.get(`input[aria-label="选择 ${libraryRootEntry.display_name}"]`)
+      .element.checked,
+  ).toBe(true);
+}
+
+function expectDefaultLibraryContext(wrapper) {
+  expect(wrapper.get(".library-scopes button.selected").text()).toBe(
+    "全部 Paper",
+  );
+  expect(wrapper.get('input[type="search"]').element.value).toBe("");
+  expect(wrapper.get(".library-toolbar select").element.value).toBe(
+    "updated_desc",
+  );
+  expect(wrapper.get(".library-detail h3").text()).toBe("Night Train");
+  expect(
+    wrapper.findAll('.library-list input[type="checkbox"]').some(
+      (checkbox) => checkbox.element.checked,
+    ),
+  ).toBe(false);
+}
+
+function mockLibraryApp({ blockedBranch = false } = {}) {
+  getRuntimeStatus.mockResolvedValue({
+    state: "ready",
+    app_version: "0.1.0",
+    core_version: "paper-v3/index-v3",
+  });
+  bridgeRequest.mockImplementation(async (method, params) => {
+    if (method === "startup.load") {
+      return { state: "ready", show_daily_card: false };
+    }
+    if (method === "library.query") {
+      return appLibraryView({ scope: params.scope });
+    }
+    if (method === "paper.create_draft") {
+      return draftPaper;
+    }
+    if (method === "paper.open") {
+      return storedFolderPaper;
+    }
+    if (method === "flashcard.open") {
+      return {
+        path: storedFolderPaper.path,
+        paper_label: `${storedFolderPaper.display_name} (${storedFolderPaper.code})`,
+        cards: [
+          { title: "Summary", content: storedFolderPaper.summary },
+          { title: "Signal", content: "Saved signal." },
+        ],
+        options: [],
+      };
+    }
+    if (method === "vault.inspect") {
+      return {
+        token: "preview-handle",
+        kind: "paper",
+        display_path: "/Users/creator/NewVault",
+        paper_count: 2,
+        source_kind: "paper",
+        message: "",
+        migration: null,
+      };
+    }
+    if (method === "vault.open") {
+      return { state: "ready", show_daily_card: false };
+    }
+    if (method === "library.branch" && blockedBranch) {
+      throw {
+        code: "commit_unknown",
+        layer: "tauri_host",
+        message: "response lost",
+        recovery: "restart_then_reload",
+      };
+    }
+    throw new Error(`Unexpected method: ${method} ${JSON.stringify(params)}`);
+  });
+}
+
 describe("desktop shell gates", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     confirmDiscardChanges.mockResolvedValue(true);
     registerWindowCloseGuard.mockResolvedValue(vi.fn());
     window.history.replaceState({}, "", "/");
+    Object.defineProperty(window, "scrollY", {
+      configurable: true,
+      value: 0,
+      writable: true,
+    });
+    Object.defineProperty(window, "scrollTo", {
+      configurable: true,
+      value: vi.fn(({ top }) => {
+        window.scrollY = top;
+      }),
+      writable: true,
+    });
     bridgeRequest.mockImplementation(async (method) => {
       if (method === "startup.load") {
         return { state: "ready", show_daily_card: false };
@@ -255,6 +416,107 @@ describe("desktop shell gates", () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain("Folder-aware retrieval");
+    wrapper.unmount();
+  });
+
+  it("preserves all Library context through Paper, Flashcard, and a canceled Vault switch", async () => {
+    mockLibraryApp();
+
+    const wrapper = mount(App);
+    await flushPromises();
+    await openLibrary(wrapper);
+    await setLibraryContext(wrapper);
+
+    await buttonByText(wrapper, "编辑 Paper").trigger("click");
+    await flushPromises();
+    const baseBridgeRequest = bridgeRequest.getMockImplementation();
+    let resolveLibraryRefresh;
+    bridgeRequest.mockImplementation((method, params) => {
+      if (method === "library.query" && !resolveLibraryRefresh) {
+        return new Promise((resolve) => {
+          resolveLibraryRefresh = async () =>
+            resolve(await baseBridgeRequest(method, params));
+        });
+      }
+      return baseBridgeRequest(method, params);
+    });
+    const findEvent = new KeyboardEvent("keydown", {
+      key: "f",
+      metaKey: true,
+      cancelable: true,
+    });
+    window.dispatchEvent(findEvent);
+    window.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Escape", cancelable: true }),
+    );
+    expect(findEvent.defaultPrevented).toBe(false);
+
+    window.scrollTo.mockClear();
+    await openLibrary(wrapper);
+    expect(resolveLibraryRefresh).toBeTypeOf("function");
+    expect(window.scrollTo).toHaveBeenCalledWith({ top: 420 });
+    await resolveLibraryRefresh();
+    await flushPromises();
+    expectLibraryContext(wrapper);
+    expect(window.scrollTo).toHaveBeenLastCalledWith({ top: 420 });
+
+    await buttonByText(wrapper, "打开 Flashcard").trigger("click");
+    await flushPromises();
+    await openLibrary(wrapper);
+    expectLibraryContext(wrapper);
+    expect(window.scrollTo).toHaveBeenLastCalledWith({ top: 420 });
+
+    await buttonByText(wrapper, "切换 Vault").trigger("click");
+    await buttonByText(wrapper, "取消并返回").trigger("click");
+    await flushPromises();
+    expectLibraryContext(wrapper);
+    expect(window.scrollTo).toHaveBeenLastCalledWith({ top: 420 });
+    wrapper.unmount();
+  });
+
+  it("resets Library context after a successful Vault switch", async () => {
+    mockLibraryApp();
+
+    const wrapper = mount(App);
+    await flushPromises();
+    await openLibrary(wrapper);
+    await setLibraryContext(wrapper);
+    await buttonByText(wrapper, "切换 Vault").trigger("click");
+    await wrapper
+      .get('.vault-panel input[type="text"]')
+      .setValue("/Users/creator/NewVault");
+    await buttonByText(wrapper, "检查 Vault").trigger("click");
+    await flushPromises();
+    await buttonByText(wrapper, "确认切换并打开").trigger("click");
+    await flushPromises();
+
+    await openLibrary(wrapper);
+    expectDefaultLibraryContext(wrapper);
+    expect(window.scrollTo).toHaveBeenLastCalledWith({ top: 0 });
+    wrapper.unmount();
+  });
+
+  it("resets Library context after a blocked runtime restarts", async () => {
+    mockLibraryApp({ blockedBranch: true });
+    restartSidecar.mockResolvedValue({
+      state: "ready",
+      app_version: "0.1.0",
+      core_version: "paper-v3/index-v3",
+    });
+
+    const wrapper = mount(App);
+    await flushPromises();
+    await openLibrary(wrapper);
+    await setLibraryContext(wrapper);
+    await buttonByText(wrapper, "复制分支").trigger("click");
+    await flushPromises();
+    expect(wrapper.text()).toContain("无法安全连接 Python Core");
+
+    await buttonByText(wrapper, "重启本地 Core").trigger("click");
+    await flushPromises();
+    await openLibrary(wrapper);
+    expectDefaultLibraryContext(wrapper);
+    expect(window.scrollTo).toHaveBeenLastCalledWith({ top: 0 });
     wrapper.unmount();
   });
 
