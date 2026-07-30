@@ -71,7 +71,7 @@ function moveHighlight(index, offset) {
   <div class="prototype-shell">
     <nav class="global-rail" aria-label="全局工作区">
       <a class="brand-mark" href="#paper-editor" aria-label="keikeu Paper">K</a>
-      <div class="rail-nav" aria-label="Road v0.4 destinations">
+      <div class="rail-nav" aria-label="Road v0.5 destinations">
         <a class="rail-item is-active" href="#paper-editor" aria-current="page">
           <span aria-hidden="true">P</span>
           <small>Paper</small>
@@ -90,7 +90,7 @@ function moveHighlight(index, offset) {
 
     <aside class="context-pane" aria-label="Paper 上下文">
       <header class="context-header">
-        <p class="section-label">Road v0.4 · CP5</p>
+        <p class="section-label">Road v0.5 · CP5</p>
         <h1>Paper 工作台</h1>
         <p class="prototype-notice">合成样张 · 不连接 Vault</p>
       </header>
@@ -232,14 +232,6 @@ function moveHighlight(index, offset) {
 
 <style scoped>
 .prototype-shell {
-  --canvas: #eceae4;
-  --paper: #fffefa;
-  --ink: #1e2523;
-  --muted: #646b68;
-  --accent: #2e5d57;
-  --signal: #9a4e3f;
-  --rule: #c8c9c2;
-  --soft: #f4f3ee;
   display: grid;
   grid-template-columns: 72px 260px minmax(0, 1fr);
   min-height: 100vh;
@@ -264,7 +256,7 @@ button {
   align-items: center;
   padding: 18px 8px 14px;
   color: var(--paper);
-  background: var(--ink);
+  background: var(--rail);
 }
 
 .brand-mark {
@@ -273,7 +265,7 @@ button {
   height: 40px;
   border: 1px solid color-mix(in srgb, var(--paper) 60%, transparent);
   color: var(--paper);
-  font: 600 1.35rem Georgia, "Times New Roman", serif;
+  font: 600 1.35rem var(--font-display);
   place-items: center;
   text-decoration: none;
 }
@@ -297,7 +289,7 @@ button {
 }
 
 .rail-item small {
-  color: #c8c9c2;
+  color: var(--rail-muted);
   font-size: 0.62rem;
   letter-spacing: 0.04em;
 }
@@ -313,8 +305,8 @@ button {
 
 .local-mark {
   margin-top: auto;
-  color: #c8c9c2;
-  font: 0.58rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--rail-muted);
+  font: 0.58rem var(--font-mono);
   letter-spacing: 0.14em;
   writing-mode: vertical-rl;
 }
@@ -343,7 +335,7 @@ button {
 
 .context-header h1 {
   margin: 7px 0 12px;
-  font: 500 1.75rem/1.05 Georgia, "Times New Roman", serif;
+  font: 500 1.75rem/1.05 var(--font-display);
 }
 
 .prototype-notice {
@@ -402,7 +394,7 @@ button {
 
 .index-heading span {
   color: var(--muted);
-  font: 0.72rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 0.72rem var(--font-mono);
 }
 
 .paper-list {
@@ -440,7 +432,7 @@ button {
   min-width: 0;
   overflow-wrap: anywhere;
   color: var(--muted);
-  font: 0.68rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 0.68rem var(--font-mono);
 }
 
 .empty-copy {
@@ -456,7 +448,7 @@ button {
   justify-content: space-between;
   gap: 8px;
   color: var(--muted);
-  font: 0.65rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 0.65rem var(--font-mono);
 }
 
 .context-footer {
@@ -480,15 +472,20 @@ button {
   border-bottom: 1px solid var(--rule);
 }
 
+.workspace-header > div {
+  min-width: 0;
+}
+
 .workspace-header h2 {
   margin: 5px 0 0;
-  font: 500 clamp(1.9rem, 3vw, 2.8rem)/1 Georgia, "Times New Roman", serif;
+  font: 500 clamp(1.9rem, 3vw, 2.8rem)/1 var(--font-display);
+  overflow-wrap: anywhere;
 }
 
 .workspace-header button {
   padding: 9px 13px;
   border: 1px solid var(--rule);
-  border-radius: 0;
+  border-radius: var(--radius-xs);
   color: var(--muted);
   background: transparent;
 }
@@ -566,7 +563,7 @@ button {
 
 .highlight-fieldset legend small {
   color: var(--muted);
-  font: 0.68rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 0.68rem var(--font-mono);
 }
 
 .highlight-list {
@@ -586,7 +583,7 @@ button {
 
 .proof-number {
   color: var(--signal);
-  font: 0.67rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 0.67rem var(--font-mono);
 }
 
 .drag-glyph {
@@ -660,12 +657,12 @@ button {
 }
 
 .margin-note > strong {
-  font: 600 0.78rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 600 0.78rem var(--font-mono);
 }
 
 .margin-note code {
   color: var(--muted);
-  font: 0.7rem/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 0.7rem/1.5 var(--font-mono);
 }
 
 .margin-note dl {

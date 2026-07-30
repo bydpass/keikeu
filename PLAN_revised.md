@@ -1,6 +1,6 @@
 # Road v0.5：Quiet Desk UI Reform and Routine Set
 
-> 状态：**CP4 PASSED BY ADVANCE YOLO · COMMIT PENDING**
+> 状态：**CP5 PASSED BY ADVANCE YOLO · CP6 PENDING**
 >
 > 目标分支：`road_v05_ui_reform_and_routine_set`
 >
@@ -359,6 +359,15 @@ Exit gate:
 - 没有横向溢出、被裁文字、不可见焦点或动作层级冲突。
 - Vault、迁移与 Core 阻塞页面不再像另一套应用。
 - 功能与数据边界未因视觉重构改变。
+
+CP5 record — 2026-07-29:
+
+- 根级视觉 token 统一为低饱和纸面、墨色正文与 ink-blue signal，并集中定义原生 macOS 字体栈、小圆角、焦点和 reduced-motion。Paper、Flashcard、Library、Vault/迁移与 Core loading/blocked/recovery 使用同一视觉语言；development-only Prototype 只同步 token，不进入生产 bundle。
+- Paper 与 Flashcard 的长名称、Library 的长文件夹/结果、Vault 的长路径与迁移错误都允许收缩和换行；Library 在紧凑宽度使用两列工具区。普通 destructive action 保持描边，只有最终确认层使用实心 danger，未改变既有动作语义。
+- 合成浏览器在 `1220×780` 与 `920×680` 检查 Paper ready/empty/daily、Flashcard ready/error、Library ready/empty/error、Vault picker/migration-ready/migration-blocked、Core starting/blocked 共 `26` 个渲染组合：均无横向溢出。`focus-visible` probe 为 `3px` ink-blue outline，`prefers-reduced-motion: reduce` 将 transition 与 animation 收敛至 `0.00001s`。
+- 五类代表证据各保留两个尺寸：[`Paper 1220`](docs/acceptance/road-v0-5/cp5-paper-1220x780.png) / [`920`](docs/acceptance/road-v0-5/cp5-paper-920x680.png)、[`Flashcard 1220`](docs/acceptance/road-v0-5/cp5-flashcard-1220x780.png) / [`920`](docs/acceptance/road-v0-5/cp5-flashcard-920x680.png)、[`Library 1220`](docs/acceptance/road-v0-5/cp5-library-1220x780.png) / [`920`](docs/acceptance/road-v0-5/cp5-library-920x680.png)、[`Vault migration 1220`](docs/acceptance/road-v0-5/cp5-vault-migration-1220x780.png) / [`920`](docs/acceptance/road-v0-5/cp5-vault-migration-920x680.png)、[`Core blocked 1220`](docs/acceptance/road-v0-5/cp5-runtime-blocked-1220x780.png) / [`920`](docs/acceptance/road-v0-5/cp5-runtime-blocked-920x680.png)。Flashcard 两张图分别覆盖 Summary 首页与单个 Highlight。
+- 合成 Tauri 窗口在两个尺寸均通过 Paper → Flashcard → Library → Vault 语义导航，并确认 Vault 的安全返回控件；没有打开系统目录选择器。临时 smoke 入口、bridge 注入和所有进程均已删除或退出。
+- 全量 Vitest `60`、Python `235`、Rust `10`、Vite production build、compileall、documentation check 与 `git diff --check` 通过。测试未连接或改写真实 Vault、真实配置或作者内容；开发者已事先声明 CP5 YOLO，exit gate 据此通过。CP6 的真实 dogfood 与产品验收仍未开始。
 
 ### CP6 · Dogfood and acceptance
 

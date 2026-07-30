@@ -639,7 +639,7 @@ onUnmounted(() => {
 <template>
   <main v-if="busy && !view" class="library-gate" aria-live="polite">
     <section>
-      <p class="library-eyebrow">Road v0.4 · Library</p>
+      <p class="library-eyebrow">Road v0.5 · Library</p>
       <h1>正在读取 Library</h1>
       <p>搜索、排序与 scope 由 Python application service 执行。</p>
     </section>
@@ -679,7 +679,7 @@ onUnmounted(() => {
 
     <aside class="library-context" aria-labelledby="library-scopes-title">
       <header>
-        <p class="library-eyebrow">Road v0.4 · Library</p>
+        <p class="library-eyebrow">Road v0.5 · Library</p>
         <h1 id="library-scopes-title">Library</h1>
         <p>Python-owned mutations · {{ runtime.core_version }}</p>
       </header>
@@ -790,7 +790,7 @@ onUnmounted(() => {
             v-model="search"
             type="search"
             :disabled="mutationBusy"
-            placeholder="名称、代号、Summary、Tags 或 Highlight 名称"
+            placeholder="搜索名称、代号、摘要、标签或亮点"
             @input="updateQuery"
           >
           <small>⌘F</small>
@@ -1111,7 +1111,7 @@ onUnmounted(() => {
 button,
 input,
 select {
-  border-radius: 0;
+  border-radius: var(--radius-xs, 2px);
 }
 
 button {
@@ -1129,7 +1129,7 @@ button:disabled {
 
 .library-eyebrow {
   margin: 0;
-  color: var(--muted, #646b68);
+  color: var(--muted);
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -1154,7 +1154,7 @@ button:disabled {
 
 .library-gate h1 {
   margin: 10px 0 16px;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-display);
   font-size: clamp(2rem, 6vw, 3.5rem);
   font-weight: 500;
   line-height: 1.08;
@@ -1182,7 +1182,7 @@ button:disabled {
   overflow-y: auto;
   padding: 18px 8px;
   color: var(--paper);
-  background: var(--ink);
+  background: var(--rail);
 }
 
 .library-brand {
@@ -1191,7 +1191,7 @@ button:disabled {
   height: 38px;
   border: 1px solid var(--paper);
   place-items: center;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-display);
   font-size: 1.4rem;
 }
 
@@ -1220,7 +1220,7 @@ button:disabled {
 
 .library-local {
   margin-top: auto;
-  font: 0.58rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 0.58rem var(--font-mono);
   letter-spacing: 0.12em;
 }
 
@@ -1235,7 +1235,7 @@ button:disabled {
 .library-context h1,
 .library-workspace h2 {
   margin: 8px 0;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-display);
   font-weight: 500;
 }
 
@@ -1260,8 +1260,10 @@ button:disabled {
 
 .library-scopes button {
   display: flex;
+  min-width: 0;
   justify-content: space-between;
   border-color: transparent;
+  overflow-wrap: anywhere;
   text-align: left;
   background: transparent;
 }
@@ -1298,6 +1300,11 @@ button:disabled {
   grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 5px;
+}
+
+.trash-folders li > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .trash-folders button,
@@ -1346,13 +1353,18 @@ button:disabled {
   border-bottom: 1px solid var(--rule);
 }
 
+.library-workspace-header > div {
+  min-width: 0;
+}
+
 .library-workspace-header h2 {
   font-size: clamp(2rem, 4vw, 3.2rem);
+  overflow-wrap: anywhere;
 }
 
 .library-workspace-header > span {
   color: var(--accent);
-  font: 0.78rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 0.78rem var(--font-mono);
 }
 
 .library-toolbar {
@@ -1384,7 +1396,7 @@ button:disabled {
 
 .library-toolbar small {
   color: var(--muted);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
 }
 
 .library-stage {
@@ -1437,7 +1449,7 @@ button:disabled {
 .library-detail h3,
 .asset-health h3 {
   margin: 0;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-display);
   font-size: 1.25rem;
   font-weight: 500;
 }
@@ -1486,6 +1498,10 @@ button:disabled {
   padding-top: 9px;
 }
 
+.library-list input[type="checkbox"] {
+  accent-color: var(--accent);
+}
+
 .library-row {
   display: grid;
   gap: 4px;
@@ -1504,7 +1520,7 @@ button:disabled {
 }
 
 .library-row span {
-  font: 0.7rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 0.7rem var(--font-mono);
 }
 
 .library-row p {
@@ -1537,7 +1553,7 @@ button:disabled {
 
 .detail-summary {
   margin: 24px 0;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-display);
   font-size: 1.25rem;
   line-height: 1.5;
   white-space: pre-wrap;
@@ -1607,6 +1623,11 @@ button:disabled {
   color: var(--muted);
 }
 
+.asset-health li strong,
+.asset-health li span {
+  overflow-wrap: anywhere;
+}
+
 .library-error {
   display: grid;
   gap: 6px;
@@ -1618,7 +1639,7 @@ button:disabled {
 
 .library-error small {
   color: var(--muted);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
 }
 
 .library-notice {
@@ -1648,7 +1669,7 @@ button:disabled {
 
 .operation-dialog h2 {
   margin: 0 0 18px;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-display);
   font-size: 1.8rem;
   font-weight: 500;
 }
@@ -1684,13 +1705,18 @@ button:disabled {
   margin-top: 22px;
 }
 
+.operation-dialog .danger-action {
+  color: var(--paper);
+  background: var(--danger);
+}
+
 @media (max-width: 1080px) {
   .library-stage {
     grid-template-columns: 1fr;
   }
 
   .library-toolbar {
-    grid-template-columns: minmax(220px, 1fr) minmax(160px, 220px) repeat(2, auto);
+    grid-template-columns: minmax(220px, 1fr) minmax(140px, 0.5fr);
   }
 }
 

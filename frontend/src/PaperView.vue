@@ -477,7 +477,7 @@ onUnmounted(() => {
 <template>
   <main v-if="screen === 'loading'" class="paper-gate" aria-live="polite">
     <section>
-      <p class="paper-eyebrow">Road v0.4 · Paper</p>
+      <p class="paper-eyebrow">Road v0.5 · Paper</p>
       <h1>正在读取本地 Paper</h1>
       <p>Vue 正通过受限本地边界读取启动状态。</p>
     </section>
@@ -541,7 +541,7 @@ onUnmounted(() => {
 
     <aside class="paper-context" aria-labelledby="paper-list-title">
       <header>
-        <p class="paper-eyebrow">Road v0.4 · Paper</p>
+        <p class="paper-eyebrow">Road v0.5 · Paper</p>
         <h1 id="paper-list-title">Paper 工作台</h1>
         <p>Python Core 已连接 · {{ runtime.core_version }}</p>
       </header>
@@ -754,7 +754,7 @@ onUnmounted(() => {
 button,
 input,
 textarea {
-  border-radius: 0;
+  border-radius: var(--radius-xs);
 }
 
 button {
@@ -772,7 +772,7 @@ button:disabled {
 
 .paper-eyebrow {
   margin: 0;
-  color: var(--muted, #646b68);
+  color: var(--muted);
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -798,7 +798,7 @@ button:disabled {
 .paper-gate h1,
 .paper-gate blockquote {
   margin: 10px 0 16px;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-display);
   font-size: clamp(2rem, 6vw, 3.5rem);
   font-weight: 500;
   line-height: 1.08;
@@ -833,7 +833,7 @@ button:disabled {
   overflow-y: auto;
   padding: 18px 8px;
   color: var(--paper);
-  background: var(--ink);
+  background: var(--rail);
 }
 
 .paper-brand {
@@ -842,7 +842,7 @@ button:disabled {
   height: 38px;
   border: 1px solid var(--paper);
   place-items: center;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-display);
   font-size: 1.4rem;
 }
 
@@ -874,7 +874,7 @@ button:disabled {
 
 .paper-local {
   margin-top: auto;
-  font: 0.58rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 0.58rem var(--font-mono);
   letter-spacing: 0.12em;
 }
 
@@ -889,7 +889,7 @@ button:disabled {
 .paper-context h1,
 .paper-workspace h2 {
   margin: 8px 0;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-display);
   font-weight: 500;
 }
 
@@ -937,12 +937,17 @@ button:disabled {
   background: var(--paper);
 }
 
+.paper-picker strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .paper-picker span,
 .paper-picker small,
 .empty-list {
   overflow-wrap: anywhere;
   color: var(--muted);
-  font: 0.7rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 0.7rem var(--font-mono);
 }
 
 .paper-workspace {
@@ -960,14 +965,19 @@ button:disabled {
   border-bottom: 1px solid var(--rule);
 }
 
+.paper-workspace-header > div {
+  min-width: 0;
+}
+
 .paper-workspace-header h2 {
   font-size: clamp(2rem, 4vw, 3.2rem);
+  overflow-wrap: anywhere;
 }
 
 .paper-code-line {
   margin: 2px 0 0;
   color: var(--muted);
-  font: 0.72rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 0.72rem var(--font-mono);
 }
 
 .paper-save-state {
@@ -975,7 +985,7 @@ button:disabled {
   padding: 3px 7px;
   color: var(--success);
   background: var(--soft);
-  font: 0.7rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 0.7rem var(--font-mono);
   white-space: nowrap;
 }
 
@@ -1017,7 +1027,7 @@ button:disabled {
 .paper-field > span,
 .paper-highlights > legend {
   color: var(--accent);
-  font: 700 0.72rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 700 0.72rem var(--font-mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -1064,7 +1074,7 @@ textarea:focus {
 .initial-copy summary {
   padding: 8px 4px;
   cursor: pointer;
-  font: 0.72rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 0.72rem var(--font-mono);
   letter-spacing: 0.04em;
 }
 
@@ -1118,7 +1128,7 @@ textarea:focus {
   color: var(--muted);
   background: transparent;
   cursor: grab;
-  font: 0.72rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 0.72rem var(--font-mono);
 }
 
 .highlight-grip:active {
@@ -1165,7 +1175,7 @@ textarea:focus {
 
 .paper-error small {
   color: var(--muted);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
 }
 
 .paper-error button {
@@ -1215,7 +1225,7 @@ textarea:focus {
 
 .paper-margin > code,
 .paper-margin dd {
-  font: 0.72rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 0.72rem var(--font-mono);
 }
 
 .paper-margin dl {

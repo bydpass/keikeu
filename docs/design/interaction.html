@@ -3,34 +3,34 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>keikeu Interaction — Road v0.4</title>
+  <title>keikeu Interaction — Road v0.5 Quiet Desk</title>
   <style>
-    :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #1e2523; background: #eceae4; }
+    :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Segoe UI", sans-serif; color: #0f0f0e; background: #ece9de; }
     * { box-sizing: border-box; }
     body { margin: 0; }
     main { width: min(1120px, calc(100% - 32px)); margin: 32px auto 64px; }
-    header, section { border: 1px solid #c8c9c2; background: #fffefa; padding: 28px; }
+    header, section { border: 1px solid #d9d5ca; background: #f6f4ed; padding: 28px; }
     section { margin-top: 16px; }
-    h1, h2 { font-family: Georgia, "Times New Roman", serif; }
+    h1, h2 { font-family: "Songti SC", "STSong", Georgia, serif; }
     h1 { max-width: 780px; margin: 8px 0 12px; font-size: clamp(2rem, 5vw, 3.6rem); line-height: .98; }
     h2 { margin: 0 0 16px; }
     p, li { line-height: 1.6; }
-    .eyebrow, .label { color: #2e5d57; font-size: .75rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
-    .status { display: inline-block; padding: 5px 9px; border-left: 3px solid #9a4e3f; background: #f4eee9; }
+    .eyebrow, .label { color: #1b365d; font-size: .75rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    .status { display: inline-block; padding: 5px 9px; border-left: 3px solid #1b365d; background: #dfdcd0; }
     .journey { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
-    .step { padding: 16px; border-top: 3px solid #2e5d57; background: #f4f3ee; }
-    .step span { display: block; margin-top: 6px; color: #646b68; font-size: .88rem; }
+    .step { padding: 16px; border-top: 3px solid #1b365d; background: #dfdcd0; }
+    .step span { display: block; margin-top: 6px; color: #5c5b56; font-size: .88rem; }
     .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 12px; border-bottom: 1px solid #c8c9c2; text-align: left; vertical-align: top; }
-    th { color: #2e5d57; }
+    th, td { padding: 12px; border-bottom: 1px solid #d9d5ca; text-align: left; vertical-align: top; }
+    th { color: #1b365d; }
     code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .9em; }
     nav { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 18px; }
-    a { color: #2e5d57; }
+    a { color: #1b365d; }
     .tools { display: none; }
     @media (max-width: 780px) {
       .journey, .two { grid-template-columns: 1fr; }
-      .step { border-top: 0; border-left: 3px solid #2e5d57; }
+      .step { border-top: 0; border-left: 3px solid #1b365d; }
       table, tbody, tr, th, td { display: block; }
       th { padding-bottom: 0; border: 0; }
     }
@@ -39,16 +39,16 @@
 <body>
   <main>
     <header>
-      <p class="eyebrow">Road v0.4 · Final interaction</p>
-      <h1>行为保持不变，调用路径逐层替换</h1>
-      <p class="status">Gate A、Gate B、产品验收、macOS 15.7+ 兼容性与 CP14 Flet 退役均已验收；Road v0.4 完成。</p>
+      <p class="eyebrow">Road v0.5 · Quiet Desk</p>
+      <h1>先保存，再离开；一次只处理一件事</h1>
+      <p class="status">本页定义 v0.5 当前交互规范；CP6 的真实 .app dogfood 与产品验收尚须单独完成，不由工程检查替代。</p>
       <nav>
         <a href="../PROJECT.md">当前坐标</a>
         <a href="../SPEC.md">产品边界</a>
-        <a href="../archive/road-v0-4/README.md">计划归档</a>
+        <a href="../../PLAN_revised.md">Road v0.5 Planbook</a>
         <a href="design.html">视觉 map</a>
         <a href="../architecture/architecture.html">架构 map</a>
-        <a href="../archive/road-v0-3/design/interaction.html">Road v0.3 完整归档</a>
+        <a href="../archive/road-v0-4/README.md">Road v0.4 归档</a>
       </nav>
       <div class="tools" aria-hidden="true">
         <input data-doc-search disabled>
@@ -59,46 +59,47 @@
     <section>
       <p class="label">Author journey</p>
       <div class="journey">
-        <div class="step"><strong>Startup</strong><span>每日卡或空白 Paper</span></div>
-        <div class="step"><strong>Paper</strong><span>捕捉、命名、排序、保存</span></div>
-        <div class="step"><strong>Flashcard</strong><span>Summary-first 聚焦与跳页</span></div>
-        <div class="step"><strong>Library</strong><span>检索、文件夹、Trash 与恢复</span></div>
-        <div class="step"><strong>External editor</strong><span>验证后 open/reveal，正文留在外部</span></div>
+        <div class="step"><strong>Daily Card</strong><span>保留现有入口，新建空白 Paper</span></div>
+        <div class="step"><strong>Paper Desk</strong><span>编辑四类字段；原始草稿只读</span></div>
+        <div class="step"><strong>Save</strong><span>成功保存建立唯一新基线</span></div>
+        <div class="step"><strong>Flashcard</strong><span>Summary-first；每张一个 Highlight</span></div>
+        <div class="step"><strong>Library</strong><span>往返时保留当前内存上下文</span></div>
       </div>
     </section>
 
     <section>
-      <h2>调用与反馈</h2>
+      <h2>核心交互约束</h2>
       <table>
         <tbody>
-          <tr><th>用户动作</th><td>Vue 保留表单输入，发送语义 method 与 DTO；不发送绝对路径或 source bytes。</td></tr>
-          <tr><th>本地边界</th><td>Rust 为请求编号并串行写入 JSONL；Python application service 调用现有 Core。</td></tr>
-          <tr><th>成功</th><td>Vue 只应用匹配 request id 的结果，并重新显示 Python 排序后的状态。</td></tr>
-          <tr><th>已知失败</th><td>错误必须标出 UI、host、transport、sidecar、service、Core 或 disk/provider 层。</td></tr>
-          <tr><th>提交状态未知</th><td>mutation 不自动重试；显示 <code>commit_unknown</code>，重新加载磁盘事实后再决定。</td></tr>
-          <tr><th>sidecar 重启</th><td>重新执行 <code>system.hello</code>；旧 edit/preview/preflight token 全部失效。</td></tr>
+          <tr><th>Paper Desk</th><td>只编辑名称、Summary、Highlights、Tags；原始草稿锁定并说明只读。任一受控字段偏离最近成功保存值时显示「未保存」。</td></tr>
+          <tr><th>保存基线</th><td>保存按钮与 <code>Cmd+S</code> 调用同一函数。只有成功写入 Markdown 才更新 baseline；失败、stale 或 <code>commit_unknown</code> 均保留表单和原 baseline。</td></tr>
+          <tr><th>离开保护</th><td>dirty 时，导航、切换或新建 Paper、切换 Vault、关闭窗口都进入同一原生二选一：放弃更改并回到最近基线，或继续编辑并取消动作。不提供「保存并前往」。</td></tr>
+          <tr><th>Flashcard</th><td>只读取最近成功保存的名称、Summary 与 Highlights；第 1 张为 Summary，之后每张只显示 1 个 Highlight，Summary context 由用户手动展开；每次打开回到第 1 张。</td></tr>
+          <tr><th>Library</th><td>scope、search query、sort order、active item、batch selection 与 scroll position 仅在当前进程内往返保留；成功切换 Vault 或应用重启后重置。</td></tr>
+          <tr><th>Vault / migration</th><td>保留既有选择、初始化、切换、复制验证、迁移确认与恢复边界；视觉改造不改变路径、Markdown、Core 或持久化语义。</td></tr>
+          <tr><th>Core recovery</th><td>blocked、protocol mismatch、sidecar unavailable、session expired 与 <code>commit_unknown</code> 使用同一纸面层级，但必须保留明确的故障层、恢复动作和安全 gate。</td></tr>
         </tbody>
       </table>
     </section>
 
     <section class="two">
       <div>
-        <h2>始终存在的状态</h2>
+        <h2>全部页面的状态</h2>
         <ul>
           <li>default、empty、loading/busy、disabled。</li>
           <li>field validation、stale snapshot、conflict。</li>
           <li>sidecar unavailable、protocol mismatch、recovery。</li>
-          <li>危险动作的说明、确认、取消与逐项结果。</li>
+          <li>危险动作的说明、确认、取消与逐项结果；视觉层级不能弱化安全边界。</li>
         </ul>
       </div>
       <div>
-        <h2>替换结果</h2>
-        <ol>
-          <li>Paper、Flashcard、Library、mutation/Vault 已分切片迁移。</li>
-          <li>Gate A 对照证明字段、动作、错误和 durable result 等价。</li>
-          <li>CP11 独立完成 Gate B；CP12 完成产品验收。</li>
-          <li>CP13 证明 macOS 15.7+；CP14 退役 Flet 并执行最终验证。</li>
-        </ol>
+        <h2>键盘、窗口与动效</h2>
+        <ul>
+          <li>所有可操作元素有可见 <code>:focus-visible</code>，Tab 顺序与视觉顺序一致。</li>
+          <li>Paper 字段失焦后仍可辨识；Highlight 拖动保留上移、下移按钮等价路径。</li>
+          <li><code>1220×780</code> 与 <code>920×680</code> 不横向溢出、不裁文字，动作保持可达。</li>
+          <li><code>prefers-reduced-motion</code> 关闭非必要动效；任何流程都不依赖动画理解或完成。</li>
+        </ul>
       </div>
     </section>
   </main>

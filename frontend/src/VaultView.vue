@@ -362,7 +362,7 @@ onMounted(() => {
   <main class="vault-gate">
     <section class="vault-panel" :aria-busy="busy">
       <header>
-        <p class="vault-eyebrow">Road v0.4 · Vault</p>
+        <p class="vault-eyebrow">Road v0.5 · Vault</p>
         <h1>{{ mode.startsWith("migration") ? "迁移旧 Vault" : "打开或创建 Vault" }}</h1>
         <p>Paper Markdown 保留在本地；Vue 只提交路径与确认令牌。</p>
       </header>
@@ -541,7 +541,7 @@ onMounted(() => {
 
 h1,
 h2 {
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-display);
   font-weight: 500;
 }
 
@@ -562,7 +562,7 @@ input[type="text"] {
   min-width: 0;
   width: 100%;
   border: 1px solid var(--rule);
-  border-radius: 0;
+  border-radius: var(--radius-xs, 2px);
   padding: 11px 12px;
   color: var(--ink);
   background: var(--field);
@@ -570,7 +570,7 @@ input[type="text"] {
 
 button {
   border: 1px solid var(--ink);
-  border-radius: 0;
+  border-radius: var(--radius-xs, 2px);
   padding: 9px 13px;
   color: var(--ink);
   background: var(--paper);
@@ -620,6 +620,10 @@ code {
   margin: 12px 0;
 }
 
+.vault-check input {
+  accent-color: var(--accent);
+}
+
 .migration-summary dl {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -648,14 +652,23 @@ code {
 }
 
 .migration-issues li {
+  min-width: 0;
   margin-top: 8px;
 }
 
+.migration-issues strong,
 .migration-issues span,
+.vault-error strong,
 .vault-error small {
   display: block;
   margin-top: 4px;
+  overflow-wrap: anywhere;
   color: var(--muted);
+}
+
+.migration-issues strong,
+.vault-error strong {
+  color: var(--ink);
 }
 
 .vault-error {

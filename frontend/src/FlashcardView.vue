@@ -174,7 +174,7 @@ onUnmounted(() => window.removeEventListener("keydown", onWindowKeydown));
 <template>
   <main v-if="busy && !deck" class="flashcard-gate" aria-live="polite">
     <section>
-      <p class="flashcard-eyebrow">Road v0.4 · Flashcard</p>
+      <p class="flashcard-eyebrow">Road v0.5 · Flashcard</p>
       <h1>正在打开 Flashcard</h1>
       <p>从 Python Core 读取 Summary-first 投影。</p>
     </section>
@@ -212,7 +212,7 @@ onUnmounted(() => window.removeEventListener("keydown", onWindowKeydown));
 
     <aside class="flashcard-context" aria-labelledby="flashcard-list-title">
       <header>
-        <p class="flashcard-eyebrow">Road v0.4 · Flashcard</p>
+        <p class="flashcard-eyebrow">Road v0.5 · Flashcard</p>
         <h1 id="flashcard-list-title">Flashcard</h1>
         <p>只读投影 · {{ runtime.core_version }}</p>
       </header>
@@ -320,7 +320,7 @@ onUnmounted(() => window.removeEventListener("keydown", onWindowKeydown));
 button,
 input,
 select {
-  border-radius: 0;
+  border-radius: var(--radius-xs);
 }
 
 button {
@@ -338,7 +338,7 @@ button:disabled {
 
 .flashcard-eyebrow {
   margin: 0;
-  color: var(--muted, #646b68);
+  color: var(--muted);
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -363,7 +363,7 @@ button:disabled {
 
 .flashcard-gate h1 {
   margin: 10px 0 16px;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-display);
   font-size: clamp(2rem, 6vw, 3.5rem);
   font-weight: 500;
   line-height: 1.08;
@@ -391,7 +391,7 @@ button:disabled {
   overflow-y: auto;
   padding: 18px 8px;
   color: var(--paper);
-  background: var(--ink);
+  background: var(--rail);
 }
 
 .flashcard-brand {
@@ -400,7 +400,7 @@ button:disabled {
   height: 38px;
   border: 1px solid var(--paper);
   place-items: center;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-display);
   font-size: 1.4rem;
 }
 
@@ -429,7 +429,7 @@ button:disabled {
 
 .flashcard-local {
   margin-top: auto;
-  font: 0.58rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 0.58rem var(--font-mono);
   letter-spacing: 0.12em;
 }
 
@@ -444,7 +444,7 @@ button:disabled {
 .flashcard-context h1,
 .flashcard-workspace h2 {
   margin: 8px 0;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-display);
   font-weight: 500;
 }
 
@@ -503,9 +503,14 @@ button:disabled {
   background: var(--paper);
 }
 
+.flashcard-list strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .flashcard-list span {
   color: var(--muted);
-  font: 0.7rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 0.7rem var(--font-mono);
 }
 
 .flashcard-workspace {
@@ -523,13 +528,18 @@ button:disabled {
   border-bottom: 1px solid var(--rule);
 }
 
+.flashcard-workspace-header > div {
+  min-width: 0;
+}
+
 .flashcard-workspace-header h2 {
   font-size: clamp(2rem, 4vw, 3.2rem);
+  overflow-wrap: anywhere;
 }
 
 .flashcard-workspace-header > span {
   color: var(--accent);
-  font: 0.78rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 0.78rem var(--font-mono);
 }
 
 .flashcard-stage {
@@ -559,7 +569,7 @@ button:disabled {
 .flashcard-content {
   min-height: 180px;
   margin: 28px 0;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-display);
   font-size: clamp(1.5rem, 3vw, 2.25rem);
   line-height: 1.45;
   overflow-wrap: anywhere;
@@ -639,7 +649,7 @@ button:disabled {
 .flashcard-margin > code,
 .flashcard-margin > p:last-child {
   color: var(--muted);
-  font: 0.72rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 0.72rem var(--font-mono);
 }
 
 @media (max-width: 1100px) {
