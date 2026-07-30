@@ -27,7 +27,6 @@ REQUIRED = {
     ROOT / "docs" / "design" / "interaction.html",
     ROOT / "docs" / "architecture" / "architecture.html",
     ROOT / "docs" / "architecture" / "decisions" / "0001-document-authority.md",
-    ROOT / "docs" / "cold_start_report.md",
     ROOT / "docs" / "acceptance" / "README.md",
     ROOT / "docs" / "generated" / "README.md",
     ROOT / "docs" / "archive" / "README.md",
@@ -64,6 +63,7 @@ def active_documents() -> list[Path]:
         ROOT / "README_EN.md",
         ROOT / "AGENTS.md",
         ROOT / "CLAUDE.md",
+        ROOT / "PLAN_revised.md",
     ]
     docs = [
         path

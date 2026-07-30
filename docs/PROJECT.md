@@ -2,7 +2,7 @@
 
 > Authority: current coordinates, module entry points, documentation index, and next gate. Product behavior belongs in [SPEC](SPEC.md); rules belong in [RULES](RULES.md).
 
-Updated: 2026-07-26
+Updated: 2026-07-29
 
 ## Current coordinates
 
@@ -14,7 +14,7 @@ Updated: 2026-07-26
 | Phase 8.5 / Road v0.3 preparation | Complete | Documentation reform, authority maps, link gate, browser QA, and bounded Graphify trial completed before Road v0.3 construction. The fresh-agent audit remained unperformed and is not retroactively claimed. |
 | Road v0.3 | Product accepted; design archive complete | Phase 0–7 engineering, CP5 macOS candidate smoke, and CP6 real-author scenarios are complete. Retrieval was faster and clear, external-editor handoff was clear, and no unresolved P0/P1 was reported. The [version archive](archive/road-v0-3/README.md) is read-only; no v0.3 tag, commit, or push is implied. |
 | Road v0.4 | Complete; CP14 accepted | [CP14 evidence](acceptance/road_v0_4_cp14.md) records accepted Flet retirement, Python `234`, Vue `48`, Rust `10`, and the authorized final beta engineering build/launch/relaunch smoke. The one-time exception is consumed; compatibility remains CP13-only evidence. |
-
+| Road v0.5 | CP0 accepted; commit pending | The [active Planbook](../PLAN_revised.md) owns scope and checkpoint order. Automated checks and section-by-section routine review passed; the developer explicitly accepted CP0 on 2026-07-29. |
 Phase 8 product acceptance is complete. Road v0.2 is marked by local annotated tag `v0.2.0` at `d0feac0269a5619f5dbf27c04347ba69c5665b42`; archival remains a separate developer decision. Automated tests, platform smoke, and author acceptance remain distinct evidence.
 
 Road v0.3 product decisions, implementation, macOS candidate smoke, and product acceptance are complete. Its detailed SPEC, Planbook, maps, ADRs, and CP6 record are archived. Its accepted Python/Flet runtime served as the Road v0.4 parity baseline until all replacement gates passed; CP14 retires it without changing or migrating Vault data.
@@ -29,7 +29,7 @@ Road v0.4 CP0 is committed at `8407941` on `codex/road-v04-cp0`; CP1 at `b718ed8
 
 ## Road v0.4 CP3 boundary
 
-- [`protocol.md`](protocol.md) records every method, params/result shape, known errors, mutation/retry rule, session token, service mapping, and a manual hello example.
+- The archived Road v0.4 [`protocol.md`](archive/road-v0-4/protocol.md) records every method, params/result shape, known errors, mutation/retry rule, session token, service mapping, and a manual hello example.
 - [`protocol.py`](../src/keikeu_bridge/protocol.py) owns validation and dispatch only; [`sidecar.py`](../src/keikeu_bridge/sidecar.py) owns stdin/stdout only. Neither contains Paper, Vault, Markdown, search, Trash, or migration rules.
 - A repeated `system.hello` changes `session_id` and clears transient preview/edit/preflight handles. EOF exits normally; the dispatcher invokes each mutation once and never retries.
 - Host timeouts, crash ownership, request queueing, response-loss `commit_unknown`, and child cleanup remain CP4 Rust responsibilities.
@@ -170,10 +170,10 @@ README
        └─ CONTEXT ──── human manuals / ADRs / read-only archive
 ```
 
-- **Authority:** [SPEC](SPEC.md) owns Road v0.4 product scope; [RULES](RULES.md) owns engineering, interaction, data, Git, and evidence constraints; [AGENTS](../AGENTS.md) owns agent procedure. The completed [Planbook and understanding gate](archive/road-v0-4/README.md) are read-only history. The [JSONL protocol](protocol.md) records the active local transport contract. Runtime facts come from [`src/`](../src/) and [`tests/`](../tests/).
+- **Authority:** [SPEC](SPEC.md) owns the accepted Road v0.4 runtime and product boundary until v0.5 acceptance; the [Road v0.5 Planbook](../PLAN_revised.md) owns active Road scope and checkpoint order. [RULES](RULES.md) owns engineering, interaction, data, Git, and evidence constraints; [AGENTS](../AGENTS.md) owns agent procedure. The completed [Road v0.4 Planbook, understanding gate, and JSONL protocol](archive/road-v0-4/README.md) are read-only history. Runtime facts come from [`src/`](../src/) and [`tests/`](../tests/).
 - **Views:** [design](design/design.html), [interaction](design/interaction.html), and [architecture](architecture/architecture.html) describe the implemented Road v0.4 runtime and accepted visual system.
-- **Working material:** the [Road v0.5 plan and design workspace](design/working-materials.md) records the next Road proposal and its generation context; it does not describe current runtime behavior.
-- **Evidence:** [acceptance](acceptance/README.md) links completed Road v0.2 evidence and the archived Road v0.3 CP6 record. The frozen [2cc40ba status snapshot](archive/snapshots/feat-complete-road-v0-3-candidate.html) shows the earlier CP5 boundary. [generated](generated/README.md) remains rebuildable observation; the [cold-start audit](cold_start_report.md) is dated historical evidence, not a claim about the transition pages.
+- **Working material:** the [Road v0.5 design workspace](design/working-materials.md) records prototype and generation context; it does not describe current runtime behavior or override the active Planbook.
+- **Evidence:** [acceptance](acceptance/README.md) links completed Road v0.2 evidence and the archived Road v0.3 CP6 record. The frozen [2cc40ba status snapshot](archive/snapshots/feat-complete-road-v0-3-candidate.html) shows the earlier CP5 boundary. [generated](generated/README.md) remains rebuildable observation; the archived [cold-start audit](archive/road-v0-3/cold_start_report.md) is dated historical evidence, not a claim about the transition pages.
 - **Context:** [ADR 0001](architecture/decisions/0001-document-authority.md) explains the authority split. Road v0.3 design history lives in its [version archive](archive/road-v0-3/README.md), and Road v0.4 planning history lives in its [planning archive](archive/road-v0-4/README.md). [Manual](manual/README.md) teaches people; [archive](archive/README.md) preserves superseded records. Neither overrides authority.
 
 ## Commands
@@ -193,8 +193,8 @@ Application tests must not be inferred from documentation checks. Platform smoke
 
 ## Post-Road decisions
 
-Road v0.4 is complete. Tag, archive, push, signing, distribution, and any real-Vault operation remain separate developer decisions.
+Road v0.4 is complete. Road v0.5 CP0 is accepted and awaits its authorized `aic` commit before CP1 begins. Tag, archive, push, signing, distribution, and any real-Vault operation remain separate developer decisions.
 
 ## History boundary
 
-Road v0.1/v0.2 history, Road v0.3 design and acceptance, old planning debates, frozen status pages, and the Phase 8.5 proposal live under [archive](archive/README.md). Human explanations live under [manual](manual/README.md). Neither overrides the active Road v0.4 authority.
+Road v0.1/v0.2 history, Road v0.3 design and acceptance, old planning debates, frozen status pages, and the Phase 8.5 proposal live under [archive](archive/README.md). Human explanations live under [manual](manual/README.md). Neither overrides the active SPEC, RULES, and Road v0.5 Planbook boundary.

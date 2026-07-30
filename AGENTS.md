@@ -11,6 +11,7 @@ Protect author control, local durability, privacy, and beginner-maintainability.
 | Need | Authority |
 | --- | --- |
 | Product scope and acceptance | `docs/SPEC.md` |
+| Road v0.5 scope and checkpoint order | `PLAN_revised.md` |
 | Current phase and next gate | `docs/PROJECT.md` |
 | Engineering, interaction, data, evidence rules | `docs/RULES.md` |
 | Module and lifecycle map | `docs/architecture/architecture.html` |
@@ -31,7 +32,7 @@ git branch --show-current
 
 Read the authority and every caller touched by a behavior change.
 
-For non-obvious scope, state:
+For every repository modification, state:
 
 ```text
 Task:

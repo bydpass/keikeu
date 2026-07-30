@@ -87,10 +87,13 @@ No feature enters an acceptance or bug-fix Phase by being adjacent, attractive, 
 
 - The human owns the diff and repository history. Agent speed never replaces human review or grants architecture or remote authority.
 - Before editing, run `git status --short --branch` and `git branch --show-current`. Dirty work requires every dirty file, overlap, and mixing risk to be named, then human confirmation.
-- Start implementation from a clean tree unless the human explicitly accepts named existing changes. One implementation Phase uses one branch and one focused capability group.
+- Start implementation from a clean tree unless the human explicitly accepts named existing changes. Each Road checkpoint uses one branch and one focused capability group.
+- Before a Road checkpoint starts, branch from the previous checkpoint commit that the developer explicitly passed or covered with advance YOLO. Name the branch `<content-type>/cp<N>-<slug>`; an unpassed checkpoint never seeds the next branch.
 - After editing, inspect status and both unstaged and staged diffs. Stage exact files only; never use broad staging before reviewing every included path.
 - Never stage secrets, environments, caches, `.DS_Store`, logs, build outputs, generated app bundles, or signing data.
 - Do not commit unless explicitly asked. A commit has one purpose, an accurate message, and remains safe to review or revert.
+- When a commit is explicitly authorized, stage exact files, inspect `git diff --cached`, verify the index is non-empty and contains no secret or author content, then use `aic` to create the commit. Never run `aic` with an empty index because it may stage and batch the worktree.
+- Before remote-provider `aic` use, name the provider and obtain explicit developer approval for the staged diff to leave the machine. Without that approval, use an already-configured local provider or stop. If `aic` is unavailable or fails, stop; do not silently fall back to `git commit`. Inspect the resulting commit before reporting success.
 - Never push or change remotes without explicit approval. Fetch is inspection; pull, merge, and rebase change local history or files and require a clean tree plus explicit task authority.
 - Never rebase shared or public history. Force-push requires explicit approval and `--force-with-lease`; plain `--force` is forbidden.
 - Resolve conflicts by reading both sides, preserving intent, limiting edits to the conflict, inspecting the result, and rerunning relevant checks. Never blindly choose ours or theirs.
@@ -106,6 +109,7 @@ No feature enters an acceptance or bug-fix Phase by being adjacent, attractive, 
 - “Engineering complete,” “file-service smoke complete,” “product accepted,” and “Road archived” are separate conclusions.
 - Never copy an old pass count forward as a current result. Record command, state, date when material, and known omissions.
 - Docs-only changes run `scripts/check_docs.py` and `git diff --check`; application tests are reported as not run.
+- After the final accepted checkpoint commit, create `docs/archive/snapshots/road-v<version>.html` in a separate closeout change. Record each checkpoint branch, commit, scope, material changes, checks, developer QA or advance-YOLO result, omissions, and risks; include neither full diffs, author content, nor sensitive paths.
 
 ## 9. Exceptions
 

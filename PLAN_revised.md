@@ -1,6 +1,6 @@
 # Road v0.5：Quiet Desk UI Reform and Routine Set
 
-> 状态：**READY FOR CP0 · 尚未开始施工**
+> 状态：**CP0 PASSED · COMMIT PENDING**
 >
 > 目标分支：`road_v05_ui_reform_and_routine_set`
 >
@@ -8,7 +8,7 @@
 >
 > 视觉原型：[keikeu-v05-prototype.html](docs/design/keikeu_opendesign/keikeu-v05-prototype.html)
 >
-> 阅读版：[HTML](docs/road-v0-5-planbook.html) · [PDF](docs/road-v0-5-planbook.pdf)
+> 冻结的 pre-CP0 阅读快照（非权威）：[HTML](docs/road-v0-5-planbook.html) · [PDF](docs/road-v0-5-planbook.pdf)
 
 ## 1. Core judgment
 
@@ -185,6 +185,22 @@ Library 本轮不重做信息架构或文件能力。必须保持：
 
 ## 6. Engineering plan
 
+### Road branch, commit, and closeout
+
+每个 CP 从上一个已经开发者明确通过或事先声明 YOLO 的 CP commit 创建独立堆叠分支。未通过的 CP 不能成为下一个 CP 的基线：
+
+| CP | Branch |
+| --- | --- |
+| CP0 | `process/cp0-authority-routine` |
+| CP1 | `ui/cp1-paper-desk` |
+| CP2 | `ui/cp2-departure-protection` |
+| CP3 | `ui/cp3-flashcard-sync` |
+| CP4 | `ui/cp4-library-context` |
+| CP5 | `ui/cp5-whole-app-visual` |
+| CP6 | `qa/cp6-dogfood-acceptance` |
+
+Commit 必须先得到明确授权，再按 `docs/RULES.md` §7 精确 stage、检查 cached diff 并调用 `aic`。CP6 通过并 commit 后，另建 `docs/archive/snapshots/road-v0-5.html` closeout change，按 `docs/RULES.md` §8 汇总全部 CP 记录；不把该 snapshot 冒充 CP6 产品验收。
+
 ### CP0 · Authority, routine, and test harness
 
 Deliverables:
@@ -194,8 +210,13 @@ Deliverables:
   - `SKILL.md`
   - `agents/openai.yaml`
 - 使用 skill-creator 生成并运行 quick validation。
-- 在 CP1 首次真实使用 routine，允许根据实际摩擦修正 1 次。
 - 复核并锁定 dirty departure 的官方 dialog binding。候选为与现有 Rust plugin 兼容的 `@tauri-apps/plugin-dialog@2.7.2`，只有确认当前 lock 与 API 后才写入 npm lock。
+
+Dialog binding lock:
+
+- JavaScript binding 精确锁定为 `@tauri-apps/plugin-dialog@2.7.2`，与 Rust `tauri-plugin-dialog = "=2.7.2"` 配对。
+- CP2 使用异步 `confirm()` 与自定义 `okLabel`、`cancelLabel`；Tauri capability 只增加稳定权限 `dialog:allow-message`。
+- CP0 不改 Vue caller 或 capability。`window.confirm` 只保留为 CP2 的非 Tauri 浏览器 fallback。
 
 Routine 的强制 checkpoint：
 
@@ -213,10 +234,23 @@ Routine 的强制 checkpoint：
 Exit gate:
 
 - skill validation 通过。
-- CP1 能按该 routine 完成一次可审阅变更。
+- routine 完成开发者逐段 QA。
 - 规则没有与仓库 authority 冲突。
 
+CP0 record — 2026-07-29:
+
+- `keikeu-routine` 通过 skill-creator quick validation；未增加 hooks、CI gate、后台 agent 或辅助资产。
+- active authority map 已接入本 Planbook，v0.4 SPEC 继续约束当前 runtime。
+- JavaScript 与 Rust dialog plugin 均精确锁定为 `2.7.2`；实际类型声明确认 `confirm()`、`okLabel` 与 `cancelLabel` 可用。
+- documentation check、48 个 Vitest、Vite production build、10 个 Rust tests 与 `git diff --check` 通过。
+- 自动检查与 routine 开发者逐段验收已通过；开发者于 2026-07-29 明确通过 CP0。首次真实使用与至多 1 次修正保留为 CP1 入口门禁。
+
 ### CP1 · Paper Desk
+
+Entry gate:
+
+- CP0 已由开发者明确通过并 commit。
+- 首次真实使用 routine 完成 preflight 与 scope 声明；允许在第一份产品 patch 前根据实际摩擦修正 routine 1 次。
 
 Deliverables:
 

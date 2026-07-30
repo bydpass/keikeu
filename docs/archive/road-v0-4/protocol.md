@@ -1,5 +1,7 @@
 # Road v0.4 JSONL Protocol v1
 
+> **ARCHIVE — READ ONLY.** This is the completed Road v0.4 transport contract; active runtime facts live in source and tests.
+>
 > Current state: CP4 Python dispatcher plus Rust/Tauri host. Vue business slices
 > begin at CP6.
 

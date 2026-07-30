@@ -1,0 +1,4 @@
+interface:
+  display_name: "keikeu Routine"
+  short_description: "Apply keikeu safe reviewable coding checkpoints"
+  default_prompt: "Use $keikeu-routine to make a small, reviewable change in the keikeu repository."
