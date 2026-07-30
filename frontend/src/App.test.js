@@ -137,7 +137,12 @@ describe("desktop shell gates", () => {
     const stored = {
       ...draftPaper,
       path: "cache/K-20260725-001.md",
+      display_name: "Night Train",
       summary: "Saved Summary.",
+      highlights: [
+        { display_name: "Window", content: "Saved first anchor." },
+        { display_name: "Platform", content: "Saved second anchor." },
+      ],
     };
     bridgeRequest.mockImplementation(async (method, params) => {
       if (method === "startup.load") {
@@ -159,8 +164,14 @@ describe("desktop shell gates", () => {
       if (method === "flashcard.open") {
         return {
           path: stored.path,
-          paper_label: stored.code,
-          cards: [{ title: "Summary", content: stored.summary }],
+          paper_label: `${stored.display_name} (${stored.code})`,
+          cards: [
+            { title: "Summary", content: stored.summary },
+            ...stored.highlights.map((highlight) => ({
+              title: highlight.display_name,
+              content: highlight.content,
+            })),
+          ],
           options: [],
         };
       }
@@ -174,14 +185,21 @@ describe("desktop shell gates", () => {
 
     const wrapper = mount(App);
     await flushPromises();
+    await wrapper.get('[name="summary"]').setValue("Unsaved form content.");
     await wrapper.get('button[aria-label="打开 Flashcard"]').trigger("click");
     await flushPromises();
 
+    expect(confirmDiscardChanges).toHaveBeenCalledOnce();
+    expect(wrapper.text()).toContain("Night Train");
     expect(wrapper.text()).toContain("Saved Summary.");
+    expect(wrapper.text()).not.toContain("Unsaved form content.");
+    expect(wrapper.text()).toContain("1 / 3");
     expect(bridgeRequest).toHaveBeenCalledWith("flashcard.open", {
       path: stored.path,
     });
 
+    await wrapper.findAll(".flashcard-list button")[1].trigger("click");
+    expect(wrapper.text()).toContain("Saved first anchor.");
     await wrapper.get('button[aria-label="返回 Paper"]').trigger("click");
     await flushPromises();
 
@@ -189,6 +207,11 @@ describe("desktop shell gates", () => {
     expect(bridgeRequest).toHaveBeenCalledWith("paper.open", {
       path: stored.path,
     });
+
+    await wrapper.get('button[aria-label="打开 Flashcard"]').trigger("click");
+    await flushPromises();
+    expect(wrapper.text()).toContain("Saved Summary.");
+    expect(wrapper.text()).toContain("1 / 3");
     wrapper.unmount();
   });
 

@@ -245,8 +245,11 @@ async function requestDeparture(action = null) {
 }
 
 function openFlashcard() {
+  if (!paper.value?.path) {
+    return false;
+  }
   return requestDeparture(() => {
-    emit("open-flashcard", paper.value?.path ?? null);
+    emit("open-flashcard", paper.value.path);
   });
 }
 
@@ -522,7 +525,8 @@ onUnmounted(() => {
         class="paper-destination"
         type="button"
         aria-label="打开 Flashcard"
-        :disabled="isBusy"
+        :disabled="isBusy || paper?.path == null"
+        title="保存 Paper 后可打开 Flashcard"
         @click="openFlashcard"
       >F<small>Flash</small></button>
       <button

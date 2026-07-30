@@ -14,7 +14,7 @@ Updated: 2026-07-29
 | Phase 8.5 / Road v0.3 preparation | Complete | Documentation reform, authority maps, link gate, browser QA, and bounded Graphify trial completed before Road v0.3 construction. The fresh-agent audit remained unperformed and is not retroactively claimed. |
 | Road v0.3 | Product accepted; design archive complete | Phase 0–7 engineering, CP5 macOS candidate smoke, and CP6 real-author scenarios are complete. Retrieval was faster and clear, external-editor handoff was clear, and no unresolved P0/P1 was reported. The [version archive](archive/road-v0-3/README.md) is read-only; no v0.3 tag, commit, or push is implied. |
 | Road v0.4 | Complete; CP14 accepted | [CP14 evidence](acceptance/road_v0_4_cp14.md) records accepted Flet retirement, Python `234`, Vue `48`, Rust `10`, and the authorized final beta engineering build/launch/relaunch smoke. The one-time exception is consumed; compatibility remains CP13-only evidence. |
-| Road v0.5 | CP2 passed by advance YOLO; commit pending | CP0 is committed at `11c2149`; CP1 at `a2ff5cb`. The active [Planbook](../PLAN_revised.md) records CP2 baseline, departure guard, automated evidence, and isolated two-width Tauri smoke under the predeclared developer YOLO boundary. |
+| Road v0.5 | CP3 passed by advance YOLO; commit pending | CP0 is committed at `11c2149`; CP1 at `a2ff5cb`; CP2 at `30b54ac`. The active [Planbook](../PLAN_revised.md) records CP3 saved-baseline projection, Summary-first behavior, automated evidence, and two-width synthetic rendering under the predeclared developer YOLO boundary. |
 Phase 8 product acceptance is complete. Road v0.2 is marked by local annotated tag `v0.2.0` at `d0feac0269a5619f5dbf27c04347ba69c5665b42`; archival remains a separate developer decision. Automated tests, platform smoke, and author acceptance remain distinct evidence.
 
 Road v0.3 product decisions, implementation, macOS candidate smoke, and product acceptance are complete. Its detailed SPEC, Planbook, maps, ADRs, and CP6 record are archived. Its accepted Python/Flet runtime served as the Road v0.4 parity baseline until all replacement gates passed; CP14 retires it without changing or migrating Vault data.
@@ -193,7 +193,7 @@ Application tests must not be inferred from documentation checks. Platform smoke
 
 ## Post-Road decisions
 
-Road v0.4 is complete. Road v0.5 CP1 is committed as `a2ff5cb`; CP2 engineering and synthetic Tauri QA passed by advance YOLO and awaits its authorized `aic` commit. Tag, archive, push, signing, distribution, and any real-Vault operation remain separate developer decisions.
+Road v0.4 is complete. Road v0.5 CP1 is committed as `a2ff5cb`; CP2 as `30b54ac`; CP3 engineering and synthetic browser QA passed by advance YOLO and awaits its authorized `aic` commit. Tag, archive, push, signing, distribution, and any real-Vault operation remain separate developer decisions.
 
 ## History boundary
 

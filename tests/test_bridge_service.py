@@ -192,6 +192,7 @@ def test_flashcard_and_library_views_keep_python_projection(service_and_vault):
     _save_paper(service, "Other Paper", name="Zulu")
 
     deck = service.flashcard_open(str(first.path))
+    assert deck.paper_label == f"Éclair ({first.code})"
     assert [card.title for card in deck.cards] == ["Summary", "Anchor"]
     assert [card.content for card in deck.cards] == ["Summary first", "Second card"]
 

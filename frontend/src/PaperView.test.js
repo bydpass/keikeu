@@ -131,6 +131,10 @@ describe("Road v0.5 Paper Desk", () => {
     installBridge({ saved: stored });
     const wrapper = mount(PaperView, { props: { runtime } });
     await flushPromises();
+    const flashcardButton = wrapper.get(
+      'button[aria-label="打开 Flashcard"]',
+    );
+    expect(flashcardButton.attributes("disabled")).toBeDefined();
 
     await wrapper.get('[name="display_name"]').setValue("Night Bus");
     await wrapper.get('[name="summary"]').setValue("First summary");
@@ -157,6 +161,7 @@ describe("Road v0.5 Paper Desk", () => {
     });
     expect(wrapper.text()).toContain("已保存至 Markdown");
     expect(wrapper.text()).toContain("First summary");
+    expect(flashcardButton.attributes("disabled")).toBeUndefined();
     wrapper.unmount();
   });
 

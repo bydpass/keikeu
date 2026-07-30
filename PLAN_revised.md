@@ -1,6 +1,6 @@
 # Road v0.5：Quiet Desk UI Reform and Routine Set
 
-> 状态：**CP2 PASSED BY ADVANCE YOLO · COMMIT PENDING**
+> 状态：**CP3 PASSED BY ADVANCE YOLO · COMMIT PENDING**
 >
 > 目标分支：`road_v05_ui_reform_and_routine_set`
 >
@@ -312,6 +312,15 @@ Exit gate:
 - Paper 与 Flashcard 的名称、摘要、亮点一致。
 - dirty Paper 不能绕过离开保护。
 - 每次进入从第 1 张开始。
+
+CP3 record — 2026-07-29:
+
+- 未成功保存、没有 Markdown path 的 Draft 不再开放 Flashcard；保存成功后入口才启用，避免 `flashcard.open(null)` 错开索引中的其他 Paper。
+- Flashcard 每次从 Python 重新读取已保存 Markdown，只投影该基线的名称、Summary 与 Highlights；dirty 表单必须先经过 CP2 离开保护，放弃后不会把未保存内容带入卡片。
+- Summary 固定为第 1 张，之后每张只显示 1 个 Highlight；Summary context 只在 Highlight 卡片上手动展开。返回 Paper 后再次进入，位置重置为 `1 / 3`。
+- focused Vitest `31`、Flashcard service pytest `1`、全量 Vitest `57`、Python `235`、Vite production build、compileall 与 documentation check 通过。
+- [`1220×780`](docs/acceptance/road-v0-5/cp3-flashcard-1220x780.png) 展示 Summary 首页；[`920×680`](docs/acceptance/road-v0-5/cp3-flashcard-920x680.png) 展示单个 Highlight 与展开的 Summary context。两次合成浏览器渲染均无横向溢出，未读取或改写真实 Vault、真实配置或作者内容。
+- CP3 未新增桌面 API 或生命周期行为，因此未把浏览器渲染冒充 Tauri smoke。开发者已事先声明 CP3 YOLO，exit gate 据此通过。
 
 ### CP4 · Library context
 
