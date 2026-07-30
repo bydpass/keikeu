@@ -80,6 +80,10 @@ describe("CP7 Flashcard slice", () => {
   it("supports arrow keys and validated page jumps without leaving the deck", async () => {
     const wrapper = mount(FlashcardView, { props: { runtime } });
     await flushPromises();
+    const controls = wrapper.findAll(".flashcard-controls > button");
+
+    expect(controls[0].attributes("disabled")).toBeDefined();
+    expect(controls[1].attributes("disabled")).toBeUndefined();
 
     const right = new KeyboardEvent("keydown", {
       key: "ArrowRight",
@@ -94,6 +98,8 @@ describe("CP7 Flashcard slice", () => {
     await wrapper.get(".flashcard-controls form").trigger("submit");
     expect(wrapper.text()).toContain("Second writing anchor.");
     expect(wrapper.text()).toContain("3 / 3");
+    expect(controls[0].attributes("disabled")).toBeUndefined();
+    expect(controls[1].attributes("disabled")).toBeDefined();
 
     await wrapper.get("#flashcard-jump-page").setValue("0");
     await wrapper.get(".flashcard-controls form").trigger("submit");

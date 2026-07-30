@@ -916,8 +916,14 @@ onUnmounted(() => {
               <div><dt>文件夹</dt><dd>{{ activeEntry.folder || "未归类" }}</dd></div>
               <div><dt>Tags</dt><dd>{{ activeEntry.tags.length ? activeEntry.tags.join("、") : "未添加" }}</dd></div>
               <div><dt>Highlights</dt><dd>{{ activeEntry.highlight_names.length ? activeEntry.highlight_names.join("、") : "未命名" }}</dd></div>
-              <div><dt>创建</dt><dd>{{ activeEntry.created }}</dd></div>
-              <div><dt>更新</dt><dd>{{ activeEntry.updated }}</dd></div>
+              <div>
+                <dt>创建</dt>
+                <dd>{{ activeEntry.created.slice(0, 16).replace("T", " ") }}</dd>
+              </div>
+              <div>
+                <dt>更新</dt>
+                <dd>{{ activeEntry.updated.slice(0, 16).replace("T", " ") }}</dd>
+              </div>
             </dl>
 
             <div class="detail-actions">

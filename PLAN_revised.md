@@ -1,6 +1,6 @@
 # Road v0.5：Quiet Desk UI Reform and Routine Set
 
-> 状态：**CP5 PASSED BY ADVANCE YOLO · CP6 PENDING**
+> 状态：**CP6 PASSED · FOLLOW-UP CHECKPOINT AUTHORIZED BY ADVANCE YOLO**
 >
 > 目标分支：`road_v05_ui_reform_and_routine_set`
 >
@@ -199,7 +199,7 @@ Library 本轮不重做信息架构或文件能力。必须保持：
 | CP5 | `ui/cp5-whole-app-visual` |
 | CP6 | `qa/cp6-dogfood-acceptance` |
 
-Commit 必须先得到明确授权，再按 `docs/RULES.md` §7 精确 stage、检查 cached diff 并调用 `aic`。CP6 通过并 commit 后，另建 `docs/archive/snapshots/road-v0-5.html` closeout change，按 `docs/RULES.md` §8 汇总全部 CP 记录；不把该 snapshot 冒充 CP6 产品验收。
+Commit 必须先得到明确授权，再按 `docs/RULES.md` §7 精确 stage、检查 cached diff 并调用 `aic`。最终 checkpoint 通过并 commit 后，另建 `docs/archive/snapshots/road-v0-5.html` closeout change，按 `docs/RULES.md` §8 汇总全部 CP 记录；不把该 snapshot 冒充产品验收。
 
 ### CP0 · Authority, routine, and test harness
 
@@ -379,6 +379,13 @@ Deliverables:
 - 修复全部 P0/P1 与最烦的 3 件事。
 - 再跑 30 分钟，并记录修复前后差异。
 
+CP6 record — 2026-07-30:
+
+- 独立 Agent dogfood 已完成两轮 30 分钟记录；未发现 P0/P1，Round 1 最烦的 3 件事已修复并在 Round 2 复验。
+- [`CP6 report`](docs/acceptance/road-v0-5/cp6-dogfood/report.md) 记录 candidate hash、隔离数据、页面路径、Core/迁移恢复与自动检查；后续 P2 修复让未落盘 Draft 可直接进入 Vault picker，dirty Draft 仍走同一离开保护。
+- 全局 `--rule` 从 `#d9d5ca` 加深为 `#b8b2a6`，覆盖 Paper、Flashcard、Library、Vault/迁移与 Core 状态页；当前源码 Tauri 在 `1220×780` 与 `920×680` 复验通过。
+- 开发者已明确通过 CP6；后续 checkpoint 已由 advance YOLO 授权，因此 Road 保持打开，不归档、不打 tag。
+
 Exit gate:
 
 - 我能马上看懂哪里可编辑。
@@ -387,7 +394,7 @@ Exit gate:
 - 鼠标和键盘都顺手。
 - 连续用半小时不烦。
 - 正常交互不会丢内容。
-- 开发者确认产品验收后，Road 才可归档或打 tag。
+- 开发者已确认 CP6 产品验收；Road 仅在后续 checkpoint 完成后才可归档或打 tag。
 
 ## 7. Test and evidence plan
 
@@ -431,7 +438,7 @@ UI 变更必须增加或更新 focused Vitest，至少覆盖：
 
 v0.5 通过需要同时满足：
 
-1. CP0–CP6 exit gate 全部通过。
+1. 所有 active checkpoint exit gate 全部通过。
 2. 无未解决 P0/P1。
 3. 最烦的 3 件事已修复并复验。
 4. 两轮各 30 分钟 dogfood 有真实记录。

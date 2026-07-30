@@ -9,6 +9,7 @@
 - [`road_v0_4_cp12.md`](road_v0_4_cp12.md) — completed CP12 macOS 15.0 production bundle and real-author A/B evidence.
 - [`road_v0_4_cp13.md`](road_v0_4_cp13.md) — accepted CP13 macOS 15.7 arm64 runner and same-artifact compatibility evidence.
 - [`road_v0_4_cp14.md`](road_v0_4_cp14.md) — accepted Flet-retirement and final Road v0.4 evidence.
+- [`road-v0-5/cp6-dogfood/report.md`](road-v0-5/cp6-dogfood/report.md) — accepted independent CP6 Agent dogfood and fixes.
 - [`../archive/docs-archive-documentation-reform-report/`](../archive/docs-archive-documentation-reform-report/): read-only pre-completion record and the SOP used for the checks.
 
 Do not place prose, inspirations, names, relationships, Vault paths, device identifiers, or secrets here. Acceptance, archive, tag, commit, and push remain separate decisions.

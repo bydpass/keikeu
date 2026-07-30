@@ -276,8 +276,15 @@ onUnmounted(() => window.removeEventListener("keydown", onWindowKeydown));
           <p v-if="notice" class="flashcard-notice" aria-live="polite">{{ notice }}</p>
 
           <div class="flashcard-controls">
-            <button type="button" :disabled="busy" @click="move(-1)">上一张</button>
-            <button class="primary-action" type="button" :disabled="busy" @click="move(1)">
+            <button type="button" :disabled="busy || index === 0" @click="move(-1)">
+              上一张
+            </button>
+            <button
+              class="primary-action"
+              type="button"
+              :disabled="busy || index === deck.cards.length - 1"
+              @click="move(1)"
+            >
               下一张
             </button>
             <form @submit.prevent="jump">

@@ -551,8 +551,7 @@ onUnmounted(() => {
       <button
         class="vault-switch"
         type="button"
-        :disabled="isBusy || paper?.path == null"
-        title="保存 Paper 后可切换 Vault"
+        :disabled="isBusy"
         @click="openVault"
       >
         切换 Vault
@@ -607,7 +606,6 @@ onUnmounted(() => {
               v-model="form.summary"
               name="summary"
               rows="6"
-              required
               placeholder="整理这张 Paper 的故事整体"
             />
           </label>
@@ -733,8 +731,14 @@ onUnmounted(() => {
           <strong>{{ paper?.code }}</strong>
           <code>{{ paper?.path || "尚未写入磁盘" }}</code>
           <dl>
-            <div><dt>创建</dt><dd>{{ paper?.created }}</dd></div>
-            <div><dt>更新</dt><dd>{{ paper?.updated }}</dd></div>
+            <div>
+              <dt>创建</dt>
+              <dd>{{ paper?.created?.slice(0, 16).replace("T", " ") }}</dd>
+            </div>
+            <div>
+              <dt>更新</dt>
+              <dd>{{ paper?.updated?.slice(0, 16).replace("T", " ") }}</dd>
+            </div>
           </dl>
         </aside>
       </div>

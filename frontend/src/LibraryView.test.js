@@ -87,6 +87,8 @@ describe("CP8/CP9 Library slice", () => {
     expect(wrapper.text()).toContain("Ideas");
     expect(wrapper.text()).toContain("损坏 Paper：cache/K-20260725-999.md");
     expect(wrapper.text()).toContain("A train waits outside the city.");
+    expect(wrapper.text()).toContain("2026-07-25 12:00");
+    expect(wrapper.text()).not.toContain("2026-07-25T12:00:00");
     wrapper.unmount();
   });
 

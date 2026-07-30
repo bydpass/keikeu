@@ -165,6 +165,23 @@ describe("Road v0.5 Paper Desk", () => {
     wrapper.unmount();
   });
 
+  it("uses the Chinese inline error for a blank Summary", async () => {
+    installBridge();
+    const wrapper = mount(PaperView, { props: { runtime } });
+    await flushPromises();
+
+    expect(wrapper.get('[name="summary"]').attributes("required")).toBeUndefined();
+    await wrapper.get(".paper-editor").trigger("submit");
+    await flushPromises();
+
+    expect(wrapper.text()).toContain("Summary 不能为空。");
+    expect(bridgeRequest).not.toHaveBeenCalledWith(
+      "paper.save",
+      expect.anything(),
+    );
+    wrapper.unmount();
+  });
+
   it("makes the four editable regions obvious and keeps the original draft locked", async () => {
     installBridge({
       draft: paper({
@@ -186,6 +203,8 @@ describe("Road v0.5 Paper Desk", () => {
     expect(wrapper.get("details.initial-copy").attributes("open")).toBeUndefined();
     expect(wrapper.get("details.initial-copy summary").text()).toContain("归档只读");
     expect(wrapper.text()).toContain("已保存至 Markdown");
+    expect(wrapper.text()).toContain("2026-07-25 12:00");
+    expect(wrapper.text()).not.toContain("2026-07-25T12:00:00");
 
     await wrapper.get('[name="summary"]').setValue("Unsaved summary");
     expect(wrapper.get(".paper-save-state").text()).toBe("未保存");
@@ -442,6 +461,40 @@ describe("Road v0.5 Paper Desk", () => {
     });
     expect(wrapper.emitted("open-vault")).toBeUndefined();
     expect(wrapper.get('[name="summary"]').element.value).toBe("Unsaved local edit");
+    wrapper.unmount();
+  });
+
+  it("opens the Vault switcher from a clean unsaved draft", async () => {
+    installBridge();
+    const wrapper = mount(PaperView, { props: { runtime } });
+    await flushPromises();
+    const vaultSwitch = wrapper.get(".vault-switch");
+
+    expect(vaultSwitch.attributes("disabled")).toBeUndefined();
+    await vaultSwitch.trigger("click");
+    await flushPromises();
+
+    expect(confirmDiscardChanges).not.toHaveBeenCalled();
+    expect(wrapper.emitted("open-vault")).toEqual([[null, null]]);
+    wrapper.unmount();
+  });
+
+  it("keeps a dirty unsaved draft when Vault departure is declined", async () => {
+    installBridge();
+    confirmDiscardChanges.mockResolvedValue(false);
+    const wrapper = mount(PaperView, { props: { runtime } });
+    await flushPromises();
+
+    await wrapper.get('[name="summary"]').setValue("Unsaved local edit");
+    await wrapper.get(".vault-switch").trigger("click");
+    await flushPromises();
+
+    expect(confirmDiscardChanges).toHaveBeenCalledOnce();
+    expect(wrapper.emitted("open-vault")).toBeUndefined();
+    expect(wrapper.get('[name="summary"]').element.value).toBe(
+      "Unsaved local edit",
+    );
+    expect(wrapper.get(".paper-save-state").text()).toBe("未保存");
     wrapper.unmount();
   });
 

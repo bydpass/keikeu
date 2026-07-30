@@ -2,7 +2,7 @@
 
 > Authority: current coordinates, module entry points, documentation index, and next gate. Product behavior belongs in [SPEC](SPEC.md); rules belong in [RULES](RULES.md).
 
-Updated: 2026-07-29
+Updated: 2026-07-30
 
 ## Current coordinates
 
@@ -14,7 +14,7 @@ Updated: 2026-07-29
 | Phase 8.5 / Road v0.3 preparation | Complete | Documentation reform, authority maps, link gate, browser QA, and bounded Graphify trial completed before Road v0.3 construction. The fresh-agent audit remained unperformed and is not retroactively claimed. |
 | Road v0.3 | Product accepted; design archive complete | Phase 0–7 engineering, CP5 macOS candidate smoke, and CP6 real-author scenarios are complete. Retrieval was faster and clear, external-editor handoff was clear, and no unresolved P0/P1 was reported. The [version archive](archive/road-v0-3/README.md) is read-only; no v0.3 tag, commit, or push is implied. |
 | Road v0.4 | Complete; CP14 accepted | [CP14 evidence](acceptance/road_v0_4_cp14.md) records accepted Flet retirement, Python `234`, Vue `48`, Rust `10`, and the authorized final beta engineering build/launch/relaunch smoke. The one-time exception is consumed; compatibility remains CP13-only evidence. |
-| Road v0.5 | CP5 passed by advance YOLO; CP6 pending | CP0 is committed at `11c2149`; CP1 at `a2ff5cb`; CP2 at `30b54ac`; CP3 at `c7b9caf`; CP4 at `371f4e8`. The active [Planbook](../PLAN_revised.md) records the whole-app visual pass, `26` two-width browser state checks, automated evidence, and isolated synthetic Tauri navigation under the predeclared developer YOLO boundary. CP6 dogfood and product acceptance remain pending. |
+| Road v0.5 | CP6 passed; advance-YOLO follow-up authorized | CP0 is committed at `11c2149`; CP1 at `a2ff5cb`; CP2 at `30b54ac`; CP3 at `c7b9caf`; CP4 at `371f4e8`. The active [Planbook](../PLAN_revised.md) records CP5. The [CP6 report](acceptance/road-v0-5/cp6-dogfood/report.md) records two dogfood rounds, three rechecked Round 1 fixes, the repaired P2 Vault switch, stronger global dividers, no observed P0/P1, copied/synthetic data, current automated evidence, and developer acceptance. Road closeout waits for the authorized follow-up checkpoint. |
 Phase 8 product acceptance is complete. Road v0.2 is marked by local annotated tag `v0.2.0` at `d0feac0269a5619f5dbf27c04347ba69c5665b42`; archival remains a separate developer decision. Automated tests, platform smoke, and author acceptance remain distinct evidence.
 
 Road v0.3 product decisions, implementation, macOS candidate smoke, and product acceptance are complete. Its detailed SPEC, Planbook, maps, ADRs, and CP6 record are archived. Its accepted Python/Flet runtime served as the Road v0.4 parity baseline until all replacement gates passed; CP14 retires it without changing or migrating Vault data.
@@ -171,9 +171,9 @@ README
 ```
 
 - **Authority:** [SPEC](SPEC.md) owns the accepted Road v0.4 runtime and product boundary until v0.5 acceptance; the [Road v0.5 Planbook](../PLAN_revised.md) owns active Road scope and checkpoint order. [RULES](RULES.md) owns engineering, interaction, data, Git, and evidence constraints; [AGENTS](../AGENTS.md) owns agent procedure. The completed [Road v0.4 Planbook, understanding gate, and JSONL protocol](archive/road-v0-4/README.md) are read-only history. Runtime facts come from [`src/`](../src/) and [`tests/`](../tests/).
-- **Views:** [design](design/design.html) and [interaction](design/interaction.html) describe the implemented Road v0.5 CP5 visual and interaction system; [architecture](architecture/architecture.html) describes the current runtime. Product acceptance remains CP6.
+- **Views:** [design](design/design.html) and [interaction](design/interaction.html) describe the implemented Road v0.5 visual and interaction system; [architecture](architecture/architecture.html) describes the current runtime. CP6 product acceptance is complete; the authorized follow-up UI checkpoint remains active.
 - **Working material:** the [Road v0.5 design workspace](design/working-materials.md) records prototype and generation context; it does not describe current runtime behavior or override the active Planbook.
-- **Evidence:** [acceptance](acceptance/README.md) links completed Road v0.2 evidence and the archived Road v0.3 CP6 record. The frozen [2cc40ba status snapshot](archive/snapshots/feat-complete-road-v0-3-candidate.html) shows the earlier CP5 boundary. [generated](generated/README.md) remains rebuildable observation; the archived [cold-start audit](archive/road-v0-3/cold_start_report.md) is dated historical evidence, not a claim about the transition pages.
+- **Evidence:** [acceptance](acceptance/README.md) links completed Road v0.2 evidence, the archived Road v0.3 CP6 record, and the active [Road v0.5 CP6 Agent dogfood report](acceptance/road-v0-5/cp6-dogfood/report.md). The frozen [2cc40ba status snapshot](archive/snapshots/feat-complete-road-v0-3-candidate.html) shows the earlier CP5 boundary. [generated](generated/README.md) remains rebuildable observation; the archived [cold-start audit](archive/road-v0-3/cold_start_report.md) is dated historical evidence, not a claim about the transition pages.
 - **Context:** [ADR 0001](architecture/decisions/0001-document-authority.md) explains the authority split. Road v0.3 design history lives in its [version archive](archive/road-v0-3/README.md), and Road v0.4 planning history lives in its [planning archive](archive/road-v0-4/README.md). [Manual](manual/README.md) teaches people; [archive](archive/README.md) preserves superseded records. Neither overrides authority.
 
 ## Commands
@@ -193,7 +193,7 @@ Application tests must not be inferred from documentation checks. Platform smoke
 
 ## Post-Road decisions
 
-Road v0.4 is complete. Road v0.5 CP1 is committed as `a2ff5cb`; CP2 as `30b54ac`; CP3 as `c7b9caf`; CP4 as `371f4e8`. CP5 engineering and isolated synthetic QA passed by advance YOLO. CP6 dogfood and product acceptance, plus tag, archive, push, signing, distribution, and any real-Vault operation, remain separate developer decisions.
+Road v0.4 is complete. Road v0.5 CP1 is committed as `a2ff5cb`; CP2 as `30b54ac`; CP3 as `c7b9caf`; CP4 as `371f4e8`. CP5 engineering and isolated synthetic QA passed by advance YOLO. CP6 independent Agent dogfood passed developer acceptance with no observed P0/P1, three rechecked Round 1 fixes, and a repaired P2 Vault switch. An advance-YOLO follow-up checkpoint keeps the Road open. Commit, tag, archive, push, signing, distribution, and any real-Vault operation remain separate developer decisions.
 
 ## History boundary
 
