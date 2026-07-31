@@ -63,7 +63,7 @@ def active_documents() -> list[Path]:
         ROOT / "README_EN.md",
         ROOT / "AGENTS.md",
         ROOT / "CLAUDE.md",
-        ROOT / "PLAN_revised.md",
+        ROOT / "PLAN_road_v0_6.md",
     ]
     docs = [
         path

@@ -11,7 +11,7 @@ Protect author control, local durability, privacy, and beginner-maintainability.
 | Need | Authority |
 | --- | --- |
 | Product scope and acceptance | `docs/SPEC.md` |
-| Road v0.5 scope and checkpoint order | `PLAN_revised.md` |
+| Road v0.6 scope and checkpoint order | `PLAN_road_v0_6.md` |
 | Current phase and next gate | `docs/PROJECT.md` |
 | Engineering, interaction, data, evidence rules | `docs/RULES.md` |
 | Module and lifecycle map | `docs/architecture/architecture.html` |
@@ -45,6 +45,7 @@ Will not edit:
 
 ## Change discipline
 
+- Road 计划书的标题、说明、范围、Gate、判据与风险一律使用简体中文；代码、命令、路径、标识符和必须原样引用的工具输出保持原文。
 - Make the smallest useful patch; reuse existing code, then stdlib, then installed dependencies.
 - Do not add an abstraction, dependency, service, platform feature, or product capability “for later.”
 - `keikeu_core` never imports a GUI or transport; GUI code never writes Markdown or index JSON.

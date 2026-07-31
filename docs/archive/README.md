@@ -24,6 +24,7 @@ Archive files retain historical reasoning and evidence. Their internal links may
 | [`docs-archive-documentation-reform-report/`](docs-archive-documentation-reform-report/) | `9114d63` · `docs: archive documentation reform report` | Phase 8 record and SOP before final author confirmation | historical acceptance evidence only |
 | [`road-v0-3/`](road-v0-3/) | version-bound · archived 2026-07-25 | accepted Road v0.3 SPEC, Planbook, maps, ADRs, and CP6 evidence | historical comparison only |
 | [`road-v0-4/`](road-v0-4/) | Road complete · archived 2026-07-28 | accepted Road v0.4 Planbook and understanding gate | historical planning evidence only |
+| [`road-v0-5/`](road-v0-5/) | Road complete · archived 2026-07-31 | accepted Road v0.5 Planbook and exported reading copies | historical planning evidence only |
 | [`snapshots/`](snapshots/) | commit-bound status pages listed below | status and handoff HTML | frozen evidence only |
 | [`planning/`](planning/) | supplied on 2026-07-18 | Phase 8.5 reform proposal | understand the migration decision, not current status |
 

@@ -59,7 +59,7 @@ Road v0.5 adds these accepted interaction rules without expanding product scope:
 - The transport-agnostic Python application service owns orchestration and opaque session state behind JSONL. During migration, Flet used the same service as the parity baseline.
 - `keikeu_core` remains independent of Flet, Vue, Tauri, Rust, JSONL, and stdout.
 - Markdown remains canonical. No localhost, HTTP, WebSocket, account, telemetry, upload, or hidden service is authorized.
-- Road v0.5 changes no architecture boundary; its execution followed [RULES](RULES.md) and the completed [Planbook](../PLAN_revised.md).
+- Road v0.5 changes no architecture boundary; its execution followed [RULES](RULES.md) and the completed [Planbook](archive/road-v0-5/PLAN_revised.md).
 
 ## 6. Explicit exclusions
 
