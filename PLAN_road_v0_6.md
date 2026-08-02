@@ -368,25 +368,25 @@ CP4 直接接入的 Paper/Library 生产候选组件；完成交互和视觉 Gat
 
 **顺序步骤：**
 
-- [ ] 建立只通过 props/emits 接收数据与意图的 `PaperV4Workbench`、
+- [x] 建立只通过 props/emits 接收数据与意图的 `PaperV4Workbench`、
       `LibraryV4Projection`；组件不 import bridge、不写文件，CP4 不得复制第二套 UI 逻辑。
-- [ ] 由现有 `PrototypeView` 用无作者内容、无真实路径的合成 Paper v4/Library DTO 驱动
+- [x] 由现有 `PrototypeView` 用无作者内容、无真实路径的合成 Paper v4/Library DTO 驱动
       两个候选组件，并醒目标注“不连接 Vault”。
-- [ ] 实现外层只读代号、始终可编辑 Paper 名称、每行一 Tag 与中央大卡页。
-- [ ] 逗号在 Tags 中只作普通字符；切换基础/进一步模式不清除隐藏类型，`null` 不显示标签。
-- [ ] 实现始终可编辑页标题、正文、基础/进一步模式、类型标签与 Summary 唯一禁用说明。
-- [ ] 实现页码真实按钮、光标首/中/尾、从未聚焦时正文末尾和选区截断；新页 null
+- [x] 实现外层只读代号、始终可编辑 Paper 名称、每行一 Tag 与中央大卡页。
+- [x] 逗号在 Tags 中只作普通字符；切换基础/进一步模式不清除隐藏类型，`null` 不显示标签。
+- [x] 实现始终可编辑页标题、正文、基础/进一步模式、类型标签与 Summary 唯一禁用说明。
+- [x] 实现页码真实按钮、光标首/中/尾、从未聚焦时正文末尾和选区截断；新页 null
       name/type，焦点进入标题。
-- [ ] 实现删普通页、唯一页替换、确认与焦点；底部主操作严格只有保存/删除/加页。
-- [ ] 实现内存 draft/baseline、整体 dirty、合成 Save、离开保护；`ui_key` 不进 DTO。
-- [ ] 实现 Library 行、第一页预览、页数、页标题、Tags 与合成搜索；结果打开整份 Paper
+- [x] 实现删普通页、唯一页替换、确认与焦点；底部主操作严格只有保存/删除/加页。
+- [x] 实现内存 draft/baseline、整体 dirty、合成 Save、离开保护；`ui_key` 不进 DTO。
+- [x] 实现 Library 行、第一页预览、页数、页标题、Tags 与合成搜索；结果打开整份 Paper
       第一页，不做 deep-link。
-- [ ] 合成显示 stale、两种 repair、index degraded 与 commit_unknown；不伪造 transport 恢复。
-- [ ] 完成 `1220×780`、`920×680`、文本缩放、对比、Tab、Enter/Space、`Cmd+S`、
+- [x] 合成显示 stale、两种 repair、index degraded 与 commit_unknown；不伪造 transport 恢复。
+- [x] 完成 `1220×780`、`920×680`、文本缩放、对比、Tab、Enter/Space、`Cmd+S`、
       类型原生方向键、加删页焦点和确认框 `Escape` QA。
-- [ ] 用 200/201 个 astral emoji 验证名称按 Unicode code point 计数；不得用原生
+- [x] 用 200/201 个 astral emoji 验证名称按 Unicode code point 计数；不得用原生
       `maxlength` 或 JavaScript `.length` 提前拒绝 Core 允许的输入。
-- [ ] 以默认 URL 启动 Tauri，确认仍进入 v0.5 production workflow、protocol v1 和 Flashcard。
+- [x] 以默认 URL 启动 Tauri，确认仍进入 v0.5 production workflow、protocol v1 和 Flashcard。
 
 **自动检查：**
 

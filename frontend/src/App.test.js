@@ -286,7 +286,7 @@ describe("desktop shell gates", () => {
     expect(bridgeRequest).not.toHaveBeenCalled();
   });
 
-  it("renders the CP5 specimen with synthetic data only", () => {
+  it("renders the CP3 v4 specimen with synthetic data only", () => {
     const wrapper = mount(PrototypeView);
 
     expect(wrapper.text()).toContain("合成样张");
@@ -598,25 +598,15 @@ describe("desktop shell gates", () => {
     wrapper.unmount();
   });
 
-  it("keeps specimen filtering, selection, and reordering in memory", async () => {
+  it("keeps specimen page editing and Library selection in memory", async () => {
     const wrapper = mount(PrototypeView);
 
-    await wrapper.get('input[type="search"]').setValue("角色");
-    const matchingPapers = wrapper.findAll(".paper-list button");
-    expect(matchingPapers).toHaveLength(1);
-    await matchingPapers[0].trigger("click");
-    expect(wrapper.get(".workspace-header h2").text()).toBe("角色动机");
-
-    const menuButtons = wrapper.findAll(".row-actions > button");
-    expect(menuButtons).toHaveLength(2);
-    await menuButtons[1].trigger("click");
-    const moveButtons = wrapper.findAll(".row-menu button");
-    expect(moveButtons.map((button) => button.text())).toEqual(["上移", "下移"]);
-    await moveButtons[0].trigger("click");
-
-    expect(
-      wrapper.findAll(".highlight-row strong").map((highlight) => highlight.text()),
-    ).toEqual(["行动压力", "表层理由"]);
+    await wrapper.get(".page-title-field input").setValue("新标题");
+    await wrapper.get(".card-actions button:last-child").trigger("click");
+    expect(wrapper.text()).toContain("2 / 4");
+    await buttonByText(wrapper, "Library").trigger("click");
+    await wrapper.get('input[type="search"]').setValue("海边");
+    expect(wrapper.findAll(".library-v4-list > li")).toHaveLength(1);
     expect(getRuntimeStatus).not.toHaveBeenCalled();
   });
 });
