@@ -9,18 +9,15 @@ from pathlib import Path
 import pytest
 
 from keikeu_core import migration_v4 as migration_mod
-from keikeu_core.markdown_io import (
-    parse_paper_v4_bytes,
-    render_paper_bytes,
-    render_paper_v4_bytes,
-)
+from keikeu_core.legacy_v3 import HighlightV3, PaperV3, render_paper_v3_bytes
+from keikeu_core.markdown_io import parse_paper_v4_bytes, render_paper_v4_bytes
 from keikeu_core.migration_v4 import (
     MigrationCommitUnknown,
     classify_migration_stage,
     inspect_paper_v4_migration,
     migrate_papers_to_v4,
 )
-from keikeu_core.models import CardPageV4, Highlight, Paper, PaperV4
+from keikeu_core.models import CardPageV4, PaperV4
 from keikeu_core.vault import init_vault, snapshot_regular_tree_no_follow
 
 
@@ -41,12 +38,12 @@ def fresh_vault(tmp_path: Path) -> Path:
     return vault
 
 
-def legacy_paper(code: str, **overrides) -> Paper:
+def legacy_paper(code: str, **overrides) -> PaperV3:
     values = {
         "code": code,
         "initial_summary": "将被备份保留但从 v4 active schema 丢弃",
         "summary": "当前总结",
-        "highlights": [Highlight(content="高光正文", display_name="高光标题")],
+        "highlights": [HighlightV3(content="高光正文", display_name="高光标题")],
         "tags": ["夜车", "重逢,旧友"],
         "created": NOW,
         "updated": NOW,
@@ -54,13 +51,13 @@ def legacy_paper(code: str, **overrides) -> Paper:
         "extra_frontmatter": {"source": "manual"},
     }
     values.update(overrides)
-    return Paper(**values)
+    return PaperV3(**values)
 
 
-def store_legacy(vault: Path, relative: str, paper: Paper) -> Path:
+def store_legacy(vault: Path, relative: str, paper: PaperV3) -> Path:
     path = vault / relative
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(render_paper_bytes(paper))
+    path.write_bytes(render_paper_v3_bytes(paper))
     return path
 
 
@@ -362,7 +359,7 @@ def test_stale_preflight_is_zero_write_and_creates_no_backup(tmp_path):
     )
     preflight = inspect_paper_v4_migration(vault)
     path.write_bytes(
-        render_paper_bytes(
+        render_paper_v3_bytes(
             legacy_paper("K-20260802-001", summary="外部改动后的总结")
         )
     )

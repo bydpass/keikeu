@@ -4,8 +4,8 @@
 > CP0–CP7 的开发者退出判断采用 advance YOLO；CP0–CP6 的分支、精确暂存、
 > DeepSeek `aic`、checkpoint commit 与连续执行另由“全部 YOLO”预先授权。
 >
-> CP4 已实现 production Paper v4、Index v4 与 protocol v2，并清零活动 Flashcard caller；
-> CP5 仍须删除不可达旧实现。本设计不代表 CP5/CP6、真实 Vault 迁移、CP7 产品接受、
+> CP4 已实现 production Paper v4、Index v4 与 protocol v2；CP5 已删除不可达旧实现，
+> 正常 runtime 只剩 v4。本设计不代表 CP6、真实 Vault 迁移、CP7 产品接受、
 > Road closeout 或发布已经完成，也不授权修改真实 Vault。
 
 ## 1. 核心判断
@@ -31,9 +31,9 @@ Road v0.6 是一次产品模型重构，不是 runtime 重写，也不是发布 
 Road v0.6 保留本地优先、Markdown 权威、作者控制和现有桌面进程边界。它不增加
 数据库、云同步、账号、遥测、AI 代写或隐藏后台服务。
 
-## 2. Road 基线与 CP4 当前边界
+## 2. Road 基线与 CP5 当前边界
 
-| 边界 | Road v0.5 基线 | CP4 当前事实 |
+| 边界 | Road v0.5 基线 | CP5 当前事实 |
 | --- | --- | --- |
 | 产品模型 | Paper v3：frozen initial Summary、current Summary、Highlights、Tags | Paper v4：`Paper.pages[]` 是权威内容 |
 | 阅读体验 | 独立、只读、Summary-first Flashcard | 同一组卡页直接浏览，不再生成 Flashcard |
@@ -42,8 +42,8 @@ Road v0.6 保留本地优先、Markdown 权威、作者控制和现有桌面进�
 | Bridge | JSONL protocol v1 | framing 不变，breaking contract 升至 protocol v2 |
 | Library | Summary 预览与 Highlight 名称 | Paper 名称、第一页预览、页数、页标题与全页搜索 |
 
-CP4 已完成表中纵切换；[SPEC](../SPEC.md)、[RULES](../RULES.md)、`src/` 与 `tests/`
-现共同描述 Paper v4/protocol v2。CP5 只清理不可达旧链，CP6 才完成故障与修复 Gate；
+CP4 已完成表中纵切换，CP5 已删除不可达旧链；[SPEC](../SPEC.md)、[RULES](../RULES.md)、
+`src/` 与 `tests/` 现共同描述 Paper v4/protocol v2。CP6 才完成故障与修复 Gate；
 不得把工程 checkpoint 写成真实作者接受或 Road 完成。
 
 ## 3. 范围与明确排除
@@ -229,7 +229,7 @@ flowchart TD
 
 - 继续只拥有 sidecar 生命周期、单队列 JSONL、请求匹配和原生 picker/open/reveal；
 - 因 breaking DTO 与方法集变化，握手常量从 protocol v1 升至 v2；
-- 同步更新只读/mutation allowlist，删除 `flashcard.open` 后不得残留兼容分支；
+- 同步更新只读/mutation allowlist，删除旧只读卡片协议入口后不得残留兼容分支；
 - Rust 不理解 CardPage、不拆页、不校验类型，也不写作者文件。
 
 ### 6.3 Python
@@ -664,7 +664,7 @@ changes：
   `index_state=current | degraded`，`library.query` 增加只读 `verify_index` 参数；
 - 可能更新 Index 的 Library/migration mutation 结果在原主结果旁固定携带
   `warnings: [] | ["index_degraded"]`，不引入 generic Result abstraction；
-- 删除 `flashcard.open`、Flashcard DTO 与 Rust allowlist 条目；
+- 删除旧只读卡片协议入口、传输值与 Rust allowlist 条目；
 - 现有 `migration.preflight` / `migration.run` DTO 使用
   `kind=v01_to_v3 | paper_to_v4`，不增加另一对同义方法；
 - 增加只读 `paper.reconcile_save`，仅供 `paper.save` 的未知结果按 §11.1 对账；它不是
@@ -776,8 +776,8 @@ development-only，production runtime 继续完整使用 v0.5 contract；不得�
 | CP1 | Paper v4 Core | v4 模型/codec 以独立 target 名称 additive 落地，不替换 v3 export 或生产 import；不变量、golden fixtures 与 round-trip 通过，v0.5 仍可启动 |
 | CP2 | 迁移与 Index | v4 迁移/Index 只从测试、fixtures 或复制 Vault 调用；v2/v3 预检、mixed 续迁、Trash 与全页搜索通过，生产 startup/save/Index 仍为 v0.5 |
 | CP3 | Vue v4 预备层 | Paper/Library v4 组件以合成 DTO 和 development-only 入口通过卡页、分页、删页、标记、dirty、键盘与浏览器 Gate；production 导航与磁盘写入仍为 v0.5 |
-| CP4 | 全栈 v2 垂直切换 | startup Gate、Service、DTO、protocol v2、Rust policy 与已准备的 Vue/Library 同一 CP 激活；文件夹/Branch/Trash/搜索/打开、整体保存、CAS、degraded、repair 与启动 smoke 全部可用；活动 `flashcard.open`/导航同时退役 |
-| CP5 | 旧链死代码清理 | 在 CP4 行为已经可用的前提下，删除不可达 Flashcard 页面/DTO/endpoint/Rust 分支、v3 正常 runtime import 与旧测试；不得把首次行为兼容拖到本 CP |
+| CP4 | 全栈 v2 垂直切换 | startup Gate、Service、DTO、protocol v2、Rust policy 与已准备的 Vue/Library 同一 CP 激活；文件夹/Branch/Trash/搜索/打开、整体保存、CAS、degraded、repair 与启动 smoke 全部可用；活动旧入口/导航同时退役 |
+| CP5 | 旧链死代码清理 | 已删除不可达旧页面、传输值、服务入口、host 残余引用、v3 正常 runtime import 与旧测试；冻结 reader 只保留在迁移边界 |
 | CP6 | 安全整合 Gate | `paper.save` 四路对账、其他 mutation 各自恢复入口、人工修复闭环、全套自动检查、sidecar build 与 Tauri 合成/复制 Vault smoke 通过 |
 | CP7 | 一号真实作者 Gate | 真实灵感创建、分页、保存、重开与 Library 找回完成；故意损坏/修复只在合成 Paper 或真实 Vault 完整副本演练；无未解决 P0/P1 |
 
@@ -900,7 +900,7 @@ Road v0.6 的 Node 锁定值为 `22.23.2`；CP0 必须核对实际工具链，�
 | sidecar 重启后对错 Vault 对账 | Python-issued `vault_locator` 绑定配置路径与 root identity；不匹配时零目标读取并进入 stale |
 | 非 Save mutation 无 operation journal | App 根只保留内存 intent；重启后显示 canonical 当前状态并人工确认，绝不自动重放 |
 | 内存恢复无法抵抗强退/断电 | 明确为 v0.6 上限；有真实故障证据后再设计持久恢复胶囊 |
-| Flashcard 死代码遗漏 | CP4 先清活动调用与 contract，CP5 再删不可达实现；runtime source、活动测试及当前 protocol/权威文档零调用/零符号，archive 与迁移说明可保留历史文字 |
+| 旧只读卡片链死代码遗漏 | CP4 先清活动调用与 contract，CP5 再删不可达实现；runtime source、活动测试及当前 protocol 零调用/零符号，archive 与迁移说明可保留历史文字 |
 | 大型 Vue/Python 文件诱发顺手重写 | 只拆当前卡页职责；不重写 `vault.py`、旧 migrator 或 sidecar worker |
 | 移动目标被当成当前支持 | 平台矩阵保持方向性；每个平台另有 runtime 与真实设备 Gate |
 

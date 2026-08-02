@@ -14,9 +14,6 @@ import unicodedata
 
 from keikeu_bridge.dto import (
     CardPageDto,
-    FlashcardDeckDto,
-    FlashcardDto,
-    HighlightDto,
     IndexErrorDto,
     LibraryEntryDto,
     LibraryViewDto,
@@ -30,7 +27,6 @@ from keikeu_bridge.dto import (
     PaperDto,
     PaperEditableDto,
     PaperOpenResultDto,
-    PaperOptionDto,
     PaperReconcileRequestDto,
     PaperReconcileResultDto,
     PaperSaveDto,
@@ -46,7 +42,6 @@ from keikeu_core.indexer import (
     rebuild_index_v4,
     verify_index_v4,
 )
-from keikeu_core.indexer import rebuild_index as rebuild_index_v3
 from keikeu_core.markdown_io import (
     branch_paper_v4,
     parse_paper_v4_bytes,
@@ -55,7 +50,6 @@ from keikeu_core.markdown_io import (
     replace_paper_v4_bytes,
     write_paper_v4,
 )
-from keikeu_core.markdown_io import read_paper_snapshot as read_paper_v3_snapshot
 from keikeu_core.migration_v01 import (
     MigrationPreflight,
     MigrationPreflightError,
@@ -70,7 +64,7 @@ from keikeu_core.migration_v4 import (
     inspect_paper_v4_migration,
     migrate_papers_to_v4,
 )
-from keikeu_core.models import CardPageV4, Paper, PaperV4
+from keikeu_core.models import CardPageV4, PaperV4
 from keikeu_core.vault import (
     PathOperationResult,
     VaultSelectionToken,
@@ -99,7 +93,6 @@ from keikeu_core.vault import (
     soft_delete_folder,
     soft_delete_papers,
     validate_regular_tree_no_follow,
-    validate_vault_papers,
     validate_vault_tree_no_follow,
     vault_index_version,
 )
@@ -108,7 +101,7 @@ __all__ = ["KeikeuService", "ServiceError"]
 
 
 _SOURCE_V01 = "v0.1"
-_SOURCE_PAPER = "Paper v2/v3"
+_SOURCE_PAPER = "paper"
 _SCOPE_ALL = "all"
 _SCOPE_UNFILED = "unfiled"
 _SCOPE_TRASH = "trash"
@@ -310,7 +303,7 @@ class KeikeuService:
             return _SOURCE_V01
         if is_vault(source):
             return _SOURCE_PAPER
-        raise ValueError("folder is not a supported v0.1 or Paper v2/v3 Vault")
+        raise ValueError("folder is not a supported v0.1 or Paper Vault")
 
     @classmethod
     def _classify_configured_home_vault(cls, source: Path) -> str:
@@ -328,33 +321,7 @@ class KeikeuService:
             raise ValueError(f"unsupported Vault index version: {version}")
         if is_v01_vault(source):
             return _SOURCE_V01
-        raise ValueError("folder is not a supported v0.1 or Paper v2/v3 Vault")
-
-    @classmethod
-    def _validated_rebuild(
-        cls,
-        vault: Path,
-        *,
-        require_clean_papers: bool = True,
-    ) -> VaultSelectionToken:
-        before = capture_vault_selection_token(vault)
-        if cls._classify_vault_source_no_follow(vault) != _SOURCE_PAPER:
-            raise ValueError("Vault changed before confirmation")
-        validate_vault_tree_no_follow(vault)
-        if require_clean_papers:
-            validate_vault_papers(vault)
-        index = rebuild_index(vault)
-        errors = index.get("errors")
-        if not isinstance(errors, list):
-            raise ValueError("index rebuild did not return an errors list")
-        if errors and require_clean_papers:
-            raise ValueError(f"Vault has {len(errors)} invalid Papers")
-        if cls._classify_vault_source_no_follow(vault) != _SOURCE_PAPER:
-            raise ValueError("Vault changed during index rebuild")
-        final = capture_vault_selection_token(vault)
-        if final.path != before.path or final.root_identity != before.root_identity:
-            raise ValueError("Vault root changed during validation")
-        return final
+        raise ValueError("folder is not a supported v0.1 or Paper Vault")
 
     @classmethod
     def _validated_v01_selection(cls, vault: Path) -> VaultSelectionToken:
@@ -1059,68 +1026,6 @@ class KeikeuService:
             except (OSError, ValueError, UnicodeError):
                 warnings = ("index_degraded",)
             return OperationReportResultDto(report, warnings)
-
-    def flashcard_open(self, relative_path: str | None = None) -> FlashcardDeckDto:
-        with _translated_errors():
-            vault = self._require_vault()
-            raw_entries = rebuild_index_v3(vault).get("papers")
-            entries = raw_entries if isinstance(raw_entries, list) else []
-            if relative_path is None:
-                if not entries:
-                    raise FileNotFoundError("Vault has no readable Paper")
-                first_path = entries[0].get("path")
-                if not isinstance(first_path, str):
-                    raise FileNotFoundError("Vault has no readable Paper")
-                relative_path = first_path
-            path = resolve_active_paper_path(vault, relative_path)
-            paper, _source_bytes = read_paper_v3_snapshot(path)
-            if path.stem != paper.code:
-                raise ValueError("Paper filename and frontmatter code do not match")
-            options = sorted(
-                (
-                    self._paper_option(entry)
-                    for entry in entries
-                    if isinstance(entry, dict)
-                ),
-                key=lambda option: (
-                    self._text_key(option.label),
-                    option.path,
-                ),
-            )
-            titles = (
-                "Summary",
-                *(
-                    highlight.display_name or f"Highlight {index}"
-                    for index, highlight in enumerate(paper.highlights, start=1)
-                ),
-            )
-            contents = (paper.summary, *(item.content for item in paper.highlights))
-            return FlashcardDeckDto(
-                path=str(path.relative_to(vault)),
-                paper_label=self._paper_label(paper),
-                cards=tuple(
-                    FlashcardDto(title, content)
-                    for title, content in zip(titles, contents, strict=True)
-                ),
-                options=tuple(options),
-            )
-
-    @staticmethod
-    def _paper_label(paper: Paper) -> str:
-        if paper.display_name is None:
-            return paper.code
-        return f"{paper.display_name} ({paper.code})"
-
-    @staticmethod
-    def _paper_option(entry: dict[str, object]) -> PaperOptionDto:
-        path = entry.get("path")
-        code = entry.get("code")
-        if not isinstance(path, str) or not isinstance(code, str):
-            raise ValueError("index Paper option is malformed")
-        display_name = entry.get("display_name")
-        name = display_name if isinstance(display_name, str) and display_name else None
-        label = f"{name} ({code})" if name is not None else code
-        return PaperOptionDto(path, code, name, label)
 
     @staticmethod
     def _text_key(value: str) -> str:

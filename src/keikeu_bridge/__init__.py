@@ -1,9 +1,6 @@
 """GUI-independent application boundary for keikeu desktop adapters."""
 
 from keikeu_bridge.dto import (
-    FlashcardDeckDto,
-    FlashcardDto,
-    HighlightDto,
     IndexErrorDto,
     LibraryEntryDto,
     LibraryViewDto,
@@ -12,7 +9,6 @@ from keikeu_bridge.dto import (
     MigrationResultDto,
     OperationReportDto,
     PaperDto,
-    PaperOptionDto,
     PaperSaveDto,
     StartupDto,
     VaultPreviewDto,
@@ -20,9 +16,6 @@ from keikeu_bridge.dto import (
 from keikeu_bridge.service import KeikeuService, ServiceError
 
 __all__ = [
-    "FlashcardDeckDto",
-    "FlashcardDto",
-    "HighlightDto",
     "IndexErrorDto",
     "KeikeuService",
     "LibraryEntryDto",
@@ -32,7 +25,6 @@ __all__ = [
     "MigrationResultDto",
     "OperationReportDto",
     "PaperDto",
-    "PaperOptionDto",
     "PaperSaveDto",
     "ServiceError",
     "StartupDto",

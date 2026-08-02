@@ -6,23 +6,22 @@
 
 ## Current status
 
-The current code still implements the Road v0.5 `Paper Markdown → Flashcard → external prose editor` core. Road v0.6 is in CP0: its target makes the Paper itself an ordered editable card-page artifact and performs the Paper v4 / protocol v2 production cutover only in CP4. CP0–CP3 do not change the production runtime.
+The current code has reached the Road v0.6 CP5 engineering state: production uses Paper v4, Index v4, and protocol v2; the Paper itself is the ordered editable card-page artifact, and the obsolete normal-runtime chain has been removed. CP6 will verify unknown commits, repair, and safety integration.
 
 Phase 7.5 is an independent lightweight iOS build for rapid testing. Its responsive UI, app-sandbox Vault, and on-device fixes are complete on a separate branch; it is not a merge gate in the macOS Road. Road v0.3 engineering, macOS candidate smoke, and CP6 real-author acceptance are complete: retrieval was faster and clear, the external-editor handoff was clear, and no unresolved P0/P1 was reported. Its design and acceptance records are now [read-only history](docs/archive/road-v0-3/README.md); no v0.3 tag was created. Road v0.4 Gate A, Gate B, product acceptance, and macOS 15.7+ compatibility have passed. The only desktop runtime is now Vue/Tauri with a local Python sidecar; Flet was retired in CP14. Road v0.5 is also complete and archived: Paper Desk, save baselines, departure protection, Flashcard/Library continuity, the whole-app Quiet Desk visual system, and fixed scrolling behavior are accepted. See [PROJECT](docs/PROJECT.md) for live coordinates.
 
 ## Current runtime flow
 
 ```text
-existing inspiration → Paper Markdown → Flashcard → external prose editor
+existing inspiration → edit and save a card-page Paper → external prose editor
 ```
 
-- **Paper:** required current Summary, frozen first-save copy, ordered optional Highlights, and flat optional Tags.
-- **Flashcard:** a read-only, Summary-first projection that starts on page 1 on every open or Paper switch; position is not persisted.
-- **Library:** searches and sorts Papers by all/unfiled/one-level-folder scope, with drag/menu/batch moves, branching, Trash, and restore.
+- **Paper:** at least one ordered card page; the page title is always editable, content is author Markdown, and type is Summary/Snapshot/Whisper or empty; save commits the whole Paper once.
+- **Library:** searches the whole Paper and sorts by all/unfiled/one-level-folder scope, with drag/menu/batch moves, branching, Trash, and restore.
 - **Vault:** selects paths only under the current user's Home, validates before switching, and byte-verifies copied unsafe legacy Vaults; Apple App Sandbox is not enabled yet.
 - **External editor:** prose always remains outside keikeu.
 
-The Road v0.6 target removes the separate Flashcard step. A Paper has at least one editable card page; every page has an editable title, content, and optional Summary/Snapshot/Whisper type, and save commits the whole Paper. See [PROJECT](docs/PROJECT.md) for the actual current/target coordinate.
+See [PROJECT](docs/PROJECT.md) for Road v0.6 engineering progress, recovery limits, and the next gate.
 
 ## Road v0.3 archive
 

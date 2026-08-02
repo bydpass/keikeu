@@ -59,7 +59,6 @@ __all__ = [
     "resolve_active_paper_path",
     "resolve_trashed_paper_path",
     "vault_index_version",
-    "validate_vault_papers",
     "validate_folder_name",
     "copy_vault_no_follow",
     "soft_delete",
@@ -71,7 +70,7 @@ __all__ = [
 
 _TreeSnapshot = tuple[tuple[Path, ...], tuple[tuple[Path, str], ...]]
 
-_EMPTY_INDEX: dict[str, object] = {"version": 3, "papers": [], "errors": []}
+_EMPTY_INDEX: dict[str, object] = {"version": 4, "papers": [], "errors": []}
 _ATOMIC_EXCHANGE_FLAG = 0x00000002
 _DARWIN_ATOMIC_NO_REPLACE_FLAG = 0x00000004
 _LINUX_ATOMIC_NO_REPLACE_FLAG = 0x00000001
@@ -1533,7 +1532,7 @@ def copy_vault_no_follow(source: Path, destination: Path) -> Path:
 def init_vault(path: Path) -> None:
     """Create the current Paper layout without changing existing user data.
 
-    New vaults contain ``cache/``, ``.trash/cache/``, and a v3 empty index.
+    New vaults contain ``cache/``, ``.trash/cache/``, and a v4 empty index.
     Existing Outline directories and an existing index are left untouched so
     this helper cannot damage a vault that still needs migration.
     """
@@ -1639,41 +1638,6 @@ def vault_index_version(vault: Path) -> int | None:
         return None
     version = data.get("version") if isinstance(data, dict) else None
     return version if type(version) is int else None
-
-
-def validate_vault_papers(vault: Path) -> None:
-    """Strictly validate active and recovery Paper Markdown without writing."""
-    from keikeu_core.markdown_io import read_paper_snapshot
-
-    raw_vault = _lexical_absolute_path(vault)
-    validate_vault_tree_no_follow(raw_vault)
-    if not is_vault(raw_vault):
-        raise ValueError(f"Vault is not structurally supported: {raw_vault}")
-    active, active_errors = scan_active_papers(raw_vault)
-    try:
-        trashed, trash_errors = scan_trashed_papers(raw_vault)
-    except FileNotFoundError:
-        trashed, trash_errors = [], []
-    errors = [*active_errors, *trash_errors]
-    if errors:
-        raise ValueError(
-            f"unsupported Paper path {errors[0]['path']}: {errors[0]['reason']}"
-        )
-    codes: dict[str, Path] = {}
-    for relative in [*active, *trashed]:
-        path = raw_vault / relative
-        paper, _source_bytes = read_paper_snapshot(path)
-        if relative.parts[0] == "cache" and path.stem != paper.code:
-            raise ValueError(
-                f"Paper filename and frontmatter code do not match: {path}"
-            )
-        previous = codes.get(paper.code)
-        if previous is not None:
-            raise ValueError(
-                f"duplicate Paper code across active/Trash: {paper.code} "
-                f"({previous}, {relative})"
-            )
-        codes[paper.code] = relative
 
 
 def _direct_paper_relative_path(

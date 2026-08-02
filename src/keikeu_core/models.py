@@ -1,9 +1,4 @@
-"""Paper v3 data structures and validation.
-
-The active core deliberately models only durable Paper assets.  Legacy v0.1
-Cache fields are isolated in ``legacy_v01.py`` for the one-shot migrator and
-Outline is not part of the Road v0.2 runtime.
-"""
+"""Paper v4 data structures and validation."""
 
 from __future__ import annotations
 
@@ -14,10 +9,7 @@ import unicodedata
 
 __all__ = [
     "CardPageV4",
-    "Highlight",
-    "Paper",
     "PaperV4",
-    "validate_display_name",
     "validate_paper_code",
 ]
 
@@ -48,22 +40,6 @@ def validate_paper_code(code: str) -> str:
     if not 1 <= int(match.group(2)) <= 999:
         raise ValueError("code sequence must be between 001 and 999")
     return code
-
-
-def validate_display_name(value: str | None) -> str | None:
-    """Return trimmed optional display text without normalizing author input."""
-    if value is None:
-        return None
-    if not isinstance(value, str):
-        raise ValueError("display_name must be a string or None")
-    value = value.strip()
-    if not value:
-        return None
-    if len(value) > 200:
-        raise ValueError("display_name must contain at most 200 Unicode code points")
-    if any(unicodedata.category(character) in {"Cc", "Zl", "Zp"} for character in value):
-        raise ValueError("display_name must be one line without control characters")
-    return value
 
 
 def _validate_v4_name(value: str | None, field_name: str) -> str | None:
@@ -104,7 +80,7 @@ def _normalize_v4_tags(tags: list[str]) -> list[str]:
 
 @dataclass
 class CardPageV4:
-    """One durable Paper v4 card page, independent from the active v3 model."""
+    """One durable Paper v4 card page."""
 
     content: str
     name: str | None = None
@@ -125,7 +101,7 @@ class CardPageV4:
 
 @dataclass
 class PaperV4:
-    """Additive Road v0.6 Paper target; production stays on ``Paper`` until CP4."""
+    """One durable Paper v4 asset."""
 
     code: str
     pages: list[CardPageV4]
@@ -176,73 +152,3 @@ class PaperV4:
                 for character in key
             ):
                 raise ValueError("extra_frontmatter key contains an invalid character")
-
-
-@dataclass
-class Highlight:
-    """One ordered writing anchor with an optional author-facing name."""
-
-    content: str
-    display_name: str | None = None
-
-    def __post_init__(self) -> None:
-        self.normalize()
-
-    def normalize(self) -> None:
-        if not isinstance(self.content, str):
-            raise ValueError("Highlight content must be a string")
-        self.display_name = validate_display_name(self.display_name)
-
-
-@dataclass
-class Paper:
-    """A Road v0.3 writing unit without lifecycle state or Outline links."""
-
-    code: str
-    initial_summary: str
-    summary: str
-    display_name: str | None = None
-    highlights: list[Highlight] = field(default_factory=list)
-    tags: list[str] = field(default_factory=list)
-    created: datetime = field(default_factory=datetime.now)
-    updated: datetime = field(default_factory=datetime.now)
-    legacy_title: str | None = None
-    extra_frontmatter: dict[str, str] = field(default_factory=dict, repr=False)
-
-    def __post_init__(self) -> None:
-        self.normalize()
-
-    def normalize(self) -> None:
-        """Validate durable fields and apply the spec's lossless list cleanup."""
-        self.code = validate_paper_code(self.code)
-        if not isinstance(self.summary, str) or not self.summary.strip():
-            raise ValueError("summary must not be blank")
-        if not isinstance(self.initial_summary, str):
-            raise ValueError("initial_summary must be a string")
-        self.display_name = validate_display_name(self.display_name)
-        if self.legacy_title is not None and not isinstance(self.legacy_title, str):
-            raise ValueError("legacy_title must be a string or None")
-        if not isinstance(self.highlights, list) or not all(
-            isinstance(item, Highlight) for item in self.highlights
-        ):
-            raise ValueError("highlights must be a list of Highlight values")
-        for highlight in self.highlights:
-            highlight.normalize()
-        self.highlights = [
-            highlight for highlight in self.highlights if highlight.content.strip()
-        ]
-        if not isinstance(self.tags, list) or not all(
-            isinstance(tag, str) for tag in self.tags
-        ):
-            raise ValueError("tags must be a list of strings")
-        normalized_tags: list[str] = []
-        for tag in self.tags:
-            cleaned = tag.strip()
-            if cleaned and cleaned not in normalized_tags:
-                normalized_tags.append(cleaned)
-        self.tags = normalized_tags
-        if not isinstance(self.extra_frontmatter, dict) or not all(
-            isinstance(key, str) and isinstance(value, str)
-            for key, value in self.extra_frontmatter.items()
-        ):
-            raise ValueError("extra_frontmatter must map strings to strings")

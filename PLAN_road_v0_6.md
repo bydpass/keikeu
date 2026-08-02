@@ -18,8 +18,8 @@ Road 完成时，正常 runtime 使用 Paper v4、Markdown schema v4 与 JSONL p
 独立 Flashcard 活动链退役。Vue 3 → Tauri/Rust → JSONL → Python Service/Core →
 Markdown/Index/Vault 的进程架构不重写。
 
-CP4 已将 production 一次切换为 Paper v4、Index v4 与 protocol v2，并退役活动
-Flashcard caller。不可达 Flashcard/v3 正常链实现留待 CP5 删除。
+CP4 已将 production 一次切换为 Paper v4、Index v4 与 protocol v2；CP5 已删除不可达
+旧正常链。冻结 v3 reader 只存在于迁移边界，CP6 是下一 Gate。
 
 ## 1. 权威、批准与执行纪律
 
@@ -491,12 +491,12 @@ runtime import/export；保留 v2/v3→v4 migration 所需冻结 parser/model/fi
 
 **顺序步骤：**
 
-- [ ] 全仓列出 Flashcard/v3 活动定义与 caller，区分 runtime、legacy migration、manual 与 archive。
-- [ ] 删除不可达 Vue 文件、import、destination、emit、按钮和旧测试。
-- [ ] 删除 Flashcard DTO/deck/option、Service 方法、protocol endpoint 与 Rust 残余分支。
-- [ ] 删除 v3 正常 runtime export/import 和只为旧 UI 存在的 compatibility；保留迁移 reader。
-- [ ] 收紧 tests，证明 v4 runtime 与 legacy migration 各自仍有直接覆盖。
-- [ ] 运行零引用 Gate、完整自动检查和最小 Tauri 导航 smoke。
+- [x] 全仓列出 Flashcard/v3 活动定义与 caller，区分 runtime、legacy migration、manual 与 archive。
+- [x] 删除不可达 Vue 文件、import、destination、emit、按钮和旧测试。
+- [x] 删除 Flashcard DTO/deck/option、Service 方法、protocol endpoint 与 Rust 残余分支。
+- [x] 删除 v3 正常 runtime export/import 和只为旧 UI 存在的 compatibility；保留迁移 reader。
+- [x] 收紧 tests，证明 v4 runtime 与 legacy migration 各自仍有直接覆盖。
+- [x] 运行零引用 Gate、完整自动检查和最小 Tauri 导航 smoke。
 
 **零引用 Gate：** 在 runtime source、活动 tests、当前 protocol 与权威 docs 中，
 `flashcard.open`、`FlashcardView`、Flashcard DTO、`open-flashcard` 与 production

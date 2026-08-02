@@ -11,8 +11,7 @@ import shutil
 
 import pytest
 
-from keikeu_core.markdown_io import read_paper
-from keikeu_core.models import Highlight
+from keikeu_core.legacy_v3 import HighlightV3, parse_paper_v3_bytes
 from keikeu_core import migration_v01
 from keikeu_core.migration_v01 import (
     MigrationPreflightError,
@@ -297,12 +296,12 @@ def test_successful_migration_backs_up_every_byte_and_replaces_legacy_assets(
         "K-20260714-001.md",
         "K-20260714-002.md",
     ]
-    first, second = (read_paper(path) for path in papers)
+    first, second = (parse_paper_v3_bytes(path.read_bytes()) for path in papers)
     assert first.code == "K-20260714-001"
     assert first.initial_summary == "Two strangers share an umbrella on an empty platform."
     assert first.summary == first.initial_summary
     assert first.highlights == [
-        Highlight(content="Keep the train announcement as the last line.")
+        HighlightV3(content="Keep the train announcement as the last line.")
     ]
     assert first.tags == []
     assert first.legacy_title == "Rain Platform"
@@ -357,7 +356,7 @@ def test_migration_accepts_whitespace_only_legacy_notes(tmp_path):
 
     papers = sorted((vault / "cache").glob("*.md"))
     assert result.converted_count == 2
-    assert read_paper(papers[1]).highlights == []
+    assert parse_paper_v3_bytes(papers[1].read_bytes()).highlights == []
 
 
 def test_migration_ignores_macos_metadata_but_preserves_it_in_backup(tmp_path):
@@ -403,7 +402,7 @@ def test_migration_also_converts_trashed_caches_to_avoid_mixed_schema(tmp_path):
     assert result.converted_count == 3
     trashed_papers = sorted((vault / ".trash" / "cache").glob("*.md"))
     assert [path.name for path in trashed_papers] == ["K-20260714-003.md"]
-    assert read_paper(trashed_papers[0]).legacy_title == "Rain Platform"
+    assert parse_paper_v3_bytes(trashed_papers[0].read_bytes()).legacy_title == "Rain Platform"
 
 
 @pytest.mark.parametrize("mutation_point", ["after_stage_copy", "before_backup"])

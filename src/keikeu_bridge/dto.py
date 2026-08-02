@@ -6,9 +6,6 @@ from dataclasses import dataclass
 
 __all__ = [
     "CardPageDto",
-    "FlashcardDeckDto",
-    "FlashcardDto",
-    "HighlightDto",
     "IndexErrorDto",
     "LibraryEntryDto",
     "LibraryViewDto",
@@ -22,7 +19,6 @@ __all__ = [
     "PaperDto",
     "PaperEditableDto",
     "PaperOpenResultDto",
-    "PaperOptionDto",
     "PaperReconcileRequestDto",
     "PaperReconcileResultDto",
     "PaperSaveDto",
@@ -38,34 +34,6 @@ class CardPageDto:
     name: str | None
     content: str
     type: str | None
-
-
-@dataclass(frozen=True)
-class HighlightDto:
-    display_name: str | None
-    content: str
-
-
-@dataclass(frozen=True)
-class PaperOptionDto:
-    path: str
-    code: str
-    display_name: str | None
-    label: str
-
-
-@dataclass(frozen=True)
-class FlashcardDto:
-    title: str
-    content: str
-
-
-@dataclass(frozen=True)
-class FlashcardDeckDto:
-    path: str
-    paper_label: str
-    cards: tuple[FlashcardDto, ...]
-    options: tuple[PaperOptionDto, ...]
 
 
 @dataclass(frozen=True)

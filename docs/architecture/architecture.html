@@ -35,7 +35,7 @@
     <header>
       <p class="eyebrow">Road v0.6 · current / cleanup map</p>
       <h1>进程架构不重写，Paper 契约垂直切换</h1>
-      <p class="status">CP4 已完整切到 Paper v4 / Index v4 / protocol v2；CP5 只删除已不可达的旧实现。</p>
+      <p class="status">CP5 已留下唯一的 Paper v4 / Index v4 / protocol v2 正常运行链；冻结 v3 reader 仅供迁移。</p>
       <nav>
         <a href="../PROJECT.md">当前坐标</a>
         <a href="../SPEC.md">产品边界</a>
@@ -48,7 +48,7 @@
     </header>
 
     <section>
-      <p class="label">Current at CP4 · protocol v2</p>
+      <p class="label">Current at CP5 · protocol v2</p>
       <div class="flow target">
         <div class="node"><strong>Vue 3</strong><span>pages[] draft/baseline + App-root pending intent</span></div>
         <div class="node"><strong>Tauri / Rust</strong><span>窗口、sidecar、单队列、窄系统动作</span></div>
@@ -60,14 +60,14 @@
     </section>
 
     <section>
-      <p class="label">Next at CP5 · behavior unchanged</p>
+      <p class="label">Next at CP6 · safety integration</p>
       <div class="flow target">
-        <div class="node"><strong>Vue 3</strong><span>删除不可达 Flashcard 页面与测试</span></div>
-        <div class="node"><strong>Tauri / Rust</strong><span>v2 policy 保持不变</span></div>
-        <div class="node"><strong>JSONL v2</strong><span>方法与 DTO 保持不变</span></div>
-        <div class="node"><strong>Python service</strong><span>删除不可达 Flashcard DTO/方法</span></div>
-        <div class="node"><strong>Python Core</strong><span>保留迁移所需冻结 v3 reader</span></div>
-        <div class="node"><strong>Author assets</strong><span>不迁移真实 Vault，不改 schema</span></div>
+        <div class="node"><strong>Vue 3</strong><span>验证未知提交与两类 repair UI</span></div>
+        <div class="node"><strong>Tauri / Rust</strong><span>验证 response-loss ownership</span></div>
+        <div class="node"><strong>JSONL v2</strong><span>保持一次 mutation、只读对账</span></div>
+        <div class="node"><strong>Python service</strong><span>覆盖 fault matrix 与 Index warning</span></div>
+        <div class="node"><strong>Python Core</strong><span>演练迁移、locator 与恢复边界</span></div>
+        <div class="node"><strong>Author assets</strong><span>只使用 fixture、合成 Vault 或完整副本</span></div>
       </div>
     </section>
 
@@ -88,8 +88,8 @@
           <li>CP1 additive v4 model/codec；production import 不变。</li>
           <li>CP2 additive migration/Index；只由 fixture/copy 调用。</li>
           <li>CP3 development-only Vue 候选组件；零 Vault 写入。</li>
-          <li>CP4 同一 Checkpoint 激活 v2 全栈并退役活动 Flashcard caller。</li>
-          <li>CP5 只删除已不可达旧链；CP6 完成恢复与修复 Gate。</li>
+          <li>CP4 同一 Checkpoint 激活 v2 全栈并退役活动旧 caller。</li>
+          <li>CP5 删除已不可达旧链；CP6 完成恢复与修复 Gate。</li>
         </ol>
       </div>
     </section>

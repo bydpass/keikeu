@@ -98,13 +98,11 @@ afterEach(() => {
 });
 
 describe("Road v0.6 desktop shell", () => {
-  it("unblocks into Paper v4 and has no reachable Flashcard UI", async () => {
+  it("unblocks into the Paper v4 workspace", async () => {
     const wrapper = await mountApp();
 
     expect(wrapper.text()).toContain("Paper 工作台");
     expect(wrapper.text()).toContain("paper-v4/index-v4");
-    expect(wrapper.text()).not.toContain("Flashcard");
-    expect(bridgeRequest).not.toHaveBeenCalledWith("flashcard.open", expect.anything());
   });
 
   it("shows the host error and can restart into the same v2 runtime", async () => {
@@ -137,7 +135,7 @@ describe("Road v0.6 desktop shell", () => {
     expect(bridgeRequest).not.toHaveBeenCalled();
   });
 
-  it("routes Library back to a whole Paper without a Flashcard destination", async () => {
+  it("routes Library back to a whole Paper", async () => {
     bridgeRequest.mockImplementation((method, params) => {
       if (method === "paper.open") return {
         state: "opened",
@@ -153,7 +151,6 @@ describe("Road v0.6 desktop shell", () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain("Paper 工作台");
-    expect(wrapper.text()).not.toContain("Flashcard");
   });
 
   it("retains a Save intent across host failure and reconciles instead of replaying", async () => {

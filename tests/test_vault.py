@@ -14,15 +14,12 @@ from pathlib import Path
 import pytest
 
 from keikeu_core import indexer as indexer_mod
-from keikeu_core import markdown_io as markdown_mod
 from keikeu_core import vault as vault_mod
 from keikeu_core.markdown_io import (
-    read_paper,
-    render_paper_bytes,
-    update_paper,
-    write_paper as _write_paper,
+    render_paper_v4_bytes,
+    write_paper_v4,
 )
-from keikeu_core.models import Highlight, Paper
+from keikeu_core.models import CardPageV4, PaperV4
 from keikeu_core.vault import (
     atomic_exchange_at_no_follow,
     atomic_exchange_no_follow,
@@ -60,45 +57,41 @@ from keikeu_core.vault import (
     validate_folder_name,
     validate_regular_tree_no_follow,
     validate_vault_tree_no_follow,
-    validate_vault_papers,
     vault_index_version,
 )
 
 
 def write_paper(
     vault: Path,
-    paper: Paper,
+    paper: PaperV4,
     *,
     destination: str | Path | None = None,
 ) -> Path:
-    return _write_paper(
+    return write_paper_v4(
         vault,
         paper,
         destination=destination or Path("cache") / f"{paper.code}.md",
     )
 
 
-def write_external_paper(vault: Path, paper: Paper) -> Path:
+def write_external_paper(vault: Path, paper: PaperV4) -> Path:
     """Model a provider/legacy duplicate that bypasses keikeu's write guard."""
-    paper.initial_summary = paper.summary
     path = vault / "cache" / f"{paper.code}.md"
-    path.write_bytes(render_paper_bytes(paper))
+    path.write_bytes(render_paper_v4_bytes(paper))
     return path
 
 
-def _paper(code: str, summary: str = "A writing-ready summary.") -> Paper:
-    return Paper(
+def _paper(code: str, summary: str = "A writing-ready summary.") -> PaperV4:
+    return PaperV4(
         code=code,
-        initial_summary="",
-        summary=summary,
-        highlights=[Highlight(content="Keep this beat.")],
+        pages=[CardPageV4(content=summary, type="summary")],
         tags=["rain"],
         created=datetime(2026, 7, 14, 9, 0),
         updated=datetime(2026, 7, 14, 9, 0),
     )
 
 
-def test_init_vault_creates_only_the_current_layout_and_empty_v3_index(tmp_path):
+def test_init_vault_creates_only_the_current_layout_and_empty_v4_index(tmp_path):
     vault = tmp_path / "vault"
 
     init_vault(vault)
@@ -108,7 +101,7 @@ def test_init_vault_creates_only_the_current_layout_and_empty_v3_index(tmp_path)
     assert not (vault / "outlines").exists()
     assert not (vault / ".trash" / "outlines").exists()
     assert json.loads((vault / "keikeu_index.json").read_text(encoding="utf-8")) == {
-        "version": 3,
+        "version": 4,
         "papers": [],
         "errors": [],
     }
@@ -782,20 +775,6 @@ def test_restore_paper_rejects_non_trash_paths(tmp_path):
 
     with pytest.raises(ValueError, match=r"\.trash/cache/\[folder/\]Paper\.md"):
         restore_paper(vault, "cache/K-20260714-001.md")
-
-
-def test_strict_vault_validation_includes_recovery_papers(tmp_path):
-    vault = tmp_path / "vault"
-    init_vault(vault)
-    source = write_paper(vault, _paper("K-20260714-001"))
-    soft_delete(vault, str(source.relative_to(vault)))
-
-    validate_vault_papers(vault)
-
-    broken = vault / ".trash" / "cache" / "broken.md"
-    broken.write_text("not a Paper\n", encoding="utf-8")
-    with pytest.raises(ValueError, match="frontmatter"):
-        validate_vault_papers(vault)
 
 
 def test_folder_create_move_merge_and_rename_use_one_real_level(tmp_path):
@@ -1761,8 +1740,7 @@ def test_whole_folder_operations_preflight_unknown_entries_before_moving(tmp_pat
     unknown.unlink()
     wrong = source / "wrong-name.md"
     wrong_paper = _paper("K-20260714-002", "wrong")
-    wrong_paper.initial_summary = wrong_paper.summary
-    wrong.write_bytes(render_paper_bytes(wrong_paper))
+    wrong.write_bytes(render_paper_v4_bytes(wrong_paper))
 
     merged = merge_folders(vault, "A", "B")
 
@@ -1817,7 +1795,7 @@ def test_folder_operations_reject_a_source_folder_replaced_after_scan(
         soft_delete_folder(vault, "A")
         source = vault / ".trash" / "cache" / "A"
     parked = tmp_path / f"parked-{operation_name}"
-    replacement_bytes = render_paper_bytes(
+    replacement_bytes = render_paper_v4_bytes(
         _paper("K-20260714-001", "replacement")
     )
     real_scan = vault_mod._folder_papers_and_errors_at
@@ -1860,7 +1838,7 @@ def test_move_isolates_and_restores_a_last_moment_source_replacement(
     destination = create_folder(vault, "B")
     source = write_paper(vault, _paper("K-20260714-001", "original"))
     original_bytes = source.read_bytes()
-    replacement_bytes = render_paper_bytes(
+    replacement_bytes = render_paper_v4_bytes(
         _paper("K-20260714-001", "replacement")
     )
     parked = tmp_path / "parked-move-source"
@@ -1898,7 +1876,7 @@ def test_permanent_delete_isolates_and_restores_a_last_moment_replacement(
     active = write_paper(vault, _paper("K-20260714-001", "original"))
     trash = soft_delete(vault, active.relative_to(vault))
     original_bytes = trash.read_bytes()
-    replacement_bytes = render_paper_bytes(
+    replacement_bytes = render_paper_v4_bytes(
         _paper("K-20260714-001", "replacement")
     )
     parked = tmp_path / "parked-delete-source"
@@ -2002,8 +1980,7 @@ def test_rename_folder_blocks_filename_frontmatter_mismatch(tmp_path):
     source = create_folder(vault, "A")
     wrong = source / "wrong-name.md"
     wrong_paper = _paper("K-20260714-001", "wrong")
-    wrong_paper.initial_summary = wrong_paper.summary
-    wrong.write_bytes(render_paper_bytes(wrong_paper))
+    wrong.write_bytes(render_paper_v4_bytes(wrong_paper))
 
     with pytest.raises(ValueError, match="filename and frontmatter code"):
         rename_folder(vault, "A", "B")
@@ -2025,7 +2002,7 @@ def test_rename_folder_restores_a_last_moment_source_replacement(
         destination="cache/A/K-20260714-001.md",
     )
     parked = tmp_path / "parked-rename-source"
-    replacement_bytes = render_paper_bytes(
+    replacement_bytes = render_paper_v4_bytes(
         _paper("K-20260714-001", "replacement")
     )
     real_rename = vault_mod._atomic_rename_no_replace_at

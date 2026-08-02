@@ -78,7 +78,7 @@ afterEach(() => {
 });
 
 describe("Road v0.6 Library runtime", () => {
-  it("renders the accepted v4 projection and exposes no Flashcard route", async () => {
+  it("renders the accepted v4 projection", async () => {
     const request = vi.fn(async () => library());
     const wrapper = await mountLibrary(request);
 
@@ -86,7 +86,6 @@ describe("Road v0.6 Library runtime", () => {
     expect(wrapper.text()).toContain("2 页");
     expect(wrapper.text()).toContain("Platform · Window");
     expect(wrapper.text()).toContain("cache/broken.md");
-    expect(wrapper.text()).not.toContain("Flashcard");
   });
 
   it("passes scope, all-page search, sort, and verification to Python", async () => {

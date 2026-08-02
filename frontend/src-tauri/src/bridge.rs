@@ -788,12 +788,15 @@ mod tests {
     }
 
     #[test]
-    fn protocol_v2_policy_removes_flashcard_and_classifies_reconcile_as_read_only() {
+    fn protocol_v2_policy_classifies_reconcile_as_read_only() {
         let timeouts = short_timeouts();
 
-        assert!(public_policy("flashcard.open", timeouts).is_none());
         assert!(!public_policy("startup.load", timeouts).unwrap().mutation);
-        assert!(!public_policy("paper.reconcile_save", timeouts).unwrap().mutation);
+        assert!(
+            !public_policy("paper.reconcile_save", timeouts)
+                .unwrap()
+                .mutation
+        );
         assert!(public_policy("paper.save", timeouts).unwrap().mutation);
     }
 

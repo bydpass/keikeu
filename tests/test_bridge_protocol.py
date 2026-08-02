@@ -218,7 +218,7 @@ def test_malformed_json_and_request_shapes_are_structured_errors(tmp_path):
     )
     session_id = _hello(dispatcher)
     bad_params = _request(dispatcher, session_id, "vault.inspect", {"path": 42})
-    unknown = _request(dispatcher, session_id, "flashcard.open", {})
+    unknown = _request(dispatcher, session_id, "removed.method", {})
 
     assert malformed["error"]["code"] == "invalid_request"  # type: ignore[index]
     assert duplicate["error"]["code"] == "invalid_request"  # type: ignore[index]
@@ -319,12 +319,11 @@ def test_every_session_method_has_one_explicit_service_mapping(
     assert service.calls == [service_method]
 
 
-def test_method_registry_has_exact_classification_and_no_flashcard_route():
+def test_method_registry_has_exact_classification():
     mapped = {method for method, _params, _service in MAPPED_METHODS}
 
     assert METHODS == frozenset(METHOD_CLASSIFICATIONS)
     assert mapped == METHODS - {"system.hello"}
-    assert "flashcard.open" not in METHODS
     assert all(METHOD_CLASSIFICATIONS.values())
     assert MUTATION_METHODS == frozenset(
         method

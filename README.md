@@ -6,23 +6,22 @@
 
 ## 当前状态
 
-当前代码仍实现 Road v0.5 的 `Paper Markdown → Flashcard → 外部正文编辑器` 核心。Road v0.6 已进入 CP0：目标把 Paper 本身重构为可编辑的有序卡页，并在 CP4 一次切换到 Paper v4 / protocol v2；CP0–CP3 不改变 production runtime。
+当前代码已完成 Road v0.6 CP5 工程实现：production 使用 Paper v4、Index v4 与 protocol v2，Paper 本身就是可编辑的有序卡页；旧正常运行链已删除。CP6 将集中验证未知提交、修复与安全整合。
 
 Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响应式界面、本机沙盒 Vault 与真机修复验证；它不是 macOS Road 的合入闸门。Road v0.3 的工程、macOS candidate smoke 与 CP6 真实作者验收均已完成；检索更快且清楚、外部编辑器 handoff 清楚，未报告未解决 P0/P1。其设计与验收文档已[只读归档](docs/archive/road-v0-3/README.md)，未创建 v0.3 tag。**Road v0.4 已彻底完成**：Gate A、Gate B、产品验收与 macOS 15.7+ 兼容性均已通过；当前唯一桌面运行时为 Vue/Tauri 与本地 Python sidecar，Flet 已在 CP14 退役。**Road v0.5 也已完成并归档**：Paper Desk、保存基线、离开保护、Flashcard/Library 连贯性、全应用 Quiet Desk 视觉与固定滚动语义均已验收。实时坐标见 [PROJECT](docs/PROJECT.md)。
 
 ## 当前运行时核心流程
 
 ```text
-已有灵感 → Paper Markdown → Flashcard → 外部正文编辑器
+已有灵感 → 编辑并保存卡页 Paper → 外部正文编辑器
 ```
 
-- **Paper**：必填当前 Summary、冻结的首次保存副本、有序可选 Highlights、平面可选 Tags。
-- **Flashcard**：Summary-first 的只读投影；每次打开或切换 Paper 都从第 1 页开始，不保存阅读位置。
-- **Library**：按全部/未归类/一层文件夹检索和排序 Paper，并提供拖放、菜单、批量移动、分支、Trash 与恢复。
+- **Paper**：至少一张有序卡页；页标题始终可编辑，正文为作者 Markdown，类型可为总结/高光/碎碎念或空；保存一次提交整份 Paper。
+- **Library**：搜索整份 Paper，按全部/未归类/一层文件夹检索和排序，并提供拖放、菜单、批量移动、分支、Trash 与恢复。
 - **Vault**：只选择当前用户 Home 内路径；切换前验证，unsafe 旧 Vault 先复制并核对；尚未启用 Apple App Sandbox。
 - **外部编辑器**：正式正文始终在 keikeu 之外完成。
 
-Road v0.6 target 不再有独立 Flashcard 步骤：Paper 由至少一张可编辑卡页组成，每页都有可编辑标题、正文与可选的总结/高光/碎碎念类型；保存始终提交整份 Paper。实际 current/target 坐标见 [PROJECT](docs/PROJECT.md)。
+Road v0.6 的工程进度、恢复边界与下一 Gate 见 [PROJECT](docs/PROJECT.md)。
 
 ## Road v0.3 归档
 

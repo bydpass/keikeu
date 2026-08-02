@@ -17,7 +17,7 @@ During a staged Road, SPEC and the HTML maps may describe the approved target wh
 
 ## 2. Architecture
 
-- The current desktop runtime is Vue/Vite JavaScript through a narrow Tauri/Rust host and one JSONL Python sidecar, with Python `>=3.11,<3.14`, Paper v4 author-owned Markdown, rebuildable Index v4 metadata, and protocol v2. CP4 activated this complete vertical path; CP5 may remove only already-unreachable Flashcard/v3 normal-runtime code.
+- The current desktop runtime is Vue/Vite JavaScript through a narrow Tauri/Rust host and one JSONL Python sidecar, with Python `>=3.11,<3.14`, Paper v4 author-owned Markdown, rebuildable Index v4 metadata, and protocol v2. Legacy Paper models/codecs are frozen inside the migration boundary and are not normal-runtime APIs.
 - Flet was the accepted parity baseline through Gate A and product acceptance; CP14 removes it only after those gates and the macOS 15.7+ compatibility gate passed.
 - The Python application service is transport-agnostic and owns orchestration behind JSONL. Rust and Vue do not duplicate product rules.
 - The developer owns architecture, dependencies, data models, build commands, and release artifacts; agent output must remain explainable and reviewable.
@@ -63,7 +63,7 @@ During a staged Road, SPEC and the HTML maps may describe the approved target wh
 - Keep the author in control: destructive, migration, rename, and recovery actions are explicit and explain consequences.
 - Required-field errors block only the unsafe action; optional-field guidance never blocks.
 - Every core flow covers default, empty, error, disabled/in-progress, and recovery states where applicable.
-- The production route has no separate Flashcard path: the editable Paper itself is the ordered card-page artifact. Unreachable legacy implementation may remain only until the declared CP5 cleanup.
+- The production route has no separate rendered-card path: the editable Paper itself is the ordered card-page artifact.
 - Use responsive layouts, safe areas, keyboard reachability, readable contrast, visible focus, and text wrapping.
 - Every drag operation has a keyboard-reachable menu equivalent. Road v0.6 adds no page reordering; existing v0.5 Highlight reordering remains current only until the CP4 cutover.
 - Motion may clarify state but cannot be required to understand or complete a task.

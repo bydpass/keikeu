@@ -31,7 +31,7 @@ Vue → Tauri/Rust → JSONL protocol v2 → Python service/core
 ```
 
 CP0–CP3 added the contracts, Core, migration/Index, and development-only UI. CP4
-performed the single vertical protocol-v2 switch. CP5 removes unreachable Flashcard/v3
+performed the single vertical protocol-v2 switch. CP5 removed the unreachable legacy
 normal-runtime code without changing this product behavior. `PROJECT.md`, source, and tests
 remain the authority for the current checkpoint.
 
@@ -90,7 +90,7 @@ No AI generation, prose editor, sync, account, community, database, file watcher
 ## 9. Acceptance gates
 
 1. **Checkpoint engineering:** CP0–CP6 each produce their declared implementation, checks, smoke, and evidence with no unresolved P0/P1. Their developer exit judgments are covered by advance YOLO; evidence may not be invented or copied forward.
-2. **Current/target integrity:** CP0–CP3 keep production v0.5/protocol v1; CP4 alone activates the complete v4/v2 vertical path; CP5 removes only code proven unreachable.
+2. **Current/target integrity:** CP0–CP3 kept production v0.5/protocol v1; CP4 alone activated the complete v4/v2 vertical path; CP5 removed only code proven unreachable.
 3. **Safety integration:** CP6 exercises unknown-result ownership, strict repair states, Index verification, migration and path-mutation recovery, and the Chinese repair manual using synthetic data or complete copies.
 4. **Product acceptance:** CP7 separately requires the first author's real workflow. It is not part of CP6 engineering completion and needs separate real-Vault authorization.
 5. **Road closeout:** CP7 acceptance, snapshot, tag, push, signing, packaging, and release are separate decisions.

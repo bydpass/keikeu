@@ -238,12 +238,3 @@ def test_write_and_read_paper_v4_snapshot_without_overwrite(tmp_path):
     assert source_bytes == render_paper_v4_bytes(paper)
     with pytest.raises(FileExistsError):
         write_paper_v4(vault, paper, destination="cache/K-20260802-001.md")
-
-
-def test_active_v3_codec_does_not_accept_v4_or_change_its_public_names():
-    from keikeu_core.markdown_io import parse_paper_bytes, render_paper_bytes
-
-    with pytest.raises(ValueError, match="schema_version: 2 or 3"):
-        parse_paper_bytes(render_paper_v4_bytes(make_paper()))
-    assert parse_paper_bytes.__name__ == "parse_paper_bytes"
-    assert render_paper_bytes.__name__ == "render_paper_bytes"
