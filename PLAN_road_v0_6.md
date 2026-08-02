@@ -247,17 +247,17 @@ renderer 和 golden fixtures。production 的 `Paper/Highlight`、v3 codec 与 i
 
 **顺序步骤：**
 
-- [ ] 先枚举 v3 export 与所有 production caller，记录当前 focused tests。
-- [ ] 添加独立 v4 model；实现至少一页、精确空白谓词、200 code point、非法字符、
+- [x] 先枚举 v3 export 与所有 production caller，记录当前 focused tests。
+- [x] 添加独立 v4 model；实现至少一页、精确空白谓词、200 code point、非法字符、
       类型集合、最多一个 Summary、null/空名称与 Tags 规则。
-- [ ] 实现无 BOM UTF-8、统一 LF/CRLF、frontmatter scalar、精确外层结构与 strict failure。
-- [ ] 实现 page marker JSON、名称连字符 `\u002d`、正文保留 marker 前置反斜线的可逆
+- [x] 实现无 BOM UTF-8、统一 LF/CRLF、frontmatter scalar、精确外层结构与 strict failure。
+- [x] 实现 page marker JSON、名称连字符 `\u002d`、正文保留 marker 前置反斜线的可逆
       round-trip；拒绝重复/未知 JSON key，不损失正文首尾空行。
-- [ ] 实现 Tags 最后一节、逗号普通字符、trim/丢空/首次去重和 canonical 输出。
-- [ ] 补齐正向 golden、损坏输入、任意合法模型的 render→parse 字段等价、
+- [x] 实现 Tags 最后一节、逗号普通字符、trim/丢空/首次去重和 canonical 输出。
+- [x] 补齐正向 golden、损坏输入、任意合法模型的 render→parse 字段等价、
       parse→render→parse canonical 等价和 content 保真测试。
-- [ ] 检查 production import graph，确认 Service/Index/startup 仍只引用 v3 API。
-- [ ] 用隔离合成环境启动现有 v0.5 App，确认 protocol 仍为 v1。
+- [x] 检查 production import graph，确认 Service/Index/startup 仍只引用 v3 API。
+- [x] 用隔离合成环境启动现有 v0.5 App，确认 protocol 仍为 v1。
 
 **自动检查：**
 

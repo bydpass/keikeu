@@ -12,6 +12,7 @@
 - [`road-v0-5/cp6-dogfood/report.md`](road-v0-5/cp6-dogfood/report.md) — accepted independent CP6 Agent dogfood and fixes.
 - [`road-v0-5/cp7-fixed-sidebars/report.md`](road-v0-5/cp7-fixed-sidebars/report.md) — developer-passed CP7 fixed rails, bounded scrolling, hidden scrollbar chrome, and no-overscroll evidence.
 - [`road-v0-6/cp0-contract/report.md`](road-v0-6/cp0-contract/report.md) — Road v0.6 CP0 current/target contract, toolchain, ADR, HTML-map, and automated-check evidence.
+- [`road-v0-6/cp1-core/report.md`](road-v0-6/cp1-core/report.md) — Road v0.6 CP1 additive Paper v4 model, strict Markdown codec, content-fidelity, regression, and protocol-v1 runtime evidence.
 - [`../archive/docs-archive-documentation-reform-report/`](../archive/docs-archive-documentation-reform-report/): read-only pre-completion record and the SOP used for the checks.
 
 Do not place prose, inspirations, names, relationships, Vault paths, device identifiers, or secrets here. Acceptance, archive, tag, commit, and push remain separate decisions.
