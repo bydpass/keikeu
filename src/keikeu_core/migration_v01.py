@@ -20,8 +20,12 @@ import stat
 from typing import Callable
 
 from keikeu_core.legacy_v01 import LegacyCache, read_v01_cache
-from keikeu_core.markdown_io import parse_paper_bytes, render_paper_bytes
-from keikeu_core.models import Highlight, Paper
+from keikeu_core.legacy_v3 import (
+    HighlightV3 as Highlight,
+    PaperV3 as Paper,
+    parse_paper_v3_bytes as parse_paper_bytes,
+    render_paper_v3_bytes as render_paper_bytes,
+)
 from keikeu_core.vault import (
     atomic_exchange_at_no_follow,
     copy_vault_no_follow,

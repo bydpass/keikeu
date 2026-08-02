@@ -19,6 +19,7 @@ import secrets
 import stat
 import unicodedata
 
+from keikeu_core.legacy_v3 import parse_paper_v3_bytes
 from keikeu_core.models import CardPageV4, Highlight, Paper, PaperV4, validate_paper_code
 from keikeu_core.vault import (
     _create_regular_bytes_at,
@@ -42,10 +43,12 @@ __all__ = [
     "read_paper_snapshot",
     "update_paper",
     "branch_paper",
+    "branch_paper_v4",
     "render_paper_bytes",
     "parse_paper_bytes",
     "render_paper_v4_bytes",
     "parse_paper_v4_bytes",
+    "replace_paper_v4_bytes",
 ]
 
 
@@ -341,6 +344,222 @@ def parse_paper_v4_bytes(data: bytes) -> PaperV4:
             key: value for key, value in frontmatter.items() if key not in known
         },
     )
+
+
+def _paper_code_from_any_bytes(data: bytes) -> str:
+    try:
+        return parse_paper_v4_bytes(data).code
+    except (ValueError, UnicodeError):
+        return parse_paper_v3_bytes(data).code
+
+
+def _supported_v4_relative_path(
+    vault: Path,
+    candidate: str | Path,
+    *,
+    active_only: bool,
+) -> Path:
+    bases = (("cache",),) if active_only else (("cache",), (".trash", "cache"))
+    errors: list[ValueError] = []
+    for base in bases:
+        try:
+            return _supported_paper_relative_path(vault, candidate, base)
+        except ValueError as exc:
+            errors.append(exc)
+    expected = "cache/[folder/]Paper.md"
+    if not active_only:
+        expected += " or .trash/cache/[folder/]Paper.md"
+    raise ValueError(f"expected {expected}") from errors[-1]
+
+
+def replace_paper_v4_bytes(
+    vault: Path,
+    path: str | Path,
+    proposed_bytes: bytes,
+    *,
+    expected_source_bytes: bytes,
+) -> None:
+    """CAS-replace one active or Trash legacy Paper with validated v4 bytes."""
+    if not isinstance(expected_source_bytes, bytes) or not isinstance(proposed_bytes, bytes):
+        raise TypeError("expected and proposed Paper snapshots must be bytes")
+    proposed = parse_paper_v4_bytes(proposed_bytes)
+    require_atomic_exchange()
+    vault, root_fd = _open_pinned_vault_root(vault)
+    relative = _supported_v4_relative_path(vault, path, active_only=False)
+    target = vault / relative
+    directory_fd: int | None = None
+    try:
+        directory_fd = _open_relative_directory_no_follow(root_fd, relative.parent, vault)
+        source_bytes, source_identity = _read_regular_bytes_at(
+            directory_fd,
+            relative.name,
+            target,
+        )
+        if source_bytes != expected_source_bytes:
+            raise ValueError("Paper changed externally; migration replacement refused")
+        source_code = _paper_code_from_any_bytes(source_bytes)
+        if proposed.code != source_code:
+            raise ValueError("Paper codes are immutable during migration")
+        if relative.name != f"{proposed.code}.md":
+            raise ValueError("Paper filename and frontmatter code do not match")
+        if _paper_code_exists_at(
+            root_fd,
+            vault,
+            proposed.code,
+            parse_code=_paper_code_from_any_bytes,
+            excluding=relative,
+        ):
+            raise ValueError(f"duplicate Paper code blocks mutation: {proposed.code}")
+        _atomic_compare_exchange_bytes_at(
+            directory_fd,
+            target,
+            relative.name,
+            proposed_bytes,
+            expected_bytes=expected_source_bytes,
+            expected_identity=source_identity,
+            guard_path=target.parent,
+            guard_fd=directory_fd,
+        )
+    finally:
+        if directory_fd is not None:
+            os.close(directory_fd)
+        os.close(root_fd)
+
+
+def branch_paper_v4(
+    vault: Path,
+    source: str | Path,
+    destination: str | Path,
+    new_code: str,
+    *,
+    expected_source_bytes: bytes,
+    now: datetime | None = None,
+) -> Path:
+    """Create one same-folder v4 branch from an exact active snapshot."""
+    if not isinstance(expected_source_bytes, bytes):
+        raise TypeError("expected_source_bytes must be bytes")
+    new_code = validate_paper_code(new_code)
+    vault, root_fd = _open_pinned_vault_root(vault)
+    source_relative = _supported_v4_relative_path(vault, source, active_only=True)
+    destination_relative = _supported_v4_relative_path(vault, destination, active_only=True)
+    if destination_relative.name != f"{new_code}.md":
+        raise ValueError("branch destination filename must match its new code")
+    if destination_relative.parent != source_relative.parent:
+        raise ValueError("branch destination must stay in the source folder")
+    source_path = vault / source_relative
+    destination_path = vault / destination_relative
+    source_fd: int | None = None
+    destination_fd: int | None = None
+    try:
+        source_fd = _open_relative_directory_no_follow(root_fd, source_relative.parent, vault)
+        destination_fd = _open_relative_directory_no_follow(
+            root_fd,
+            destination_relative.parent,
+            vault,
+        )
+        source_bytes, source_identity = _read_regular_bytes_at(
+            source_fd,
+            source_relative.name,
+            source_path,
+        )
+        if source_bytes != expected_source_bytes:
+            raise ValueError(f"Paper changed before branch copy: {source_path}")
+        source_paper = parse_paper_v4_bytes(source_bytes)
+        if source_relative.name != f"{source_paper.code}.md":
+            raise ValueError("Paper filename and frontmatter code do not match")
+        if _paper_code_exists_at(
+            root_fd,
+            vault,
+            source_paper.code,
+            parse_code=_paper_code_from_any_bytes,
+            excluding=source_relative,
+        ):
+            raise ValueError(f"duplicate Paper code blocks mutation: {source_paper.code}")
+        branch_time = now or datetime.now()
+        branched = PaperV4(
+            code=new_code,
+            display_name=(
+                f"{source_paper.display_name[:195]} · 分支"
+                if source_paper.display_name is not None
+                else None
+            ),
+            pages=[
+                CardPageV4(name=page.name, content=page.content, type=page.type)
+                for page in source_paper.pages
+            ],
+            tags=list(source_paper.tags),
+            created=branch_time,
+            updated=branch_time,
+            legacy_title=source_paper.legacy_title,
+            extra_frontmatter=source_paper.extra_frontmatter.copy(),
+        )
+        target_bytes = render_paper_v4_bytes(branched)
+        _require_new_regular_name_at(
+            destination_fd,
+            destination_relative.name,
+            destination_path,
+        )
+        if _paper_code_exists_at(
+            root_fd,
+            vault,
+            new_code,
+            parse_code=_paper_code_from_any_bytes,
+        ):
+            raise FileExistsError(f"Paper code already exists in active/Trash: {new_code}")
+        _require_directory_path_identity(source_path.parent, source_fd)
+        _require_directory_path_identity(destination_path.parent, destination_fd)
+        target_identity = _create_regular_bytes_at(
+            destination_fd,
+            destination_relative.name,
+            target_bytes,
+            destination_path,
+        )
+        try:
+            current_source, current_identity = _read_regular_bytes_at(
+                source_fd,
+                source_relative.name,
+                source_path,
+            )
+            stored_bytes, stored_identity = _read_regular_bytes_at(
+                destination_fd,
+                destination_relative.name,
+                destination_path,
+            )
+            if current_identity != source_identity or current_source != source_bytes:
+                raise ValueError(f"Paper changed during branch copy: {source_path}")
+            if stored_identity != target_identity or stored_bytes != target_bytes:
+                raise ValueError(f"branch Paper changed while creating: {destination_path}")
+            _require_directory_path_identity(source_path.parent, source_fd)
+            _require_directory_path_identity(destination_path.parent, destination_fd)
+            if _paper_code_exists_at(
+                root_fd,
+                vault,
+                new_code,
+                parse_code=_paper_code_from_any_bytes,
+                excluding=destination_relative,
+            ):
+                raise FileExistsError(
+                    f"Paper code concurrently created in active/Trash: {new_code}"
+                )
+        except Exception:
+            if not _unlink_owned_bytes_at(
+                destination_fd,
+                destination_relative.name,
+                target_identity,
+                target_bytes,
+            ):
+                raise OSError(
+                    errno.EIO,
+                    "branch Paper could not roll back safely; source and branch were preserved",
+                )
+            raise
+        return destination_path
+    finally:
+        if destination_fd is not None:
+            os.close(destination_fd)
+        if source_fd is not None:
+            os.close(source_fd)
+        os.close(root_fd)
 
 
 def _format_frontmatter(pairs: list[tuple[str, str]]) -> str:

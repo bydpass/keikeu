@@ -301,24 +301,24 @@ export；不触碰真实或复制 Vault；不新增依赖或顺手重构 v3 code
 
 **顺序步骤：**
 
-- [ ] 为 v0.1 migrator 建立最小 frozen-v3 接线，先证明现有 fixture manifest 与输出不变。
-- [ ] 实现 active、一级 folder、Trash 的 no-follow schema scan 和 pure-v4/mixed/unsupported
+- [x] 为 v0.1 migrator 建立最小 frozen-v3 接线，先证明现有 fixture manifest 与输出不变。
+- [x] 实现 active、一级 folder、Trash 的 no-follow schema scan 和 pure-v4/mixed/unsupported
       分类；不信任旧 Index version。
-- [ ] 实现独立 raw loss-audit：重复/无效 frontmatter、重复 section、游离文本、malformed
+- [x] 实现独立 raw loss-audit：重复/无效 frontmatter、重复 section、游离文本、malformed
       Highlight、未归属 bytes 全部阻塞。
-- [ ] 实现 Summary/Highlight 映射、未知 frontmatter 保留、`initial_summary` 明确处置；
+- [x] 实现 Summary/Highlight 映射、未知 frontmatter 保留、`initial_summary` 明确处置；
       多行/control/空/有外围空白/trim 后重复 legacy Tag 全部阻塞。
-- [ ] 实现全量 preflight、外置完整备份、隔离 staging、render→parse→字段等价、逐文件
+- [x] 实现全量 preflight、外置完整备份、隔离 staging、render→parse→字段等价、逐文件
       安全替换、去内容报告和中断续迁；备份必须位于 Home 下但 active Vault 之外，
       并在任何源替换前完成 regular-file manifest 与逐字节验证。测试只使用临时复制 Vault。
-- [ ] 实现 v0.1→冻结 v3→v4 的两段 Gate；不得在中间 claim、编辑或建 v4 Index。
-- [ ] 实现 Index v4 entry、全页本地 `search_text`、NUL 字段分隔、NFC/casefold 内存比较、
+- [x] 实现 v0.1→冻结 v3→v4 的两段 Gate；不得在中间 claim、编辑或建 v4 Index。
+- [x] 实现 Index v4 entry、全页本地 `search_text`、NUL 字段分隔、NFC/casefold 内存比较、
       类型值/中文标签搜索、第一页原文 preview、全 Index verify、坏 Paper 隔离和
       active-only 持久化；不可逆截行只由 Vue CSS 完成。
-- [ ] 实现 Trash 查询时 O(n) 临时投影；`search_text` 不落 Trash Index、不进 DTO。
-- [ ] 实现 v4 Branch 的 source snapshot、pages/Tags/frontmatter 保留、新 code/time/path，
+- [x] 实现 Trash 查询时 O(n) 临时投影；`search_text` 不落 Trash Index、不进 DTO。
+- [x] 实现 v4 Branch 的 source snapshot、pages/Tags/frontmatter 保留、新 code/time/path，
       源变化或冲突时零创建。
-- [ ] 检查 production Service/startup/rebuild 仍调用 v3 API，并启动现有 v0.5 App。
+- [x] 检查 production Service/startup/rebuild 仍调用 v3 API，并启动现有 v0.5 App。
 
 **自动检查：**
 
