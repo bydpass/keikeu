@@ -11,7 +11,7 @@ Protect author control, local durability, privacy, and beginner-maintainability.
 | Need | Authority |
 | --- | --- |
 | Product scope and acceptance | `docs/SPEC.md` |
-| Road v0.6 scope and checkpoint order | `PLAN_road_v0_6.md` |
+| Road v0.6 approved target design and current planning gate | `docs/design/road-v0-6-paper-v4-design.md`, then `PLAN_road_v0_6.md` |
 | Current phase and next gate | `docs/PROJECT.md` |
 | Engineering, interaction, data, evidence rules | `docs/RULES.md` |
 | Module and lifecycle map | `docs/architecture/architecture.html` |

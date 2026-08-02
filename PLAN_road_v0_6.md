@@ -1,1494 +1,654 @@
-# Road v0.6 受邀 Alpha 实施计划
+# Road v0.6 实施计划（待开发者批准）
 
-> 按照 `docs/RULES.md` §7 和项目本地 `keikeu-routine` 逐项执行；
-> 复选框（`- [ ]`）用于跟踪实施状态。
+> 状态：依据已批准的 [Paper v4 产品与架构设计](docs/design/road-v0-6-paper-v4-design.md)
+> 于 2026-08-02 重写。本计划及其准备提交不代表实施计划已经批准，不开始 CP0，
+> 也不授权真实 Vault、远端、发布或任何 Checkpoint 提交。
 
-**目标：** 交付一个私下分发的 macOS Apple Silicon 受邀 Alpha，使开发者能够
-独立复现其 Developer ID 发布流程，并在 `n = 1` 时对二号用户 MVP Gate 作出结论。
+## 0. Road 目标
 
-**架构：** 保持已接受的 Vue/Tauri/JSONL/Python 运行时不变。使用锁定的本地工具链、
-Tauri 现有的 macOS bundle 路径、Apple Keychain 身份和 Apple 原生公证工具。
-Markdown 继续作为持久的权威与证据格式；DMG、原始日志、凭据和作者内容绝不进入 Git。
+Road v0.6 把产品从“编辑 Paper，再打开独立 Flashcard”重构为：
 
-**技术栈：** Python 3.13 / pytest / PyInstaller 6.21.0、Node 22.23.1 / npm
-10.9.8 / Vue / Vitest、Rust 1.88 / Tauri CLI 2.11.4 / Tauri crate 2.11.5，
-以及 macOS `security`、`codesign`、`notarytool`、`stapler`、`spctl`、
-`hdiutil`、`lipo`、`vtool` 和 `plutil`。
-
-## 全局约束
-
-- 与本计划配套、且已由开发者批准的设计书是
-  `docs/design/road-v0-6-invited-alpha-design.md`。
-  任务 0 的批准会冻结本计划及其中对外层 DMG 的窄范围澄清。
-  如果本计划与该设计书、`docs/SPEC.md` 或 `docs/RULES.md` 冲突，
-  必须停止实施并先解决冲突。
-- Road v0.6 有五个顺序检查点（checkpoint）。每个检查点都需要审查当前证据，
-  并由开发者明确判定通过。YOLO 不是 Gate。
-- 已接受的本地 `.gitignore` 修改不进入任何暂存或提交。
-  发现其他意外修改路径时，停止当前任务。
-- 除非另有独立且明确的指示，否则不得推送（push）、更改远端、打标签、发布、
-  删除分支或改写历史。
-- 每次提交前都要获得明确授权、只暂存精确路径、检查 `git diff --cached`、
-  确认没有秘密信息或作者内容被暂存、识别已配置的 `aic` 提供方，并遵循
-  `docs/RULES.md` §7。不得退回使用 `git commit`。
-- 不得增加依赖、CI 签名、更新器、App Store 打包、PKG、自定义 DMG 样式、
-  遥测、云端行为或其他平台运行时。
-- 不得修改真实 Vault 或使用未发表的作者内容。运行时冒烟测试使用专用的合成
-  Vault；启动前要披露任何已选 Vault 或本地应用状态变化。
-- 绝不把 Apple ID、密码、API 密钥、私钥材料、完整签名身份、
-  Keychain 凭据配置名称、原始公证日志、本地绝对路径、稳定设备标识符、
-  Vault 路径或测试者正文写入 Git。
-- 候选包名称不可变：`keikeu-0.6.0-alpha.N-macos-arm64.dmg`。CP2 从
-  `alpha.1` 开始，每次已经绑定哈希的重试都递增编号。CP3 使用已接受 CP2
-  候选包之后的下一个未使用编号，通常是 `alpha.2`。候选包一旦绑定哈希
-  或被分享，任何发生变化的产物都必须递增 `N`。
-- 发布产物和原始证据保存在已忽略的本地目录 `build/road-v0-6/`，
-  或开发者选择的其他非 Git 位置。
-- 如果 `/Applications/keikeu.app` 已存在，安装前必须停止，并询问开发者
-  应如何精确处置。绝不覆盖它。
-- 不得给 shell 的 `HOME` 赋值。需要隔离时，创建任务专用临时目录，
-  并仅通过待测子进程的启动命令把它传给该子进程。
-- 签名、内部 bundle 校验、公证、Gatekeeper、架构、安装或运行时任一失败，
-  都意味着按计划停止并重新构建。绝不移除 quarantine 元数据、
-  绕过 Gatekeeper、使用临时（ad-hoc）签名，或以
-  `codesign --deep --force` 修复。
-
----
-
-## 任务 0：审查并冻结 Road 开始前的文档
-
-**文件：**
-
-- 修改：`AGENTS.md`
-- 归档：把 `PLAN_revised.md` 的完整正文移至
-  `docs/archive/road-v0-5/PLAN_revised.md`，并把根文件改为历史链接兼容入口
-- 审查：
-  `docs/design/road-v0-6-invited-alpha-design.md`
-- 审查：
-  `PLAN_road_v0_6.md`
-- 修改：`docs/PROJECT.md`
-- 修改：`docs/SPEC.md`
-- 修改：`docs/archive/README.md`
-- 修改：`docs/design/design.html`
-- 修改：`docs/design/interaction.html`
-- 修改：`scripts/check_docs.py`
-
-- [ ] **步骤 1：核验规划工作树**
-
-运行：
-
-```bash
-git status --short --branch
-git branch --show-current
-git diff -- .gitignore
-git diff -- docs/PROJECT.md
-sed -n '1,9999p' \
-  docs/design/road-v0-6-invited-alpha-design.md
-sed -n '1,9999p' \
-  PLAN_road_v0_6.md
+```text
+灵感 → 直接编辑由有序卡页组成的 Paper → 整体保存 → 带着 Paper 离开
 ```
 
-预期：分支为 `docs/road-v0-6-design`；`.gitignore` 是已点名的用户修改；
-其余工作仅包括 Road v0.5 计划书归档与兼容入口、活跃引用切换、
-Road v0.6 设计书、计划书、中文计划规则和 `PROJECT.md`。
-
-- [ ] **步骤 2：审查已锁定的决策**
-
-确认两份文档都包含以下内容：
-
-- Road 结果是一个私下分发的 macOS Apple Silicon 受邀 Alpha，
-  加一次二号用户 MVP Gate。
-- 发布身份是 `0.6.0` / `app.keikeu.desktop` / macOS 15.7+ / 仅 arm64。
-- 不支持 Intel Mac、Linux 和 watchOS；带日期的 iOS/iPadOS、Android、
-  HarmonyOS 和 Windows 条目都是需要各自 Gate 的未来目标，不代表当前支持。
-- 发布路径是本地 Developer ID 签名、手动 `notarytool`、staple、默认 DMG、
-  Gatekeeper 和精确哈希证据。
-- CP3 仅由开发者执行，Agent 零介入。
-- CP4 把测试者设备问题推迟到准入 Gate，只修复观察到的 P0/P1；
-  缺乏正向价值信号时判为产品 Gate 失败，而不是授权增加功能。
-
-- [ ] **步骤 3：使 PROJECT 保持在当前行数预算内**
-
-把其中现有的 Road v0.6 工作材料句替换为一句话，同时链接设计书和本计划，
-并说明两者已经开发者批准，但 CP0 和发布工作均未开始。不得增加行数。
-
-- [ ] **步骤 4：运行规划文档检查**
-
-运行：
-
-```bash
-.venv/bin/python scripts/check_docs.py
-git diff --check
-```
-
-如果以下两个已知的既有文档错误仍存在，就记录它们：
-`docs/design/working-materials.md` 中一个因移动而失效的链接，以及已归档
-Road v0.5 HTML 缺少归档标记。任何新错误都会阻止批准。
-
-- [ ] **步骤 5：取得设计书与计划书批准**
-
-开发者审查实际差异，然后提出修改要求，或明确批准实施计划以及已批准设计书中
-对外层 DMG 的窄范围澄清。此批准不代表 CP0 通过，也不授权推送。
-
-- [ ] **步骤 6：仅在另行明确授权后提交**
-
-只暂存：
-
-```bash
-git add -- AGENTS.md \
-  PLAN_revised.md \
-  PLAN_road_v0_6.md \
-  docs/PROJECT.md \
-  docs/SPEC.md \
-  docs/archive/README.md \
-  docs/archive/road-v0-5/PLAN_revised.md \
-  docs/design/design.html \
-  docs/design/interaction.html \
-  docs/design/road-v0-6-invited-alpha-design.md \
-  scripts/check_docs.py
-git diff --cached --check
-git diff --cached
-git status --short
-```
-
-开发者批准已暂存差异和获准的 `aic` 提供方后，创建一个意图为
-`docs: prepare Road v0.6 execution baseline` 的聚焦 Road 交接提交。检查生成的提交。
-保持 `.gitignore` 未暂存。不要推送。
-
----
-
-## 任务 1：CP0 — 发布契约与身份就绪
-
-**分支：** `docs/cp0-release-contract`
-
-**文件：**
-
-- 修改：`docs/design/working-materials.md`
-- 修改：`docs/archive/road-v0-5/road-v0-5-planbook.html`
-- 修改：`pyproject.toml`
-- 修改：`src/keikeu_bridge/protocol.py`
-- 修改：`frontend/package.json`
-- 修改：`frontend/package-lock.json`
-- 修改：`frontend/src-tauri/Cargo.toml`
-- 修改：`frontend/src-tauri/Cargo.lock`
-- 修改：`frontend/src-tauri/tauri.conf.json`
-- 修改：`requirements-build.lock`
-- 创建：`tests/test_release_identity.py`
-- 修改：`docs/SPEC.md`
-- 修改：`docs/RULES.md`
-- 修改：`docs/PROJECT.md`
-- 修改：`README.md`
-- 修改：`README_EN.md`
-- 创建：`docs/manual/forfresh/macos-developer-id-release.md`
-- 修改：`docs/manual/README.md`
-- 仅当 CP0 beta 条件成立时创建：
-  `docs/architecture/decisions/0006-beta-toolchain-release-exception.md`
-- 创建：`docs/acceptance/road-v0-6/README.md`
-- 创建：
-  `docs/acceptance/road-v0-6/cp0-release-contract/report.md`
-- 修改：`docs/acceptance/README.md`
-
-- [ ] **步骤 1：从已批准的规划提交开始**
-
-运行：
-
-```bash
-git status --short --branch
-git branch --show-current
-git rev-parse HEAD
-```
-
-预期：只有已接受的 `.gitignore` 修改尚未提交，且 HEAD 是开发者批准的规划
-提交。然后创建：
-
-```bash
-git switch -c docs/cp0-release-contract
-```
-
-- [ ] **步骤 2：修复已知文档基线**
-
-只进行以下纠正：
-
-- 在 `docs/design/working-materials.md` 中，把 HTML 链接指向
-  `../archive/road-v0-5/road-v0-5-planbook.html`。
-- 在 `docs/archive/road-v0-5/road-v0-5-planbook.html` 开头附近加入：
-
-```html
-<!-- ARCHIVE · READ ONLY · Road v0.5 frozen planbook -->
-```
-
-这是对紧邻此前那次归档移动的窄范围纠正。必须明确审查；
-除此之外不要改写 Road v0.5 历史。
-
-运行：
-
-```bash
-.venv/bin/python scripts/check_docs.py
-git diff --check
-```
-
-预期：在 CP0 增加更多文档前，两条命令都通过。
-
-- [ ] **步骤 3：增加一个会失败的发布身份测试**
-
-创建 `tests/test_release_identity.py`，其中包含一个一致性测试：
-
-```python
-from __future__ import annotations
-
-import json
-import tomllib
-from pathlib import Path
-
-from keikeu_bridge.protocol import APP_VERSION
-
-
-ROOT = Path(__file__).resolve().parents[1]
-EXPECTED_VERSION = "0.6.0"
-
-
-def _toml(path: Path) -> dict:
-    return tomllib.loads(path.read_text(encoding="utf-8"))
-
-
-def test_release_versions_are_0_6_0() -> None:
-    package = json.loads(
-        (ROOT / "frontend" / "package.json").read_text(encoding="utf-8")
-    )
-    package_lock = json.loads(
-        (ROOT / "frontend" / "package-lock.json").read_text(encoding="utf-8")
-    )
-    cargo = _toml(ROOT / "frontend" / "src-tauri" / "Cargo.toml")
-    cargo_lock = _toml(ROOT / "frontend" / "src-tauri" / "Cargo.lock")
-    tauri = json.loads(
-        (ROOT / "frontend" / "src-tauri" / "tauri.conf.json").read_text(
-            encoding="utf-8"
-        )
-    )
-    cargo_package = next(
-        item
-        for item in cargo_lock["package"]
-        if item["name"] == "keikeu-desktop"
-    )
-    versions = {
-        "python-project": _toml(ROOT / "pyproject.toml")["project"]["version"],
-        "python-runtime": APP_VERSION,
-        "npm-package": package["version"],
-        "npm-lock-root": package_lock["version"],
-        "npm-lock-package": package_lock["packages"][""]["version"],
-        "cargo-package": cargo["package"]["version"],
-        "cargo-lock-package": cargo_package["version"],
-        "tauri-config": tauri["version"],
-    }
-    assert versions == {name: EXPECTED_VERSION for name in versions}
-```
-
-运行：
-
-```bash
-.venv/bin/python -m pytest tests/test_release_identity.py -q
-```
-
-预期：失败，因为仓库仍报告 `0.1.0`。测试收集或解析错误不是预期失败，
-必须先修复。
-
-- [ ] **步骤 4：应用已锁定的发布身份**
-
-进行以下精确的版本修改：
-
-- `pyproject.toml`：项目版本改为 `0.6.0`。
-- `src/keikeu_bridge/protocol.py`：后备 `APP_VERSION` 改为 `0.6.0`。
-- `frontend/package.json` 以及 `frontend/package-lock.json` 中仅根
-  package 字段改为 `0.6.0`，通过以下命令生成：
-
-```bash
-npm --prefix frontend version 0.6.0 --no-git-tag-version
-```
-
-- `frontend/src-tauri/Cargo.toml` 以及 `Cargo.lock` 中仅本地
-  `keikeu-desktop` package 条目改为 `0.6.0`。
-- `frontend/src-tauri/tauri.conf.json`：版本改为 `0.6.0`；保持
-  identifier `app.keikeu.desktop`、`minimumSystemVersion` `15.7`、target
-  `app` 和现有 sidecar 路径；在 `bundle.macOS` 下明确增加
-  `"hardenedRuntime": true`。
-- `requirements-build.lock`：只修改第一条注释，说明它针对 Road v0.6
-  在 Python 3.13.14 / macOS arm64 上解析。不要修改任何依赖版本。
-
-检查 lockfile，确保没有依赖漂移：
-
-```bash
-git diff -- frontend/package-lock.json frontend/src-tauri/Cargo.lock \
-  requirements-build.lock
-cargo metadata --manifest-path frontend/src-tauri/Cargo.toml \
-  --no-deps --format-version 1
-```
-
-- [ ] **步骤 5：刷新已忽略的可编辑安装元数据**
-
-运行命令前，披露它会修改已忽略的本地 `.venv` 可编辑安装元数据。
-如果后端尚不可用，PEP 517 构建隔离还可能创建临时构建环境并请求访问
-软件包索引；发生这种情况时先取得网络授权。
-它不得修改已追踪的依赖文件或 lockfile。
-
-```bash
-.venv/bin/python -m pip install --no-deps -e .
-.venv/bin/python -m pytest tests/test_release_identity.py -q
-```
-
-预期：聚焦测试通过，导入的运行时版本为 `0.6.0`。
-
-- [ ] **步骤 6：更新当前权威文档，不扩大产品范围**
-
-进行以下有界的文档修改：
-
-- `docs/SPEC.md`：保留已接受的 Road v0.5 产品行为和作者控制；写明
-  Road v0.6 当前结果、macOS arm64 15.7+ 发布契约、no-YOLO CP0–CP4
-  Gates、受邀用户 MVP 标准和明确排除项。
-- `docs/RULES.md`：增加持久保障，涵盖仅限 Keychain 的凭据、命名且不可变/
-  已绑定哈希的产物、排除原始日志、quarantine 与 Gatekeeper 完整性、
-  精确目标清理，以及禁止包含秘密信息的命令。Road 特定的 no-YOLO 规则
-  不得进入全局规则。
-- `docs/PROJECT.md`：把 CP0 标为当前阶段，把规划提交列为基线，
-  并把 CP0 人工 Gate 标为下一步。通过替换或压缩现有行维持 200 行上限。
-- `README.md` 和 `README_EN.md`：区分当前产品行为与 Road v0.6 分发状态，
-  并公布锁定的平台矩阵：macOS Apple Silicon 为主力、不支持 Intel Mac、
-  iOS/iPadOS 为 2026 年 8 月工程目标、Android 为 2026 年 Q4 目标、
-  HarmonyOS 为 2026 年 Q4 可行性目标且须先在 NEXT-native 与
-  Android-compatible 之间作出选择、Windows 为 2027 年目标，
-  Linux/watchOS 暂无计划。每个非 macOS 日期都必须标为目标，
-  而不是支持承诺。
-
-不要修改运行时架构、交互或视觉设计文档。
-
-- [ ] **步骤 7：创建发布手册的 CP0 章节**
-
-创建 `docs/manual/forfresh/macos-developer-id-release.md`，包含以下章节：
-
-1. 权威与范围；
-2. 支持的主机与产物；
-3. 停止条件；
-4. 签名、公证、stapling 与 Gatekeeper 的区别；
-5. 一次性的 Apple Developer 会员资格、Developer ID Application
-   证书/私钥和 Keychain 凭据配置设置；
-6. 凭据与证据的隐私边界；
-7. 每个候选包的预检；
-8. 为实际验证命令保留的 CP1 构建流程；
-9. 为实际验证命令保留的 CP2 信任链流程；
-10. 收件人式安装与冒烟测试；
-11. 候选包编号、不可变文件名、staple 前后哈希记录，
-    以及保留 quarantine 的私下测试者传输；
-12. 故障排除与安全清理。
-
-保留的 CP1/CP2 章节必须写明“尚未验证；不得用于发布”，
-而不是包含占位命令。从 `docs/manual/README.md` 链接该手册。
-
-一次性 profile 设置是已披露的持久 Keychain 修改，
-只有人在明确批准后才能运行：
-
-```bash
-read -r "KEIKEU_NOTARY_PROFILE?Local Keychain profile name: "
-xcrun notarytool store-credentials "$KEIKEU_NOTARY_PROFILE"
-xcrun notarytool history \
-  --keychain-profile "$KEIKEU_NOTARY_PROFILE"
-unset KEIKEU_NOTARY_PROFILE
-```
-
-让 `notarytool` 安全地提示输入。不要把 Apple ID、Team ID 或密码放入
-shell 历史、文件或 Git。
-
-- [ ] **步骤 8：盘点实际发布工作站**
-
-运行并总结，但不提交机器绝对路径：
-
-```bash
-read -r "KEIKEU_NOTARY_PROFILE?Local Keychain profile name: "
-uname -m
-sw_vers
-xcodebuild -version
-.venv/bin/python --version
-node --version
-npm --version
-rustc --version --verbose
-cargo --version
-.venv/bin/python -m PyInstaller --version
-npm --prefix frontend run tauri -- info
-security find-identity -v -p codesigning
-xcrun notarytool history \
-  --keychain-profile "$KEIKEU_NOTARY_PROFILE"
-unset KEIKEU_NOTARY_PROFILE
-```
-
-预期：
-
-- 原生主机架构是 `arm64`；
-- 有效的 `Developer ID Application` 身份具有匹配的私钥；
-- Keychain profile 能查询公证历史；
-- 已安装工具链匹配已锁定的项目工具链，或具有明确且已审查的例外。
-
-如果发布 OS 或 Xcode 是 beta，立即停止。只有在开发者批准后，才创建
-`docs/architecture/decisions/0006-beta-toolchain-release-exception.md`，
-写明背景、精确例外、后果、到期/重新审查条件和生效状态。
-不得静默继承旧的、仅用于开发的例外。
-
-- [ ] **步骤 9：创建去标识化的 CP0 证据**
-
-创建：
-
-- `docs/acceptance/road-v0-6/README.md` 作为索引，只链接实际存在的记录；
-- `docs/acceptance/road-v0-6/cp0-release-contract/report.md`，包含实际日期、
-  源代码提交、发布身份、已脱敏的工具链摘要、已脱敏的 Developer ID/
-  私钥/凭据配置就绪状态、四个概念的理解审查、执行过的命令、
-  未覆盖项、风险和通过状态；
-- 从 `docs/acceptance/README.md` 添加链接。
-
-不要粘贴 `security` 输出、公证历史、账户数据或本地路径。
-
-- [ ] **步骤 10：运行 CP0 检查**
-
-运行：
-
-```bash
-.venv/bin/python -m pytest tests/test_release_identity.py \
-  tests/test_bridge_protocol.py
-.venv/bin/python -m pytest
-.venv/bin/python -m compileall -q src
-npm --prefix frontend test
-npm --prefix frontend run build
-cargo test --manifest-path frontend/src-tauri/Cargo.toml --locked
-.venv/bin/python scripts/check_docs.py
-git diff --check
-```
-
-记录实际结果，不得复制通过数量。发布身份、账户、私钥、凭据配置、
-target、工具链、文档或测试任一失败，都会阻止 CP0。
-
-- [ ] **步骤 11：人工 CP0 Gate 与提交**
-
-开发者必须检查差异/证据，用自己的话解释签名、公证、stapling
-和 Gatekeeper，并明确判定 CP0 通过。然后，在另行明确授权提交后，
-只暂存 CP0 列出的文件、检查已暂存差异，并调用已批准的 `aic` 提供方，
-意图为 `release: lock Road v0.6 contract`。检查提交；
-保持 `.gitignore` 未暂存；不要推送。
-
----
-
-## 任务 2：CP1 — 可重复构建的 arm64 候选包
-
-**分支：** `build/cp1-arm64-candidate`
-
-**文件：**
-
-- 修改：`scripts/build_sidecar.py`
-- 创建：`tests/test_build_sidecar.py`
-- 修改：`docs/manual/forfresh/macos-developer-id-release.md`
-- 修改：`docs/PROJECT.md`
-- 创建：
-  `docs/acceptance/road-v0-6/cp1-arm64-candidate/report.md`
-- 修改：`docs/acceptance/road-v0-6/README.md`
-
-- [ ] **步骤 1：从已通过的 CP0 提交创建分支**
-
-运行：
-
-```bash
-git status --short --branch
-git branch --show-current
-git rev-parse HEAD
-git switch -c build/cp1-arm64-candidate
-```
-
-切换前预期：只有 `.gitignore` 尚未提交，HEAD 是已检查的 CP0 提交，
-且 CP0 已明确通过。
-
-- [ ] **步骤 2：编写会失败的原生 arm64 构建守卫测试**
-
-在 `scripts/build_sidecar.py` 中规划一个纯守卫，其约定如下：
-
-```python
-EXPECTED_RELEASE_TARGET = "aarch64-apple-darwin"
-
-
-def _require_release_host(
-    target: str,
-    *,
-    system: str | None = None,
-    machine: str | None = None,
-) -> None:
-    actual_system = sys.platform if system is None else system
-    actual_machine = platform.machine() if machine is None else machine
-    if actual_system != "darwin":
-        raise RuntimeError("the release sidecar must be built on macOS")
-    if actual_machine != "arm64":
-        raise RuntimeError("the release Python process must be native arm64")
-    if target != EXPECTED_RELEASE_TARGET:
-        raise RuntimeError(
-            f"Rust host must be {EXPECTED_RELEASE_TARGET}, got {target}"
-        )
-```
-
-`system=None` 读取 `sys.platform`；`machine=None` 读取
-`platform.machine()`。当系统不是 Darwin、Python 进程不是原生 `arm64`，
-或 Rust host 不是 `aarch64-apple-darwin` 时，它会在 PyInstaller 之前抛出
-`RuntimeError`。
-
-创建 `tests/test_build_sidecar.py`，包含：
-
-- 一个原生 Darwin/arm64/正确 target 的通过用例；
-- 参数化的 system、machine 和 target 失败用例；
-- 一个 `main()` 测试：patch `_target_triple()` 和 `platform.machine()`
-  来模拟 Rosetta，并让任何 PyInstaller `subprocess.run()` 调用导致测试失败。
-
-运行：
-
-```bash
-.venv/bin/python -m pytest tests/test_build_sidecar.py -q
-```
-
-预期：失败，因为守卫尚不存在。
-
-- [ ] **步骤 3：实现最小构建守卫**
-
-导入标准库 `platform`，实现上述约定，并在 `_target_triple()` 之后、
-构造或调用 PyInstaller 命令之前立即调用 `_require_release_host(target)`。
-不要增加依赖、target 抽象、发布编排器或其他平台行为。
-
-运行：
-
-```bash
-.venv/bin/python -m pytest tests/test_build_sidecar.py -q
-```
-
-预期：通过。
-
-- [ ] **步骤 4：创建产物前运行源代码检查**
-
-运行：
-
-```bash
-.venv/bin/python -m pytest
-.venv/bin/python -m compileall -q src
-npm --prefix frontend test
-npm --prefix frontend run build
-cargo test --manifest-path frontend/src-tauri/Cargo.toml --locked
-.venv/bin/python scripts/check_docs.py
-git diff --check
-```
-
-任一失败都会停止候选包构建。
-
-- [ ] **步骤 5：构建前冻结精确的 CP1 源代码**
-
-候选包必须来自一个提交，而不是未提交的代码差异。明确审查并授权提交后，
-只暂存 `scripts/build_sidecar.py` 和 `tests/test_build_sidecar.py`，
-检查已缓存差异，并使用已批准的 `aic` 提供方，意图为
-`build: guard arm64 sidecar release`。
-
-检查提交并运行：
-
-```bash
-git rev-parse HEAD
-git status --short
-```
-
-预期：源代码冻结提交是 HEAD，且只有 `.gitignore` 尚未提交。
-该提交不代表 CP1 通过，也不能作为 CP2 的起点。
-
-- [ ] **步骤 6：构建全新 sidecar，并证明其运行时身份**
-
-运行：
-
-```bash
-.venv/bin/python scripts/build_sidecar.py
-file frontend/src-tauri/binaries/keikeu-sidecar-aarch64-apple-darwin
-lipo -archs frontend/src-tauri/binaries/keikeu-sidecar-aarch64-apple-darwin
-printf '%s\n' \
-  '{"v":1,"id":1,"method":"system.hello","params":{}}' \
-  | frontend/src-tauri/binaries/keikeu-sidecar-aarch64-apple-darwin
-```
-
-预期：仅 arm64；hello 报告应用版本 `0.6.0`、protocol `1`、
-Paper schema `paper-v3` 和 index schema `index-v3`。
-不得仅因文件名匹配就复用旧的已忽略 sidecar。
-
-- [ ] **步骤 7：构建未签名/临时签名的 CP1 应用候选包**
-
-首先确保没有 Apple 签名或公证变量会改变 CP1 的含义。
-只检查变量名；绝不打印值：
-
-```bash
-for variable in \
-  APPLE_SIGNING_IDENTITY APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD \
-  APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID APPLE_API_ISSUER \
-  APPLE_API_KEY APPLE_API_KEY_PATH
-do
-  if printenv "$variable" >/dev/null
-  then
-    echo "$variable is set; stop before the CP1 build"
-    exit 1
-  fi
-done
-npm --prefix frontend run tauri:build -- \
-  --target aarch64-apple-darwin \
-  --bundles app
-```
-
-使用以下精确输出路径：
-
-```bash
-KEIKEU_APP=frontend/src-tauri/target/aarch64-apple-darwin/release/bundle/macos/keikeu.app
-KEIKEU_MAIN="$KEIKEU_APP/Contents/MacOS/keikeu-desktop"
-KEIKEU_SIDECAR="$KEIKEU_APP/Contents/MacOS/keikeu-sidecar"
-```
-
-CP1 不得设置 Developer ID 身份，也不得声称已公证。
-
-- [ ] **步骤 8：核验架构、身份字段和最低 macOS 版本**
-
-运行：
-
-```bash
-file "$KEIKEU_MAIN" "$KEIKEU_SIDECAR"
-lipo -archs "$KEIKEU_MAIN"
-lipo -archs "$KEIKEU_SIDECAR"
-xcrun vtool -show-build "$KEIKEU_MAIN"
-xcrun vtool -show-build "$KEIKEU_SIDECAR"
-plutil -extract CFBundleShortVersionString raw -o - \
-  "$KEIKEU_APP/Contents/Info.plist"
-plutil -extract CFBundleIdentifier raw -o - \
-  "$KEIKEU_APP/Contents/Info.plist"
-plutil -extract LSMinimumSystemVersion raw -o - \
-  "$KEIKEU_APP/Contents/Info.plist"
-shasum -a 256 "$KEIKEU_MAIN" "$KEIKEU_SIDECAR"
-```
-
-预期：应用和 sidecar 仅为 arm64；版本为 `0.6.0`；identifier 为
-`app.keikeu.desktop`；plist minimum 为 `15.7`；Mach-O minimum deployment
-值不要求晚于 15.7 的版本。
-
-- [ ] **步骤 9：执行隔离的已安装应用合成冒烟测试**
-
-首先披露向 `/Applications` 复制以及隔离的本地应用状态边界。检查：
-
-```bash
-if [ -e /Applications/keikeu.app ]
-then
-  echo "/Applications/keikeu.app already exists; stop before copying"
-  exit 1
-fi
-KEIKEU_TEST_HOME="$(mktemp -d /private/tmp/keikeu-cp1-home.XXXXXX)"
-ditto "$KEIKEU_APP" /Applications/keikeu.app
-```
-
-如果应用已存在，立即停止。否则把精确的 CP1 应用复制到
-`/Applications/keikeu.app`，不得覆盖，然后用以下命令启动子进程：
-
-```bash
-env HOME="$KEIKEU_TEST_HOME" \
-  /Applications/keikeu.app/Contents/MacOS/keikeu-desktop
-```
-
-只使用合成文本：
-
-1. 创建专用测试 Vault；
-2. 创建并保存一个 Paper；
-3. 打开其 Flashcard；
-4. 退出；
-5. 使用相同的、仅对子进程生效的 `HOME` 重新启动；
-6. 找回 Paper。
-
-记录观察结果。清理是另一个需要开发者确认的精确目标操作；
-绝不删除既有应用或宽泛目录。
-
-- [ ] **步骤 10：用已验证的构建路径替换手册中的 CP1 警告**
-
-用刚刚实际运行的精确命令、预期输出、架构/版本/最低 OS
-检查、合成冒烟测试、安全安装边界更新手册，并声明 CP1 不证明
-Developer ID、公证、Gatekeeper 或收件人兼容性。
-
-创建 CP1 报告，包含源代码提交、实际工具版本和命令结果、
-main/sidecar 哈希、隔离冒烟测试结果、未覆盖项和风险。
-从 Road 证据索引链接它。把 `docs/PROJECT.md` 更新到 CP1 Gate，
-并保持在 200 行以内。
-
-- [ ] **步骤 11：运行最终 CP1 文档与回归检查**
-
-运行：
-
-```bash
-.venv/bin/python -m pytest
-.venv/bin/python -m compileall -q src
-npm --prefix frontend test
-npm --prefix frontend run build
-cargo test --manifest-path frontend/src-tauri/Cargo.toml --locked
-.venv/bin/python scripts/check_docs.py
-git diff --check
-```
-
-如果源代码、测试、构建配置或产物输入在源代码冻结提交后发生变化，
-立即停止：取得新源代码冻结提交的批准，并重复步骤 6–9。
-只涉及文档的证据修改无需重建已经记录哈希的 CP1 产物。
-
-- [ ] **步骤 12：人工 CP1 Gate 与提交**
-
-开发者检查当前证据并明确判定 CP1 通过。在另行提交授权下，只暂存 CP1
-手册、PROJECT 和去标识化证据路径；源代码/测试文件对已位于经过审查的
-源代码冻结提交中。绝不暂存 sidecar、应用 bundle、构建输出、日志、
-`.venv`、临时状态或 `.gitignore`。使用已批准的 `aic` 提供方，
-意图为 `docs: record repeatable arm64 candidate`；检查提交，不要推送。
-
----
-
-## 任务 3：CP2 — Developer ID 信任链
-
-**分支：** `build/cp2-developer-id-trust`
-
-**文件：**
-
-- 修改：`docs/manual/forfresh/macos-developer-id-release.md`
-- 修改：`docs/PROJECT.md`
-- 创建：
-  `docs/acceptance/road-v0-6/cp2-developer-id-trust/report.md`
-- 修改：`docs/acceptance/road-v0-6/README.md`
-
-CP2 不计划修改源代码、依赖、entitlement 或 bundle 配置。
-一旦发现需要此类修改，就停止该检查点，返回进行聚焦修复并生成全新候选包。
-
-- [ ] **步骤 1：从已通过的 CP1 提交创建分支**
-
-核验状态、HEAD、CP1 明确通过，且只有 `.gitignore` 尚未提交。然后运行：
-
-```bash
-git switch -c build/cp2-developer-id-trust
-```
-
-- [ ] **步骤 2：准备不可变的 CP2 候选包工作区**
-
-从仓库根目录运行：
-
-```bash
-read -r "KEIKEU_ALPHA_NUMBER?Unused candidate number (digits only): "
-case "$KEIKEU_ALPHA_NUMBER" in
-  ""|*[!0-9]*|0*)
-    echo "candidate number must be a positive integer without a leading zero"
-    exit 1
-    ;;
-esac
-KEIKEU_CANDIDATE_ID="alpha.$KEIKEU_ALPHA_NUMBER"
-KEIKEU_RELEASE_DIR="build/road-v0-6/$KEIKEU_CANDIDATE_ID"
-KEIKEU_LOCAL_EVIDENCE="$KEIKEU_RELEASE_DIR/local-evidence"
-KEIKEU_DMG="$KEIKEU_RELEASE_DIR/keikeu-0.6.0-$KEIKEU_CANDIDATE_ID-macos-arm64.dmg"
-if [ -e "$KEIKEU_RELEASE_DIR" ]
-then
-  echo "$KEIKEU_CANDIDATE_ID already exists; stop instead of overwriting it"
-  exit 1
-fi
-mkdir -p "$KEIKEU_LOCAL_EVIDENCE"
-git rev-parse HEAD
-git status --short
-```
-
-预期：CP2 第一次尝试使用 `1`；已退役/已绑定哈希的重试使用下一个未使用编号。
-该目录和不可变候选包名称此前不存在，状态除已接受的 `.gitignore` 行外
-没有其他修改。
-
-- [ ] **步骤 3：选择本地身份，不暴露凭据**
-
-运行：
-
-```bash
-read -r "KEIKEU_NOTARY_PROFILE?Local Keychain profile name: "
-security find-identity -v -p codesigning
-xcrun notarytool history \
-  --keychain-profile "$KEIKEU_NOTARY_PROFILE"
-```
-
-在本地选择有效的 Developer ID Application SHA-1。如果身份重复，
-使用精确 SHA-1，而不是有歧义的名称。仅在当前 Terminal 中导出：
-
-```bash
-read -r "APPLE_SIGNING_IDENTITY?Developer ID Application SHA-1: "
-export APPLE_SIGNING_IDENTITY
-```
-
-不要记录该值。
-
-- [ ] **步骤 4：防止意外触发 Tauri 自动公证**
-
-检查变量名，不打印值：
-
-```bash
-for variable in \
-  APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD \
-  APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID APPLE_API_ISSUER \
-  APPLE_API_KEY APPLE_API_KEY_PATH
-do
-  if printenv "$variable" >/dev/null
-  then
-    echo "$variable is set; stop before build"
-    exit 1
-  fi
-done
-```
-
-使用 Keychain profile 的手动 `notarytool` 是唯一公证路径。
-
-- [ ] **步骤 5：构建已签名应用与默认 DMG**
-
-确认构建来自干净且已通过的 CP1 提交，然后运行：
-
-```bash
-git rev-parse HEAD
-git status --short
-.venv/bin/python -m pytest
-.venv/bin/python -m compileall -q src
-npm --prefix frontend test
-npm --prefix frontend run build
-cargo test --manifest-path frontend/src-tauri/Cargo.toml --locked
-.venv/bin/python scripts/check_docs.py
-git diff --check
-.venv/bin/python scripts/build_sidecar.py
-```
-
-除 `.gitignore` 外的任何已追踪修改，或任何检查失败，都会停止构建。
-然后运行：
-
-```bash
-npm --prefix frontend run tauri:build -- \
-  --target aarch64-apple-darwin \
-  --bundles app,dmg \
-  --verbose
-```
-
-使用：
-
-```bash
-KEIKEU_TAURI_APP=frontend/src-tauri/target/aarch64-apple-darwin/release/bundle/macos/keikeu.app
-KEIKEU_TAURI_DMG=frontend/src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/keikeu_0.6.0_aarch64.dmg
-test -d "$KEIKEU_TAURI_APP"
-test -f "$KEIKEU_TAURI_DMG"
-cp -p -n "$KEIKEU_TAURI_DMG" "$KEIKEU_DMG"
-test -f "$KEIKEU_DMG"
-```
-
-- [ ] **步骤 6：确保外层 DMG 在首次计算哈希前已签名**
-
-首先核验：
-
-```bash
-codesign --verify --verbose=4 "$KEIKEU_DMG"
-```
-
-当且仅当 Tauri 留下的外层 DMG 未签名时，才把这次 DMG 签名作为
-候选包创建的一部分执行一次：
-
-```bash
-codesign --force \
-  --sign "$APPLE_SIGNING_IDENTITY" \
-  --timestamp \
-  "$KEIKEU_DMG"
-```
-
-不要手动签名内部内容。应用/main/sidecar 的任一签名失败都意味着退役当前候选包，
-并用下一个未使用编号修复/重建；不得原地修复。
-
-- [ ] **步骤 7：核验提交前的完整产物**
-
-运行：
-
-```bash
-codesign --verify --verbose=4 "$KEIKEU_DMG"
-hdiutil verify "$KEIKEU_DMG"
-KEIKEU_PRE_MOUNT_DIR="$(
-  mktemp -d /private/tmp/keikeu-cp2-precheck.XXXXXX
-)"
-hdiutil attach -readonly -nobrowse \
-  -mountpoint "$KEIKEU_PRE_MOUNT_DIR" \
-  "$KEIKEU_DMG"
-KEIKEU_PACKAGED_APP="$KEIKEU_PRE_MOUNT_DIR/keikeu.app"
-KEIKEU_PACKAGED_MAIN="$KEIKEU_PACKAGED_APP/Contents/MacOS/keikeu-desktop"
-KEIKEU_PACKAGED_SIDECAR="$KEIKEU_PACKAGED_APP/Contents/MacOS/keikeu-sidecar"
-codesign --verify --strict --verbose=4 "$KEIKEU_PACKAGED_MAIN"
-codesign --verify --strict --verbose=4 "$KEIKEU_PACKAGED_SIDECAR"
-codesign --verify --deep --strict --verbose=4 "$KEIKEU_PACKAGED_APP"
-codesign -d --verbose=4 "$KEIKEU_PACKAGED_MAIN" \
-  > "$KEIKEU_LOCAL_EVIDENCE/codesign-main.txt" 2>&1
-codesign -d --verbose=4 "$KEIKEU_PACKAGED_SIDECAR" \
-  > "$KEIKEU_LOCAL_EVIDENCE/codesign-sidecar.txt" 2>&1
-codesign -d --verbose=4 "$KEIKEU_PACKAGED_APP" \
-  > "$KEIKEU_LOCAL_EVIDENCE/codesign-app.txt" 2>&1
-codesign -d --verbose=4 "$KEIKEU_DMG" \
-  > "$KEIKEU_LOCAL_EVIDENCE/codesign-dmg.txt" 2>&1
-codesign --display --entitlements - --xml "$KEIKEU_PACKAGED_MAIN" \
-  > "$KEIKEU_LOCAL_EVIDENCE/entitlements-main.plist" \
-  2> "$KEIKEU_LOCAL_EVIDENCE/entitlements-main.stderr.txt"
-codesign --display --entitlements - --xml "$KEIKEU_PACKAGED_SIDECAR" \
-  > "$KEIKEU_LOCAL_EVIDENCE/entitlements-sidecar.plist" \
-  2> "$KEIKEU_LOCAL_EVIDENCE/entitlements-sidecar.stderr.txt"
-lipo -archs "$KEIKEU_PACKAGED_MAIN"
-lipo -archs "$KEIKEU_PACKAGED_SIDECAR"
-xcrun vtool -show-build "$KEIKEU_PACKAGED_MAIN"
-xcrun vtool -show-build "$KEIKEU_PACKAGED_SIDECAR"
-hdiutil detach "$KEIKEU_PRE_MOUNT_DIR"
-rmdir "$KEIKEU_PRE_MOUNT_DIR"
-```
-
-这些检查针对将被计算哈希并提交的精确 DMG 内部应用，而不是独立的 Tauri
-应用目录。即便只读诊断失败，也要在停止前卸载，并仅移除精确的挂载目录。
-
-手动确认：
-
-- 应用、主可执行文件、sidecar 和 DMG 都使用 Developer ID Application；
-- 应用/主程序/sidecar 共用相同 TeamIdentifier；
-- 可执行代码报告安全时间戳和 `runtime` 标志；
-- 两个可执行文件都没有 `get-task-allow`；
-- main 和 sidecar 仅为 arm64；
-- 磁盘映像核验成功。
-
-`--deep` 仅用于核验，绝不能与强制签名结合使用。
-
-- [ ] **步骤 8：绑定不可变的 staple 前哈希**
-
-运行：
-
-```bash
-shasum -a 256 "$KEIKEU_DMG" \
-  > "$KEIKEU_LOCAL_EVIDENCE/dmg-pre-staple.sha256"
-```
-
-检查该文件，然后在提交前不得修改 DMG。
-
-- [ ] **步骤 9：提交一次，并审查同一次公证**
-
-运行：
-
-```bash
-xcrun notarytool submit "$KEIKEU_DMG" \
-  --keychain-profile "$KEIKEU_NOTARY_PROFILE" \
-  --wait \
-  --output-format json \
-  > "$KEIKEU_LOCAL_EVIDENCE/notary-submit.json"
-KEIKEU_SUBMISSION_ID="$(
-  plutil -extract id raw -o - \
-    "$KEIKEU_LOCAL_EVIDENCE/notary-submit.json"
-)"
-xcrun notarytool info "$KEIKEU_SUBMISSION_ID" \
-  --keychain-profile "$KEIKEU_NOTARY_PROFILE" \
-  --output-format json \
-  > "$KEIKEU_LOCAL_EVIDENCE/notary-info.json"
-xcrun notarytool log "$KEIKEU_SUBMISSION_ID" \
-  --keychain-profile "$KEIKEU_NOTARY_PROFILE" \
-  "$KEIKEU_LOCAL_EVIDENCE/notary-log.json"
-```
-
-预期：状态精确为 `Accepted`；日志中的 SHA-256 与 staple 前 DMG 匹配；
-没有错误；每个警告都已明确审查并确认不阻塞。如果 submission ID
-已存在，就查询它，而不是再次上传。
-
-- [ ] **步骤 10：证明已提交字节未变化并执行 staple**
-
-运行：
-
-```bash
-shasum -a 256 -c "$KEIKEU_LOCAL_EVIDENCE/dmg-pre-staple.sha256"
-xcrun stapler staple -v "$KEIKEU_DMG"
-xcrun stapler validate -v "$KEIKEU_DMG"
-```
-
-如果 stapling 在字节已变化后失败，退役当前候选包。
-否则遵循设计书中的有界重试规则。
-
-- [ ] **步骤 11：重新核验并计算最终哈希**
-
-运行：
-
-```bash
-hdiutil verify "$KEIKEU_DMG"
-codesign --verify --verbose=4 "$KEIKEU_DMG"
-xcrun stapler validate -v "$KEIKEU_DMG"
-spctl --assess --type open \
-  --context context:primary-signature \
-  --verbose=4 "$KEIKEU_DMG"
-shasum -a 256 "$KEIKEU_DMG" \
-  > "$KEIKEU_LOCAL_EVIDENCE/dmg-final.sha256"
-```
-
-预期 Gatekeeper 文本明确标识已公证的 Developer ID 结果，
-而不只是退出码为零。最终哈希通常与 staple 前哈希不同。
-
-- [ ] **步骤 12：以只读方式挂载并评估其中应用**
-
-运行：
-
-```bash
-KEIKEU_MOUNT_DIR="$(mktemp -d /private/tmp/keikeu-cp2-mount.XXXXXX)"
-hdiutil attach -readonly -nobrowse \
-  -mountpoint "$KEIKEU_MOUNT_DIR" \
-  "$KEIKEU_DMG"
-KEIKEU_FINAL_APP="$KEIKEU_MOUNT_DIR/keikeu.app"
-KEIKEU_FINAL_MAIN="$KEIKEU_FINAL_APP/Contents/MacOS/keikeu-desktop"
-KEIKEU_FINAL_SIDECAR="$KEIKEU_FINAL_APP/Contents/MacOS/keikeu-sidecar"
-spctl --assess --type execute --verbose=4 \
-  "$KEIKEU_FINAL_APP"
-codesign --verify --strict --verbose=4 "$KEIKEU_FINAL_MAIN"
-codesign --verify --strict --verbose=4 "$KEIKEU_FINAL_SIDECAR"
-codesign --verify --deep --strict --verbose=4 \
-  "$KEIKEU_FINAL_APP"
-lipo -archs "$KEIKEU_FINAL_MAIN"
-lipo -archs "$KEIKEU_FINAL_SIDECAR"
-xcrun vtool -show-build "$KEIKEU_FINAL_MAIN"
-xcrun vtool -show-build "$KEIKEU_FINAL_SIDECAR"
-hdiutil detach "$KEIKEU_MOUNT_DIR"
-rmdir "$KEIKEU_MOUNT_DIR"
-```
-
-预期：被接受，来源是已公证的 Developer ID，且最终 DMG 的 main、
-sidecar、应用签名、arm64 架构和最低 OS 证据仍通过。
-即使诊断失败，也要在停止前卸载精确挂载点。
-
-- [ ] **步骤 13：在本地安装并运行最终哈希候选包**
-
-使用正常的 Finder DMG 到 Applications 复制路径；不得使用 `sudo`、覆盖、
-右键“打开”或移除 quarantine。复制或启动前：
-
-```bash
-if [ -e /Applications/keikeu.app ]
-then
-  echo "/Applications/keikeu.app already exists; stop before copying"
-  exit 1
-fi
-KEIKEU_TEST_HOME="$(mktemp -d /private/tmp/keikeu-cp2-home.XXXXXX)"
-```
-
-通过 Finder 复制后，只用隔离的主目录启动已安装子进程：
-
-```bash
-env HOME="$KEIKEU_TEST_HOME" \
-  /Applications/keikeu.app/Contents/MacOS/keikeu-desktop
-```
-
-这样可防止读取现有 `~/.keikeu_config.json`，或写入真实
-`~/.keikeu_state.json`。使用专用合成 Vault 并执行：
-
-1. 首次启动；
-2. 创建/打开/保存 Paper；
-3. 打开 Flashcard；
-4. 移交外部编辑器；
-5. 退出并重新启动；
-6. 找回 Paper。
-
-记录精确的最终哈希和实际观察。Gatekeeper 评估不能代替此运行时冒烟测试。
-
-- [ ] **步骤 14：完成已验证手册和 CP2 记录**
-
-用精确的成功路径替换手册中的 CP2 警告：预检、一次已校验的数字候选包输入、
-从 `alpha.N` 派生的路径、身份选择、构建、有条件的外层 DMG 签名、提交前检查、
-staple 前哈希、单次提交、日志审查、staple、最终核验、staple 后哈希、安装、
-隔离冒烟测试、失败恢复、脱敏、保留 quarantine 的私下传输，以及精确目标清理。
-同一份手册必须接受
-`1` 作为 CP2 首个候选包编号，并接受下一个未使用编号用于 CP3；
-绝不能硬编码 `alpha.1`。
-它还必须包含 CP3 步骤 4 中精确的 arm64、macOS 15.7.x、最终哈希，
-以及仅对子进程生效的 `HOME` 兼容性命令，确保演练绝不因缺少命令而依赖
-本计划或 Agent。
-
-创建 CP2 报告，包含去标识化源代码提交、候选包名称、staple 前后哈希、
-submission-ID 绑定、已脱敏身份一致性、Accepted/日志审查、staple、
-Gatekeeper、磁盘映像、架构和运行时结果。
-从 Road 索引链接它。原始文件保留在本地。把 PROJECT 更新到 CP2 Gate。
-
-- [ ] **步骤 15：人工 CP2 Gate 与提交**
-
-开发者审查本地原始证据和适合进入 Git 的摘要，确认没有发生绕过或内部补丁，
-并明确判定 CP2 通过。运行：
-
-```bash
-.venv/bin/python scripts/check_docs.py
-git diff --check
-```
-
-两项都必须通过。然后清除本地发布会话值：
-
-```bash
-unset APPLE_SIGNING_IDENTITY
-unset KEIKEU_NOTARY_PROFILE
-unset KEIKEU_SUBMISSION_ID
-```
-
-另行授权后，只提交手册、PROJECT、索引和报告，使用已批准的 `aic`
-提供方，意图为 `release: prove Developer ID trust chain`。
-绝不暂存构建输出、DMG、原始证据、秘密信息或 `.gitignore`。
-检查提交；不要推送。
-
----
-
-## 任务 4：CP3 — 开发者独立发布演练
-
-**分支：** `docs/cp3-release-rehearsal`
-
-**文件：**
-
-- 仅当独立执行失败时修改：
-  `docs/manual/forfresh/macos-developer-id-release.md`
-- 修改：`docs/PROJECT.md`
-- 创建：
-  `docs/acceptance/road-v0-6/cp3-release-rehearsal/report.md`
-- 修改：`docs/acceptance/road-v0-6/README.md`
-
-- [ ] **步骤 1：从已通过的 CP2 提交创建分支**
-
-核验只有 `.gitignore` 尚未提交、CP2 已明确通过，且 CP2 手册已提交。
-然后：
-
-```bash
-git switch -c docs/cp3-release-rehearsal
-```
-
-- [ ] **步骤 2：冻结手册与候选包身份**
-
-独立尝试使用：
-
-- 分支开始时精确的 CP2 提交；
-- 已提交的手册，尝试期间保持不变；
-- 已接受 CP2 候选包后的下一个未使用编号，通常为 `2`，通过手册中
-  已校验的数字输入；
-- 一个全新派生目录和不可变的
-  `keikeu-0.6.0-alpha.N-macos-arm64.dmg` 名称；
-- 除已接受的 `.gitignore` 修改外，没有未提交的已追踪内容。
-
-开发者在开始前记录源代码提交。执行期间不得提供任何 Agent 生成的命令、
-纠正或先决条件。
-
-- [ ] **步骤 3：在新的 Terminal 中完整执行手册**
-
-开发者打开新的 Terminal，独立执行手册中从身份检查到最终 staple 后哈希及
-已安装应用合成冒烟测试的每一步。
-开发者要把每条核验命令映射到其结论：
-
-- 源代码/版本/target；
-- 架构/最低 OS；
-- 身份/签名/hardened runtime/时间戳；
-- 磁盘映像完整性；
-- 公证状态和日志；
-- staple；
-- Gatekeeper；
-- 运行时和重新启动。
-
-如果开发者需要 Agent 帮助或未记录在文档中的命令，CP3 失败。
-按要求退役当前候选包并结束该次尝试。用聚焦差异修复手册，然后运行：
-
-```bash
-.venv/bin/python scripts/check_docs.py
-git diff --check
-```
-
-然后取得明确审查和提交授权，并用已批准的 `aic` 提供方提交纠正。
-只有在修正后的手册已提交、状态再次除 `.gitignore` 外没有已追踪
-修改后，开发者才能冻结新的源代码提交、选择下一个未使用候选包编号、
-打开另一个新 Terminal，并重新开始完整的零介入尝试。
-
-- [ ] **步骤 4：在真实 macOS 15.7 上运行精确的最终哈希 DMG**
-
-把独立生成的最终哈希 DMG 传输到运行 macOS 15.7.x 的真实 Apple Silicon
-主机。在该主机上运行：
-
-```bash
-read -r "KEIKEU_RECEIVED_DMG?Exact local DMG path: "
-uname -m
-sw_vers -productVersion
-shasum -a 256 "$KEIKEU_RECEIVED_DMG"
-if [ -e /Applications/keikeu.app ]
-then
-  echo "/Applications/keikeu.app already exists; stop before copying"
-  exit 1
-fi
-KEIKEU_TEST_HOME="$(mktemp -d /private/tmp/keikeu-cp3-home.XXXXXX)"
-```
-
-预期：`arm64`、以 `15.7` 开头的 OS 版本，以及独立记录的精确最终哈希。
-正常安装 DMG，不覆盖、不绕过 Gatekeeper，然后仅启动已安装的子进程：
-
-```bash
-env HOME="$KEIKEU_TEST_HOME" \
-  /Applications/keikeu.app/Contents/MacOS/keikeu-desktop
-```
-
-这会隔离现有已选 Vault 和本地状态。使用相同的、仅对子进程生效的
-`HOME` 完成合成 Paper／保存／Flashcard／外部编辑器／退出／重新启动／找回流程。
-
-如果没有真实 macOS 15.7 主机，CP3 暂停。旧证据、更新的 OS 或不同 DMG
-都不能替代。修改支持下限需要另行作出设计决策并批准。
-
-- [ ] **步骤 5：创建 CP3 证据记录**
-
-记录：
-
-- 精确源代码提交和最终候选包名称/哈希；
-- 实际主机 OS/架构，不含设备标识符；
-- Agent 零介入；
-- 完整手册执行结果；
-- 从命令到结论的理解审查；
-- 精确哈希的 macOS 15.7 安装/核心流程/重新启动结果；
-- 未覆盖项、风险和通过状态。
-
-不要提交原始公证日志、本地路径、包含账户数据的截图或 DMG。
-从 Road 索引链接报告，并把 PROJECT 更新到 CP3 人工 Gate。
-
-- [ ] **步骤 6：人工 CP3 Gate 与提交**
-
-开发者明确确认已独立复现并理解概念，审查当前证据，并判定 CP3 通过。运行：
-
-```bash
-.venv/bin/python scripts/check_docs.py
-git diff --check
-```
-
-两项都必须通过。另行授权后，使用已批准的 `aic` 提供方，只提交报告、
-证据索引和 PROJECT，意图为
-`docs: record independent release rehearsal`。任何手册纠正必须已位于
-成功重跑所用的干净源代码提交中。检查提交；不要推送。
-
----
-
-## 任务 5：CP4 — 受邀 Alpha 与二号用户 MVP Gate
-
-**分支：** `test/cp4-invited-alpha-gate`
-
-**文件：**
-
-- 创建：`docs/manual/invited-alpha-test-guide.md`
-- 修改：`docs/manual/README.md`
-- 修改：`docs/PROJECT.md`
-- 创建：
-  `docs/acceptance/road-v0-6/cp4-invited-alpha-gate/report.md`
-- 修改：`docs/acceptance/road-v0-6/README.md`
-- 仅通过后修改：`README.md`
-- 仅通过后修改：`README_EN.md`
-
-- [ ] **步骤 1：从已通过的 CP3 提交创建分支**
-
-核验只有 `.gitignore` 尚未提交、CP3 已明确通过，且已接受的 CP3
-产物/哈希不可变。然后：
-
-```bash
-git switch -c test/cp4-invited-alpha-gate
-```
-
-- [ ] **步骤 2：收集此前推迟的测试者准入事实**
-
-现在，而不是更早，确认：
-
-- Apple Silicon Mac；
-- macOS 15.7 或更高版本；
-- 设备是否由学校/公司管理；
-- 设备策略允许 Developer ID DMG；
-- 设备策略允许移交外部编辑器；
-- 测试者能创建专用测试 Vault，并使用一条由其自愿选择的真实灵感。
-
-如果任何边界未知或受阻，CP4 不启动。只记录支持/受阻结论，
-不记录硬件序列号、账户、组织或设备标识符。
-
-- [ ] **步骤 3：编写单页测试者指南**
-
-创建 `docs/manual/invited-alpha-test-guide.md`，只包含：
-
-1. 私下 Alpha 范围和 macOS Apple Silicon 15.7+ 边界；
-2. 隐私：专用测试 Vault、自愿内容，不收集正文或路径；
-3. 停止条件以及如何停止；
-4. 用于比对的精确最终 SHA-256；
-5. 正常的 DMG 到 Applications 安装与 Gatekeeper 启动；
-6. 唯一任务：使用一条真实灵感帮助自己开始写作；
-7. 不做功能介绍；
-8. 将观察的内容：完成情况、犹豫点、介入次数和去标识化反馈；
-9. 两个任务后价值问题。
-
-从手册索引链接它。不要包含主持人的点击指示。
-
-- [ ] **步骤 4：私下传输精确的 CP3 产物**
-
-使用一个已经可用、由用户选择的私下传输渠道。本计划不增加或背书新服务；
-可观察 Gate 是接收文件保留了 quarantine 元数据。
-
-在测试者 Mac 上比较：
-
-```bash
-read -r "KEIKEU_RECEIVED_DMG?Exact local DMG path: "
-shasum -a 256 "$KEIKEU_RECEIVED_DMG"
-xattr -p com.apple.quarantine "$KEIKEU_RECEIVED_DMG"
-```
-
-主持人可以通过拖放协助设置本地路径变量，但不得记录它。
-哈希必须匹配 CP3，且 quarantine 元数据必须存在。
-绝不移除该属性或绕过 Gatekeeper。
-
-- [ ] **步骤 5：执行无引导安装和核心任务**
-
-在不做功能介绍的情况下观察：
-
-1. 通过 Finder 正常拖到 Applications；
-2. 首次 Gatekeeper 启动；
-3. 创建专用测试 Vault；
-4. 整理并保存 Paper；
-5. 打开 Flashcard；
-6. 测试者独立选择外部编辑器；
-7. 撰写约十分钟正文；
-8. 退出并重新启动；
-9. 找回 Paper。
-
-主持人可以解释隐私、任务和停止条件。每条 keikeu 点击路径指示都计为一次介入。
-绝不记录屏幕内容、正文、灵感、关系、Vault 路径、账户或设备 ID。
-主持人对常见核心点击路径的任何救援都视为 P1，直到修复并重新测试。
-
-- [ ] **步骤 6：提出非引导式价值问题**
-
-任务完成后，提出一个包含两个子问的非引导式问题：
-
-1. keikeu 是否让开始写作变得更容易？具体发生了什么变化？
-2. 你会选择再用它处理另一条灵感吗？为什么？
-
-确认不含敏感内容后，才记录简短、去标识化的原话。
-
-- [ ] **步骤 7：严格应用 Gate 决策**
-
-- **通过：** 核心安全流程完成、没有未解决的 P0/P1，且至少存在一个具体的
-  正向价值信号。
-- **P0：** 立即停止写入和重复实验，保留测试 Vault 和当前产物，
-  不再修改；只记录去标识化步骤，并保持 CP4 失败/开放。
-- **P1：** 记录最短复现路径和频率；在常见主流程修复并重新核验前，
-  保持 CP4 失败/开放。
-- **P0/P1 纠正：** 明确批准后，只在以该问题命名的聚焦分支上修复
-  观察到的问题；递增候选包编号，对变化后的产物重跑 CP1、CP2 和
-  CP3 操作 Gate，再重新测试 CP4。不要创建重复检查点记录。
-- **P2/P3：** 记录一个去标识化的下一 Road 候选项；现在不要加入。
-- **流程成功但没有正向价值信号：** MVP Gate 失败；这不会自动成为 P1，
-  也不授权任何功能范围；工作暂停，另行作出产品决策，判断此前考虑的
-  Road v0.5.5 纠正范围是否合理。
-- **设备不受支持或被策略阻止：** CP4 从未开始；等待符合要求的测试者，
-  不得削弱平台或安全边界。
-
-在 `n = 1` 时通过只构成受邀用户 MVP 证据，不是市场验证或产品市场契合。
-
-- [ ] **步骤 8：分别记录工程与产品结论**
-
-创建 CP4 报告，包含：
-
-- 精确产物名称/哈希和受支持设备/策略结论；
-- quarantine、安装、Gatekeeper、启动/重新启动结果；
-- 每项核心任务的完成状态；
-- 介入次数和去标识化犹豫点；
-- P0/P1 状态；
-- 去标识化价值回答；
-- 单独的工程发布结论；
-- 单独的 `n = 1` 产品 Gate 结论；
-- 未覆盖项和风险。
-
-从 Road 索引链接它。仅通过时，把两份 README 从“Road v0.6 目标”
-更新为精确的已接受受邀 Alpha 状态，不得声称公开或跨平台可用。
-把 PROJECT 更新到 CP4 人工 Gate。
-
-- [ ] **步骤 9：人工 CP4 Gate 与提交**
-
-开发者审查当前去标识化证据，并明确判定通过、失败，或记录 CP4 无法开始。
-运行：
-
-```bash
-.venv/bin/python scripts/check_docs.py
-git diff --check
-```
-
-两项都必须通过。
-
-- 通过时，且仅在另行授权提交后，暂存测试者指南、索引、报告、
-  PROJECT 和仅通过时才有的 README 修改。使用已批准的 `aic` 提供方，
-  意图为
-  `test: record invited alpha MVP gate`.
-- 如果结果是负价值、P0/P1 或准入受阻，另行明确授权后，可以只提交
-  已存在且去标识化的指南/索引/报告/PROJECT 路径，意图为
-  `test: record failed invited alpha MVP gate`。该提交不代表 CP4 通过，
-  也不能作为收尾的起点。
-
-检查任何生成的提交。绝不暂存 DMG、测试者内容、本地日志、标识符或
-`.gitignore`；不要推送。
-
----
-
-## 任务 6：独立的 Road v0.6 收尾
-
-**分支：** `docs/road-v0-6-closeout`
-
-**准入条件：** CP4 已明确通过，且其聚焦提交已检查。
-
-**文件：**
-
-- 创建：`docs/archive/snapshots/road-v0-6.html`
-- 修改：`docs/archive/README.md`
-- 修改：`docs/PROJECT.md`
-
-- [ ] **步骤 1：创建独立的收尾分支**
-
-运行：
-
-```bash
-git status --short --branch
-git rev-parse HEAD
-git switch -c docs/road-v0-6-closeout
-```
-
-预期：HEAD 是已通过的 CP4 提交，且只有 `.gitignore` 尚未提交。
-
-- [ ] **步骤 2：创建只读快照**
-
-创建 `docs/archive/snapshots/road-v0-6.html`，包含醒目的
-`ARCHIVE · READ ONLY` 标记，以及以下内容的精简记录：
-
-- CP0–CP4 分支和提交；
-- 聚焦范围和实质修改；
-- 实际检查和人工 Gate 结果；
-- 不含本地路径的产物身份/哈希结论；
-- 手册演练和 macOS 15.7 结论；
-- 二号用户工程与产品结论；
-- 未覆盖项和剩余风险；
-- 明确声明这不意味着标签、推送、公开发布或非 macOS 支持。
-
-不要嵌入完整 diff、原始日志、作者/测试者内容、凭据或敏感路径。
-
-- [ ] **步骤 3：更新归档导航和当前状态**
-
-从 `docs/archive/README.md` 链接快照。更新 `docs/PROJECT.md`，
-说明 Road v0.6 实际接受或暂停结果，以及开发者的下一项决策。
-保持 PROJECT 不超过 200 行。
-
-- [ ] **步骤 4：运行收尾检查**
-
-运行：
-
-```bash
-.venv/bin/python scripts/check_docs.py
-git diff --check
-```
-
-这个仅文档的收尾不重新运行应用测试；必须明确说明。
-
-- [ ] **步骤 5：人工收尾审查与提交**
-
-明确授权后，只暂存快照、归档索引和 PROJECT；检查已暂存差异；
-使用已批准的 `aic` 提供方，意图为 `docs: archive Road v0.6`；检查提交。
-除非另有决策，不得打标签、推送、发布、删除分支或启动其他平台 Road。
-
----
-
-## 设计覆盖检查
-
-| 已锁定要求 | 实施位置 |
+Road 完成时，正常 runtime 使用 Paper v4、Markdown schema v4 与 JSONL protocol v2；
+独立 Flashcard 活动链退役。Vue 3 → Tauri/Rust → JSONL → Python Service/Core →
+Markdown/Index/Vault 的进程架构不重写。
+
+当前事实仍是 Road v0.5、Paper v3、protocol v1 与独立 Flashcard。CP0–CP3 只能建立
+target 契约、additive Core 和 development-only UI；production 必须继续完整启动 v0.5。
+CP4 才允许一次性完成 v2 垂直切换。
+
+## 1. 权威、批准与执行纪律
+
+- 产品与架构 target 以
+  [`docs/design/road-v0-6-paper-v4-design.md`](docs/design/road-v0-6-paper-v4-design.md)
+  为准；本计划只安排顺序、证据和 Gate，不另造第二份 schema 或 protocol 权威。
+- 在 CP0 校准前，[`docs/SPEC.md`](docs/SPEC.md)、[`docs/RULES.md`](docs/RULES.md)、
+  `src/` 与 `tests/` 继续描述或证明 v0.5 current；target/current 不得混写。
+- 本计划须由开发者审阅实际文件并明确说“批准实施计划”。批准状态必须写回本文件与
+  `docs/PROJECT.md` 并形成干净基线提交，之后才能创建 CP0 分支。
+- Road v0.6 不使用 YOLO。每个 CP 必须从前一 CP 已明确通过且已提交的 commit 建立
+  `<content-type>/cp<N>-<slug>` 分支；未通过的 CP 不得播种下一分支。
+- 每个 CP 的“通过”、checkpoint commit、真实 Vault 操作、push、tag、发布分别授权。
+  通过不自动授权提交，提交不自动授权 push。
+- 每次编辑前执行 Git Gate，点名 dirty 路径与混合风险；提交前精确暂存、审阅 staged
+  diff、确认没有秘密或作者内容，并按 `docs/RULES.md` §7 使用 `aic`。
+- 每个 CP 只修当前范围的 P0/P1。P2/P3 进入候选池，不扩张本 Road。
+
+## 2. 全局工程与数据边界
+
+### 2.1 架构与范围
+
+- Vue 只拥有可见交互、draft、baseline、活动页与 App 根 pending intent。
+- Tauri/Rust 只拥有 sidecar 生命周期、单队列、JSONL 请求匹配和原生 picker/open/reveal。
+- Python Application Service 是唯一编排与 mutation 入口；Core 拥有领域校验和纯转换。
+- `markdown_io.py` 独占 Paper Markdown；`indexer.py` 只生成可重建投影；`vault.py`
+  独占路径校验和 destructive filesystem 规则。
+- 不新增依赖、Router、Pinia、TypeScript、UI kit、数据库、文件 watcher、网络、账号、
+  遥测、AI、远端 Agent、逐页协议、自动保存、页面重排或单页 deep-link。
+- 不顺手重写 `vault.py`、`migration_v01.py`、sidecar worker 或大型 Vue 文件；先复用
+  现有 helper 和现有 `?prototype=1` development-only 入口。
+
+### 2.2 作者资产与迁移
+
+- Markdown 是作者权威；Index 和设备状态可删除重建。不得静默删改、修复、规范化、
+  上传或在日志/证据中回显作者正文。
+- v2/v3 → v4 唯一获准丢弃的作者字段是 `initial_summary`。备份保留它；报告只记录
+  每文件存在该处置，不记录内容或长度。
+- legacy Tag 若含多行、控制字符、空项、外围空白，或 trim 后发生重复，迁移预检必须
+  阻塞并要求用户按旧格式人工修复。迁移不得借 v4 的正常 trim/丢空/去重语义静默改变
+  旧字段。
+- raw loss-audit 必须让每个 legacy source byte 恰好属于已知结构、明确映射字段或
+  `initial_summary`；任何歧义或未归属字节使整次预检 `ready=false`、零写入。
+- v0.1 → 冻结 v3 与 v3 → v4 是两个独立 Gate，各有 token、确认、备份、报告和失败
+  语义；中间 v3 不进入编辑、每日卡 claim 或 v4 Index rebuild。
+- CP1–CP6 只使用 tests、fixtures、合成 Vault 或完整副本。任何真实 Vault、selected
+  Vault 配置、持久应用状态或真实迁移都需事前披露准确影响并取得单独授权。
+- 真实迁移的完整备份必须位于 Home 下但 active Vault 之外；在替换任何源文件前，
+  必须完成 regular-file manifest 与逐字节验证。备份不由本 Road 自动删除。
+- mixed schema 时禁止编辑和 Index rebuild；启动只读扫描 active、一级 folder 与 Trash，
+  重新确认后才续迁。未知 schema、symlink、特殊文件或损坏旧 Paper 阻塞整次迁移。
+
+### 2.3 保存、Index 与未知结果
+
+- Save 是一份 Paper 的整体 CAS；不增加 `page.add/delete/split` 或逐页 mutation。
+- Markdown 已安全替换但 Index 失败仍返回保存成功与 `index_degraded`；Vue 建立新
+  baseline，禁止重发保存，只能显式 rebuild 并由 Python 完整校验 Index。
+- durable mutation 只发送一次。越过主 commit boundary 后无法证明结果时必须提升为
+  `commit_unknown`，不得伪装成普通可重试错误。
+- `paper.save` 的 App 根 intent 保存完整 submitted/baseline；其他 intent 不复制作者
+  正文。组件卸载、runtime Gate 或 sidecar 重启不得清空 intent。
+- `vault_locator` 由 Python 签发并绑定配置路径与 pinned root identity；Vue/Rust 不解析、
+  不记录、不猜 `cache/<code>.md`。locator 不匹配时零目标读取、零 token，进入 stale。
+- pending intent 只驻当前 App 内存。强退或断电仍可能丢未提交 draft，是 v0.6 已接受
+  上限；本 Road 不增加 operation journal 或持久恢复胶囊。
+
+### 2.4 平台、工具链与明确排除
+
+- 唯一工程与一号作者 Gate 平台是 macOS Apple Silicon；Intel Mac 明确不支持。
+- iOS/iPadOS、Android/HarmonyOS、Windows、Linux、watchOS 与二号用户不进入本 Road。
+- Developer ID、签名、公证、staple、DMG 与人工分发延至 Road v0.8。
+- Node 锁定 `22.23.2`，npm 锁定 `10.9.8`；Python 遵守 `>=3.11,<3.14`，
+  Rust/Cargo 继续锁定 `1.88.0`。
+- macOS 27 / Xcode 27 beta 只可用于已批准的 Road v0.6 工程工作站，直到对应稳定版；
+  不产生发布或兼容性声称，之后的大版本 beta 不自动获准。
+- 不自动 push，不改 remote，不 tag，不发布，不恢复或使用已停用的公证凭据。
+
+## 3. 证据分层与通用检查
+
+以下结论必须分开：
+
+| 结论 | 最低证据 |
 | --- | --- |
-| `0.6.0`、bundle ID、arm64、macOS 15.7+、平台矩阵 | CP0 |
-| 不扩展依赖/运行时架构 | 全局约束、CP1 |
-| 可重复构建的 arm64 sidecar/应用与合成冒烟测试 | CP1 |
-| Developer ID、手动公证、staple、Gatekeeper、哈希 | CP2 |
-| 外层 DMG 签名边界；不对内部内容进行修复签名 | CP2 |
-| 可用手册与 Agent 零介入独立复现 | CP3 |
-| 精确最终哈希的真实 macOS 15.7 证据 | CP3 |
-| 推迟收集测试者事实并保留 quarantine 传输 | CP4 |
-| 真实灵感、外部编辑器、重新启动/找回 | CP4 |
-| 仅纠正 P0/P1，并在负价值时暂停 | CP4 |
-| 只声称 `n = 1` MVP | CP4 |
-| 独立归档；不暗示标签/推送/公开发布 | 收尾 |
+| 代码已实现 | source inspection + focused tests |
+| CP 工程完成 | 该 CP 全部检查、风险、下一 Gate 和开发者判断 |
+| 合成/复制 Vault smoke | 实际 Tauri 平台流程记录 |
+| 产品接受 | CP7 一号真实作者全部场景，无未解决 P0/P1 |
+| Road closeout | CP7 通过并提交后，开发者另行授权 snapshot |
+
+完整自动检查集合：
+
+```bash
+.venv/bin/python -m pytest
+.venv/bin/python -m compileall -q src
+.venv/bin/python scripts/build_sidecar.py
+npm --prefix frontend run test
+npm --prefix frontend run build
+cargo test --manifest-path frontend/src-tauri/Cargo.toml
+.venv/bin/python scripts/check_docs.py
+git diff --check
+```
+
+每个 CP 只运行与风险相称的 focused subset，并在 Gate 前运行该 CP 规定的完整集合。
+不得复制旧 pass 数；没有运行的测试、smoke、设备检查、备份或接受必须明确写“未运行”。
+
+证据文件沿用现有结构：
+
+```text
+docs/acceptance/road-v0-6/
+  README.md
+  cp0-contract/report.md
+  cp1-core/report.md
+  cp2-migration-index/report.md
+  cp3-ui/report.md
+  cp4-runtime/report.md
+  cp5-cleanup/report.md
+  cp6-safety/report.md
+  cp7-author/report.md
+```
+
+只在对应 Gate 产生真实证据时创建目录和报告，不创建空文件夹。报告不包含作者正文、
+真实路径、凭据、稳定设备标识、原始日志或完整 diff。
+
+## 4. Checkpoint 总览
+
+| CP | 分支 | 目标 | production 边界 |
+| --- | --- | --- | --- |
+| CP0 | `docs/cp0-v06-contract-baseline` | target 契约、HTML 图、工具链与 current/target 基线 | 仍为 v0.5 / v1 |
+| CP1 | `core/cp1-paper-v4-core` | additive Paper v4 model 与严格 Markdown codec | 仍为 v0.5 / v1 |
+| CP2 | `core/cp2-paper-v4-migration-index` | additive 迁移、loss-audit 与 Index v4 | 仍为 v0.5 / v1 |
+| CP3 | `ui/cp3-paper-v4-development` | 合成 DTO 的 development-only 卡页与 Library Gate | 仍为 v0.5 / v1 |
+| CP4 | `feat/cp4-runtime-v2-cutover` | 全栈 protocol v2 垂直切换 | 首次 production v4 / v2 |
+| CP5 | `refactor/cp5-retire-flashcard-v3` | 删除不可达 Flashcard 与 v3 正常链 | 仅 v4 runtime |
+| CP6 | `test/cp6-recovery-repair-gate` | 故障矩阵、人工修复手册与安全整合 | v4 候选 |
+| CP7 | `test/cp7-real-author-gate` | 一号真实作者接受 | 可申请 Road closeout |
+
+---
+
+## 5. CP0 — 契约与基线
+
+**分支：** `docs/cp0-v06-contract-baseline`
+
+**进入条件：** 本计划已由开发者明确批准、批准状态已提交、工作树干净；从该规划
+基线 commit 建分支。CP0 不使用 YOLO。
+
+**范围：** 把已批准设计落为 active target 契约，同时让 `PROJECT/src/tests` 明示
+current v0.5；锁定 Markdown grammar、protocol v2 方法表、工具链、平台例外和排除项。
+
+**主要文件：**
+
+- `docs/SPEC.md`
+- `docs/RULES.md`
+- `docs/PROJECT.md`
+- `docs/architecture/architecture.html`
+- `docs/design/design.html`
+- `docs/design/interaction.html`
+- `README.md`、`README_EN.md`
+- `frontend/package.json`、`frontend/package-lock.json`
+- 新增 `docs/architecture/decisions/0006-road-v0-6-beta-engineering-exception.md`
+- 新增 `docs/architecture/decisions/0007-paper-v4-schema-migration.md`
+- `docs/acceptance/README.md` 与有证据后创建的 CP0 报告
+- `scripts/check_docs.py` 仅在新 required file 或预算确实需要时修改
+
+**顺序步骤：**
+
+- [ ] 运行 Git Gate，记录规划基线 HEAD、分支、dirty 与实际工具版本。
+- [ ] 列出 `SPEC/RULES` 中 frozen initial Summary、必填 Summary、Highlight、Flashcard、
+      v3 schema 和 protocol v1 的冲突条款；逐项改为已批准 target，并保留 current 标签。
+- [ ] 在 `PROJECT` 保持 runtime v0.5 事实、下一 Gate 和 CP0 尚未完成的边界。
+- [ ] 以已批准设计 §4、§8、§11、§13 为唯一细节来源，核对 Paper v4 不变量、Markdown
+      grammar、DTO、method classification、repair 与 unknown-result 所有权；不复制新规格。
+- [ ] 更新 architecture/design/interaction HTML，使 current v0.5 与 target v0.6 可视化并列；
+      不伪造代码、测试或 smoke 证据。
+- [ ] 将 Node 锁定从 `22.23.1` 校准为 `22.23.2`，同步 package manifest、lockfile、
+      README 与 PROJECT；不升级任何依赖。
+- [ ] 新建 ADR-0006，记录 macOS/Xcode 27 beta 仅限本 Road 工程、稳定版到来即结束、
+      后续大版本 beta 不获继承，且不产生发布/兼容性声称。
+- [ ] 新建 ADR-0007，记录 Paper v4 权威页模型、`initial_summary` 唯一丢弃决定、
+      legacy Tag 阻塞、备份后果与复核条件；不得把它扩张成普通保存时的删文例外。
+- [ ] 创建 CP0 evidence index/report，记录检查与未运行项，不记录本地敏感信息。
+- [ ] 审阅所有链接、术语、平台矩阵、排除项和最终 diff。
+
+**自动检查：**
+
+```bash
+.venv/bin/python scripts/check_docs.py
+git diff --check
+npm --prefix frontend run test
+npm --prefix frontend run build
+```
+
+另以只读命令记录 `node/npm/rustc/cargo/python` 版本。应用源码未改时不把旧 Python/Rust
+pass 数复制为 CP0 证据；若 package metadata 变更影响构建，则补跑完整自动检查集合。
+
+**开发者 Gate：** 逐节确认 target/current、schema、protocol、HTML 图、工具链、
+ADR、平台与排除项一致；确认 protocol v2 尚未激活。无 P0/P1 后明确说“CP0 通过”，
+再另行决定 checkpoint commit。
+
+**明确排除：** 不改 Core、Service、Vue 业务调用方或 Rust policy；不启用 v2、不写 v4、
+不迁移 Vault、不删除 Flashcard、不发布、不 push。
+
+---
+
+## 6. CP1 — Paper v4 Core（additive）
+
+**分支：** `core/cp1-paper-v4-core`
+
+**进入条件：** CP0 已明确通过并提交；从 CP0 commit 建立干净分支。
+
+**范围：** 以独立 target 符号加入 `CardPageV4`、`PaperV4`、
+`parse_paper_v4_bytes` 与 `render_paper_v4_bytes`；实现领域不变量、严格 parser、canonical
+renderer 和 golden fixtures。production 的 `Paper/Highlight`、v3 codec 与 import 不变。
+
+**主要文件：**
+
+- `src/keikeu_core/models.py`
+- `src/keikeu_core/markdown_io.py`
+- 新增 `tests/test_models_v4.py`
+- 新增 `tests/test_markdown_v4.py`
+- 仅在 golden bytes 确有价值时新增 `tests/fixtures/paper-v4/`
+- CP1 报告与 `docs/PROJECT.md`
+
+**顺序步骤：**
+
+- [ ] 先枚举 v3 export 与所有 production caller，记录当前 focused tests。
+- [ ] 添加独立 v4 model；实现至少一页、精确空白谓词、200 code point、非法字符、
+      类型集合、最多一个 Summary、null/空名称与 Tags 规则。
+- [ ] 实现无 BOM UTF-8、统一 LF/CRLF、frontmatter scalar、精确外层结构与 strict failure。
+- [ ] 实现 page marker JSON、名称连字符 `\u002d`、正文保留 marker 前置反斜线的可逆
+      round-trip；拒绝重复/未知 JSON key，不损失正文首尾空行。
+- [ ] 实现 Tags 最后一节、逗号普通字符、trim/丢空/首次去重和 canonical 输出。
+- [ ] 补齐正向 golden、损坏输入、任意合法模型的 render→parse 字段等价、
+      parse→render→parse canonical 等价和 content 保真测试。
+- [ ] 检查 production import graph，确认 Service/Index/startup 仍只引用 v3 API。
+- [ ] 用隔离合成环境启动现有 v0.5 App，确认 protocol 仍为 v1。
+
+**自动检查：**
+
+```bash
+.venv/bin/python -m pytest tests/test_models_v4.py tests/test_markdown_v4.py
+.venv/bin/python -m pytest
+.venv/bin/python -m compileall -q src
+.venv/bin/python scripts/build_sidecar.py
+.venv/bin/python scripts/check_docs.py
+git diff --check
+```
+
+**开发者 Gate：** 审阅 v4 model、canonical Markdown 与错误边界；确认作者 content
+保真、失败零写、所有 v4 符号 additive、production import 未变，v0.5 实际仍启动。
+
+**明确排除：** 不实现迁移或 Index v4；不改 Service/DTO/protocol/Rust/Vue；不替换 v3
+export；不触碰真实或复制 Vault；不新增依赖或顺手重构 v3 codec。
+
+---
+
+## 7. CP2 — 迁移与 Index v4（additive）
+
+**分支：** `core/cp2-paper-v4-migration-index`
+
+**进入条件：** CP1 已明确通过并提交；production 仍完整使用 v3/v1。
+
+**范围：** 新增独立 v2/v3→v4 迁移模块、raw loss-audit、schema scan、Index v4、全页
+搜索、Trash 临时投影和 v4 Branch。所有 v4 mutation 只从 tests、fixtures 或副本调用。
+
+**主要文件：**
+
+- 新增 `src/keikeu_core/migration_v4.py`
+- `src/keikeu_core/indexer.py`
+- `src/keikeu_core/models.py`、`src/keikeu_core/markdown_io.py`
+- `src/keikeu_core/vault.py` 仅复用或补齐必要的既有安全 primitive
+- `src/keikeu_core/migration_v01.py` 仅做 frozen-v3 import 接线
+- 新增 `tests/test_migration_v4.py`、`tests/test_indexer_v4.py`
+- 既有 migration/vault/index fixture tests
+- 仅按测试需要新增 v2/v3/v4/mixed fixtures
+- CP2 报告与 `docs/PROJECT.md`
+
+**顺序步骤：**
+
+- [ ] 为 v0.1 migrator 建立最小 frozen-v3 接线，先证明现有 fixture manifest 与输出不变。
+- [ ] 实现 active、一级 folder、Trash 的 no-follow schema scan 和 pure-v4/mixed/unsupported
+      分类；不信任旧 Index version。
+- [ ] 实现独立 raw loss-audit：重复/无效 frontmatter、重复 section、游离文本、malformed
+      Highlight、未归属 bytes 全部阻塞。
+- [ ] 实现 Summary/Highlight 映射、未知 frontmatter 保留、`initial_summary` 明确处置；
+      多行/control/空/有外围空白/trim 后重复 legacy Tag 全部阻塞。
+- [ ] 实现全量 preflight、外置完整备份、隔离 staging、render→parse→字段等价、逐文件
+      安全替换、去内容报告和中断续迁；备份必须位于 Home 下但 active Vault 之外，
+      并在任何源替换前完成 regular-file manifest 与逐字节验证。测试只使用临时复制 Vault。
+- [ ] 实现 v0.1→冻结 v3→v4 的两段 Gate；不得在中间 claim、编辑或建 v4 Index。
+- [ ] 实现 Index v4 entry、全页本地 `search_text`、NUL 字段分隔、NFC/casefold 内存比较、
+      类型值/中文标签搜索、第一页原文 preview、全 Index verify、坏 Paper 隔离和
+      active-only 持久化；不可逆截行只由 Vue CSS 完成。
+- [ ] 实现 Trash 查询时 O(n) 临时投影；`search_text` 不落 Trash Index、不进 DTO。
+- [ ] 实现 v4 Branch 的 source snapshot、pages/Tags/frontmatter 保留、新 code/time/path，
+      源变化或冲突时零创建。
+- [ ] 检查 production Service/startup/rebuild 仍调用 v3 API，并启动现有 v0.5 App。
+
+**自动检查：**
+
+```bash
+.venv/bin/python -m pytest \
+  tests/test_migration_v4.py \
+  tests/test_indexer_v4.py \
+  tests/test_migration_v01.py \
+  tests/test_v01_fixture.py \
+  tests/test_road_v03_fixture.py
+.venv/bin/python -m pytest
+.venv/bin/python -m compileall -q src
+.venv/bin/python scripts/build_sidecar.py
+.venv/bin/python scripts/check_docs.py
+git diff --check
+```
+
+**开发者 Gate：** 审阅合成 preflight、阻塞报告、mixed 续迁、两段 v0.1 和 Index/Trash/
+Branch 证据；确认失败时源 bytes 不变，唯一丢弃字段只有 `initial_summary`，production
+仍为 v3/v1。
+
+**明确排除：** 不接 startup/Service/DTO/protocol/Rust/Vue；不替换 active v3 Index；
+不迁移真实 Vault、不删备份、不自动修复、不重写旧算法、不新增依赖。
+
+---
+
+## 8. CP3 — Vue v4 预备层（development-only）
+
+**分支：** `ui/cp3-paper-v4-development`
+
+**进入条件：** CP2 已明确通过并提交；production 默认导航和 bridge 仍为 v0.5/v1。
+
+**范围：** 复用现有 `?prototype=1` 与 `PrototypeView.vue`，以合成 DTO 驱动两块可由
+CP4 直接接入的 Paper/Library 生产候选组件；完成交互和视觉 Gate，不创建 Router、
+第二个 dev 入口或 Vault 写入链。
+
+**主要文件：**
+
+- `frontend/src/PrototypeView.vue`
+- 新增 `frontend/src/PaperV4Workbench.vue`、`frontend/src/LibraryV4Projection.vue`
+- 新增对应 focused `*.test.js`
+- 新增 `frontend/src/PrototypeView.test.js`
+- `frontend/src/App.vue` 仅在现有 dev-only 动态入口确需校准时修改
+- `frontend/src/style.css` 仅在共享 token 确有复用时最小修改
+- `frontend/src/App.test.js` 用于证明 production 默认路径不变
+- CP3 报告、设计截图或去内容 visual evidence、`docs/PROJECT.md`
+
+**顺序步骤：**
+
+- [ ] 建立只通过 props/emits 接收数据与意图的 `PaperV4Workbench`、
+      `LibraryV4Projection`；组件不 import bridge、不写文件，CP4 不得复制第二套 UI 逻辑。
+- [ ] 由现有 `PrototypeView` 用无作者内容、无真实路径的合成 Paper v4/Library DTO 驱动
+      两个候选组件，并醒目标注“不连接 Vault”。
+- [ ] 实现外层只读代号、始终可编辑 Paper 名称、每行一 Tag 与中央大卡页。
+- [ ] 逗号在 Tags 中只作普通字符；切换基础/进一步模式不清除隐藏类型，`null` 不显示标签。
+- [ ] 实现始终可编辑页标题、正文、基础/进一步模式、类型标签与 Summary 唯一禁用说明。
+- [ ] 实现页码真实按钮、光标首/中/尾、从未聚焦时正文末尾和选区截断；新页 null
+      name/type，焦点进入标题。
+- [ ] 实现删普通页、唯一页替换、确认与焦点；底部主操作严格只有保存/删除/加页。
+- [ ] 实现内存 draft/baseline、整体 dirty、合成 Save、离开保护；`ui_key` 不进 DTO。
+- [ ] 实现 Library 行、第一页预览、页数、页标题、Tags 与合成搜索；结果打开整份 Paper
+      第一页，不做 deep-link。
+- [ ] 合成显示 stale、两种 repair、index degraded 与 commit_unknown；不伪造 transport 恢复。
+- [ ] 完成 `1220×780`、`920×680`、文本缩放、对比、Tab、Enter/Space、`Cmd+S`、
+      类型原生方向键、加删页焦点和确认框 `Escape` QA。
+- [ ] 用 200/201 个 astral emoji 验证名称按 Unicode code point 计数；不得用原生
+      `maxlength` 或 JavaScript `.length` 提前拒绝 Core 允许的输入。
+- [ ] 以默认 URL 启动 Tauri，确认仍进入 v0.5 production workflow、protocol v1 和 Flashcard。
+
+**自动检查：**
+
+```bash
+npm --prefix frontend run test -- \
+  PaperV4Workbench.test.js \
+  LibraryV4Projection.test.js \
+  PrototypeView.test.js \
+  App.test.js
+npm --prefix frontend run test
+npm --prefix frontend run build
+cargo test --manifest-path frontend/src-tauri/Cargo.toml
+.venv/bin/python scripts/check_docs.py
+git diff --check
+```
+
+**开发者 Gate：** 亲自审阅两个窗口尺寸、键盘路径、分页/删页/标记/dirty；确认原型
+零 bridge/Vault 调用，两个候选组件可由 CP4 接入而无需复制交互逻辑，production bundle
+与默认导航仍是 v0.5。明确通过后才进入 CP4。
+
+**明确排除：** 不改 Python、Rust policy、bridge contract 或 protocol；不接默认导航；
+不删活动 Flashcard；不真实保存/迁移/写 Index；不新增依赖、自动保存、重排或 deep-link。
+
+---
+
+## 9. CP4 — protocol v2 全栈垂直切换
+
+**分支：** `feat/cp4-runtime-v2-cutover`
+
+**进入条件：** CP3 已明确通过并提交；CP1–CP3 target tests 均通过；Node 实际为
+`22.23.2`。CP4 的 breaking change 必须在一个 Checkpoint 内形成可启动完整状态。
+
+**范围：** production 从 Paper v3/protocol v1 一次切换为 Paper v4/protocol v2；
+同一 CP 激活 startup Gate、Service/DTO/protocol、Rust policy、Vue Paper/Library/Vault、
+locator、pending intent、tagged repair、Index warning 与 `paper.reconcile_save`。活动
+Flashcard 调用同时退役，实现文件留到 CP5 删除。
+
+**主要文件：**
+
+- CP1/CP2 的 v4 model、codec、migration、index 文件
+- `src/keikeu_bridge/dto.py`、`service.py`、`protocol.py`
+- `frontend/src-tauri/src/bridge.rs`
+- `frontend/src/App.vue`、`PaperView.vue`、`LibraryView.vue`、`VaultView.vue`、`bridge.js`
+- 对应 Python、Rust、Vitest
+- CP4 报告与 `docs/PROJECT.md`
+
+**顺序步骤：**
+
+- [ ] 先按设计 §13.1 逐方法写 strict DTO、method classification parity 与 v1/v2
+      mismatch failing tests；每个方法恰好属于一类，不能按前缀猜测。
+- [ ] 接通 startup 全量 schema Gate，确保 scan 发生在每日卡 claim、Index load 和编辑前。
+- [ ] 接通 v0.1→冻结 v3→v4 两段迁移；mixed 只进入续迁 Gate。
+- [ ] Service 切换 `paper.create_draft/open/save/reconcile_save`、locator、target path、source
+      digest、CAS、tagged repair、fixed save result 与 degraded warning。
+- [ ] 接通 Library v4、active/folder/Trash、全页搜索、Branch 与完整 Index verify。
+- [ ] Python protocol 与 Rust host 同时升 v2；方法恰好归入已批准分类，v1/v2 hello 错配阻塞。
+- [ ] App 根在发送前保存所有 durable pending intent；Save 另存 baseline 与 submitted。
+- [ ] 由 Startup/Migration/Library/Paper DTO 回显并核对同一 active locator；Vault preview
+      使用 candidate locator，只有首次 initialize 尚不存在目标时允许 null。
+- [ ] 把 CP3 已接受的候选组件接入 production Paper/Library，完成 dirty、离开、repair、
+      degraded、commit_unknown 与关闭保护；不得另写第二套卡页或 Library 投影。
+- [ ] 从 App/Library/Python protocol/Rust allowlist 删除活动 `flashcard.open`、导航和动作；
+      暂不删除不可达实现文件。
+- [ ] 运行 focused/full checks、构建 sidecar，再执行合成/复制 Vault Tauri smoke。
+- [ ] 更新 PROJECT，明确 CP4 是首次 production v4，CP5 只做死代码清理。
+
+**自动检查：** 运行 §3 的完整自动检查集合。focused tests 至少覆盖 protocol v2 hello、
+strict DTO、method parity、v1/v2 mismatch、startup pure/mixed/repair、Paper save/CAS、两类
+repair、Index degraded、locator、一份 App 根 pending intent、Library 全生命周期与活动
+Flashcard caller 为零。
+
+**Tauri smoke：** 只使用 fake Home/config 和合成或完整复制 Vault，完成启动、复制 v3
+迁移、创建、分页、保存、重开、搜索、folder、Branch、Trash、restore、degraded rebuild、
+sidecar restart、退出；检查 `1220×780`、`920×680` 和键盘核心路径。结束后清理临时
+host/sidecar，不保留 production debug 入口。
+
+**开发者 Gate：** 审阅最终 diff、方法表、DTO 与实际窗口；确认 production 启动、
+迁移、保存、Library、Vault 与恢复可用，活动 Flashcard route/protocol 已退役，无 P0/P1。
+
+**明确排除：** 不执行真实迁移；不删除不可达 Flashcard/v3 文件；不完成 CP6 全故障
+矩阵；不加依赖/架构；不发布、移动端或 Intel Mac。
+
+---
+
+## 10. CP5 — Flashcard 与 v3 正常链清理
+
+**分支：** `refactor/cp5-retire-flashcard-v3`
+
+**进入条件：** CP4 已明确通过并提交，production v4 已独立完成主流程；任何行为缺口
+都退回 CP4，不偷渡到清理 CP。
+
+**范围：** 删除不可达 Flashcard 页面/DTO/endpoint/Rust 分支与旧测试，删除 v3 正常
+runtime import/export；保留 v2/v3→v4 migration 所需冻结 parser/model/fixtures 和历史说明。
+
+**主要文件：**
+
+- 删除 `frontend/src/FlashcardView.vue`、`frontend/src/FlashcardView.test.js`
+- `frontend/src/App.vue`、`LibraryView.vue` 与相关 tests
+- `src/keikeu_bridge/dto.py`、`service.py`、`protocol.py`
+- `frontend/src-tauri/src/bridge.rs`
+- v3 runtime exports/tests 与当前 docs
+- CP5 报告与 `docs/PROJECT.md`
+
+**顺序步骤：**
+
+- [ ] 全仓列出 Flashcard/v3 活动定义与 caller，区分 runtime、legacy migration、manual 与 archive。
+- [ ] 删除不可达 Vue 文件、import、destination、emit、按钮和旧测试。
+- [ ] 删除 Flashcard DTO/deck/option、Service 方法、protocol endpoint 与 Rust 残余分支。
+- [ ] 删除 v3 正常 runtime export/import 和只为旧 UI 存在的 compatibility；保留迁移 reader。
+- [ ] 收紧 tests，证明 v4 runtime 与 legacy migration 各自仍有直接覆盖。
+- [ ] 运行零引用 Gate、完整自动检查和最小 Tauri 导航 smoke。
+
+**零引用 Gate：** 在 runtime source、活动 tests、当前 protocol 与权威 docs 中，
+`flashcard.open`、`FlashcardView`、Flashcard DTO、`open-flashcard` 与 production
+`destination="flashcard"` 必须为零。archive、迁移说明和手册中的历史对比不计失败。
+
+**开发者 Gate：** 确认 diff 以删除为主、没有新行为或顺手重写；确认 v4 runtime、
+v0.1 两段迁移和 v2/v3→v4 tests 仍通过。运行 §3 完整检查与 Paper→Library→Paper→Vault
+Tauri smoke。
+
+**明确排除：** 不删 archive、legacy migration 或旧 fixtures；不重写 `vault.py`、旧
+migrator 或大型 Vue；不做视觉润色、新功能、人工修复、真实作者或发布。
+
+---
+
+## 11. CP6 — 未知提交、人工修复与安全整合 Gate
+
+**分支：** `test/cp6-recovery-repair-gate`
+
+**进入条件：** CP5 已明确通过并提交；正常 runtime 只剩 v4；全部故障实验只用 fixture、
+合成 Vault 或完整副本。
+
+**范围：** 完成 `commit_unknown`、locator、Index audit、其他 durable mutation 的故障
+矩阵；完成两种 repair UI；交付并演练中文 HTML 人工修复手册；完成全套安全 smoke。
+
+**主要文件：**
+
+- App/Paper/Library/Vault/bridge 与 Rust bridge
+- Python DTO/Service/protocol；Core/Index 只在暴露根因时最小修正
+- 对应 Python/Rust/Vitest
+- 新增 `docs/manual/paper-v4-repair.html`
+- `docs/manual/README.md`
+- CP6 报告与 `docs/PROJECT.md`
+
+**顺序步骤：**
+
+- [ ] 用现有 fake spawner、monkeypatch 与 fixture 建故障注入，不留下 production 开关。
+- [ ] 覆盖 Save baseline/submitted/第三内容/损坏、首次目标、同 code 异路径、重复 code、
+      已有目标消失 `missing_existing`、`code/created` 身份变化 `identity_changed`、
+      invalid submitted、locator/config/root identity 变化、strict tagged DTO 与全 Index
+      stale/extra。
+- [ ] 证明 App 根快照跨 PaperView 卸载、runtime blocked、sidecar restart 和关闭请求存活；
+      原 Save 只发送一次。
+- [ ] 在 Paper 替换、Library/Vault 路径变化、迁移第 N 文件、Index 替换和 response
+      serialization 后注入失败；结果不得降级为普通可重试错误。
+- [ ] 覆盖 mutation timeout、EOF、错误 response ID 与无效响应：均须只发送一次并成为
+      `commit_unknown`；只读恢复调用的响应丢失不得误报 `commit_unknown`。
+- [ ] 验证 migration、Vault/config、Library path mutation、Index rebuild 各自的只读恢复
+      入口和“绝不自动重放”。
+- [ ] 验证普通 open repair 不建半成品；unknown-save repair 保留 submitted/关闭保护；
+      Finder、复制草稿、重新检查和 Index rebuild 可达且不回显正文。
+- [ ] 编写逐项满足设计 §12 的中文 HTML 手册：完整示例；frontmatter、page marker、
+      `name/content/Tags`；三种类型值、中文显示名和 null/空值；两类 escape；UTF-8/换行；
+      常见错误及错误信息含义；Finder、修复、重新检查和 rebuild；明确 App 不会自动
+      改写损坏文件。
+- [ ] 开发者仅对故意损坏的合成 Paper 或完整副本，完全按手册完成一次修复。
+- [ ] 运行完整自动检查、sidecar build 与 Tauri 安全 smoke，删除临时故障入口。
+
+**Tauri smoke：** fake Home/config 下至少完成一次 response-loss→restart→reconcile、四态
+代表 UI、degraded→rebuild、非 Save unknown 不重发、Finder 修复复制 Paper、正常关闭
+保护、两个窗口尺寸和键盘路径。自动化已覆盖的组合不强迫用 production debug 开关重复。
+
+**开发者 Gate：** 逐项审阅故障矩阵、smoke 和手册；开发者能不依赖 agent 猜正文而
+修复一份损坏副本；全部 P0/P1 已修复并复验。运行 §3 完整自动检查集合。
+
+**明确排除：** 不损坏唯一真实 Vault、不开始真实作者 Gate、不加 journal/恢复胶囊、
+自动修复或源码编辑器，不保留测试后门，不修 P2/P3，不发布。
+
+---
+
+## 12. CP7 — 一号真实作者 Gate
+
+**分支：** `test/cp7-real-author-gate`
+
+**进入条件：** CP6 已明确通过并提交；候选 commit、完整自动检查、复制 Vault smoke 已
+固定。任何真实 Vault 选择、备份、迁移或 config 变化先单独说明并取得授权。
+
+**范围：** 一号作者用真实灵感完成创建、分页、删页、标记、保存、退出重启、Library
+找回与继续编辑；记录去标识化结果、介入次数和 P0/P1。二号用户不参加。
+
+**主要文件：**
+
+- 有真实证据后创建 CP7 报告
+- `docs/acceptance/README.md`
+- `docs/PROJECT.md`
+- 仅在发现 P0/P1 时修改最小源码与直接测试
+
+**顺序步骤：**
+
+- [ ] 重跑 §3 完整自动检查与 sidecar build，记录候选 commit、Apple Silicon 环境和
+      启动方式，不记录私密路径。
+- [ ] 开发者选择已有真实 Vault 或新 v4 Vault；已有 v3 Vault 必须先只读 preflight、
+      在 Home 下但 active Vault 外创建完整备份并完成 regular-file manifest/逐字节验证、
+      staging 验证，再单独批准迁移。
+- [ ] 测试前只说明隐私、停止条件和不记录作品内容，不先做功能教学。
+- [ ] 一号作者创建 Paper，编辑 Paper 名称、页标题和正文，在真实光标处分割新页，
+      设置需要的类型，删除一页并确认，然后整体保存。
+- [ ] 正常退出并重启，从 Library 搜索或浏览找回整份 Paper，打开并继续编辑。
+- [ ] 只记录完成/未完成、犹豫点、介入次数、错误等级和脱敏原话；不记录正文、名称、
+      Tags、路径或含内容截图。
+- [ ] 不在唯一真实 Vault 故意制造损坏；repair 只复用 CP6 合成/副本证据。
+- [ ] P0 立即停止写入并保留原 Vault/备份；P1 停止接受，先在 fixture/副本修复并重跑
+      CP6 相关 Gate，再申请重试。
+- [ ] 无 P0/P1 后完成报告，由开发者明确判断 CP7 通过或拒绝。
+
+**开发者 Gate：** 必须确认哪里可写、如何分页/删页/保存；退出重开和 Library 找回符合
+预期；无内容丢失、静默改写或危险继续；没有未解决 P0/P1。CP7 只证明一号作者接受，
+不证明第二用户、多用户 MVP、移动端或市场匹配。
+
+**明确排除：** 二号用户与全部非 macOS ARM 平台；签名、公证、staple、DMG、发布；
+故意损坏唯一真实作品；收集作者内容；P2/P3 扩展；AI、同步、账号、遥测；自动 closeout、
+tag 或 push。
+
+---
+
+## 13. Road 完成与独立 closeout
+
+Road v0.6 只有在 CP0–CP7 逐项明确通过并提交、normal runtime 只使用 v4、活动/Trash
+没有未处理旧 schema、Flashcard 活动链清零、修复手册演练完成、一号作者 Gate 通过且
+无未解决 P0/P1 后，才达到“可申请 closeout”。
+
+随后仍需开发者另行决定：
+
+1. 是否创建 `docs/archive/snapshots/road-v0-6.html` 的独立 closeout 变更；
+2. 是否提交该 snapshot；
+3. 是否 tag；
+4. 是否 push。
+
+这些决定不产生签名、公证、DMG、移动端、二号用户或多用户 MVP 声称。
+
+## 14. 已知风险与控制
+
+| 风险 | 控制 |
+| --- | --- |
+| CP4 变更面大 | breaking contract 只能垂直切换；内部按测试顺序推进，但不提交不可启动半态 |
+| legacy Tag 被归一化 | 迁移对空项、外围空白、trim 后重复一律阻塞，人工修复后重试 |
+| `initial_summary` 丢弃后后悔 | 设计明确披露，真实迁移前完整备份；不扩张为其他字段 |
+| 宽松 parser 吞字节 | 独立 raw loss-audit + 全量预检 + 零写入失败 |
+| mixed schema 被误当 ready | startup 全路径扫描；迁移完成前禁止编辑与 Index rebuild |
+| Index 被当权威 | 打开始终读 Markdown；Index 可删重建并完整 verify |
+| `commit_unknown` 自动重发 | App 根 intent、只读对账、method-specific recovery，绝不 replay |
+| 错 Vault 对账 | Python locator + pinned root identity；不匹配零目标读取 |
+| 内存草稿遭强退 | 明示 v0.6 上限，正常关闭保护；无证据不加持久 journal |
+| Flashcard 死代码残留 | CP4 清 caller/contract，CP5 删除不可达实现并执行零引用 Gate |
+| 移动/发布范围回流 | 平台矩阵和 v0.8 延期每 CP 复核 |
+
+## 15. 实施计划批准 Gate
+
+开发者批准本计划前须确认：
+
+- CP0–CP3 不切 production，CP4 一次完成 protocol v2 垂直切换；
+- legacy Tag 的保守迁移阻塞规则准确，唯一获准丢弃字段仍是 `initial_summary`；
+- CP4/CP5 的 Flashcard 退役顺序准确；
+- CP6 的 unknown-result、repair 和人工手册 Gate 准确；
+- CP7 只是一号作者 Gate，不含二号用户、移动端或发布；
+- 每个 CP 无 YOLO，分支、通过、提交、真实 Vault、push 与 closeout 分别授权。
+
+本文件的准备提交只保存可审阅计划。开发者后续明确说“批准实施计划”并提交批准状态
+之后，Road v0.6 才能创建 CP0 分支。

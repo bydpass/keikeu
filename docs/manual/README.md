@@ -26,7 +26,7 @@ manual/
 
 | 阅读路径 | 读到什么 | 最终核对 |
 | --- | --- | --- |
-| [产品设计](prospect/appdesign.md) | Road v0.2 的产品设计来路与长篇解释 | [SPEC](../SPEC.md) |
+| [产品设计](prospect/appdesign.md) | Road v0.6 Paper v4 的目标产品说明（非当前实现） | [Road v0.6 已批准设计](../design/road-v0-6-paper-v4-design.md) |
 | [技术伦理](prospect/ethics.md) | 作者控制、数据边界与功能评审方法 | [SPEC](../SPEC.md) 与 [RULES](../RULES.md) |
 
 若 manual 与 truth 冲突，manual 错；修 manual，不复制一份新规则。

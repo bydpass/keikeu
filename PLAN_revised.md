@@ -4,5 +4,5 @@
 
 完整只读计划书见
 [`docs/archive/road-v0-5/PLAN_revised.md`](docs/archive/road-v0-5/PLAN_revised.md)。
-当前 Road v0.6 的范围与执行顺序见
+当前 Road v0.6 的设计与计划状态见
 [`PLAN_road_v0_6.md`](PLAN_road_v0_6.md)。

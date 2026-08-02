@@ -2,7 +2,7 @@
 
 > Authority: current coordinates, module entry points, documentation index, and next gate. Product behavior belongs in [SPEC](SPEC.md); rules belong in [RULES](RULES.md).
 
-Updated: 2026-07-30
+Updated: 2026-08-02
 
 ## Current coordinates
 
@@ -172,7 +172,7 @@ README
 
 - **Authority:** [SPEC](SPEC.md) owns the accepted Road v0.5 product boundary; the completed [Road v0.5 Planbook](archive/road-v0-5/PLAN_revised.md) records checkpoint scope and execution. [RULES](RULES.md) owns engineering, interaction, data, Git, and evidence constraints; [AGENTS](../AGENTS.md) owns agent procedure. Runtime facts come from [`src/`](../src/) and [`tests/`](../tests/).
 - **Views:** [design](design/design.html) and [interaction](design/interaction.html) describe the accepted Road v0.5 visual and interaction system; [architecture](architecture/architecture.html) describes the unchanged Vue/Tauri/JSONL/Python runtime. CP6 product acceptance, CP7 final UI gate, checkpoint commit, and Road closeout are complete.
-- **Working material:** the approved [Road v0.6 design](design/road-v0-6-invited-alpha-design.md) and [implementation plan](../PLAN_road_v0_6.md) define the target; CP0 and release work have not started. The [Road v0.5 design workspace](design/working-materials.md) is historical and overrides no active authority.
+- **Working material:** the conversation and written [Road v0.6 Paper v4 design](design/road-v0-6-paper-v4-design.md) were approved by the developer on 2026-08-02; the rewritten Chinese [CP0–CP7 implementation plan](../PLAN_road_v0_6.md) now awaits separate developer approval. The old invited-Alpha release target is revoked, no CP has started, and the [Road v0.5 design workspace](design/working-materials.md) remains historical.
 - **Evidence:** [acceptance](acceptance/README.md) links completed Road v0.2 evidence, the archived Road v0.3 CP6 record, the accepted [Road v0.5 CP6 Agent dogfood report](acceptance/road-v0-5/cp6-dogfood/report.md), and the [CP7 fixed-sidebars report](acceptance/road-v0-5/cp7-fixed-sidebars/report.md). The frozen [2cc40ba status snapshot](archive/snapshots/feat-complete-road-v0-3-candidate.html) shows the earlier CP5 boundary. [generated](generated/README.md) remains rebuildable observation; the archived [cold-start audit](archive/road-v0-3/cold_start_report.md) is dated historical evidence, not a claim about the transition pages.
 - **Context:** [ADR 0001](architecture/decisions/0001-document-authority.md) explains the authority split. Road v0.3 design history, Road v0.4 planning history, and the [Road v0.5 construction snapshot](archive/snapshots/road-v0-5.html) are read-only records. [Manual](manual/README.md) teaches people; [archive](archive/README.md) preserves history. Neither overrides authority.
 
