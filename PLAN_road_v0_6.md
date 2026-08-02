@@ -1,8 +1,9 @@
-# Road v0.6 实施计划（待开发者批准）
+# Road v0.6 实施计划（已批准；CP0–CP7 advance YOLO）
 
 > 状态：依据已批准的 [Paper v4 产品与架构设计](docs/design/road-v0-6-paper-v4-design.md)
-> 于 2026-08-02 重写。本计划及其准备提交不代表实施计划已经批准，不开始 CP0，
-> 也不授权真实 Vault、远端、发布或任何 Checkpoint 提交。
+> 于 2026-08-02 重写；开发者于同日授权开始执行 Road v0.6，并以 advance YOLO
+> 预先覆盖 CP0–CP7 的开发者退出判断。YOLO 不替代实际自动检查、smoke、人工操作或
+> 真实作者证据，也不授权真实 Vault、远端、发布、closeout 或任何 Checkpoint 提交。
 
 ## 0. Road 目标
 
@@ -27,12 +28,13 @@ CP4 才允许一次性完成 v2 垂直切换。
   为准；本计划只安排顺序、证据和 Gate，不另造第二份 schema 或 protocol 权威。
 - 在 CP0 校准前，[`docs/SPEC.md`](docs/SPEC.md)、[`docs/RULES.md`](docs/RULES.md)、
   `src/` 与 `tests/` 继续描述或证明 v0.5 current；target/current 不得混写。
-- 本计划须由开发者审阅实际文件并明确说“批准实施计划”。批准状态必须写回本文件与
-  `docs/PROJECT.md` 并形成干净基线提交，之后才能创建 CP0 分支。
-- Road v0.6 不使用 YOLO。每个 CP 必须从前一 CP 已明确通过且已提交的 commit 建立
-  `<content-type>/cp<N>-<slug>` 分支；未通过的 CP 不得播种下一分支。
-- 每个 CP 的“通过”、checkpoint commit、真实 Vault 操作、push、tag、发布分别授权。
-  通过不自动授权提交，提交不自动授权 push。
+- 开发者已审阅实际计划并授权开始执行。批准状态必须写回本文件与 `docs/PROJECT.md`
+  并形成干净基线提交，之后才能创建 CP0 分支。
+- CP0–CP7 的开发者退出判断由 2026-08-02 的 advance YOLO 预先覆盖。每个 CP 仍须完成
+  声明的实际证据且无未解决 P0/P1，并从前一 CP 已通过且已提交的 commit 建立
+  `<content-type>/cp<N>-<slug>` 分支；证据未完成的 CP 不得播种下一分支。
+- advance YOLO 不授权 checkpoint commit、真实 Vault 操作、push、tag、发布或
+  closeout；这些仍分别授权。通过不自动授权提交，提交不自动授权 push。
 - 每次编辑前执行 Git Gate，点名 dirty 路径与混合风险；提交前精确暂存、审阅 staged
   diff、确认没有秘密或作者内容，并按 `docs/RULES.md` §7 使用 `aic`。
 - 每个 CP 只修当前范围的 P0/P1。P2/P3 进入候选池，不扩张本 Road。
@@ -162,7 +164,7 @@ docs/acceptance/road-v0-6/
 **分支：** `docs/cp0-v06-contract-baseline`
 
 **进入条件：** 本计划已由开发者明确批准、批准状态已提交、工作树干净；从该规划
-基线 commit 建分支。CP0 不使用 YOLO。
+基线 commit 建分支。CP0 的开发者退出判断由本 Road 的 advance YOLO 覆盖。
 
 **范围：** 把已批准设计落为 active target 契约，同时让 `PROJECT/src/tests` 明示
 current v0.5；锁定 Markdown grammar、protocol v2 方法表、工具链、平台例外和排除项。
@@ -213,9 +215,9 @@ npm --prefix frontend run build
 另以只读命令记录 `node/npm/rustc/cargo/python` 版本。应用源码未改时不把旧 Python/Rust
 pass 数复制为 CP0 证据；若 package metadata 变更影响构建，则补跑完整自动检查集合。
 
-**开发者 Gate：** 逐节确认 target/current、schema、protocol、HTML 图、工具链、
-ADR、平台与排除项一致；确认 protocol v2 尚未激活。无 P0/P1 后明确说“CP0 通过”，
-再另行决定 checkpoint commit。
+**退出 Gate（advance YOLO）：** 逐节确认 target/current、schema、protocol、HTML 图、
+工具链、ADR、平台与排除项一致；确认 protocol v2 尚未激活。声明证据完成且无 P0/P1
+时，CP0 由 advance YOLO 通过；checkpoint commit 仍另行授权。
 
 **明确排除：** 不改 Core、Service、Vue 业务调用方或 Rust policy；不启用 v2、不写 v4、
 不迁移 Vault、不删除 Flashcard、不发布、不 push。
@@ -226,7 +228,7 @@ ADR、平台与排除项一致；确认 protocol v2 尚未激活。无 P0/P1 后
 
 **分支：** `core/cp1-paper-v4-core`
 
-**进入条件：** CP0 已明确通过并提交；从 CP0 commit 建立干净分支。
+**进入条件：** CP0 已由 advance YOLO 通过并提交；从 CP0 commit 建立干净分支。
 
 **范围：** 以独立 target 符号加入 `CardPageV4`、`PaperV4`、
 `parse_paper_v4_bytes` 与 `render_paper_v4_bytes`；实现领域不变量、严格 parser、canonical
@@ -266,7 +268,7 @@ renderer 和 golden fixtures。production 的 `Paper/Highlight`、v3 codec 与 i
 git diff --check
 ```
 
-**开发者 Gate：** 审阅 v4 model、canonical Markdown 与错误边界；确认作者 content
+**退出 Gate（advance YOLO）：** 核对 v4 model、canonical Markdown 与错误边界；确认作者 content
 保真、失败零写、所有 v4 符号 additive、production import 未变，v0.5 实际仍启动。
 
 **明确排除：** 不实现迁移或 Index v4；不改 Service/DTO/protocol/Rust/Vue；不替换 v3
@@ -278,7 +280,7 @@ export；不触碰真实或复制 Vault；不新增依赖或顺手重构 v3 code
 
 **分支：** `core/cp2-paper-v4-migration-index`
 
-**进入条件：** CP1 已明确通过并提交；production 仍完整使用 v3/v1。
+**进入条件：** CP1 已由 advance YOLO 通过并提交；production 仍完整使用 v3/v1。
 
 **范围：** 新增独立 v2/v3→v4 迁移模块、raw loss-audit、schema scan、Index v4、全页
 搜索、Trash 临时投影和 v4 Branch。所有 v4 mutation 只从 tests、fixtures 或副本调用。
@@ -332,7 +334,7 @@ export；不触碰真实或复制 Vault；不新增依赖或顺手重构 v3 code
 git diff --check
 ```
 
-**开发者 Gate：** 审阅合成 preflight、阻塞报告、mixed 续迁、两段 v0.1 和 Index/Trash/
+**退出 Gate（advance YOLO）：** 核对合成 preflight、阻塞报告、mixed 续迁、两段 v0.1 和 Index/Trash/
 Branch 证据；确认失败时源 bytes 不变，唯一丢弃字段只有 `initial_summary`，production
 仍为 v3/v1。
 
@@ -345,7 +347,7 @@ Branch 证据；确认失败时源 bytes 不变，唯一丢弃字段只有 `init
 
 **分支：** `ui/cp3-paper-v4-development`
 
-**进入条件：** CP2 已明确通过并提交；production 默认导航和 bridge 仍为 v0.5/v1。
+**进入条件：** CP2 已由 advance YOLO 通过并提交；production 默认导航和 bridge 仍为 v0.5/v1。
 
 **范围：** 复用现有 `?prototype=1` 与 `PrototypeView.vue`，以合成 DTO 驱动两块可由
 CP4 直接接入的 Paper/Library 生产候选组件；完成交互和视觉 Gate，不创建 Router、
@@ -399,9 +401,9 @@ cargo test --manifest-path frontend/src-tauri/Cargo.toml
 git diff --check
 ```
 
-**开发者 Gate：** 亲自审阅两个窗口尺寸、键盘路径、分页/删页/标记/dirty；确认原型
+**退出 Gate（advance YOLO）：** 实际核对两个窗口尺寸、键盘路径、分页/删页/标记/dirty；确认原型
 零 bridge/Vault 调用，两个候选组件可由 CP4 接入而无需复制交互逻辑，production bundle
-与默认导航仍是 v0.5。明确通过后才进入 CP4。
+与默认导航仍是 v0.5。声明证据完成且无 P0/P1 时由 advance YOLO 通过，提交后才进入 CP4。
 
 **明确排除：** 不改 Python、Rust policy、bridge contract 或 protocol；不接默认导航；
 不删活动 Flashcard；不真实保存/迁移/写 Index；不新增依赖、自动保存、重排或 deep-link。
@@ -412,7 +414,7 @@ git diff --check
 
 **分支：** `feat/cp4-runtime-v2-cutover`
 
-**进入条件：** CP3 已明确通过并提交；CP1–CP3 target tests 均通过；Node 实际为
+**进入条件：** CP3 已由 advance YOLO 通过并提交；CP1–CP3 target tests 均通过；Node 实际为
 `22.23.2`。CP4 的 breaking change 必须在一个 Checkpoint 内形成可启动完整状态。
 
 **范围：** production 从 Paper v3/protocol v1 一次切换为 Paper v4/protocol v2；
@@ -459,7 +461,7 @@ Flashcard caller 为零。
 sidecar restart、退出；检查 `1220×780`、`920×680` 和键盘核心路径。结束后清理临时
 host/sidecar，不保留 production debug 入口。
 
-**开发者 Gate：** 审阅最终 diff、方法表、DTO 与实际窗口；确认 production 启动、
+**退出 Gate（advance YOLO）：** 核对最终 diff、方法表、DTO 与实际窗口；确认 production 启动、
 迁移、保存、Library、Vault 与恢复可用，活动 Flashcard route/protocol 已退役，无 P0/P1。
 
 **明确排除：** 不执行真实迁移；不删除不可达 Flashcard/v3 文件；不完成 CP6 全故障
@@ -471,7 +473,7 @@ host/sidecar，不保留 production debug 入口。
 
 **分支：** `refactor/cp5-retire-flashcard-v3`
 
-**进入条件：** CP4 已明确通过并提交，production v4 已独立完成主流程；任何行为缺口
+**进入条件：** CP4 已由 advance YOLO 通过并提交，production v4 已独立完成主流程；任何行为缺口
 都退回 CP4，不偷渡到清理 CP。
 
 **范围：** 删除不可达 Flashcard 页面/DTO/endpoint/Rust 分支与旧测试，删除 v3 正常
@@ -499,7 +501,7 @@ runtime import/export；保留 v2/v3→v4 migration 所需冻结 parser/model/fi
 `flashcard.open`、`FlashcardView`、Flashcard DTO、`open-flashcard` 与 production
 `destination="flashcard"` 必须为零。archive、迁移说明和手册中的历史对比不计失败。
 
-**开发者 Gate：** 确认 diff 以删除为主、没有新行为或顺手重写；确认 v4 runtime、
+**退出 Gate（advance YOLO）：** 确认 diff 以删除为主、没有新行为或顺手重写；确认 v4 runtime、
 v0.1 两段迁移和 v2/v3→v4 tests 仍通过。运行 §3 完整检查与 Paper→Library→Paper→Vault
 Tauri smoke。
 
@@ -512,7 +514,7 @@ migrator 或大型 Vue；不做视觉润色、新功能、人工修复、真实�
 
 **分支：** `test/cp6-recovery-repair-gate`
 
-**进入条件：** CP5 已明确通过并提交；正常 runtime 只剩 v4；全部故障实验只用 fixture、
+**进入条件：** CP5 已由 advance YOLO 通过并提交；正常 runtime 只剩 v4；全部故障实验只用 fixture、
 合成 Vault 或完整副本。
 
 **范围：** 完成 `commit_unknown`、locator、Index audit、其他 durable mutation 的故障
@@ -555,7 +557,7 @@ migrator 或大型 Vue；不做视觉润色、新功能、人工修复、真实�
 代表 UI、degraded→rebuild、非 Save unknown 不重发、Finder 修复复制 Paper、正常关闭
 保护、两个窗口尺寸和键盘路径。自动化已覆盖的组合不强迫用 production debug 开关重复。
 
-**开发者 Gate：** 逐项审阅故障矩阵、smoke 和手册；开发者能不依赖 agent 猜正文而
+**退出 Gate（advance YOLO）：** 逐项核对故障矩阵、smoke 和手册；开发者能不依赖 agent 猜正文而
 修复一份损坏副本；全部 P0/P1 已修复并复验。运行 §3 完整自动检查集合。
 
 **明确排除：** 不损坏唯一真实 Vault、不开始真实作者 Gate、不加 journal/恢复胶囊、
@@ -567,7 +569,7 @@ migrator 或大型 Vue；不做视觉润色、新功能、人工修复、真实�
 
 **分支：** `test/cp7-real-author-gate`
 
-**进入条件：** CP6 已明确通过并提交；候选 commit、完整自动检查、复制 Vault smoke 已
+**进入条件：** CP6 已由 advance YOLO 通过并提交；候选 commit、完整自动检查、复制 Vault smoke 已
 固定。任何真实 Vault 选择、备份、迁移或 config 变化先单独说明并取得授权。
 
 **范围：** 一号作者用真实灵感完成创建、分页、删页、标记、保存、退出重启、Library
@@ -596,9 +598,9 @@ migrator 或大型 Vue；不做视觉润色、新功能、人工修复、真实�
 - [ ] 不在唯一真实 Vault 故意制造损坏；repair 只复用 CP6 合成/副本证据。
 - [ ] P0 立即停止写入并保留原 Vault/备份；P1 停止接受，先在 fixture/副本修复并重跑
       CP6 相关 Gate，再申请重试。
-- [ ] 无 P0/P1 后完成报告，由开发者明确判断 CP7 通过或拒绝。
+- [ ] 无 P0/P1 后完成报告；实际场景证据满足时，CP7 由 advance YOLO 通过。
 
-**开发者 Gate：** 必须确认哪里可写、如何分页/删页/保存；退出重开和 Library 找回符合
+**退出 Gate（advance YOLO）：** 必须确认哪里可写、如何分页/删页/保存；退出重开和 Library 找回符合
 预期；无内容丢失、静默改写或危险继续；没有未解决 P0/P1。CP7 只证明一号作者接受，
 不证明第二用户、多用户 MVP、移动端或市场匹配。
 
@@ -610,7 +612,7 @@ tag 或 push。
 
 ## 13. Road 完成与独立 closeout
 
-Road v0.6 只有在 CP0–CP7 逐项明确通过并提交、normal runtime 只使用 v4、活动/Trash
+Road v0.6 只有在 CP0–CP7 逐项完成声明证据、由 advance YOLO 通过并提交、normal runtime 只使用 v4、活动/Trash
 没有未处理旧 schema、Flashcard 活动链清零、修复手册演练完成、一号作者 Gate 通过且
 无未解决 P0/P1 后，才达到“可申请 closeout”。
 
@@ -639,16 +641,17 @@ Road v0.6 只有在 CP0–CP7 逐项明确通过并提交、normal runtime 只�
 | Flashcard 死代码残留 | CP4 清 caller/contract，CP5 删除不可达实现并执行零引用 Gate |
 | 移动/发布范围回流 | 平台矩阵和 v0.8 延期每 CP 复核 |
 
-## 15. 实施计划批准 Gate
+## 15. 实施计划批准 Gate（已通过）
 
-开发者批准本计划前须确认：
+开发者于 2026-08-02 授权开始执行 Road v0.6，并确认：
 
 - CP0–CP3 不切 production，CP4 一次完成 protocol v2 垂直切换；
 - legacy Tag 的保守迁移阻塞规则准确，唯一获准丢弃字段仍是 `initial_summary`；
 - CP4/CP5 的 Flashcard 退役顺序准确；
 - CP6 的 unknown-result、repair 和人工手册 Gate 准确；
 - CP7 只是一号作者 Gate，不含二号用户、移动端或发布；
-- 每个 CP 无 YOLO，分支、通过、提交、真实 Vault、push 与 closeout 分别授权。
+- CP0–CP7 的开发者退出判断采用 advance YOLO，但实际证据不得省略；checkpoint commit、
+  真实 Vault、push、tag、发布与 closeout 仍分别授权。
 
-本文件的准备提交只保存可审阅计划。开发者后续明确说“批准实施计划”并提交批准状态
-之后，Road v0.6 才能创建 CP0 分支。
+批准状态形成独立干净基线提交后，Road v0.6 才能从该提交创建 CP0 分支。批准与
+advance YOLO 不表示任何 CP 已开始或已有未运行的证据。

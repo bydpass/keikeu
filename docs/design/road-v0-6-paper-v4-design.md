@@ -1,7 +1,7 @@
 # Road v0.6：Paper v4 产品与架构设计
 
-> 状态：对话设计与本书面稿均已由开发者于 2026-08-02 批准；中文实施计划已重写，
-> 等待开发者另行审阅和批准。
+> 状态：对话设计、本书面稿与中文实施计划均已由开发者于 2026-08-02 批准；
+> CP0–CP7 的开发者退出判断采用 advance YOLO。
 >
 > 当前事实仍是 Road v0.5、Paper v3 与独立 Flashcard 页面/DTO/投影链。本设计定义
 > Road v0.6 的目标，不代表代码、迁移、测试、Checkpoint、提交或产品接受已经完成，
@@ -764,8 +764,9 @@ development-only，production runtime 继续完整使用 v0.5 contract；不得�
 
 ## 14. Checkpoint 顺序
 
-Road v0.6 不使用 YOLO 代替开发者 Gate。每个 CP 从前一个明确通过的提交建立聚焦
-分支；提交、push 和真实 Vault 操作分别授权。
+开发者于 2026-08-02 以 advance YOLO 预先覆盖 CP0–CP7 的开发者退出判断。每个 CP
+仍须完成表中实际证据且无未解决 P0/P1，再从前一个已通过并提交的 Checkpoint 建立
+聚焦分支；YOLO 不授权提交、push、真实 Vault 操作、tag、发布或 closeout。
 
 | CP | 目标 | 最小退出证据 |
 | --- | --- | --- |
@@ -905,7 +906,7 @@ Road v0.6 的 Node 锁定值为 `22.23.2`；CP0 必须核对实际工具链，�
 
 Road v0.6 只有在以下条件全部满足后才能完成：
 
-1. CP0–CP7 逐项由开发者明确通过，且无 YOLO 替代证据审查。
+1. CP0–CP7 逐项完成声明证据、无未解决 P0/P1，并由 advance YOLO 覆盖开发者退出判断。
 2. 正常 runtime 只使用 Paper v4；活动区与 Trash 中不存在未处理的 v2/v3 Paper。
 3. Markdown v4、Index v4、protocol v2、Vue 与 Python 对同一数据契约达成一致。
 4. 独立 Flashcard route、DTO、endpoint 与 Rust allowlist 条目已从 runtime source、活动
@@ -927,6 +928,7 @@ Road v0.6 只有在以下条件全部满足后才能完成：
 - Library、错误恢复、protocol v2、CP0–CP7 与平台延期准确；
 - 没有要求 Road v0.6 执行发布或二号用户测试。
 
-审阅结果：开发者于 2026-08-02 批准本书面设计。
-[`PLAN_road_v0_6.md`](../../PLAN_road_v0_6.md) 已重写为中文实施计划，等待开发者单独
-批准；获批后才可开始 CP0。设计批准本身不授权实现或提交。
+审阅结果：开发者于 2026-08-02 批准本书面设计，随后授权开始执行
+[`PLAN_road_v0_6.md`](../../PLAN_road_v0_6.md)，并以 advance YOLO 覆盖 CP0–CP7 的
+开发者退出判断。批准状态须先形成独立基线提交；YOLO 不替代实际证据，也不授权
+Checkpoint 提交、真实 Vault、push、tag、发布或 closeout。
