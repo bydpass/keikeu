@@ -2,8 +2,9 @@
 
 > 状态：依据已批准的 [Paper v4 产品与架构设计](docs/design/road-v0-6-paper-v4-design.md)
 > 于 2026-08-02 重写；开发者于同日授权开始执行 Road v0.6，并以 advance YOLO
-> 预先覆盖 CP0–CP7 的开发者退出判断。YOLO 不替代实际自动检查、smoke、人工操作或
-> 真实作者证据，也不授权真实 Vault、远端、发布、closeout 或任何 Checkpoint 提交。
+> 预先覆盖 CP0–CP7 的开发者退出判断，随后以“全部 YOLO”预先授权 CP0–CP6 的分支、
+> 精确暂存、DeepSeek `aic`、checkpoint commit 与连续执行。YOLO 不替代实际证据，也
+> 不授权真实 Vault、push、tag、发布、closeout 或 CP7 commit。
 
 ## 0. Road 目标
 
@@ -33,8 +34,9 @@ CP4 才允许一次性完成 v2 垂直切换。
 - CP0–CP7 的开发者退出判断由 2026-08-02 的 advance YOLO 预先覆盖。每个 CP 仍须完成
   声明的实际证据且无未解决 P0/P1，并从前一 CP 已通过且已提交的 commit 建立
   `<content-type>/cp<N>-<slug>` 分支；证据未完成的 CP 不得播种下一分支。
-- advance YOLO 不授权 checkpoint commit、真实 Vault 操作、push、tag、发布或
-  closeout；这些仍分别授权。通过不自动授权提交，提交不自动授权 push。
+- “全部 YOLO”预先授权 CP0–CP6 的 checkpoint commit 与后续分支；每次仍须精确暂存、
+  审阅 staged diff、确认无秘密/作者内容，并使用已批准的 DeepSeek `aic`。真实 Vault、
+  push、tag、发布、closeout 与 CP7 commit 仍分别授权；提交不自动授权 push。
 - 每次编辑前执行 Git Gate，点名 dirty 路径与混合风险；提交前精确暂存、审阅 staged
   diff、确认没有秘密或作者内容，并按 `docs/RULES.md` §7 使用 `aic`。
 - 每个 CP 只修当前范围的 P0/P1。P2/P3 进入候选池，不扩张本 Road。
@@ -186,22 +188,22 @@ current v0.5；锁定 Markdown grammar、protocol v2 方法表、工具链、平
 
 **顺序步骤：**
 
-- [ ] 运行 Git Gate，记录规划基线 HEAD、分支、dirty 与实际工具版本。
-- [ ] 列出 `SPEC/RULES` 中 frozen initial Summary、必填 Summary、Highlight、Flashcard、
+- [x] 运行 Git Gate，记录规划基线 HEAD、分支、dirty 与实际工具版本。
+- [x] 列出 `SPEC/RULES` 中 frozen initial Summary、必填 Summary、Highlight、Flashcard、
       v3 schema 和 protocol v1 的冲突条款；逐项改为已批准 target，并保留 current 标签。
-- [ ] 在 `PROJECT` 保持 runtime v0.5 事实、下一 Gate 和 CP0 尚未完成的边界。
-- [ ] 以已批准设计 §4、§8、§11、§13 为唯一细节来源，核对 Paper v4 不变量、Markdown
+- [x] 在 `PROJECT` 保持 runtime v0.5 事实、下一 Gate 和 CP0 实施期间尚未完成的边界。
+- [x] 以已批准设计 §4、§8、§11、§13 为唯一细节来源，核对 Paper v4 不变量、Markdown
       grammar、DTO、method classification、repair 与 unknown-result 所有权；不复制新规格。
-- [ ] 更新 architecture/design/interaction HTML，使 current v0.5 与 target v0.6 可视化并列；
+- [x] 更新 architecture/design/interaction HTML，使 current v0.5 与 target v0.6 可视化并列；
       不伪造代码、测试或 smoke 证据。
-- [ ] 将 Node 锁定从 `22.23.1` 校准为 `22.23.2`，同步 package manifest、lockfile、
+- [x] 将 Node 锁定从 `22.23.1` 校准为 `22.23.2`，同步 package manifest、lockfile、
       README 与 PROJECT；不升级任何依赖。
-- [ ] 新建 ADR-0006，记录 macOS/Xcode 27 beta 仅限本 Road 工程、稳定版到来即结束、
+- [x] 新建 ADR-0006，记录 macOS/Xcode 27 beta 仅限本 Road 工程、稳定版到来即结束、
       后续大版本 beta 不获继承，且不产生发布/兼容性声称。
-- [ ] 新建 ADR-0007，记录 Paper v4 权威页模型、`initial_summary` 唯一丢弃决定、
+- [x] 新建 ADR-0007，记录 Paper v4 权威页模型、`initial_summary` 唯一丢弃决定、
       legacy Tag 阻塞、备份后果与复核条件；不得把它扩张成普通保存时的删文例外。
-- [ ] 创建 CP0 evidence index/report，记录检查与未运行项，不记录本地敏感信息。
-- [ ] 审阅所有链接、术语、平台矩阵、排除项和最终 diff。
+- [x] 创建 CP0 evidence index/report，记录检查与未运行项，不记录本地敏感信息。
+- [x] 审阅所有链接、术语、平台矩阵、排除项和最终 diff。
 
 **自动检查：**
 
@@ -217,7 +219,7 @@ pass 数复制为 CP0 证据；若 package metadata 变更影响构建，则补�
 
 **退出 Gate（advance YOLO）：** 逐节确认 target/current、schema、protocol、HTML 图、
 工具链、ADR、平台与排除项一致；确认 protocol v2 尚未激活。声明证据完成且无 P0/P1
-时，CP0 由 advance YOLO 通过；checkpoint commit 仍另行授权。
+时，CP0 由 advance YOLO 通过；其 checkpoint commit 已由“全部 YOLO”预先授权。
 
 **明确排除：** 不改 Core、Service、Vue 业务调用方或 Rust policy；不启用 v2、不写 v4、
 不迁移 Vault、不删除 Flashcard、不发布、不 push。
@@ -650,8 +652,9 @@ Road v0.6 只有在 CP0–CP7 逐项完成声明证据、由 advance YOLO 通过
 - CP4/CP5 的 Flashcard 退役顺序准确；
 - CP6 的 unknown-result、repair 和人工手册 Gate 准确；
 - CP7 只是一号作者 Gate，不含二号用户、移动端或发布；
-- CP0–CP7 的开发者退出判断采用 advance YOLO，但实际证据不得省略；checkpoint commit、
-  真实 Vault、push、tag、发布与 closeout 仍分别授权。
+- CP0–CP7 的开发者退出判断采用 advance YOLO，但实际证据不得省略；CP0–CP6 的分支、
+  精确暂存、DeepSeek `aic`、checkpoint commit 与连续执行由“全部 YOLO”预先授权；
+  真实 Vault、push、tag、发布、closeout 与 CP7 commit 仍分别授权。
 
 批准状态形成独立干净基线提交后，Road v0.6 才能从该提交创建 CP0 分支。批准与
 advance YOLO 不表示任何 CP 已开始或已有未运行的证据。

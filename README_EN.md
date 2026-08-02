@@ -1,12 +1,12 @@
 # keikeu
 
-> A local-first fanfiction writing utility that turns existing inspiration into durable Markdown Papers, then uses Flashcards to focus expansion.
+> A local-first fanfiction writing utility that turns existing inspiration into durable, editable card-page Markdown Papers.
 
 [简体中文](README.md) | English
 
 ## Current status
 
-The code implements the `Paper Markdown → Flashcard → external prose editor` core. Road v0.2 Phases 0–7 engineering, macOS file-service smoke, and Phase 8 real-author one-shot and two-session short/medium acceptance are complete and marked by local annotated tag `v0.2.0`.
+The current code still implements the Road v0.5 `Paper Markdown → Flashcard → external prose editor` core. Road v0.6 is in CP0: its target makes the Paper itself an ordered editable card-page artifact and performs the Paper v4 / protocol v2 production cutover only in CP4. CP0–CP3 do not change the production runtime.
 
 Phase 7.5 is an independent lightweight iOS build for rapid testing. Its responsive UI, app-sandbox Vault, and on-device fixes are complete on a separate branch; it is not a merge gate in the macOS Road. Road v0.3 engineering, macOS candidate smoke, and CP6 real-author acceptance are complete: retrieval was faster and clear, the external-editor handoff was clear, and no unresolved P0/P1 was reported. Its design and acceptance records are now [read-only history](docs/archive/road-v0-3/README.md); no v0.3 tag was created. Road v0.4 Gate A, Gate B, product acceptance, and macOS 15.7+ compatibility have passed. The only desktop runtime is now Vue/Tauri with a local Python sidecar; Flet was retired in CP14. Road v0.5 is also complete and archived: Paper Desk, save baselines, departure protection, Flashcard/Library continuity, the whole-app Quiet Desk visual system, and fixed scrolling behavior are accepted. See [PROJECT](docs/PROJECT.md) for live coordinates.
 
@@ -21,6 +21,8 @@ existing inspiration → Paper Markdown → Flashcard → external prose editor
 - **Library:** searches and sorts Papers by all/unfiled/one-level-folder scope, with drag/menu/batch moves, branching, Trash, and restore.
 - **Vault:** selects paths only under the current user's Home, validates before switching, and byte-verifies copied unsafe legacy Vaults; Apple App Sandbox is not enabled yet.
 - **External editor:** prose always remains outside keikeu.
+
+The Road v0.6 target removes the separate Flashcard step. A Paper has at least one editable card page; every page has an editable title, content, and optional Summary/Snapshot/Whisper type, and save commits the whole Paper. See [PROJECT](docs/PROJECT.md) for the actual current/target coordinate.
 
 ## Road v0.3 archive
 
@@ -46,7 +48,7 @@ Stable product boundaries live in [SPEC](docs/SPEC.md); reviewable constraints l
 
 ## Development
 
-Python `>=3.11,<3.14`, Node/npm `22.23.1`/`10.9.8`, and Rust/Cargo
+Python `>=3.11,<3.14`, Node/npm `22.23.2`/`10.9.8`, and Rust/Cargo
 `1.88.0` are required.
 
 ```bash
@@ -65,10 +67,10 @@ npm --prefix frontend run tauri:dev
 README.md                 public entry and real commands
 AGENTS.md                 agent operating discipline and read order
 docs/PROJECT.md           current coordinates, module entry points, next gate
-docs/SPEC.md              Road v0.5 product and author-control boundary
+docs/SPEC.md              approved Road v0.6 target and author-control boundary
 docs/RULES.md             engineering, interaction, data, and evidence rules
-docs/design/              accepted Road v0.5 visual and interaction maps
-docs/architecture/        active Road v0.4 architecture map and ADRs
+docs/design/              Road v0.5 current and Road v0.6 target visual/interaction maps
+docs/architecture/        current/target architecture map and ADRs
 docs/acceptance/          supporting evidence; not an independent status source
 docs/manual/              supplementary human guides; never normative
 docs/generated/           rebuildable and disposable observations
@@ -91,8 +93,8 @@ layer owns Markdown I/O.
 | Current state and next gate | [PROJECT](docs/PROJECT.md) |
 | Rules a change must obey | [RULES](docs/RULES.md) |
 | Current architecture | [Architecture map](docs/architecture/architecture.html) |
-| Road v0.5 visual specification | [Design map](docs/design/design.html) |
-| Road v0.5 interaction specification | [Interaction map](docs/design/interaction.html) |
+| Road v0.5 current / Road v0.6 target visual specification | [Design map](docs/design/design.html) |
+| Road v0.5 current / Road v0.6 target interaction specification | [Interaction map](docs/design/interaction.html) |
 | How agents work | [AGENTS](AGENTS.md) |
 | Human-facing design, Git, and ethics guides | [Human manuals](docs/manual/README.md) |
 | Historical rationale and snapshots | [Archive](docs/archive/README.md) |
@@ -107,8 +109,9 @@ Phase 8.5   Road v0.3 preparation; precursor to the next Mac version
 Road v0.3   macOS Paper Library; CP6 product accepted, design and acceptance records archived
 Road v0.4   Vue/Tauri frontend replacement complete; CP14 accepted
 Road v0.5   Quiet Desk UI and interaction closeout complete; CP7 accepted and archived
+Road v0.6   Paper v4 card-page reconstruction; CP0 contract and baseline in progress
 Pre-Advance optional Markdown Outline; never blocks the core flow
-later       iPhone/iPad file-service capability, Android, Windows
+later       iOS/iPadOS (2026-08 direction), Android/HarmonyOS (2026 Q4), Windows (2027)
 ```
 
 ## License

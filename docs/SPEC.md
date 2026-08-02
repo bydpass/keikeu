@@ -1,16 +1,16 @@
-# keikeu Road v0.5 Product Boundary
+# keikeu Road v0.6 Product Boundary
 
-> Authority: accepted Road v0.5 product scope and author-asset constraints. Current runtime facts live in `src/` and `tests/`; current coordinates live in [PROJECT](PROJECT.md). The completed checkpoint history is summarized in the [Road v0.5 snapshot](archive/snapshots/road-v0-5.html).
+> Authority: approved Road v0.6 product scope and author-asset constraints. The detailed Paper v4 grammar, DTOs, migration, recovery, and protocol contract live in the approved [Paper v4 design](design/road-v0-6-paper-v4-design.md). Current runtime coordinates live in [PROJECT](PROJECT.md).
 
 ## 1. Definition
 
 keikeu is a private, local-first pre-writing and writing-focus tool for a single fanfiction author.
 
 ```text
-existing inspiration → Paper Markdown → Flashcard → external prose editor
+existing inspiration → editable card-page Paper → saved Paper → external prose editor
 ```
 
-It organizes existing inspiration. It does not generate inspiration, ghostwrite prose, or host finished work.
+The author now leaves keikeu with the Paper itself. There is no separate Flashcard product step in the Road v0.6 target.
 
 ## 2. Author control
 
@@ -19,56 +19,82 @@ It organizes existing inspiration. It does not generate inspiration, ghostwrite 
 - keikeu must not silently rewrite, normalize, delete, overwrite, upload, merge, score, or train on author text.
 - The author chooses the Vault and external prose editor.
 - No account, cloud backend, telemetry, hidden remote service, or background sync is authorized.
+- Damaged Paper Markdown is reported, not silently repaired or partially opened as an editable Paper.
 
-## 3. Road objective and baseline
+## 3. Current and target boundary
 
-Road v0.4 completed the desktop presentation and local call-boundary replacement:
+The accepted current runtime remains Road v0.5 through CP3:
 
 ```text
-retired baseline: Flet → Python Core → Markdown / Index / Vault
-current runtime:  Vue → Tauri/Rust → JSONL sidecar
-                  → Python application service
-                  → Python Core → Markdown / Index / Vault
+Vue → Tauri/Rust → JSONL protocol v1 → Python service/core
+    → Paper v3 Markdown / Index / Vault → separate Flashcard
 ```
 
-Road v0.5 keeps that architecture and makes the existing workflow calmer, clearer, and safer to operate. It does not change Paper schema, Vault layout, Home containment, migration semantics, or the product flow.
+Road v0.6 keeps the same process architecture and changes the product/data contract:
 
-## 4. Accepted behavior
+```text
+Vue → Tauri/Rust → JSONL protocol v2 → Python service/core
+    → Paper v4 Markdown / Index / Vault → Paper pages
+```
 
-Road v0.5 preserves every accepted Road v0.4 capability:
+CP0–CP3 add target contracts, Core, migration/Index, and development-only UI without changing the production path. CP4 performs the single vertical protocol-v2 switch. CP5 removes unreachable Flashcard/v3 normal-runtime code. `PROJECT.md`, source, and tests remain the authority for which side of that transition is actually active.
 
-- Paper create/open/save, frozen initial Summary, named Highlights, Tags, branching, soft delete, and external-modification rejection.
-- Summary-first Flashcard navigation that always starts at page 1.
-- Folder-aware Library search/sort, batch operations, Trash, restore, permanent-delete gate, and partial results.
-- Vault preview/init/switch/relocate and v0.1 migration with Home containment, copy verification, backup, staging, and explicit confirmation.
-- External-editor open/reveal through a validated platform boundary.
+## 4. Paper v4 target behavior
 
-Road v0.5 adds these accepted interaction rules without expanding product scope:
+- A Paper has a stable optional display name, ordered Tags, and at least one ordered card page.
+- Every page has an always-editable optional title, author Markdown content, and optional type: `summary`, `snapshot`, `whisper`, or `null`.
+- Display labels are fixed: 总结、高光、碎碎念; `null` displays no label.
+- A Paper has at most one Summary page. Snapshot and Whisper pages are unlimited.
+- Basic mode and further mode are presentation only. Switching modes never clears a page title, content, or hidden type.
+- A saved page must have a non-empty title or content containing at least one non-whitespace character. The whitespace check never rewrites content.
+- Paper and page names trim outer whitespace only, become `null` when empty, allow at most 200 Unicode code points, and reject control, surrogate, and line-separator characters.
+- Tags are single-line values; comma is ordinary content. Normal v4 editing trims, drops empty values, and keeps the first trimmed duplicate without normalizing author text.
 
-- Paper Desk visibly separates editable name, Summary, Highlights, and Tags from the locked original draft.
-- A successful save establishes the newest baseline. Save failure preserves the form and old baseline.
-- Dirty navigation, Paper/Vault switching, and window close share one native two-choice departure guard: discard to the latest baseline or continue editing.
-- Flashcard reads only the latest saved Paper, starts with Summary, then shows one Highlight per card.
-- Library preserves scope, query, sort, active item, batch selection, and scroll only within the current process; Vault switch or runtime restart resets it.
-- All pages share the Quiet Desk visual system. Paper, Flashcard, and Library context rails remain fixed in supported desktop layouts; long Flashcard lists scroll independently; overscroll bounce and scrollbar chrome are suppressed without disabling ordinary scrolling.
+The exact Markdown v4 shape, frontmatter scalar codec, page markers, reversible marker escaping, Tags grammar, and strict failure rules are defined only in [the approved design §8](design/road-v0-6-paper-v4-design.md#8-markdown-schema-v4).
 
-## 5. Architecture boundaries
+## 5. Accepted interaction target
 
-- Vue owns visible state and interaction only. It never reads or writes author files.
-- Rust owns the desktop lifecycle, one Python sidecar, the JSONL queue, native directory selection, and validated system actions.
-- The transport-agnostic Python application service owns orchestration and opaque session state behind JSONL. During migration, Flet used the same service as the parity baseline.
-- `keikeu_core` remains independent of Flet, Vue, Tauri, Rust, JSONL, and stdout.
-- Markdown remains canonical. No localhost, HTTP, WebSocket, account, telemetry, upload, or hidden service is authorized.
-- Road v0.5 changes no architecture boundary; its execution followed [RULES](RULES.md) and the completed [Planbook](archive/road-v0-5/PLAN_revised.md).
+- The default Paper editor is one large card page, not a Summary form followed by a render step.
+- The Paper display name and current page title remain editable in both basic and further modes.
+- The card bottom exposes exactly three primary actions: 保存, 删除, 加一页.
+- 加一页 splits the current page content at the actual caret or selection, preserves the prefix on the current page, moves the suffix to a new untitled/untyped page, and focuses the new page title. If the body was never focused, the split point is the end.
+- 删除 removes the current page after confirmation. Deleting the only page replaces it with one blank page; a Paper never has zero pages.
+- Page-number buttons switch pages. Road v0.6 does not add page reordering or page deep-links.
+- Save is one whole-Paper compare-and-swap operation. A successful Markdown replacement advances the baseline even when disposable Index update fails.
+- Dirty departure protection covers Paper/Vault switching, navigation, and normal close. Known failure preserves the draft; stale or unknown results never trigger an automatic retry.
+- Library projects the whole Paper, searches all pages locally, previews the first page, and always opens the whole Paper at page 1.
 
-## 6. Explicit exclusions
+## 6. Recovery and migration
 
-No AI generation, prose editor, sync, account, community, database, file watcher, Router, Pinia, TypeScript, UI kit, signing, notarization, DMG, public distribution, App Sandbox, mobile work, or cross-platform build enters Road v0.5.
+- `repair_required` is a tagged successful domain result with separate ordinary-open and unknown-save ownership; it never exposes damaged prose in diagnostics.
+- `commit_unknown` freezes the affected durable intent. `paper.save` recovers only through read-only `paper.reconcile_save`; all other mutations use their declared read-only refresh/inspect path and are never automatically replayed.
+- `index_degraded` means the author-file mutation is known successful while the disposable Index is not current. It must not roll back or re-send the author mutation.
+- v2/v3 → v4 migration may discard only `initial_summary`, and only under the approved migration contract with a complete external backup.
+- Legacy Tags containing multiline/control characters, empty items, outer whitespace, or trim-collisions block preflight rather than being silently normalized.
+- Raw loss-audit, full preflight, Home-contained backup outside the active Vault, regular-file manifest and byte verification, isolated staging, per-file safe replacement, and mixed-schema resume are required.
+- Migration, delete, recovery, and failure experiments use fixtures, synthetic Vaults, or complete copies before any separately authorized real-Vault operation.
 
-## 7. Acceptance gates
+## 7. Architecture boundaries
 
-1. **Checkpoint engineering:** CP0–CP7 each pass their declared focused checks and independent developer or advance-YOLO gate.
-2. **Desktop UI evidence:** supported `1220×780` and `920×680` layouts remain reachable without horizontal overflow; desktop-dependent behavior receives isolated current-source Tauri evidence.
-3. **Product acceptance:** two 30-minute dogfood rounds complete, the three most annoying issues are fixed and rechecked, and no unresolved P0/P1 remains.
-4. **Final UI gate:** fixed rails, bounded Flashcard scrolling, hidden scrollbar chrome, and no-overscroll behavior pass the developer's final condition.
-5. **Road closeout:** final checkpoint `d900953` is committed and the developer authorizes the separate read-only Road snapshot. Tag, push, signing, notarization, DMG, and distribution remain separate decisions.
+- Vue owns visible state, draft/baseline, active page, and App-root pending intent; it never reads or writes author files.
+- Rust owns desktop lifecycle, one Python sidecar, the JSONL queue, native directory selection, and validated system actions; it never parses Markdown or implements product rules.
+- The transport-agnostic Python service owns orchestration and strict DTOs. `keikeu_core` owns domain validation and file rules without GUI or transport imports.
+- `markdown_io.py` exclusively owns Paper Markdown. `vault.py` owns containment and destructive filesystem rules. Index data is local and rebuildable.
+- No localhost, HTTP, WebSocket, account, telemetry, upload, hidden service, or automatic mutation replay is authorized.
+
+## 8. Explicit exclusions and platforms
+
+No AI generation, prose editor, sync, account, community, database, file watcher, Router, Pinia, TypeScript, UI kit, auto-save, page reorder, signing, notarization, staple, DMG, public distribution, mobile implementation, or cross-platform build enters Road v0.6.
+
+- macOS Apple Silicon is the only Road v0.6 engineering and first-author platform. Intel Mac is unsupported.
+- iOS/iPadOS remain a separate 2026-08 direction; Android/HarmonyOS a separate 2026-Q4 direction; Windows a 2027 direction.
+- Linux and watchOS have no planned support. The iOS-only second user does not enter v0.x acceptance and returns no earlier than a separately designed iOS+Android v1.0.
+- Developer ID distribution work is deferred to Road v0.8.
+
+## 9. Acceptance gates
+
+1. **Checkpoint engineering:** CP0–CP6 each produce their declared implementation, checks, smoke, and evidence with no unresolved P0/P1. Their developer exit judgments are covered by advance YOLO; evidence may not be invented or copied forward.
+2. **Current/target integrity:** CP0–CP3 keep production v0.5/protocol v1; CP4 alone activates the complete v4/v2 vertical path; CP5 removes only code proven unreachable.
+3. **Safety integration:** CP6 exercises unknown-result ownership, strict repair states, Index verification, migration and path-mutation recovery, and the Chinese repair manual using synthetic data or complete copies.
+4. **Product acceptance:** CP7 separately requires the first author's real workflow. It is not part of CP6 engineering completion and needs separate real-Vault authorization.
+5. **Road closeout:** CP7 acceptance, snapshot, tag, push, signing, packaging, and release are separate decisions.

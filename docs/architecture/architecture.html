@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>keikeu Architecture — Road v0.4</title>
+  <title>keikeu Architecture — Road v0.6 current / target</title>
   <style>
     :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #1e2523; background: #eceae4; }
     * { box-sizing: border-box; }
@@ -12,14 +12,14 @@
     header, section { border: 1px solid #c8c9c2; background: #fffefa; padding: 28px; }
     section { margin-top: 16px; }
     h1, h2 { font-family: Georgia, "Times New Roman", serif; }
-    h1 { max-width: 760px; margin: 8px 0 12px; font-size: clamp(2rem, 5vw, 3.6rem); line-height: .98; }
+    h1 { max-width: 820px; margin: 8px 0 12px; font-size: clamp(2rem, 5vw, 3.6rem); line-height: .98; }
     h2 { margin: 0 0 18px; }
     p, li { line-height: 1.6; }
     .eyebrow, .label { color: #2e5d57; font-size: .75rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
     .status { display: inline-block; padding: 5px 9px; border-left: 3px solid #9a4e3f; background: #f4eee9; }
-    .flow { display: grid; gap: 10px; align-items: stretch; }
-    .runtime { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-    .node { min-width: 0; padding: 16px; border-top: 3px solid #2e5d57; background: #f4f3ee; }
+    .flow { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; align-items: stretch; }
+    .node { min-width: 0; padding: 16px; border-top: 3px solid #77736b; background: #f4f3ee; }
+    .target .node { border-top-color: #2e5d57; }
     .node strong, .node span { display: block; }
     .node span { margin-top: 6px; color: #646b68; font-size: .88rem; overflow-wrap: anywhere; }
     .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -27,63 +27,69 @@
     nav { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 18px; }
     a { color: #2e5d57; }
     .tools { display: none; }
-    @media (max-width: 820px) {
-      .runtime, .two { grid-template-columns: 1fr; }
-      .node { border-top: 0; border-left: 3px solid #2e5d57; }
-    }
+    @media (max-width: 820px) { .flow, .two { grid-template-columns: 1fr; } .node { border-top: 0; border-left: 3px solid #77736b; } .target .node { border-left-color: #2e5d57; } }
   </style>
 </head>
 <body>
   <main>
     <header>
-      <p class="eyebrow">Road v0.4 · Final architecture</p>
-      <h1>替换前端，不重写作者资产与 Python Core</h1>
-      <p class="status">Gate A、Gate B、产品验收、macOS 15.7+ 兼容性与 CP14 Flet 退役均已验收；Road v0.4 完成。</p>
+      <p class="eyebrow">Road v0.6 · current / target map</p>
+      <h1>进程架构不重写，Paper 契约垂直切换</h1>
+      <p class="status">CP0 只锁定 target。Production 仍是 Road v0.5 / Paper v3 / protocol v1；CP4 才允许完整切到 v4 / v2。</p>
       <nav>
         <a href="../PROJECT.md">当前坐标</a>
         <a href="../SPEC.md">产品边界</a>
-        <a href="../archive/road-v0-4/protocol.md">JSONL v1</a>
-        <a href="../archive/road-v0-4/README.md">计划归档</a>
+        <a href="../design/road-v0-6-paper-v4-design.md">Paper v4 设计</a>
         <a href="decisions/0004-vue-tauri-python-sidecar.md">ADR 0004</a>
+        <a href="decisions/0006-road-v0-6-beta-engineering-exception.md">ADR 0006</a>
+        <a href="decisions/0007-paper-v4-schema-migration.md">ADR 0007</a>
       </nav>
-      <div class="tools" aria-hidden="true">
-        <input data-doc-search disabled>
-        <button data-theme-toggle disabled>Theme</button>
-      </div>
+      <div class="tools" aria-hidden="true"><input data-doc-search disabled><button data-theme-toggle disabled>Theme</button></div>
     </header>
 
     <section>
-      <p class="label">Current · single desktop runtime</p>
-      <div class="flow runtime">
-        <div class="node"><strong>Vue 3</strong><span>可见状态与交互</span></div>
-        <div class="node"><strong>Tauri / Rust</strong><span>窗口、sidecar、队列、窄系统动作</span></div>
-        <div class="node"><strong>JSONL</strong><span>版本化本地消息</span></div>
-        <div class="node"><strong>Application service</strong><span>编排、DTO、进程内 opaque handles</span></div>
-        <div class="node"><strong>Python Core</strong><span>Paper、Vault、Markdown、Index</span></div>
-        <div class="node"><strong>Author assets</strong><span>Markdown / JSON index / Vault</span></div>
+      <p class="label">Current through CP3 · protocol v1</p>
+      <div class="flow">
+        <div class="node"><strong>Vue 3</strong><span>Summary / Highlights / Flashcard UI</span></div>
+        <div class="node"><strong>Tauri / Rust</strong><span>窗口、sidecar、单队列、窄系统动作</span></div>
+        <div class="node"><strong>JSONL v1</strong><span>现有 DTO 与 Flashcard allowlist</span></div>
+        <div class="node"><strong>Python service</strong><span>v3 编排与 opaque session state</span></div>
+        <div class="node"><strong>Python Core</strong><span>Paper v3、Markdown、Index、Vault</span></div>
+        <div class="node"><strong>Author assets</strong><span>v3 Markdown + rebuildable Index</span></div>
       </div>
-      <p><code>frontend/</code> 只处理界面与窄宿主边界；<code>src/keikeu_bridge/</code> 提供 JSONL v1 dispatcher 与 transport-neutral service；<code>src/keikeu_core/</code> 继续独占业务和文件规则。</p>
+    </section>
+
+    <section>
+      <p class="label">Target at CP4 · protocol v2</p>
+      <div class="flow target">
+        <div class="node"><strong>Vue 3</strong><span>pages[] draft/baseline + App-root pending intent</span></div>
+        <div class="node"><strong>Tauri / Rust</strong><span>相同生命周期；显式 v2 method policy</span></div>
+        <div class="node"><strong>JSONL v2</strong><span>strict DTO、locator、tagged repair</span></div>
+        <div class="node"><strong>Python service</strong><span>整体 CAS、对账、迁移与 Library 编排</span></div>
+        <div class="node"><strong>Python Core</strong><span>Paper v4、strict codec、Index v4</span></div>
+        <div class="node"><strong>Author assets</strong><span>card-page Markdown + disposable Index</span></div>
+      </div>
     </section>
 
     <section class="two">
       <div>
-        <h2>边界不变量</h2>
+        <h2>不变边界</h2>
         <ul>
-          <li>Vue 不读取或写入作者文件，也不持有绝对路径。</li>
-          <li>Rust 不解析 Markdown，不实现搜索、Trash、迁移或 Paper 规则。</li>
-          <li>Python application service 与 JSONL transport 分开。</li>
-          <li><code>keikeu_core</code> 不依赖 GUI、Rust、JSONL 或 stdout。</li>
-          <li>无 localhost、HTTP、WebSocket、后台网络服务或遥测。</li>
+          <li>Vue 不读写作者文件，不解析 locator 或猜测路径。</li>
+          <li>Rust 不解析 Markdown，不实现 Paper、搜索、Trash 或迁移规则。</li>
+          <li>Python service 是唯一编排/mutation 入口；Core 不依赖 GUI/transport。</li>
+          <li><code>markdown_io.py</code> 独占 Markdown；<code>vault.py</code> 独占路径与 destructive rules。</li>
+          <li>无 localhost、网络服务、遥测或 mutation 自动 replay。</li>
         </ul>
       </div>
       <div>
-        <h2>退场依据</h2>
+        <h2>切换顺序</h2>
         <ol>
-          <li>Application Service 与 JSONL contract 已稳定。</li>
-          <li>Gate A 功能等价和 Gate B 视觉重建已验收。</li>
-          <li>production bundle 与真实作者场景 A/B 已验收。</li>
-          <li>同一 artifact 已通过 macOS 15.7 runner 和当前工作站复验。</li>
-          <li>CP14 删除 Flet 后重跑全量检查与 `.app` smoke。</li>
+          <li>CP1 additive v4 model/codec；production import 不变。</li>
+          <li>CP2 additive migration/Index；只由 fixture/copy 调用。</li>
+          <li>CP3 development-only Vue 候选组件；零 Vault 写入。</li>
+          <li>CP4 同一 Checkpoint 激活 v2 全栈并退役活动 Flashcard caller。</li>
+          <li>CP5 只删除已不可达旧链；CP6 完成恢复与修复 Gate。</li>
         </ol>
       </div>
     </section>

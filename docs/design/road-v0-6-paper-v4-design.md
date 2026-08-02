@@ -1,7 +1,8 @@
 # Road v0.6：Paper v4 产品与架构设计
 
 > 状态：对话设计、本书面稿与中文实施计划均已由开发者于 2026-08-02 批准；
-> CP0–CP7 的开发者退出判断采用 advance YOLO。
+> CP0–CP7 的开发者退出判断采用 advance YOLO；CP0–CP6 的分支、精确暂存、
+> DeepSeek `aic`、checkpoint commit 与连续执行另由“全部 YOLO”预先授权。
 >
 > 当前事实仍是 Road v0.5、Paper v3 与独立 Flashcard 页面/DTO/投影链。本设计定义
 > Road v0.6 的目标，不代表代码、迁移、测试、Checkpoint、提交或产品接受已经完成，
@@ -764,9 +765,11 @@ development-only，production runtime 继续完整使用 v0.5 contract；不得�
 
 ## 14. Checkpoint 顺序
 
-开发者于 2026-08-02 以 advance YOLO 预先覆盖 CP0–CP7 的开发者退出判断。每个 CP
-仍须完成表中实际证据且无未解决 P0/P1，再从前一个已通过并提交的 Checkpoint 建立
-聚焦分支；YOLO 不授权提交、push、真实 Vault 操作、tag、发布或 closeout。
+开发者于 2026-08-02 以 advance YOLO 预先覆盖 CP0–CP7 的开发者退出判断，并以
+“全部 YOLO”预先授权 CP0–CP6 的分支、精确暂存、DeepSeek `aic`、checkpoint commit
+与连续执行。每个 CP 仍须完成表中实际证据且无未解决 P0/P1，再从前一个已通过并提交
+的 Checkpoint 建立聚焦分支；真实 Vault、push、tag、发布、closeout 与 CP7 commit
+仍不在授权内。
 
 | CP | 目标 | 最小退出证据 |
 | --- | --- | --- |
@@ -930,5 +933,6 @@ Road v0.6 只有在以下条件全部满足后才能完成：
 
 审阅结果：开发者于 2026-08-02 批准本书面设计，随后授权开始执行
 [`PLAN_road_v0_6.md`](../../PLAN_road_v0_6.md)，并以 advance YOLO 覆盖 CP0–CP7 的
-开发者退出判断。批准状态须先形成独立基线提交；YOLO 不替代实际证据，也不授权
-Checkpoint 提交、真实 Vault、push、tag、发布或 closeout。
+开发者退出判断。批准状态已形成独立基线提交 `9bb722a`；后续“全部 YOLO”授权
+CP0–CP6 的分支、精确暂存、DeepSeek `aic`、checkpoint commit 与连续执行，但不替代
+实际证据，也不授权真实 Vault、push、tag、发布、closeout 或 CP7 commit。

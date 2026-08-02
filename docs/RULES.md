@@ -17,7 +17,7 @@ During a staged Road, SPEC and the HTML maps may describe the approved target wh
 
 ## 2. Architecture
 
-- The current desktop runtime is Vue/Vite JavaScript through a narrow Tauri/Rust host and one JSONL Python sidecar, with Python `>=3.11,<3.14`, author-owned Markdown, and rebuildable JSON metadata.
+- The current desktop runtime is Vue/Vite JavaScript through a narrow Tauri/Rust host and one JSONL Python sidecar, with Python `>=3.11,<3.14`, author-owned Markdown, and rebuildable JSON metadata. Production remains Paper v3/protocol v1 through Road v0.6 CP3; CP4 alone may activate the complete Paper v4/protocol v2 vertical path.
 - Flet was the accepted parity baseline through Gate A and product acceptance; CP14 removes it only after those gates and the macOS 15.7+ compatibility gate passed.
 - The Python application service is transport-agnostic and owns orchestration behind JSONL. Rust and Vue do not duplicate product rules.
 - The developer owns architecture, dependencies, data models, build commands, and release artifacts; agent output must remain explainable and reviewable.
@@ -36,8 +36,8 @@ During a staged Road, SPEC and the HTML maps may describe the approved target wh
 ## 3. Author text and privacy
 
 - Never silently delete, overwrite, normalize, auto-correct, summarize, rewrite, merge, score, train on, upload, or expose author text.
-- Preserve the frozen initial Summary, current Summary, Paper/Highlight display names, Highlight content and order, intentionally blank optional fields, and feasible unknown frontmatter.
-- Required Summary fails explicitly before disk write.
+- Preserve Paper display names, ordered page titles/content/types, ordered Tags, intentionally blank optional fields, and feasible unknown frontmatter. During legacy migration preserve every mapped field; `initial_summary` is the only approved discard and remains in the verified backup.
+- Paper v4 save requires at least one page and, for every page, a non-empty title or content containing a non-whitespace character. It permits at most one `summary`; failure occurs before disk write.
 - Name validation trims only outer whitespace, rejects line breaks/control characters and overlength input, and stores the remaining author text unchanged. NFC+casefold is a comparison key, never a disk rewrite.
 - Never ask for prose, inspirations, names, relationships, Vault paths, secrets, or private drafts in chat or acceptance records.
 - No telemetry, analytics, account, remote API, hidden background service, or external corpus without explicit product authorization.
@@ -63,9 +63,9 @@ During a staged Road, SPEC and the HTML maps may describe the approved target wh
 - Keep the author in control: destructive, migration, rename, and recovery actions are explicit and explain consequences.
 - Required-field errors block only the unsafe action; optional-field guidance never blocks.
 - Every core flow covers default, empty, error, disabled/in-progress, and recovery states where applicable.
-- Flashcard remains read-only and Summary-first; it never becomes a progress tracker or prose editor.
+- Through CP3 the current Flashcard remains read-only and Summary-first. The Road v0.6 target removes the separate Flashcard path: the editable Paper itself is the ordered card-page artifact.
 - Use responsive layouts, safe areas, keyboard reachability, readable contrast, visible focus, and text wrapping.
-- Every drag operation has a keyboard-reachable menu equivalent. Highlight rows expose a drag handle plus **上移/下移** menu actions; reordering does not announce a redundant toast.
+- Every drag operation has a keyboard-reachable menu equivalent. Road v0.6 adds no page reordering; existing v0.5 Highlight reordering remains current only until the CP4 cutover.
 - Motion may clarify state but cannot be required to understand or complete a task.
 - System file services are ordinary paths. Do not pretend to manage provider sync, accounts, timing, or conflict merges.
 
@@ -80,7 +80,7 @@ During a staged Road, SPEC and the HTML maps may describe the approved target wh
 
 No feature enters an acceptance or bug-fix Phase by being adjacent, attractive, or convenient.
 
-- Default release order is macOS core, iPhone/iPad capability, Android, then Windows; optional Outline work never blocks the core.
+- Platform direction is macOS Apple Silicon first, iOS/iPadOS, Android/HarmonyOS, then Windows. Intel Mac is unsupported; Linux and watchOS have no scheduled work. Optional Outline work never blocks the core.
 - Before MVP, do not add a plugin architecture, complex graph system, AI-required workflow, social system, external fandom database, or premature Windows/Linux parity.
 
 ## 7. Git

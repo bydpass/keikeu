@@ -15,7 +15,7 @@ Updated: 2026-08-02
 | Road v0.3 | Product accepted; design archive complete | Phase 0–7 engineering, CP5 macOS candidate smoke, and CP6 real-author scenarios are complete. Retrieval was faster and clear, external-editor handoff was clear, and no unresolved P0/P1 was reported. The [version archive](archive/road-v0-3/README.md) is read-only; no v0.3 tag, commit, or push is implied. |
 | Road v0.4 | Complete; CP14 accepted | [CP14 evidence](acceptance/road_v0_4_cp14.md) records accepted Flet retirement, Python `234`, Vue `48`, Rust `10`, and the authorized final beta engineering build/launch/relaunch smoke. The one-time exception is consumed; compatibility remains CP13-only evidence. |
 | Road v0.5 | Complete; CP7 accepted and Road archived | CP0 `11c2149`, CP1 `a2ff5cb`, CP2 `30b54ac`, CP3 `c7b9caf`, CP4 `371f4e8`, CP5 `1e87ad4`, CP6 `4753d1d`, and CP7 `d900953` form the linear Road. The [CP6 report](acceptance/road-v0-5/cp6-dogfood/report.md) records product acceptance; the [CP7 report](acceptance/road-v0-5/cp7-fixed-sidebars/report.md) records the final UI gate. The [Road snapshot](archive/snapshots/road-v0-5.html) binds the final checkpoint and records scope, checks, QA, omissions, and risks. |
-| Road v0.6 | Implementation plan approved; CP0 not started | The developer authorized execution and advance YOLO for CP0–CP7 on 2026-08-02. YOLO covers developer exit judgments only; declared evidence, checkpoint commits, real-Vault operations, push, tag, release, and closeout retain their recorded gates. CP0 must branch from the committed approval-state baseline. |
+| Road v0.6 | CP0 complete under advance YOLO | Planning approval is `9bb722a`; the CP0 checkpoint is branch `docs/cp0-v06-contract-baseline` HEAD. [CP0 evidence](acceptance/road-v0-6/cp0-contract/report.md) records contracts, toolchain, maps, ADRs, checks, and omissions. The next Gate is additive CP1; real Vault, push, tag, release, closeout, and CP7 remain unauthorized. |
 Phase 8 product acceptance is complete. Road v0.2 is marked by local annotated tag `v0.2.0` at `d0feac0269a5619f5dbf27c04347ba69c5665b42`; archival remains a separate developer decision. Automated tests, platform smoke, and author acceptance remain distinct evidence.
 Road v0.3 product decisions, implementation, macOS candidate smoke, and product acceptance are complete. Its detailed SPEC, Planbook, maps, ADRs, and CP6 record are archived. Its accepted Python/Flet runtime served as the Road v0.4 parity baseline until all replacement gates passed; CP14 retires it without changing or migrating Vault data.
 
@@ -110,33 +110,28 @@ Road v0.4 CP0 is committed at `8407941` on `codex/road-v04-cp0`; CP1 at `b718ed8
 - [CP11 Gate B evidence](acceptance/road_v0_4_cp11.md) records the accepted shared visual tokens, fixed functional rails, 5.41:1–15.48:1 contrast, four-width browser QA, visible keyboard focus, and a unique `.app` smoke across Vault, Paper, Flashcard, and Library.
 - [CP12 evidence](acceptance/road_v0_4_cp12.md) records the macOS 15.0 production bundle smoke, accepted de-identified real-author A/B, and non-blocking InputMethodKit diagnostic.
 
-## Road v0.4 toolchain
+## Road v0.6 CP0 toolchain
 
-CP0 observed the workstation before approval:
+CP0 observed the approved engineering workstation on 2026-08-02:
 
 | Tool | Observed | CP0 judgment |
 | --- | --- | --- |
-| Node / npm | `22.23.1` / `10.9.8` | Stable candidate; not locked |
-| Rust / Cargo | `1.83.0` / `1.83.0` | Stable candidate; host `aarch64-apple-darwin`; insufficient for the resolved dependency graph |
-| Python / PyInstaller | `3.13.14` / not installed | Python candidate only; build dependency not approved |
-| macOS | `27.0 (26A5388g)`, arm64 | Beta; prohibited for the production Road environment |
-| Xcode | `27.0 (27A5194q)` from `Xcode-beta.app` | Beta; no stable Xcode installation found |
+| Node / npm | `22.23.2` / `10.9.8` | Exact Road v0.6 lock |
+| Rust / Cargo | `1.88.0` / `1.88.0` | Exact lock; host `aarch64-apple-darwin` |
+| Python | `3.13.14` | Within `>=3.11,<3.14` |
+| macOS | `27.0 (26A5388g)`, Apple Silicon | Road v0.6 engineering exception only |
+| Xcode | `27.0 (27A5194q)` | Road v0.6 engineering exception only |
 
-The developer approved exact Road v0.4 dependencies and the current beta
-macOS/Xcode workstation for CP4–CP12 engineering on 2026-07-25, then granted a
-one-time CP14 final build/smoke extension on 2026-07-26. This narrow exception
-is recorded in [ADR-0005](architecture/decisions/0005-beta-toolchain-engineering-exception.md);
-it does not replace the accepted CP13 macOS 15.7+ compatibility evidence. CP4 locks
-Node/npm `22.23.1`/`10.9.8`, Rust/Cargo `1.88.0`/`1.88.0`,
-Python/PyInstaller `3.13.14`/`6.21.0`, and target `aarch64-apple-darwin`.
+The narrow Road v0.6 macOS/Xcode beta policy is recorded in [ADR-0006](architecture/decisions/0006-road-v0-6-beta-engineering-exception.md). It permits engineering only, expires when stable 27 arrives, is not inherited by later betas, and proves neither compatibility nor release readiness. Historical Road v0.4 policy remains in [ADR-0005](architecture/decisions/0005-beta-toolchain-engineering-exception.md).
 
-## Product flow
+## Current and target product flow
 
 ```text
-Paper Markdown → Flashcard → external prose editor
+current through CP3: Paper Markdown → Flashcard → external prose editor
+target at CP4:       editable card-page Paper → saved Paper → external prose editor
 ```
 
-See [SPEC](SPEC.md) for the stable product boundary. The accepted Road v0.3 interaction detail is historical and lives in its [archive](archive/road-v0-3/design/interaction.html).
+See [SPEC](SPEC.md) for the approved target and the [Paper v4 design](design/road-v0-6-paper-v4-design.md) for detailed grammar and protocol. Source and tests below remain the current runtime fact until each convergence checkpoint passes.
 
 ## Current runtime map (Paper v3 + folder-aware paths)
 
@@ -170,9 +165,9 @@ README
        └─ CONTEXT ──── human manuals / ADRs / read-only archive
 ```
 
-- **Authority:** [SPEC](SPEC.md) owns the accepted Road v0.5 product boundary; the completed [Road v0.5 Planbook](archive/road-v0-5/PLAN_revised.md) records checkpoint scope and execution. [RULES](RULES.md) owns engineering, interaction, data, Git, and evidence constraints; [AGENTS](../AGENTS.md) owns agent procedure. Runtime facts come from [`src/`](../src/) and [`tests/`](../tests/).
-- **Views:** [design](design/design.html) and [interaction](design/interaction.html) describe the accepted Road v0.5 visual and interaction system; [architecture](architecture/architecture.html) describes the unchanged Vue/Tauri/JSONL/Python runtime. CP6 product acceptance, CP7 final UI gate, checkpoint commit, and Road closeout are complete.
-- **Working material:** the [Road v0.6 Paper v4 design](design/road-v0-6-paper-v4-design.md) and Chinese [CP0–CP7 implementation plan](../PLAN_road_v0_6.md) were approved by the developer on 2026-08-02; CP0–CP7 use advance YOLO for developer exit judgments without replacing actual evidence or separately gated actions. The old invited-Alpha release target is revoked, no CP has started, and the [Road v0.5 design workspace](design/working-materials.md) remains historical.
+- **Authority:** [SPEC](SPEC.md) owns the approved Road v0.6 product target; the [Paper v4 design](design/road-v0-6-paper-v4-design.md) owns detailed grammar/protocol and the Chinese [CP0–CP7 plan](../PLAN_road_v0_6.md) owns execution order. [RULES](RULES.md) owns implementation discipline; [AGENTS](../AGENTS.md) owns agent procedure. Runtime facts come from [`src/`](../src/) and [`tests/`](../tests/).
+- **Views:** [design](design/design.html), [interaction](design/interaction.html), and [architecture](architecture/architecture.html) show Road v0.5 current beside the approved Road v0.6 target; they do not claim the target is implemented.
+- **Working material:** Road v0.6 CP0 is complete on `docs/cp0-v06-contract-baseline`; its checkpoint is the branch HEAD and CP1 is next. CP0–CP6 are fully YOLO-authorized for branches, evidence-based exit, exact staging, DeepSeek `aic`, commits, and continuation. The old invited-Alpha release target is revoked; [Road v0.5 working material](design/working-materials.md) is historical.
 - **Evidence:** [acceptance](acceptance/README.md) links completed Road v0.2 evidence, the archived Road v0.3 CP6 record, the accepted [Road v0.5 CP6 Agent dogfood report](acceptance/road-v0-5/cp6-dogfood/report.md), and the [CP7 fixed-sidebars report](acceptance/road-v0-5/cp7-fixed-sidebars/report.md). The frozen [2cc40ba status snapshot](archive/snapshots/feat-complete-road-v0-3-candidate.html) shows the earlier CP5 boundary. [generated](generated/README.md) remains rebuildable observation; the archived [cold-start audit](archive/road-v0-3/cold_start_report.md) is dated historical evidence, not a claim about the transition pages.
 - **Context:** [ADR 0001](architecture/decisions/0001-document-authority.md) explains the authority split. Road v0.3 design history, Road v0.4 planning history, and the [Road v0.5 construction snapshot](archive/snapshots/road-v0-5.html) are read-only records. [Manual](manual/README.md) teaches people; [archive](archive/README.md) preserves history. Neither overrides authority.
 
@@ -193,7 +188,7 @@ Application tests must not be inferred from documentation checks. Platform smoke
 
 ## Post-Road decisions
 
-Road v0.4 and Road v0.5 are complete. Road v0.5 ended at checkpoint `d900953`; CP6 product acceptance and the final CP7 UI condition passed with no unresolved P0/P1, and the Road is recorded in the [commit-bound snapshot](archive/snapshots/road-v0-5.html). No tag or push was created. Signing, notarization, DMG, public distribution, compatibility updates, and any real-Vault operation remain separate developer decisions.
+Road v0.4 and Road v0.5 are complete. Road v0.6 CP0 is complete and CP1 is next; no Paper v4 implementation, protocol-v2 activation, migration, real-Vault operation, tag, push, signing, packaging, release, or CP7 acceptance is claimed yet.
 
 ## History boundary
 
