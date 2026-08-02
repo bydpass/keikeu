@@ -1,8 +1,7 @@
 <script setup>
 import { defineAsyncComponent, onMounted, onUnmounted, ref } from "vue";
 
-import { getRuntimeStatus, restartSidecar } from "./bridge.js";
-import FlashcardView from "./FlashcardView.vue";
+import { bridgeRequest, getRuntimeStatus, restartSidecar } from "./bridge.js";
 import LibraryView from "./LibraryView.vue";
 import PaperView from "./PaperView.vue";
 import VaultView from "./VaultView.vue";
@@ -16,14 +15,61 @@ const showPrototype =
 const status = ref({ state: "starting" });
 const restarting = ref(false);
 const destination = ref("paper");
-const flashcardPath = ref(null);
 const paperPath = ref(null);
 const paperStartup = ref(null);
 const vaultStartup = ref(null);
 const vaultReturnDestination = ref("paper");
 const vaultCanCancel = ref(false);
 const libraryContextGeneration = ref(0);
+const pendingIntent = ref(null);
 let refreshTimer;
+
+const durableMethods = new Set([
+  "vault.open",
+  "vault.initialize",
+  "vault.relocate",
+  "migration.run",
+  "paper.save",
+  "paper.soft_delete",
+  "library.rebuild",
+  "library.move",
+  "library.branch",
+  "library.soft_delete",
+  "library.restore",
+  "library.permanently_delete",
+  "library.create_folder",
+  "library.rename_folder",
+  "library.merge_folders",
+  "library.soft_delete_folder",
+  "library.restore_folder",
+  "library.permanently_delete_folder",
+]);
+
+function cloneIntent(value) {
+  return globalThis.structuredClone
+    ? globalThis.structuredClone(value)
+    : JSON.parse(JSON.stringify(value));
+}
+
+async function appRequest(method, params = {}, intent = null) {
+  const durable = durableMethods.has(method);
+  if (durable) {
+    pendingIntent.value = cloneIntent(intent ?? {
+      family: method.split(".")[0],
+      method,
+      vault_locator: params.vault_locator ?? null,
+      summary: { fields: Object.keys(params).sort() },
+    });
+  }
+  try {
+    const result = await bridgeRequest(method, params);
+    if (durable) pendingIntent.value = null;
+    return result;
+  } catch (error) {
+    if (durable && error?.code !== "commit_unknown") pendingIntent.value = null;
+    throw error;
+  }
+}
 
 async function refreshStatus() {
   try {
@@ -51,10 +97,14 @@ async function restart() {
     if (status.value.state === "ready") {
       destination.value = "paper";
       paperPath.value = null;
-      flashcardPath.value = null;
       paperStartup.value = null;
       vaultStartup.value = null;
       libraryContextGeneration.value += 1;
+      if (pendingIntent.value?.family?.startsWith("library")) {
+        destination.value = "library";
+      } else if (["vault", "migration"].includes(pendingIntent.value?.family)) {
+        destination.value = "vault";
+      }
     }
   } catch (error) {
     status.value = {
@@ -68,11 +118,6 @@ async function restart() {
 
 function blockRuntime(error) {
   status.value = { state: "blocked", error };
-}
-
-function openFlashcard(path) {
-  flashcardPath.value = path;
-  destination.value = "flashcard";
 }
 
 function openPaper(path) {
@@ -108,6 +153,10 @@ function cancelVault() {
   }
 }
 
+function settleIntent() {
+  pendingIntent.value = null;
+}
+
 onMounted(() => {
   if (!showPrototype) {
     refreshStatus();
@@ -125,30 +174,25 @@ onUnmounted(() => window.clearTimeout(refreshTimer));
       :runtime="status"
       :initial-path="paperPath"
       :initial-startup="paperStartup"
+      :pending-intent="pendingIntent"
+      :request="appRequest"
       @runtime-blocked="blockRuntime"
-      @open-flashcard="openFlashcard"
       @open-library="openLibrary"
       @open-vault="openVault"
       @startup-consumed="paperStartup = null"
-    />
-
-    <FlashcardView
-      v-if="destination === 'flashcard'"
-      :runtime="status"
-      :initial-path="flashcardPath"
-      @runtime-blocked="blockRuntime"
-      @open-paper="openPaper"
-      @open-library="openLibrary"
+      @intent-settled="settleIntent"
     />
 
     <KeepAlive :key="libraryContextGeneration">
       <LibraryView
         v-if="destination === 'library'"
         :runtime="status"
+        :pending-intent="pendingIntent"
+        :request="appRequest"
         @runtime-blocked="blockRuntime"
         @open-paper="openPaper"
-        @open-flashcard="openFlashcard"
         @open-vault="openVault"
+        @intent-settled="settleIntent"
       />
     </KeepAlive>
 
@@ -157,9 +201,12 @@ onUnmounted(() => window.clearTimeout(refreshTimer));
       :runtime="status"
       :initial-startup="vaultStartup"
       :can-cancel="vaultCanCancel"
+      :pending-intent="pendingIntent"
+      :request="appRequest"
       @runtime-blocked="blockRuntime"
       @ready="finishVault"
       @cancel="cancelVault"
+      @intent-settled="settleIntent"
     />
   </template>
 

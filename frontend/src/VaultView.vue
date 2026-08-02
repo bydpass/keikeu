@@ -16,9 +16,17 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  request: {
+    type: Function,
+    default: bridgeRequest,
+  },
+  pendingIntent: {
+    type: Object,
+    default: null,
+  },
 });
 
-const emit = defineEmits(["runtime-blocked", "ready", "cancel"]);
+const emit = defineEmits(["runtime-blocked", "ready", "cancel", "intent-settled"]);
 
 const mode = ref("picker");
 const path = ref("");
@@ -61,7 +69,6 @@ function handleError(rawError, fallback) {
         : `${fallback}：${normalized.message}`,
   };
   if (
-    normalized.layer === "tauri_host" &&
     ["commit_unknown", "protocol_mismatch", "sidecar_unavailable"].includes(
       normalized.code,
     )
@@ -76,7 +83,9 @@ function isMigration(value) {
   return (
     value &&
     typeof value.token === "string" &&
+    typeof value.kind === "string" &&
     typeof value.ready === "boolean" &&
+    typeof value.vault_locator === "string" &&
     typeof value.backup_path === "string" &&
     Number.isInteger(value.cache_count) &&
     Number.isInteger(value.trash_cache_count) &&
@@ -213,7 +222,7 @@ async function inspectVault() {
   notice.value = "";
   busyAction.value = "inspect";
   try {
-    applyPreview(await bridgeRequest("vault.inspect", { path: path.value }));
+    applyPreview(await props.request("vault.inspect", { path: path.value }));
   } catch (rawError) {
     handleError(rawError, "无法检查 Vault");
   } finally {
@@ -243,7 +252,7 @@ async function chooseDirectory() {
     }
     path.value = selected;
     busyAction.value = "inspect";
-    applyPreview(await bridgeRequest("vault.inspect", { path: path.value }));
+    applyPreview(await props.request("vault.inspect", { path: path.value }));
   } catch (rawError) {
     handleError(rawError, "无法选择目录");
   } finally {
@@ -259,7 +268,12 @@ async function runStartupMutation(method, params, fallback) {
   error.value = null;
   notice.value = "";
   try {
-    applyStartup(await bridgeRequest(method, params));
+    applyStartup(await props.request(method, params, {
+      family: "vault",
+      method,
+      vault_locator: preview.value?.candidate_locator ?? null,
+      summary: { fields: Object.keys(params).sort() },
+    }));
   } catch (rawError) {
     handleError(rawError, fallback);
   } finally {
@@ -320,8 +334,13 @@ async function runMigration() {
   notice.value = "";
   try {
     migrationResult.value = validateMigrationResult(
-      await bridgeRequest("migration.run", {
+      await props.request("migration.run", {
         preflight_token: migration.value.token,
+      }, {
+        family: "migration",
+        method: "migration.run",
+        vault_locator: migration.value.vault_locator,
+        summary: { kind: migration.value.kind },
       }),
     );
     mode.value = "migration_result";
@@ -339,7 +358,7 @@ async function openMigratedVault() {
   busyAction.value = "startup.load";
   error.value = null;
   try {
-    applyStartup(await bridgeRequest("startup.load", {}));
+    applyStartup(await props.request("startup.load", {}));
   } catch (rawError) {
     handleError(rawError, "无法打开已迁移 Vault");
   } finally {
@@ -347,7 +366,17 @@ async function openMigratedVault() {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  if (["vault", "migration"].includes(props.pendingIntent?.family)) {
+    try {
+      const startup = await props.request("startup.load", {});
+      emit("intent-settled");
+      applyStartup(startup);
+    } catch (rawError) {
+      handleError(rawError, "无法在重启后重新读取 Vault");
+    }
+    return;
+  }
   if (props.initialStartup) {
     try {
       applyStartup(props.initialStartup);
@@ -362,7 +391,7 @@ onMounted(() => {
   <main class="vault-gate">
     <section class="vault-panel" :aria-busy="busy">
       <header>
-        <p class="vault-eyebrow">Road v0.5 · Vault</p>
+        <p class="vault-eyebrow">Road v0.6 · Vault</p>
         <h1>{{ mode.startsWith("migration") ? "迁移旧 Vault" : "打开或创建 Vault" }}</h1>
         <p>Paper Markdown 保留在本地；Vue 只提交路径与确认令牌。</p>
       </header>

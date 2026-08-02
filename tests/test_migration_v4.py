@@ -124,6 +124,32 @@ def test_schema_scan_accepts_valid_v4_crlf_and_reports_symlink_without_following
     assert outside.read_bytes() == b"outside"
 
 
+def test_damaged_v4_is_isolated_instead_of_blocking_valid_v4_assets(tmp_path):
+    vault = fresh_vault(tmp_path)
+    store_v4(
+        vault,
+        "cache/K-20260802-001.md",
+        PaperV4(
+            code="K-20260802-001",
+            pages=[CardPageV4(content="usable")],
+            created=NOW,
+            updated=NOW,
+        ),
+    )
+    broken = vault / "cache" / "K-20260802-002.md"
+    broken.write_text(
+        "---\ntype: paper\nschema_version: 4\ncode: K-20260802-002\n---\ninvalid",
+        encoding="utf-8",
+    )
+
+    preflight = inspect_paper_v4_migration(vault)
+
+    assert preflight.state == "pure_v4"
+    assert preflight.ready is False
+    assert preflight.issues[0].category == "v4_paper"
+    assert classify_migration_stage(vault) == "ready"
+
+
 @pytest.mark.parametrize(
     ("mutate", "message"),
     [

@@ -1,10 +1,11 @@
-"""Transport-neutral values returned by the keikeu application service."""
+"""Transport-neutral protocol-v2 values returned by the application service."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 
 __all__ = [
+    "CardPageDto",
     "FlashcardDeckDto",
     "FlashcardDto",
     "HighlightDto",
@@ -14,42 +15,35 @@ __all__ = [
     "MigrationIssueDto",
     "MigrationPreflightDto",
     "MigrationResultDto",
+    "NameResultDto",
     "OperationReportDto",
+    "OperationReportResultDto",
+    "OperationReportsResultDto",
     "PaperDto",
+    "PaperEditableDto",
+    "PaperOpenResultDto",
     "PaperOptionDto",
+    "PaperReconcileRequestDto",
+    "PaperReconcileResultDto",
     "PaperSaveDto",
+    "PaperSaveResultDto",
+    "RepairDto",
     "StartupDto",
     "VaultPreviewDto",
 ]
 
 
 @dataclass(frozen=True)
+class CardPageDto:
+    name: str | None
+    content: str
+    type: str | None
+
+
+@dataclass(frozen=True)
 class HighlightDto:
     display_name: str | None
     content: str
-
-
-@dataclass(frozen=True)
-class PaperDto:
-    path: str | None
-    edit_token: str
-    code: str
-    display_name: str | None
-    initial_summary: str
-    summary: str
-    highlights: tuple[HighlightDto, ...]
-    tags: tuple[str, ...]
-    created: str
-    updated: str
-
-
-@dataclass(frozen=True)
-class PaperSaveDto:
-    edit_token: str
-    summary: str
-    display_name: str | None = None
-    highlights: tuple[HighlightDto, ...] = ()
-    tags: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -75,23 +69,97 @@ class FlashcardDeckDto:
 
 
 @dataclass(frozen=True)
-class LibraryEntryDto:
-    path: str
+class PaperEditableDto:
+    display_name: str | None
+    tags: tuple[str, ...]
+    pages: tuple[CardPageDto, ...]
+
+
+@dataclass(frozen=True)
+class PaperDto:
+    path: str | None
+    edit_token: str
     code: str
     display_name: str | None
-    folder: str | None
-    summary: str
     tags: tuple[str, ...]
-    highlight_names: tuple[str, ...]
+    pages: tuple[CardPageDto, ...]
     created: str
     updated: str
-    trashed: bool = False
+    vault_locator: str
+    target_path: str
+    source_digest: str | None
+
+
+@dataclass(frozen=True)
+class PaperSaveDto:
+    edit_token: str
+    vault_locator: str
+    display_name: str | None
+    tags: tuple[str, ...]
+    pages: tuple[CardPageDto, ...]
+
+
+@dataclass(frozen=True)
+class PaperSaveResultDto:
+    paper: PaperDto
+    warnings: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class RepairDto:
+    origin: str
+    path: str
+    reason: str
+    page_number: int | None = None
+
+
+@dataclass(frozen=True)
+class PaperOpenResultDto:
+    state: str
+    paper: PaperDto | None = None
+    repair: RepairDto | None = None
+
+
+@dataclass(frozen=True)
+class PaperReconcileRequestDto:
+    vault_locator: str
+    target_path: str
+    code: str
+    created: str
+    source_digest: str | None
+    baseline: PaperEditableDto | None
+    submitted: PaperEditableDto
+
+
+@dataclass(frozen=True)
+class PaperReconcileResultDto:
+    state: str
+    paper: PaperDto | None = None
+    stale_reason: str | None = None
+    repair: RepairDto | None = None
+    index_state: str = "not_checked"
 
 
 @dataclass(frozen=True)
 class IndexErrorDto:
     path: str
     reason: str
+
+
+@dataclass(frozen=True)
+class LibraryEntryDto:
+    path: str
+    code: str
+    display_name: str | None
+    folder: str | None
+    tags: tuple[str, ...]
+    preview: str
+    page_count: int
+    page_names: tuple[str, ...]
+    created: str | None
+    updated: str | None
+    trashed: bool = False
+    repair_reason: str | None = None
 
 
 @dataclass(frozen=True)
@@ -102,6 +170,8 @@ class LibraryViewDto:
     trash_folders: tuple[str, ...]
     trash_count: int
     errors: tuple[IndexErrorDto, ...]
+    vault_locator: str
+    index_state: str
 
 
 @dataclass(frozen=True)
@@ -116,6 +186,24 @@ class OperationReportDto:
 
 
 @dataclass(frozen=True)
+class OperationReportResultDto:
+    report: OperationReportDto
+    warnings: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class OperationReportsResultDto:
+    reports: tuple[OperationReportDto, ...]
+    warnings: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class NameResultDto:
+    name: str
+    warnings: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
 class MigrationIssueDto:
     path: str
     message: str
@@ -124,7 +212,9 @@ class MigrationIssueDto:
 @dataclass(frozen=True)
 class MigrationPreflightDto:
     token: str
+    kind: str
     ready: bool
+    vault_locator: str
     backup_path: str
     cache_count: int
     trash_cache_count: int
@@ -135,10 +225,12 @@ class MigrationPreflightDto:
 
 @dataclass(frozen=True)
 class MigrationResultDto:
+    kind: str
     converted_count: int
     backup_path: str
     report_path: str
-    paper_paths: tuple[str, ...]
+    paper_paths: tuple[str, ...] = ()
+    warnings: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -149,6 +241,8 @@ class StartupDto:
     configured_path: str = ""
     migration: MigrationPreflightDto | None = None
     preview: VaultPreviewDto | None = None
+    vault_locator: str | None = None
+    index_state: str = "not_checked"
 
 
 @dataclass(frozen=True)
@@ -160,3 +254,4 @@ class VaultPreviewDto:
     source_kind: str = ""
     message: str = ""
     migration: MigrationPreflightDto | None = None
+    candidate_locator: str | None = None

@@ -5,10 +5,11 @@ const props = defineProps({
   entries: { type: Array, required: true },
   errors: { type: Array, default: () => [] },
   indexState: { type: String, default: "current" },
+  query: { type: String, default: "" },
 });
-const emit = defineEmits(["open", "rebuild-index"]);
+const emit = defineEmits(["open", "rebuild-index", "search", "select"]);
 
-const query = ref("");
+const query = ref(props.query);
 const selectedPath = ref(props.entries[0]?.path ?? null);
 const normalizedQuery = computed(() => query.value.trim().toLocaleLowerCase());
 const filteredEntries = computed(() => {
@@ -44,6 +45,8 @@ watch(
     }
   },
 );
+watch(() => props.query, (value) => { query.value = value; });
+watch(selected, (value) => emit("select", value?.path ?? null), { immediate: true });
 
 function label(entry) {
   return entry.display_name || entry.code;
@@ -59,7 +62,12 @@ function label(entry) {
       </div>
       <label>
         <span>搜索名称、Tags、所有页</span>
-        <input v-model="query" type="search" placeholder="搜索合成 Paper">
+        <input
+          v-model="query"
+          type="search"
+          placeholder="搜索所有卡页"
+          @input="emit('search', query)"
+        >
       </label>
     </header>
 

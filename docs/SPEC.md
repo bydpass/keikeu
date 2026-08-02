@@ -21,23 +21,19 @@ The author now leaves keikeu with the Paper itself. There is no separate Flashca
 - No account, cloud backend, telemetry, hidden remote service, or background sync is authorized.
 - Damaged Paper Markdown is reported, not silently repaired or partially opened as an editable Paper.
 
-## 3. Current and target boundary
+## 3. Current runtime boundary
 
-The accepted current runtime remains Road v0.5 through CP3:
-
-```text
-Vue → Tauri/Rust → JSONL protocol v1 → Python service/core
-    → Paper v3 Markdown / Index / Vault → separate Flashcard
-```
-
-Road v0.6 keeps the same process architecture and changes the product/data contract:
+CP4 has activated the Road v0.6 product/data contract without changing the process architecture:
 
 ```text
 Vue → Tauri/Rust → JSONL protocol v2 → Python service/core
     → Paper v4 Markdown / Index / Vault → Paper pages
 ```
 
-CP0–CP3 add target contracts, Core, migration/Index, and development-only UI without changing the production path. CP4 performs the single vertical protocol-v2 switch. CP5 removes unreachable Flashcard/v3 normal-runtime code. `PROJECT.md`, source, and tests remain the authority for which side of that transition is actually active.
+CP0–CP3 added the contracts, Core, migration/Index, and development-only UI. CP4
+performed the single vertical protocol-v2 switch. CP5 removes unreachable Flashcard/v3
+normal-runtime code without changing this product behavior. `PROJECT.md`, source, and tests
+remain the authority for the current checkpoint.
 
 ## 4. Paper v4 target behavior
 

@@ -1,17 +1,8 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
-
 import { flushPromises, mount } from "@vue/test-utils";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import PaperView from "./PaperView.vue";
-import {
-  bridgeRequest,
-  confirmDiscardChanges,
-  registerWindowCloseGuard,
-} from "./bridge.js";
-
-const globalStyles = readFileSync(resolve(process.cwd(), "src/style.css"), "utf8");
+import { confirmDiscardChanges, registerWindowCloseGuard } from "./bridge.js";
 
 vi.mock("./bridge.js", () => ({
   bridgeRequest: vi.fn(),
@@ -22,530 +13,243 @@ vi.mock("./bridge.js", () => ({
 const runtime = {
   state: "ready",
   app_version: "0.1.0",
-  core_version: "paper-v3/index-v3",
+  core_version: "paper-v4/index-v4",
 };
 
 function paper(overrides = {}) {
   return {
     path: null,
     edit_token: "edit-1",
-    code: "K-20260725-001",
+    code: "K-20260802-001",
     display_name: null,
-    initial_summary: "",
-    summary: "",
-    highlights: [],
     tags: [],
-    created: "2026-07-25T12:00:00",
-    updated: "2026-07-25T12:00:00",
+    pages: [{ name: null, content: "Draft", type: null }],
+    created: "2026-08-02T12:00:00",
+    updated: "2026-08-02T12:00:00",
+    vault_locator: "vault-v1:test",
+    target_path: "cache/K-20260802-001.md",
+    source_digest: null,
     ...overrides,
   };
 }
 
-function installBridge({
-  startup = { state: "ready", show_daily_card: false },
-  entries = [],
-  draft = paper(),
-  opened = paper(),
-  saved = paper(),
-  saveError = null,
-  deleteResult = { source: "cache/K.md", destination: "Trash/cache/K.md", error: null },
-} = {}) {
-  bridgeRequest.mockImplementation(async (method) => {
-    if (method === "startup.load") return startup;
-    if (method === "library.query") return { entries, errors: [] };
-    if (method === "paper.create_draft") return draft;
-    if (method === "paper.open") return opened;
-    if (method === "paper.save") {
-      if (saveError) throw saveError;
-      return saved;
-    }
-    if (method === "paper.soft_delete") return deleteResult;
-    throw new Error(`Unexpected method: ${method}`);
-  });
+function ready() {
+  return {
+    state: "ready",
+    show_daily_card: false,
+    vault_locator: "vault-v1:test",
+    index_state: "current",
+  };
 }
 
-describe("Road v0.5 Paper Desk", () => {
-  beforeEach(() => {
-    vi.resetAllMocks();
-    confirmDiscardChanges.mockResolvedValue(true);
-    registerWindowCloseGuard.mockResolvedValue(vi.fn());
+function buttonByText(wrapper, text) {
+  const button = wrapper.findAll("button").find((item) => item.text() === text);
+  if (!button) throw new Error(`button not found: ${text}`);
+  return button;
+}
+
+const mounted = [];
+async function mountPaper(request, extra = {}) {
+  const wrapper = mount(PaperView, {
+    attachTo: document.body,
+    props: { runtime, request, ...extra },
   });
+  mounted.push(wrapper);
+  await flushPromises();
+  return wrapper;
+}
 
-  it("shows the claimed daily card before creating a blank Paper", async () => {
-    installBridge({
-      startup: { state: "ready", show_daily_card: true },
+beforeEach(() => {
+  vi.resetAllMocks();
+  confirmDiscardChanges.mockResolvedValue(true);
+  registerWindowCloseGuard.mockResolvedValue(vi.fn());
+});
+
+afterEach(() => {
+  while (mounted.length) mounted.pop().unmount();
+});
+
+describe("Road v0.6 Paper runtime", () => {
+  it("opens a blank v4 Paper directly into the accepted card workbench", async () => {
+    const request = vi.fn(async (method) => {
+      if (method === "startup.load") return ready();
+      if (method === "paper.create_draft") return paper();
+      throw new Error(method);
     });
-    const wrapper = mount(PaperView, { props: { runtime } });
-    await flushPromises();
 
-    expect(wrapper.text()).toContain("每日一张");
-    expect(bridgeRequest).not.toHaveBeenCalledWith("paper.create_draft", {});
-
-    await wrapper.get(".daily-gate button").trigger("click");
-    await flushPromises();
+    const wrapper = await mountPaper(request);
 
     expect(wrapper.text()).toContain("Paper 工作台");
-    expect(bridgeRequest).toHaveBeenCalledWith("paper.create_draft", {});
-    wrapper.unmount();
-  });
-
-  it("does not bypass a Vault or migration startup gate", async () => {
-    installBridge({
-      startup: {
-        state: "vault_picker",
-        show_daily_card: false,
-        message: "Vault selection required",
-      },
-    });
-    const wrapper = mount(PaperView, { props: { runtime } });
-    await flushPromises();
-
-    expect(wrapper.text()).toContain("当前还不能进入 Paper");
-    expect(wrapper.text()).toContain("Vault selection required");
-    expect(bridgeRequest).not.toHaveBeenCalledWith("paper.create_draft", {});
-    expect(wrapper.emitted("open-vault")[0][0]).toMatchObject({
-      state: "vault_picker",
-      message: "Vault selection required",
-    });
-    wrapper.unmount();
-  });
-
-  it("consumes a confirmed startup DTO without claiming startup twice", async () => {
-    installBridge();
-    const confirmed = { state: "ready", show_daily_card: false };
-    const wrapper = mount(PaperView, {
-      props: { runtime, initialStartup: confirmed },
-    });
-    await flushPromises();
-
-    expect(wrapper.emitted("startup-consumed")).toHaveLength(1);
-    expect(bridgeRequest).not.toHaveBeenCalledWith("startup.load", {});
-    expect(wrapper.text()).toContain("Paper 工作台");
-    wrapper.unmount();
-  });
-
-  it("saves the controlled form through Cmd+S with ordered DTO fields", async () => {
-    const stored = paper({
-      path: "cache/K-20260725-001.md",
-      initial_summary: "First summary",
-      summary: "First summary",
-      display_name: "Night Bus",
-      highlights: [{ display_name: "Breath", content: "A held breath." }],
-      tags: ["rain", "station"],
-    });
-    installBridge({ saved: stored });
-    const wrapper = mount(PaperView, { props: { runtime } });
-    await flushPromises();
-    const flashcardButton = wrapper.get(
-      'button[aria-label="打开 Flashcard"]',
-    );
-    expect(flashcardButton.attributes("disabled")).toBeDefined();
-
-    await wrapper.get('[name="display_name"]').setValue("Night Bus");
-    await wrapper.get('[name="summary"]').setValue("First summary");
-    await wrapper.get('[name="tags"]').setValue("rain, station");
-    await wrapper.get(".paper-highlights > button").trigger("click");
-    await wrapper.get(".highlight-fields input").setValue("Breath");
-    await wrapper.get(".highlight-fields textarea").setValue("A held breath.");
-
-    const shortcut = new KeyboardEvent("keydown", {
-      key: "s",
-      metaKey: true,
-      cancelable: true,
-    });
-    window.dispatchEvent(shortcut);
-    await flushPromises();
-
-    expect(shortcut.defaultPrevented).toBe(true);
-    expect(bridgeRequest).toHaveBeenCalledWith("paper.save", {
-      edit_token: "edit-1",
-      summary: "First summary",
-      display_name: "Night Bus",
-      highlights: [{ display_name: "Breath", content: "A held breath." }],
-      tags: ["rain", " station"],
-    });
-    expect(wrapper.text()).toContain("已保存至 Markdown");
-    expect(wrapper.text()).toContain("First summary");
-    expect(flashcardButton.attributes("disabled")).toBeUndefined();
-    wrapper.unmount();
-  });
-
-  it("uses the Chinese inline error for a blank Summary", async () => {
-    installBridge();
-    const wrapper = mount(PaperView, { props: { runtime } });
-    await flushPromises();
-
-    expect(wrapper.get('[name="summary"]').attributes("required")).toBeUndefined();
-    await wrapper.get(".paper-editor").trigger("submit");
-    await flushPromises();
-
-    expect(wrapper.text()).toContain("Summary 不能为空。");
-    expect(bridgeRequest).not.toHaveBeenCalledWith(
-      "paper.save",
-      expect.anything(),
-    );
-    wrapper.unmount();
-  });
-
-  it("makes the four editable regions obvious and keeps the original draft locked", async () => {
-    installBridge({
-      draft: paper({
-        path: "cache/K-20260725-001.md",
-        display_name: "Night Bus",
-        initial_summary: "Frozen first draft",
-        summary: "Saved summary",
-        tags: ["rain"],
-      }),
-    });
-    const wrapper = mount(PaperView, { props: { runtime } });
-    await flushPromises();
-
-    expect(wrapper.find('[name="code"]').exists()).toBe(false);
-    expect(wrapper.get('[name="display_name"]').element.readOnly).toBe(false);
-    expect(wrapper.get('[name="summary"]').element.readOnly).toBe(false);
-    expect(wrapper.get('[name="tags"]').element.readOnly).toBe(false);
-    expect(wrapper.text()).toContain("Highlights");
-    expect(wrapper.get("details.initial-copy").attributes("open")).toBeUndefined();
-    expect(wrapper.get("details.initial-copy summary").text()).toContain("归档只读");
-    expect(wrapper.text()).toContain("已保存至 Markdown");
-    expect(wrapper.text()).toContain("2026-07-25 12:00");
-    expect(wrapper.text()).not.toContain("2026-07-25T12:00:00");
-    const context = wrapper.get(".paper-context");
-    expect(context.classes()).toContain("fixed-context-rail");
-    expect(globalStyles).toMatch(
-      /\*\s*\{[^}]*overscroll-behavior:\s*none;/,
-    );
-    expect(globalStyles).toMatch(/\*\s*\{[^}]*scrollbar-width:\s*none;/);
-    expect(globalStyles).toMatch(
-      /\*::-webkit-scrollbar\s*\{[^}]*display:\s*none;/,
-    );
-    expect(globalStyles).toMatch(
-      /\.fixed-context-rail\s*\{[^}]*position:\s*fixed;[^}]*overflow-y:\s*auto;/,
-    );
-
-    await wrapper.get('[name="summary"]').setValue("Unsaved summary");
-    expect(wrapper.get(".paper-save-state").text()).toBe("未保存");
-    wrapper.unmount();
-  });
-
-  it("opens an existing Paper, preserves its initial copy, and saves reordered Highlights", async () => {
-    const entry = {
-      path: "cache/K-20260725-002.md",
-      code: "K-20260725-002",
-      display_name: "Scene",
-    };
-    const opened = paper({
-      path: entry.path,
-      edit_token: "edit-existing",
-      code: entry.code,
-      display_name: entry.display_name,
-      initial_summary: "Frozen first draft",
-      summary: "Current summary",
-      highlights: [
-        { display_name: "First", content: "One" },
-        { display_name: "Second", content: "Two" },
-      ],
-    });
-    installBridge({ entries: [entry], opened, saved: opened });
-    const wrapper = mount(PaperView, { props: { runtime } });
-    await flushPromises();
-
-    await wrapper.get(".paper-picker button").trigger("click");
-    await flushPromises();
-    expect(wrapper.text()).toContain("Frozen first draft");
-
-    const firstRowButtons = wrapper.findAll(".highlight-actions")[0].findAll("button");
-    await firstRowButtons[1].trigger("click");
-    await wrapper.get(".paper-editor").trigger("submit");
-    await flushPromises();
-
-    const saveCall = bridgeRequest.mock.calls.find(([method]) => method === "paper.save");
-    expect(saveCall[1].highlights).toEqual([
-      { display_name: "Second", content: "Two" },
-      { display_name: "First", content: "One" },
+    expect(wrapper.text()).toContain("paper-v4/index-v4");
+    expect(wrapper.findAll(".card-actions > button").map((item) => item.text())).toEqual([
+      "保存",
+      "删除本页",
+      "加一页",
     ]);
-    wrapper.unmount();
   });
 
-  it("reorders Highlights with the native drag handle", async () => {
+  it("sends one whole-page Save DTO plus the restart reconciliation intent", async () => {
+    const draft = paper();
     const stored = paper({
-      path: "cache/K-20260725-003.md",
-      summary: "Saved summary",
-      highlights: [
-        { display_name: "First", content: "One" },
-        { display_name: "Second", content: "Two" },
-      ],
+      path: draft.target_path,
+      source_digest: "digest-new",
+      pages: [{ name: "First", content: "Changed", type: "summary" }],
     });
-    installBridge({ draft: stored, saved: stored });
-    const wrapper = mount(PaperView, { props: { runtime } });
-    await flushPromises();
-
-    const dataTransfer = {
-      effectAllowed: "",
-      setData: vi.fn(),
-    };
-    await wrapper.findAll(".highlight-grip")[0].trigger("dragstart", { dataTransfer });
-    await wrapper.findAll(".paper-highlights li")[1].trigger("drop");
-    await wrapper.get(".paper-editor").trigger("submit");
-    await flushPromises();
-
-    expect(dataTransfer.setData).toHaveBeenCalledWith("text/plain", expect.any(String));
-    const saveCall = bridgeRequest.mock.calls.find(([method]) => method === "paper.save");
-    expect(saveCall[1].highlights).toEqual([
-      { display_name: "Second", content: "Two" },
-      { display_name: "First", content: "One" },
-    ]);
-    wrapper.unmount();
-  });
-
-  it.each([
-    [
-      "stale_snapshot",
-      "Paper 已在外部修改；未覆盖。请重新打开后决定如何处理。",
-    ],
-    [
-      "not_found",
-      "Paper 已在外部删除或移动；未保存。请刷新 Paper 列表。",
-    ],
-  ])("does not retry a save rejected as %s", async (code, message) => {
-    installBridge({
-      draft: paper({
-        path: "cache/K-20260725-001.md",
-        summary: "Disk summary",
-      }),
-      saveError: {
-        code,
-        layer: "application_service",
-        message: "de-identified service failure",
-        recovery: "refresh",
-      },
+    const request = vi.fn(async (method) => {
+      if (method === "startup.load") return ready();
+      if (method === "paper.create_draft") return draft;
+      if (method === "paper.save") return { paper: stored, warnings: [] };
+      throw new Error(method);
     });
-    const wrapper = mount(PaperView, { props: { runtime } });
+    const wrapper = await mountPaper(request);
+    await wrapper.get(".page-title-field input").setValue("First");
+    await wrapper.get(".page-content-field textarea").setValue("Changed");
+    await buttonByText(wrapper, "进一步").trigger("click");
+    await wrapper.get(".advanced-panel select").setValue("summary");
+
+    await buttonByText(wrapper, "保存").trigger("click");
     await flushPromises();
 
-    await wrapper.get('[name="summary"]').setValue("Unsaved local edit");
-    await wrapper.get(".paper-editor").trigger("submit");
-    await flushPromises();
-
-    expect(wrapper.text()).toContain(message);
-    expect(
-      bridgeRequest.mock.calls.filter(([method]) => method === "paper.save"),
-    ).toHaveLength(1);
-    expect(wrapper.get('[name="summary"]').element.value).toBe("Unsaved local edit");
-    expect(wrapper.get(".paper-save-state").text()).toBe("未保存");
-    wrapper.unmount();
-  });
-
-  it("requires confirmation before soft delete and opens a fresh draft afterward", async () => {
-    const stored = paper({
-      path: "cache/K-20260725-001.md",
-      summary: "Saved",
-    });
-    let draftCount = 0;
-    installBridge({ draft: stored });
-    const baseImplementation = bridgeRequest.getMockImplementation();
-    bridgeRequest.mockImplementation(async (method, params) => {
-      if (method === "paper.create_draft") {
-        draftCount += 1;
-        return draftCount === 1 ? stored : paper({ edit_token: "edit-2" });
-      }
-      return baseImplementation(method, params);
-    });
-    const wrapper = mount(PaperView, { props: { runtime } });
-    await flushPromises();
-
-    await wrapper.findAll(".paper-actions button")[1].trigger("click");
-    expect(wrapper.text()).toContain("确认软删除这个 Paper");
-    await wrapper.get(".danger-action").trigger("click");
-    await flushPromises();
-
-    expect(bridgeRequest).toHaveBeenCalledWith("paper.soft_delete", {
+    const saveCall = request.mock.calls.find(([method]) => method === "paper.save");
+    expect(saveCall[1]).toEqual({
       edit_token: "edit-1",
+      vault_locator: "vault-v1:test",
+      display_name: null,
+      tags: [],
+      pages: [{ name: "First", content: "Changed", type: "summary" }],
     });
-    expect(wrapper.text()).toContain("Paper 已移入回收站");
-    expect(
-      bridgeRequest.mock.calls.filter(([method]) => method === "paper.create_draft"),
-    ).toHaveLength(2);
-    expect(wrapper.findAll(".paper-actions button")[1].attributes("disabled")).toBeDefined();
-    wrapper.unmount();
+    expect(saveCall[2].family).toBe("paper_save");
+    expect(saveCall[2].reconcile).toMatchObject({
+      code: draft.code,
+      source_digest: null,
+      baseline: null,
+      submitted: { pages: saveCall[1].pages },
+    });
+    expect(wrapper.text()).toContain("Paper 已保存为卡页 Markdown");
   });
 
-  it("blocks the UI when a mutation result becomes unknown", async () => {
-    installBridge({
-      draft: paper({ summary: "Saved text" }),
-      saveError: {
+  it("treats damaged open as tagged repair instead of a failed transport", async () => {
+    const request = vi.fn(async (method) => {
+      if (method === "startup.load") return ready();
+      if (method === "paper.open") return {
+        state: "repair_required",
+        paper: null,
+        repair: { path: "cache/broken.md", reason: "page marker missing" },
+      };
+      throw new Error(method);
+    });
+
+    const wrapper = await mountPaper(request, { initialPath: "cache/broken.md" });
+
+    expect(wrapper.text()).toContain("这份 Paper 暂时不能安全打开");
+    expect(wrapper.text()).toContain("cache/broken.md");
+    expect(wrapper.emitted("runtime-blocked")).toBeUndefined();
+  });
+
+  it("reconciles an unknown save without replay and keeps not-committed draft dirty", async () => {
+    const submitted = { display_name: null, tags: [], pages: [{ name: null, content: "Submitted", type: null }] };
+    const pending = {
+      family: "paper_save",
+      method: "paper.save",
+      vault_locator: "vault-v1:test",
+      save: { edit_token: "old", vault_locator: "vault-v1:test", ...submitted },
+      reconcile: {
+        vault_locator: "vault-v1:test",
+        target_path: "cache/K-20260802-001.md",
+        code: "K-20260802-001",
+        created: "2026-08-02T12:00:00",
+        source_digest: "old-digest",
+        baseline: { display_name: null, tags: [], pages: [{ name: null, content: "Baseline", type: null }] },
+        submitted,
+      },
+    };
+    const request = vi.fn(async (method) => {
+      if (method === "startup.load") return ready();
+      if (method === "paper.reconcile_save") return {
+        state: "not_committed",
+        paper: paper({
+          path: pending.reconcile.target_path,
+          edit_token: "fresh",
+          source_digest: "old-digest",
+          pages: submitted.pages,
+        }),
+        index_state: "current",
+      };
+      throw new Error(method);
+    });
+
+    const wrapper = await mountPaper(request, { pendingIntent: pending });
+
+    expect(request.mock.calls.filter(([method]) => method === "paper.save")).toHaveLength(0);
+    expect(request.mock.calls.filter(([method]) => method === "paper.reconcile_save")).toHaveLength(1);
+    expect(wrapper.text()).toContain("草稿仍在，请检查后重新保存");
+    expect(wrapper.text()).toContain("草稿有未保存修改");
+    expect(wrapper.emitted("intent-settled")).toHaveLength(1);
+  });
+
+  it("blocks after one unknown save and never retries it", async () => {
+    const request = vi.fn(async (method) => {
+      if (method === "startup.load") return ready();
+      if (method === "paper.create_draft") return paper();
+      if (method === "paper.save") throw {
         code: "commit_unknown",
         layer: "tauri_host",
         message: "response lost",
-        recovery: "restart_sidecar",
-      },
+        recovery: "restart_then_reload",
+      };
+      throw new Error(method);
     });
-    const wrapper = mount(PaperView, { props: { runtime } });
+    const wrapper = await mountPaper(request);
+    await wrapper.get(".page-content-field textarea").setValue("Unknown result");
+
+    await buttonByText(wrapper, "保存").trigger("click");
     await flushPromises();
 
-    await wrapper.get('[name="summary"]').setValue("Changed text");
-    await wrapper.get(".paper-editor").trigger("submit");
-    await flushPromises();
-
-    expect(wrapper.emitted("runtime-blocked")[0][0]).toMatchObject({
-      code: "commit_unknown",
-      layer: "tauri_host",
-    });
-    expect(
-      bridgeRequest.mock.calls.filter(([method]) => method === "paper.save"),
-    ).toHaveLength(1);
-    wrapper.unmount();
+    expect(request.mock.calls.filter(([method]) => method === "paper.save")).toHaveLength(1);
+    expect(wrapper.emitted("runtime-blocked")).toHaveLength(1);
   });
 
-  it("keeps the page and content when the user continues editing", async () => {
-    const stored = paper({
-      path: "cache/K-20260725-001.md",
-      summary: "Saved text",
+  it("soft-deletes the whole Paper with locator after confirmation", async () => {
+    const saved = paper({ path: "cache/K-20260802-001.md", source_digest: "digest" });
+    const request = vi.fn(async (method) => {
+      if (method === "startup.load") return ready();
+      if (method === "paper.open") return { state: "opened", paper: saved, repair: null };
+      if (method === "paper.soft_delete") return {
+        report: { source: saved.path, destination: `.trash/${saved.path}`, error: null },
+        warnings: [],
+      };
+      if (method === "paper.create_draft") return paper({ code: "K-20260802-002", edit_token: "edit-2" });
+      throw new Error(method);
     });
-    installBridge({ draft: stored });
-    confirmDiscardChanges.mockResolvedValue(false);
-    const wrapper = mount(PaperView, { props: { runtime } });
+    const wrapper = await mountPaper(request, { initialPath: saved.path });
+
+    await buttonByText(wrapper, "整份移入废纸篓").trigger("click");
+    await buttonByText(wrapper, "确认移入废纸篓").trigger("click");
     await flushPromises();
 
-    await wrapper.get('[name="summary"]').setValue("Unsaved local edit");
-    await wrapper.get('button[aria-label="打开 Flashcard"]').trigger("click");
-    await flushPromises();
-
-    expect(confirmDiscardChanges).toHaveBeenCalledOnce();
-    expect(wrapper.emitted("open-flashcard")).toBeUndefined();
-    expect(wrapper.get('[name="summary"]').element.value).toBe("Unsaved local edit");
-    expect(wrapper.get(".paper-save-state").text()).toBe("未保存");
-    wrapper.unmount();
-  });
-
-  it("discards only to the latest successful save before leaving", async () => {
-    const initial = paper({
-      path: "cache/K-20260725-001.md",
-      edit_token: "edit-1",
-      summary: "First baseline",
-    });
-    const saved = paper({
-      path: initial.path,
-      edit_token: "edit-2",
-      summary: "Latest baseline",
-    });
-    installBridge({ draft: initial, saved });
-    const wrapper = mount(PaperView, { props: { runtime } });
-    await flushPromises();
-
-    await wrapper.get('[name="summary"]').setValue("Latest baseline");
-    await wrapper.get(".paper-editor").trigger("submit");
-    await flushPromises();
-    await wrapper.get('[name="summary"]').setValue("Throw this away");
-    await wrapper.get('button[aria-label="打开 Library"]').trigger("click");
-    await flushPromises();
-
-    expect(wrapper.emitted("open-library")).toHaveLength(1);
-    expect(wrapper.get('[name="summary"]').element.value).toBe("Latest baseline");
-    expect(wrapper.get(".paper-save-state").text()).toBe("已保存至 Markdown");
-    wrapper.unmount();
-  });
-
-  it("uses the same guard for new Paper, Paper switch, and Vault switch", async () => {
-    const entry = {
-      path: "cache/K-20260725-002.md",
-      code: "K-20260725-002",
-      display_name: "Other Paper",
-    };
-    installBridge({
-      draft: paper({
-        path: "cache/K-20260725-001.md",
-        summary: "Saved text",
-      }),
-      entries: [entry],
-    });
-    confirmDiscardChanges.mockResolvedValue(false);
-    const wrapper = mount(PaperView, { props: { runtime } });
-    await flushPromises();
-
-    await wrapper.get('[name="summary"]').setValue("Unsaved local edit");
-    await wrapper.get(".new-paper").trigger("click");
-    await wrapper.get(".paper-picker button").trigger("click");
-    await wrapper.get(".vault-switch").trigger("click");
-    await flushPromises();
-
-    expect(confirmDiscardChanges).toHaveBeenCalledTimes(3);
-    expect(
-      bridgeRequest.mock.calls.filter(([method]) => method === "paper.create_draft"),
-    ).toHaveLength(1);
-    expect(bridgeRequest).not.toHaveBeenCalledWith("paper.open", {
-      path: entry.path,
-    });
-    expect(wrapper.emitted("open-vault")).toBeUndefined();
-    expect(wrapper.get('[name="summary"]').element.value).toBe("Unsaved local edit");
-    wrapper.unmount();
-  });
-
-  it("opens the Vault switcher from a clean unsaved draft", async () => {
-    installBridge();
-    const wrapper = mount(PaperView, { props: { runtime } });
-    await flushPromises();
-    const vaultSwitch = wrapper.get(".vault-switch");
-
-    expect(vaultSwitch.attributes("disabled")).toBeUndefined();
-    await vaultSwitch.trigger("click");
-    await flushPromises();
-
-    expect(confirmDiscardChanges).not.toHaveBeenCalled();
-    expect(wrapper.emitted("open-vault")).toEqual([[null, null]]);
-    wrapper.unmount();
-  });
-
-  it("keeps a dirty unsaved draft when Vault departure is declined", async () => {
-    installBridge();
-    confirmDiscardChanges.mockResolvedValue(false);
-    const wrapper = mount(PaperView, { props: { runtime } });
-    await flushPromises();
-
-    await wrapper.get('[name="summary"]').setValue("Unsaved local edit");
-    await wrapper.get(".vault-switch").trigger("click");
-    await flushPromises();
-
-    expect(confirmDiscardChanges).toHaveBeenCalledOnce();
-    expect(wrapper.emitted("open-vault")).toBeUndefined();
-    expect(wrapper.get('[name="summary"]').element.value).toBe(
-      "Unsaved local edit",
+    expect(request).toHaveBeenCalledWith(
+      "paper.soft_delete",
+      { edit_token: "edit-1", vault_locator: "vault-v1:test" },
+      expect.objectContaining({ family: "paper_delete" }),
     );
-    expect(wrapper.get(".paper-save-state").text()).toBe("未保存");
-    wrapper.unmount();
+    expect(wrapper.text()).toContain("整份 Paper 已移入废纸篓");
   });
 
-  it("runs window close through the same latest-baseline guard", async () => {
-    installBridge({ draft: paper({ summary: "Saved text" }) });
-    confirmDiscardChanges.mockResolvedValue(false);
-    const wrapper = mount(PaperView, { props: { runtime } });
-    await flushPromises();
-    const closeGuard = registerWindowCloseGuard.mock.calls[0][0];
+  it("re-reads Trash and settles an unknown whole-Paper delete after restart", async () => {
+    const request = vi.fn(async (method, params) => {
+      if (method === "startup.load") return ready();
+      if (method === "library.query") {
+        expect(params).toMatchObject({ scope: "trash", verify_index: true });
+        return { entries: [] };
+      }
+      if (method === "paper.create_draft") return paper();
+      throw new Error(method);
+    });
+    const wrapper = await mountPaper(request, {
+      pendingIntent: { family: "paper_delete", method: "paper.soft_delete" },
+    });
 
-    await wrapper.get('[name="summary"]').setValue("Unsaved local edit");
-    await expect(closeGuard()).resolves.toBe(false);
-    expect(wrapper.get('[name="summary"]').element.value).toBe("Unsaved local edit");
-
-    confirmDiscardChanges.mockResolvedValue(true);
-    await expect(closeGuard()).resolves.toBe(true);
-    expect(wrapper.get('[name="summary"]').element.value).toBe("Saved text");
-    wrapper.unmount();
-  });
-
-  it("stays dirty when the native discard dialog fails", async () => {
-    installBridge({ draft: paper({ summary: "Saved text" }) });
-    confirmDiscardChanges.mockRejectedValue(new Error("dialog unavailable"));
-    const wrapper = mount(PaperView, { props: { runtime } });
-    await flushPromises();
-
-    await wrapper.get('[name="summary"]').setValue("Unsaved local edit");
-    await wrapper.get('button[aria-label="打开 Library"]').trigger("click");
-    await flushPromises();
-
-    expect(wrapper.emitted("open-library")).toBeUndefined();
-    expect(wrapper.get('[name="summary"]').element.value).toBe("Unsaved local edit");
-    expect(wrapper.get(".paper-save-state").text()).toBe("未保存");
-    expect(wrapper.text()).toContain("无法确认是否放弃更改");
-    wrapper.unmount();
+    expect(wrapper.text()).toContain("已在重启后重新读取废纸篓");
+    expect(wrapper.emitted("intent-settled")).toHaveLength(1);
   });
 });

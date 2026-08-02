@@ -4,9 +4,9 @@
 > CP0–CP7 的开发者退出判断采用 advance YOLO；CP0–CP6 的分支、精确暂存、
 > DeepSeek `aic`、checkpoint commit 与连续执行另由“全部 YOLO”预先授权。
 >
-> 当前事实仍是 Road v0.5、Paper v3 与独立 Flashcard 页面/DTO/投影链。本设计定义
-> Road v0.6 的目标，不代表代码、迁移、测试、Checkpoint、提交或产品接受已经完成，
-> 也不授权修改真实 Vault。
+> CP4 已实现 production Paper v4、Index v4 与 protocol v2，并清零活动 Flashcard caller；
+> CP5 仍须删除不可达旧实现。本设计不代表 CP5/CP6、真实 Vault 迁移、CP7 产品接受、
+> Road closeout 或发布已经完成，也不授权修改真实 Vault。
 
 ## 1. 核心判断
 
@@ -31,9 +31,9 @@ Road v0.6 是一次产品模型重构，不是 runtime 重写，也不是发布 
 Road v0.6 保留本地优先、Markdown 权威、作者控制和现有桌面进程边界。它不增加
 数据库、云同步、账号、遥测、AI 代写或隐藏后台服务。
 
-## 2. current 与 target 边界
+## 2. Road 基线与 CP4 当前边界
 
-| 边界 | 当前已接受事实 | Road v0.6 目标 |
+| 边界 | Road v0.5 基线 | CP4 当前事实 |
 | --- | --- | --- |
 | 产品模型 | Paper v3：frozen initial Summary、current Summary、Highlights、Tags | Paper v4：`Paper.pages[]` 是权威内容 |
 | 阅读体验 | 独立、只读、Summary-first Flashcard | 同一组卡页直接浏览，不再生成 Flashcard |
@@ -42,10 +42,9 @@ Road v0.6 保留本地优先、Markdown 权威、作者控制和现有桌面进�
 | Bridge | JSONL protocol v1 | framing 不变，breaking contract 升至 protocol v2 |
 | Library | Summary 预览与 Highlight 名称 | Paper 名称、第一页预览、页数、页标题与全页搜索 |
 
-在 Road v0.6 的代码和权威文档尚未逐步收敛前，[SPEC](../SPEC.md) 与
-[RULES](../RULES.md) 继续描述 v0.5 当前行为。本设计已获书面批准；中文实施计划已经
-重写但尚未单独批准，批准后 CP0 才能建立明确的 target/current 标签并更新相冲突的
-规则。不得把目标写成已经实现的事实。
+CP4 已完成表中纵切换；[SPEC](../SPEC.md)、[RULES](../RULES.md)、`src/` 与 `tests/`
+现共同描述 Paper v4/protocol v2。CP5 只清理不可达旧链，CP6 才完成故障与修复 Gate；
+不得把工程 checkpoint 写成真实作者接受或 Road 完成。
 
 ## 3. 范围与明确排除
 

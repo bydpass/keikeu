@@ -6,8 +6,14 @@ from datetime import datetime
 
 import pytest
 
-from keikeu_core.markdown_io import parse_paper_v4_bytes, render_paper_v4_bytes
+from keikeu_core.markdown_io import (
+    parse_paper_v4_bytes,
+    read_paper_v4_snapshot,
+    render_paper_v4_bytes,
+    write_paper_v4,
+)
 from keikeu_core.models import CardPageV4, PaperV4
+from keikeu_core.vault import init_vault
 
 
 def make_paper(**overrides) -> PaperV4:
@@ -218,6 +224,20 @@ def test_paper_v4_parse_render_parse_preserves_all_author_fields():
         parsed = parse_paper_v4_bytes(rendered)
         assert parsed == paper
         assert parse_paper_v4_bytes(render_paper_v4_bytes(parsed)) == parsed
+
+
+def test_write_and_read_paper_v4_snapshot_without_overwrite(tmp_path):
+    vault = tmp_path / "Vault"
+    init_vault(vault)
+    paper = make_paper()
+
+    path = write_paper_v4(vault, paper, destination="cache/K-20260802-001.md")
+    stored, source_bytes = read_paper_v4_snapshot(path)
+
+    assert stored == paper
+    assert source_bytes == render_paper_v4_bytes(paper)
+    with pytest.raises(FileExistsError):
+        write_paper_v4(vault, paper, destination="cache/K-20260802-001.md")
 
 
 def test_active_v3_codec_does_not_accept_v4_or_change_its_public_names():

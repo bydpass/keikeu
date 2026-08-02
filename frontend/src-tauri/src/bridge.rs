@@ -9,7 +9,7 @@ use tauri_plugin_shell::{
     ShellExt,
 };
 
-const PROTOCOL_VERSION: u64 = 1;
+const PROTOCOL_VERSION: u64 = 2;
 const SIDECAR_NAME: &str = "keikeu-sidecar";
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
@@ -93,8 +93,7 @@ struct RequestPolicy {
 fn public_policy(method: &str, timeouts: Timeouts) -> Option<RequestPolicy> {
     let mutation = matches!(
         method,
-        "startup.load"
-            | "vault.open"
+        "vault.open"
             | "vault.initialize"
             | "vault.relocate"
             | "migration.run"
@@ -120,8 +119,9 @@ fn public_policy(method: &str, timeouts: Timeouts) -> Option<RequestPolicy> {
                 | "migration.preflight"
                 | "paper.create_draft"
                 | "paper.open"
-                | "flashcard.open"
+                | "paper.reconcile_save"
                 | "library.query"
+                | "startup.load"
         );
     if !known {
         return None;
@@ -741,14 +741,14 @@ mod tests {
     fn hello(id: u64, session: &str) -> ChildEvent {
         ChildEvent::Stdout(
             serde_json::to_vec(&json!({
-                "v": 1,
+                "v": PROTOCOL_VERSION,
                 "id": id,
                 "ok": true,
                 "result": {
-                    "protocol_version": 1,
+                    "protocol_version": PROTOCOL_VERSION,
                     "session_id": session,
                     "app_version": "0.1.0",
-                    "core_version": "paper-v3/index-v3",
+                    "core_version": "paper-v4/index-v4",
                 },
             }))
             .unwrap(),
@@ -758,7 +758,7 @@ mod tests {
     fn success(id: u64, result: Value) -> ChildEvent {
         ChildEvent::Stdout(
             serde_json::to_vec(&json!({
-                "v": 1,
+                "v": PROTOCOL_VERSION,
                 "id": id,
                 "ok": true,
                 "result": result,
@@ -788,17 +788,27 @@ mod tests {
     }
 
     #[test]
+    fn protocol_v2_policy_removes_flashcard_and_classifies_reconcile_as_read_only() {
+        let timeouts = short_timeouts();
+
+        assert!(public_policy("flashcard.open", timeouts).is_none());
+        assert!(!public_policy("startup.load", timeouts).unwrap().mutation);
+        assert!(!public_policy("paper.reconcile_save", timeouts).unwrap().mutation);
+        assert!(public_policy("paper.save", timeouts).unwrap().mutation);
+    }
+
+    #[test]
     fn incompatible_hello_blocks_before_business_requests() {
         let incompatible = ChildEvent::Stdout(
             serde_json::to_vec(&json!({
-                "v": 1,
+                "v": PROTOCOL_VERSION,
                 "id": 1,
                 "ok": true,
                 "result": {
-                    "protocol_version": 2,
+                    "protocol_version": 1,
                     "session_id": "session-a",
                     "app_version": "0.1.0",
-                    "core_version": "paper-v3/index-v3",
+                    "core_version": "paper-v4/index-v4",
                 },
             }))
             .unwrap(),

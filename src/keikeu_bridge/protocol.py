@@ -9,12 +9,18 @@ from pathlib import Path
 import secrets
 from typing import Any, TextIO
 
-from keikeu_bridge.dto import HighlightDto, PaperSaveDto
+from keikeu_bridge.dto import (
+    CardPageDto,
+    PaperEditableDto,
+    PaperReconcileRequestDto,
+    PaperSaveDto,
+)
 from keikeu_bridge.service import KeikeuService, ServiceError
 
 __all__ = [
     "APP_VERSION",
     "CORE_VERSION",
+    "METHOD_CLASSIFICATIONS",
     "METHODS",
     "MUTATION_METHODS",
     "PROTOCOL_VERSION",
@@ -22,66 +28,50 @@ __all__ = [
     "run_jsonl",
 ]
 
-PROTOCOL_VERSION = 1
-CORE_VERSION = "paper-v3/index-v3"
+PROTOCOL_VERSION = 2
+CORE_VERSION = "paper-v4/index-v4"
 
 try:
     APP_VERSION = version("keikeu")
 except PackageNotFoundError:
     APP_VERSION = "0.1.0"
 
-_SESSION_METHODS = {
-    "startup.load",
-    "vault.inspect",
-    "vault.open",
-    "vault.initialize",
-    "vault.relocate",
-    "migration.preflight",
-    "migration.run",
-    "paper.create_draft",
-    "paper.open",
-    "paper.save",
-    "paper.soft_delete",
-    "flashcard.open",
-    "library.query",
-    "library.rebuild",
-    "library.move",
-    "library.branch",
-    "library.soft_delete",
-    "library.restore",
-    "library.permanently_delete",
-    "library.create_folder",
-    "library.rename_folder",
-    "library.merge_folders",
-    "library.soft_delete_folder",
-    "library.restore_folder",
-    "library.permanently_delete_folder",
-    "system.resolve_target",
+METHOD_CLASSIFICATIONS = {
+    "system.hello": "readonly_session",
+    "vault.inspect": "readonly_session",
+    "migration.preflight": "readonly_session",
+    "paper.create_draft": "readonly_session",
+    "paper.open": "readonly_session",
+    "paper.reconcile_save": "readonly_session",
+    "library.query": "readonly_session",
+    "system.resolve_target": "readonly_session",
+    "startup.load": "replay_safe_local_state",
+    "vault.open": "vault_durable",
+    "vault.initialize": "vault_durable",
+    "vault.relocate": "vault_durable",
+    "migration.run": "migration_durable",
+    "paper.save": "paper_durable",
+    "paper.soft_delete": "paper_durable",
+    "library.move": "library_path_durable",
+    "library.branch": "library_path_durable",
+    "library.soft_delete": "library_path_durable",
+    "library.restore": "library_path_durable",
+    "library.permanently_delete": "library_path_durable",
+    "library.create_folder": "library_path_durable",
+    "library.rename_folder": "library_path_durable",
+    "library.merge_folders": "library_path_durable",
+    "library.soft_delete_folder": "library_path_durable",
+    "library.restore_folder": "library_path_durable",
+    "library.permanently_delete_folder": "library_path_durable",
+    "library.rebuild": "index_durable",
 }
-METHODS = frozenset({"system.hello", *_SESSION_METHODS})
+METHODS = frozenset(METHOD_CLASSIFICATIONS)
+_SESSION_METHODS = METHODS - {"system.hello"}
 
 MUTATION_METHODS = frozenset(
-    {
-        "startup.load",
-        "vault.open",
-        "vault.initialize",
-        "vault.relocate",
-        "migration.run",
-        "paper.save",
-        "paper.soft_delete",
-        "library.rebuild",
-        "library.move",
-        "library.branch",
-        "library.soft_delete",
-        "library.restore",
-        "library.permanently_delete",
-        "library.create_folder",
-        "library.rename_folder",
-        "library.merge_folders",
-        "library.soft_delete_folder",
-        "library.restore_folder",
-        "library.permanently_delete_folder",
-    }
+    method
+    for method, category in METHOD_CLASSIFICATIONS.items()
+    if category.endswith("_durable")
 )
 
 
@@ -154,6 +144,65 @@ def _strings(params: dict[str, object], name: str) -> list[str]:
             "correct_input",
         )
     return value
+
+
+def _boolean(params: dict[str, object], name: str) -> bool:
+    value = params.get(name)
+    if type(value) is not bool:
+        raise _ProtocolError(
+            "invalid_request",
+            f"{name} must be a boolean",
+            "correct_input",
+        )
+    return value
+
+
+def _pages(value: object, field_name: str = "pages") -> tuple[CardPageDto, ...]:
+    if not isinstance(value, list):
+        raise _ProtocolError(
+            "invalid_request",
+            f"{field_name} must be an array",
+            "correct_input",
+        )
+    pages: list[CardPageDto] = []
+    for index, item in enumerate(value):
+        if not isinstance(item, dict):
+            raise _ProtocolError(
+                "invalid_request",
+                f"{field_name}[{index}] must be an object",
+                "correct_input",
+            )
+        _expect_keys(item, {"name", "content", "type"})
+        page_type = _nullable_string(item, "type")
+        if page_type not in {None, "summary", "snapshot", "whisper"}:
+            raise _ProtocolError(
+                "invalid_request",
+                f"{field_name}[{index}].type is invalid",
+                "correct_input",
+            )
+        pages.append(
+            CardPageDto(
+                _nullable_string(item, "name"),
+                _string(item, "content"),
+                page_type,
+            )
+        )
+    return tuple(pages)
+
+
+def _editable(value: object, field_name: str) -> PaperEditableDto:
+    if not isinstance(value, dict):
+        raise _ProtocolError(
+            "invalid_request",
+            f"{field_name} must be an object",
+            "correct_input",
+        )
+    _expect_keys(value, {"display_name", "tags", "pages"})
+    return PaperEditableDto(
+        _nullable_string(value, "display_name"),
+        tuple(_strings(value, "tags")),
+        _pages(value.get("pages"), f"{field_name}.pages"),
+    )
 
 
 def _json_value(value: object) -> Any:
@@ -402,18 +451,20 @@ class JsonlDispatcher:
             return self._service.paper_open(_string(params, "path"))
         if method == "paper.save":
             return self._paper_save(params)
+        if method == "paper.reconcile_save":
+            return self._paper_reconcile_save(params)
         if method == "paper.soft_delete":
-            _expect_keys(params, {"edit_token"})
+            _expect_keys(params, {"edit_token", "vault_locator"})
             return self._service.paper_soft_delete(
-                _string(params, "edit_token")
+                _string(params, "edit_token"),
+                _string(params, "vault_locator"),
             )
-        if method == "flashcard.open":
-            _expect_keys(params, set(), {"path"})
-            return self._service.flashcard_open(
-                _nullable_string(params, "path")
+        if method == "library.query":
+            _expect_keys(
+                params,
+                set(),
+                {"scope", "search", "sort", "verify_index"},
             )
-        if method in {"library.query", "library.rebuild"}:
-            _expect_keys(params, set(), {"scope", "search", "sort"})
             return self._service.library_query(
                 scope=_string(params, "scope") if "scope" in params else "all",
                 search=_string(params, "search") if "search" in params else "",
@@ -422,56 +473,74 @@ class JsonlDispatcher:
                     if "sort" in params
                     else "updated_desc"
                 ),
-                rebuild=method == "library.rebuild",
+                verify_index=(
+                    _boolean(params, "verify_index")
+                    if "verify_index" in params
+                    else False
+                ),
             )
+        if method == "library.rebuild":
+            _expect_keys(params, {"vault_locator"})
+            return self._service.library_rebuild(_string(params, "vault_locator"))
         if method == "library.move":
-            _expect_keys(params, {"paths", "destination_folder"})
+            _expect_keys(params, {"paths", "destination_folder", "vault_locator"})
             return self._service.library_move(
                 _strings(params, "paths"),
                 _nullable_string(params, "destination_folder"),
+                _string(params, "vault_locator"),
             )
         if method == "library.branch":
-            _expect_keys(params, {"path"})
-            return self._service.library_branch(_string(params, "path"))
+            _expect_keys(params, {"path", "vault_locator"})
+            return self._service.library_branch(
+                _string(params, "path"),
+                _string(params, "vault_locator"),
+            )
         if method in {
             "library.soft_delete",
             "library.restore",
             "library.permanently_delete",
         }:
-            _expect_keys(params, {"paths"})
+            _expect_keys(params, {"paths", "vault_locator"})
             paths = _strings(params, "paths")
+            locator = _string(params, "vault_locator")
             if method == "library.soft_delete":
-                return self._service.library_soft_delete(paths)
+                return self._service.library_soft_delete(paths, locator)
             if method == "library.restore":
-                return self._service.library_restore(paths)
-            return self._service.library_permanently_delete(paths)
+                return self._service.library_restore(paths, locator)
+            return self._service.library_permanently_delete(paths, locator)
         if method == "library.create_folder":
-            _expect_keys(params, {"name"})
-            return self._service.library_create_folder(_string(params, "name"))
+            _expect_keys(params, {"name", "vault_locator"})
+            return self._service.library_create_folder(
+                _string(params, "name"),
+                _string(params, "vault_locator"),
+            )
         if method == "library.rename_folder":
-            _expect_keys(params, {"folder", "new_name"})
+            _expect_keys(params, {"folder", "new_name", "vault_locator"})
             return self._service.library_rename_folder(
                 _string(params, "folder"),
                 _string(params, "new_name"),
+                _string(params, "vault_locator"),
             )
         if method == "library.merge_folders":
-            _expect_keys(params, {"source", "destination"})
+            _expect_keys(params, {"source", "destination", "vault_locator"})
             return self._service.library_merge_folders(
                 _string(params, "source"),
                 _string(params, "destination"),
+                _string(params, "vault_locator"),
             )
         if method in {
             "library.soft_delete_folder",
             "library.restore_folder",
             "library.permanently_delete_folder",
         }:
-            _expect_keys(params, {"folder"})
+            _expect_keys(params, {"folder", "vault_locator"})
             folder = _string(params, "folder")
+            locator = _string(params, "vault_locator")
             if method == "library.soft_delete_folder":
-                return self._service.library_soft_delete_folder(folder)
+                return self._service.library_soft_delete_folder(folder, locator)
             if method == "library.restore_folder":
-                return self._service.library_restore_folder(folder)
-            return self._service.library_permanently_delete_folder(folder)
+                return self._service.library_restore_folder(folder, locator)
+            return self._service.library_permanently_delete_folder(folder, locator)
         if method == "system.resolve_target":
             _expect_keys(params, {"action", "relative_target"})
             return {
@@ -491,37 +560,46 @@ class JsonlDispatcher:
     def _paper_save(self, params: dict[str, object]) -> object:
         _expect_keys(
             params,
-            {"edit_token", "summary", "display_name", "highlights", "tags"},
+            {"edit_token", "vault_locator", "display_name", "tags", "pages"},
         )
-        highlights = params.get("highlights")
-        if not isinstance(highlights, list):
-            raise _ProtocolError(
-                "invalid_request",
-                "highlights must be an array",
-                "correct_input",
-            )
-        parsed_highlights: list[HighlightDto] = []
-        for index, item in enumerate(highlights):
-            if not isinstance(item, dict):
-                raise _ProtocolError(
-                    "invalid_request",
-                    f"highlights[{index}] must be an object",
-                    "correct_input",
-                )
-            _expect_keys(item, {"display_name", "content"})
-            parsed_highlights.append(
-                HighlightDto(
-                    _nullable_string(item, "display_name"),
-                    _string(item, "content"),
-                )
-            )
         return self._service.paper_save(
             PaperSaveDto(
                 edit_token=_string(params, "edit_token"),
-                summary=_string(params, "summary"),
+                vault_locator=_string(params, "vault_locator"),
                 display_name=_nullable_string(params, "display_name"),
-                highlights=tuple(parsed_highlights),
                 tags=tuple(_strings(params, "tags")),
+                pages=_pages(params.get("pages")),
+            )
+        )
+
+    def _paper_reconcile_save(self, params: dict[str, object]) -> object:
+        _expect_keys(
+            params,
+            {
+                "vault_locator",
+                "target_path",
+                "code",
+                "created",
+                "source_digest",
+                "baseline",
+                "submitted",
+            },
+        )
+        baseline_value = params.get("baseline")
+        baseline = (
+            None
+            if baseline_value is None
+            else _editable(baseline_value, "baseline")
+        )
+        return self._service.paper_reconcile_save(
+            PaperReconcileRequestDto(
+                vault_locator=_string(params, "vault_locator"),
+                target_path=_string(params, "target_path"),
+                code=_string(params, "code"),
+                created=_string(params, "created"),
+                source_digest=_nullable_string(params, "source_digest"),
+                baseline=baseline,
+                submitted=_editable(params.get("submitted"), "submitted"),
             )
         )
 

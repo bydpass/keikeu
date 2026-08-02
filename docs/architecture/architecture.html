@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>keikeu Architecture — Road v0.6 current / target</title>
+  <title>keikeu Architecture — Road v0.6 current / cleanup</title>
   <style>
     :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #1e2523; background: #eceae4; }
     * { box-sizing: border-box; }
@@ -33,9 +33,9 @@
 <body>
   <main>
     <header>
-      <p class="eyebrow">Road v0.6 · current / target map</p>
+      <p class="eyebrow">Road v0.6 · current / cleanup map</p>
       <h1>进程架构不重写，Paper 契约垂直切换</h1>
-      <p class="status">CP0 只锁定 target。Production 仍是 Road v0.5 / Paper v3 / protocol v1；CP4 才允许完整切到 v4 / v2。</p>
+      <p class="status">CP4 已完整切到 Paper v4 / Index v4 / protocol v2；CP5 只删除已不可达的旧实现。</p>
       <nav>
         <a href="../PROJECT.md">当前坐标</a>
         <a href="../SPEC.md">产品边界</a>
@@ -48,26 +48,26 @@
     </header>
 
     <section>
-      <p class="label">Current through CP3 · protocol v1</p>
-      <div class="flow">
-        <div class="node"><strong>Vue 3</strong><span>Summary / Highlights / Flashcard UI</span></div>
-        <div class="node"><strong>Tauri / Rust</strong><span>窗口、sidecar、单队列、窄系统动作</span></div>
-        <div class="node"><strong>JSONL v1</strong><span>现有 DTO 与 Flashcard allowlist</span></div>
-        <div class="node"><strong>Python service</strong><span>v3 编排与 opaque session state</span></div>
-        <div class="node"><strong>Python Core</strong><span>Paper v3、Markdown、Index、Vault</span></div>
-        <div class="node"><strong>Author assets</strong><span>v3 Markdown + rebuildable Index</span></div>
-      </div>
-    </section>
-
-    <section>
-      <p class="label">Target at CP4 · protocol v2</p>
+      <p class="label">Current at CP4 · protocol v2</p>
       <div class="flow target">
         <div class="node"><strong>Vue 3</strong><span>pages[] draft/baseline + App-root pending intent</span></div>
-        <div class="node"><strong>Tauri / Rust</strong><span>相同生命周期；显式 v2 method policy</span></div>
+        <div class="node"><strong>Tauri / Rust</strong><span>窗口、sidecar、单队列、窄系统动作</span></div>
         <div class="node"><strong>JSONL v2</strong><span>strict DTO、locator、tagged repair</span></div>
         <div class="node"><strong>Python service</strong><span>整体 CAS、对账、迁移与 Library 编排</span></div>
         <div class="node"><strong>Python Core</strong><span>Paper v4、strict codec、Index v4</span></div>
         <div class="node"><strong>Author assets</strong><span>card-page Markdown + disposable Index</span></div>
+      </div>
+    </section>
+
+    <section>
+      <p class="label">Next at CP5 · behavior unchanged</p>
+      <div class="flow target">
+        <div class="node"><strong>Vue 3</strong><span>删除不可达 Flashcard 页面与测试</span></div>
+        <div class="node"><strong>Tauri / Rust</strong><span>v2 policy 保持不变</span></div>
+        <div class="node"><strong>JSONL v2</strong><span>方法与 DTO 保持不变</span></div>
+        <div class="node"><strong>Python service</strong><span>删除不可达 Flashcard DTO/方法</span></div>
+        <div class="node"><strong>Python Core</strong><span>保留迁移所需冻结 v3 reader</span></div>
+        <div class="node"><strong>Author assets</strong><span>不迁移真实 Vault，不改 schema</span></div>
       </div>
     </section>
 

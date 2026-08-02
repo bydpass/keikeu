@@ -12,7 +12,7 @@ vi.mock("./bridge.js", () => ({
 const runtime = {
   state: "ready",
   app_version: "0.1.0",
-  core_version: "paper-v3/index-v3",
+  core_version: "paper-v4/index-v4",
 };
 const previewHandle = ["preview", "handle"].join("-");
 const migrationHandle = ["migration", "handle"].join("-");
@@ -24,6 +24,8 @@ const pickerStartup = {
   configured_path: "",
   migration: null,
   preview: null,
+  vault_locator: null,
+  index_state: "not_checked",
 };
 
 const readyStartup = {
@@ -33,6 +35,8 @@ const readyStartup = {
   configured_path: "",
   migration: null,
   preview: null,
+  vault_locator: "vault-v1:test",
+  index_state: "current",
 };
 
 function preview(overrides = {}) {
@@ -44,6 +48,7 @@ function preview(overrides = {}) {
     source_kind: "paper",
     message: "",
     migration: null,
+    candidate_locator: "vault-v1:candidate",
     ...overrides,
   };
 }
@@ -51,7 +56,9 @@ function preview(overrides = {}) {
 function preflight(overrides = {}) {
   return {
     token: migrationHandle,
+    kind: "paper_to_v4",
     ready: true,
+    vault_locator: "vault-v1:candidate",
     backup_path: "/Users/creator/keikeu-backups",
     cache_count: 2,
     trash_cache_count: 1,
@@ -62,7 +69,7 @@ function preflight(overrides = {}) {
   };
 }
 
-describe("CP9 Vault and migration gate", () => {
+describe("Road v0.6 Vault and migration gate", () => {
   beforeEach(() => {
     vi.resetAllMocks();
   });
@@ -87,9 +94,11 @@ describe("CP9 Vault and migration gate", () => {
 
     await wrapper.get(".vault-preview .primary").trigger("click");
     await flushPromises();
-    expect(bridgeRequest).toHaveBeenCalledWith("vault.open", {
-      preview_token: previewHandle,
-    });
+    expect(bridgeRequest).toHaveBeenCalledWith(
+      "vault.open",
+      { preview_token: previewHandle },
+      expect.objectContaining({ family: "vault" }),
+    );
     expect(wrapper.emitted("ready")[0]).toEqual([readyStartup]);
     wrapper.unmount();
   });
@@ -143,10 +152,14 @@ describe("CP9 Vault and migration gate", () => {
     await relocate.trigger("click");
     await flushPromises();
 
-    expect(bridgeRequest).toHaveBeenCalledWith("vault.relocate", {
-      preview_token: previewHandle,
-      destination_path: "/Users/creator/SafeCopy",
-    });
+    expect(bridgeRequest).toHaveBeenCalledWith(
+      "vault.relocate",
+      {
+        preview_token: previewHandle,
+        destination_path: "/Users/creator/SafeCopy",
+      },
+      expect.objectContaining({ family: "vault" }),
+    );
     wrapper.unmount();
   });
 
@@ -155,10 +168,12 @@ describe("CP9 Vault and migration gate", () => {
     bridgeRequest.mockImplementation(async (method) => {
       if (method === "migration.run") {
         return {
+          kind: "paper_to_v4",
           converted_count: 2,
           backup_path: "/Users/creator/backups/Vault-v01",
           report_path: "/Users/creator/Vault/keikeu_migration_report.json",
           paper_paths: ["cache/K-001.md", "cache/K-002.md"],
+          warnings: [],
         };
       }
       if (method === "startup.load") return readyStartup;
@@ -182,9 +197,11 @@ describe("CP9 Vault and migration gate", () => {
     await run.trigger("click");
     await flushPromises();
 
-    expect(bridgeRequest).toHaveBeenCalledWith("migration.run", {
-      preflight_token: migrationHandle,
-    });
+    expect(bridgeRequest).toHaveBeenCalledWith(
+      "migration.run",
+      { preflight_token: migrationHandle },
+      expect.objectContaining({ family: "migration", vault_locator: "vault-v1:candidate" }),
+    );
     expect(wrapper.text()).toContain("已转换 2 个 Paper");
 
     await wrapper.get(".migration-result .primary").trigger("click");
@@ -225,6 +242,27 @@ describe("CP9 Vault and migration gate", () => {
       code: "commit_unknown",
       layer: "tauri_host",
     });
+    wrapper.unmount();
+  });
+
+  it("re-reads startup and settles an unknown Vault mutation after restart", async () => {
+    const request = vi.fn(async (method) => {
+      if (method === "startup.load") return readyStartup;
+      throw new Error(method);
+    });
+    const wrapper = mount(VaultView, {
+      props: {
+        runtime,
+        request,
+        pendingIntent: { family: "vault", method: "vault.open" },
+      },
+    });
+    await flushPromises();
+
+    expect(request).toHaveBeenCalledOnce();
+    expect(request).toHaveBeenCalledWith("startup.load", {});
+    expect(wrapper.emitted("intent-settled")).toHaveLength(1);
+    expect(wrapper.emitted("ready")[0]).toEqual([readyStartup]);
     wrapper.unmount();
   });
 });

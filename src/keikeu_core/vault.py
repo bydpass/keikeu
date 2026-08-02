@@ -1616,7 +1616,7 @@ def is_vault(path: Path) -> bool:
                     return True
             version = data.get("version") if isinstance(data, dict) else None
             if type(version) is int:
-                return version in {2, 3}
+                return version in {2, 3, 4}
             return True
         finally:
             os.close(root_fd)
@@ -2186,7 +2186,7 @@ def _move_supported_paper_at(
     expected_source_parent_fd: int | None = None,
     expected_destination_parent_fd: int | None = None,
 ) -> Path:
-    from keikeu_core.markdown_io import parse_paper_bytes
+    from keikeu_core.markdown_io import paper_code_from_bytes
 
     source = vault / source_relative
     destination = vault / destination_relative
@@ -2219,21 +2219,21 @@ def _move_supported_paper_at(
             source_relative.name,
             source,
         )
-        paper = parse_paper_bytes(source_bytes)
-        if source_relative.parts[0] == "cache" and source_relative.name != f"{paper.code}.md":
+        code = paper_code_from_bytes(source_bytes)
+        if source_relative.parts[0] == "cache" and source_relative.name != f"{code}.md":
             raise ValueError(
                 f"Paper filename and frontmatter code do not match: {source}"
             )
-        if destination_relative.name != f"{paper.code}.md":
+        if destination_relative.name != f"{code}.md":
             raise ValueError("Paper moves must preserve the immutable code filename")
         if _paper_code_exists_at(
             root_fd,
             vault,
-            paper.code,
-            parse_code=lambda data: parse_paper_bytes(data).code,
+            code,
+            parse_code=paper_code_from_bytes,
             excluding=source_relative,
         ):
-            raise ValueError(f"duplicate Paper code blocks mutation: {paper.code}")
+            raise ValueError(f"duplicate Paper code blocks mutation: {code}")
         _require_directory_path_identity(source.parent, source_parent_fd)
         _require_directory_path_identity(destination.parent, destination_parent_fd)
         _move_regular_no_overwrite_at(
@@ -2308,7 +2308,7 @@ def _validate_supported_paper_at(
     root_fd: int,
     relative: Path,
 ) -> None:
-    from keikeu_core.markdown_io import parse_paper_bytes
+    from keikeu_core.markdown_io import paper_code_from_bytes
 
     parent_fd = _open_relative_directory_no_follow(
         root_fd,
@@ -2321,19 +2321,19 @@ def _validate_supported_paper_at(
             relative.name,
             vault / relative,
         )
-        paper = parse_paper_bytes(data)
-        if relative.name != f"{paper.code}.md":
+        code = paper_code_from_bytes(data)
+        if relative.name != f"{code}.md":
             raise ValueError(
                 f"Paper filename and frontmatter code do not match: {vault / relative}"
             )
         if _paper_code_exists_at(
             root_fd,
             vault,
-            paper.code,
-            parse_code=lambda value: parse_paper_bytes(value).code,
+            code,
+            parse_code=paper_code_from_bytes,
             excluding=relative,
         ):
-            raise ValueError(f"duplicate Paper code blocks mutation: {paper.code}")
+            raise ValueError(f"duplicate Paper code blocks mutation: {code}")
         _require_directory_path_identity(vault / relative.parent, parent_fd)
     finally:
         os.close(parent_fd)
@@ -2456,7 +2456,7 @@ def rename_folder(vault: Path, folder: str | Path, new_name: str) -> Path:
         )
         if folder_errors:
             raise ValueError(folder_errors[0].error or "unsupported folder entry")
-        from keikeu_core.markdown_io import parse_paper_bytes
+        from keikeu_core.markdown_io import paper_code_from_bytes
 
         for relative in papers:
             data, _identity = _read_regular_bytes_at(
@@ -2464,12 +2464,12 @@ def rename_folder(vault: Path, folder: str | Path, new_name: str) -> Path:
                 relative.name,
                 vault / relative,
             )
-            code = parse_paper_bytes(data).code
+            code = paper_code_from_bytes(data)
             if _paper_code_exists_at(
                 root_fd,
                 vault,
                 code,
-                parse_code=lambda value: parse_paper_bytes(value).code,
+                parse_code=paper_code_from_bytes,
                 excluding=relative,
             ):
                 raise ValueError(f"duplicate Paper code blocks mutation: {code}")
@@ -2647,7 +2647,7 @@ def _folder_papers_and_errors_at(
     folder = base / folder_name
     papers: list[Path] = []
     errors: list[PathOperationResult] = []
-    from keikeu_core.markdown_io import parse_paper_bytes
+    from keikeu_core.markdown_io import paper_code_from_bytes
 
     with os.scandir(folder_fd) as entries:
         folder_entries = sorted(entries, key=lambda entry: entry.name)
@@ -2673,12 +2673,12 @@ def _folder_papers_and_errors_at(
                 if identity != (entry_stat.st_dev, entry_stat.st_ino):
                     raise ValueError("Paper changed while inspecting folder")
                 try:
-                    paper = parse_paper_bytes(data)
+                    code = paper_code_from_bytes(data)
                 except (ValueError, UnicodeError):
                     if validate_papers:
                         raise
                 else:
-                    if entry.name != f"{paper.code}.md":
+                    if entry.name != f"{code}.md":
                         raise ValueError(
                             "Paper filename and frontmatter code do not match"
                         )
@@ -2974,7 +2974,7 @@ def restore_papers(
                     candidate,
                     (".trash", "cache"),
                 )
-                from keikeu_core.markdown_io import parse_paper_bytes
+                from keikeu_core.markdown_io import paper_code_from_bytes
 
                 source_parent_fd = _open_relative_directory_no_follow(
                     root_fd,
@@ -2989,8 +2989,8 @@ def restore_papers(
                     )
                 finally:
                     os.close(source_parent_fd)
-                paper = parse_paper_bytes(source_bytes)
-                if source_relative.name != f"{paper.code}.md":
+                code = paper_code_from_bytes(source_bytes)
+                if source_relative.name != f"{code}.md":
                     raise ValueError(
                         "Paper filename and frontmatter code do not match"
                     )
@@ -3005,7 +3005,7 @@ def restore_papers(
                         ),
                     )
                 destination_parent = Path("cache").joinpath(*remainder)
-                destination_relative = destination_parent / f"{paper.code}.md"
+                destination_relative = destination_parent / f"{code}.md"
                 destination_fd, record = _ensure_relative_directory_at(
                     root_fd,
                     vault,
@@ -3086,7 +3086,7 @@ def restore_folder(
             target_relative,
         )
         for source_relative in papers:
-            from keikeu_core.markdown_io import parse_paper_bytes
+            from keikeu_core.markdown_io import paper_code_from_bytes
 
             try:
                 data, _identity = _read_regular_bytes_at(
@@ -3094,7 +3094,7 @@ def restore_folder(
                     source_relative.name,
                     vault / source_relative,
                 )
-                code = parse_paper_bytes(data).code
+                code = paper_code_from_bytes(data)
                 if source_relative.name != f"{code}.md":
                     raise ValueError(
                         "Paper filename and frontmatter code do not match"
@@ -3156,7 +3156,7 @@ def permanently_delete_papers(
     paths: Iterable[str | Path],
 ) -> list[PathOperationResult]:
     """Permanently unlink only explicit validated Trash Paper paths."""
-    from keikeu_core.markdown_io import parse_paper_bytes
+    from keikeu_core.markdown_io import paper_code_from_bytes
 
     vault, root_fd = _open_pinned_vault_root(vault)
     try:
@@ -3180,7 +3180,7 @@ def permanently_delete_papers(
                         relative.name,
                         vault / relative,
                     )
-                    code = parse_paper_bytes(data).code
+                    code = paper_code_from_bytes(data)
                     if relative.name != f"{code}.md":
                         raise ValueError(
                             "Paper filename and frontmatter code do not match"
@@ -3189,7 +3189,7 @@ def permanently_delete_papers(
                         root_fd,
                         vault,
                         code,
-                        parse_code=lambda value: parse_paper_bytes(value).code,
+                        parse_code=paper_code_from_bytes,
                         excluding=relative,
                     ):
                         raise ValueError(f"duplicate Paper code blocks mutation: {code}")

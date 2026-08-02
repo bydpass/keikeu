@@ -372,7 +372,11 @@ def inspect_paper_v4_migration(vault: Path) -> MigrationPreflightV4:
                 digest = hashlib.sha256(data).hexdigest()
                 schema = _schema_hint(data)
                 if schema == 4:
-                    paper = parse_paper_v4_bytes(data)
+                    try:
+                        paper = parse_paper_v4_bytes(data)
+                    except (ValueError, UnicodeError) as exc:
+                        issues.append(MigrationIssueV4(relative, "v4_paper", str(exc)))
+                        continue
                     v4_paths.append(relative)
                 else:
                     schema, _legacy, paper, target_bytes = _legacy_to_v4(data)
@@ -418,7 +422,8 @@ def inspect_paper_v4_migration(vault: Path) -> MigrationPreflightV4:
         }.values(),
         key=lambda item: (str(item.path), item.category, item.reason),
     )
-    if issues:
+    blocking_issues = [item for item in issues if item.category != "v4_paper"]
+    if blocking_issues or (issues and candidates):
         state = "repair_required"
     elif candidates and v4_paths:
         state = "mixed"
@@ -449,7 +454,9 @@ def classify_migration_stage(vault: Path) -> str:
             return "repair_required"
         return "v01_to_v3"
     preflight = inspect_paper_v4_migration(vault)
-    if preflight.issues:
+    if any(item.category != "v4_paper" for item in preflight.issues):
+        return "repair_required"
+    if preflight.issues and preflight.candidates:
         return "repair_required"
     if preflight.candidates:
         return "paper_to_v4"

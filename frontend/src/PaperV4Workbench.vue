@@ -3,6 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue"
 
 const props = defineProps({
   paper: { type: Object, required: true },
+  baselineEditable: { type: Object, default: undefined },
   state: { type: String, default: "ready" },
 });
 const emit = defineEmits(["dirty-change", "save"]);
@@ -52,20 +53,29 @@ function editableProjection(value) {
   };
 }
 
-function loadPaper(paper) {
+function loadPaper() {
+  const paper = props.paper;
   draft.value = {
     code: paper.code,
     display_name: paper.display_name ?? "",
     tags_text: (paper.tags ?? []).join("\n"),
     pages: paper.pages.map((page) => ({ ...page, ui_key: nextUiKey++ })),
   };
-  baseline.value = JSON.stringify(editableProjection(draft.value));
+  baseline.value = props.baselineEditable === undefined
+    ? JSON.stringify(editableProjection(draft.value))
+    : props.baselineEditable === null
+      ? "__missing_paper__"
+      : JSON.stringify(props.baselineEditable);
   activeIndex.value = 0;
   cursorKnown.value = false;
   fieldErrors.value = {};
 }
 
-watch(() => props.paper, loadPaper, { immediate: true });
+watch(
+  [() => props.paper, () => props.baselineEditable],
+  loadPaper,
+  { immediate: true },
+);
 
 const activePage = computed(() => draft.value.pages[activeIndex.value]);
 const dirty = computed(

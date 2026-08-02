@@ -18,9 +18,8 @@ Road 完成时，正常 runtime 使用 Paper v4、Markdown schema v4 与 JSONL p
 独立 Flashcard 活动链退役。Vue 3 → Tauri/Rust → JSONL → Python Service/Core →
 Markdown/Index/Vault 的进程架构不重写。
 
-当前事实仍是 Road v0.5、Paper v3、protocol v1 与独立 Flashcard。CP0–CP3 只能建立
-target 契约、additive Core 和 development-only UI；production 必须继续完整启动 v0.5。
-CP4 才允许一次性完成 v2 垂直切换。
+CP4 已将 production 一次切换为 Paper v4、Index v4 与 protocol v2，并退役活动
+Flashcard caller。不可达 Flashcard/v3 正常链实现留待 CP5 删除。
 
 ## 1. 权威、批准与执行纪律
 
@@ -435,23 +434,23 @@ Flashcard 调用同时退役，实现文件留到 CP5 删除。
 
 **顺序步骤：**
 
-- [ ] 先按设计 §13.1 逐方法写 strict DTO、method classification parity 与 v1/v2
+- [x] 先按设计 §13.1 逐方法写 strict DTO、method classification parity 与 v1/v2
       mismatch failing tests；每个方法恰好属于一类，不能按前缀猜测。
-- [ ] 接通 startup 全量 schema Gate，确保 scan 发生在每日卡 claim、Index load 和编辑前。
-- [ ] 接通 v0.1→冻结 v3→v4 两段迁移；mixed 只进入续迁 Gate。
-- [ ] Service 切换 `paper.create_draft/open/save/reconcile_save`、locator、target path、source
+- [x] 接通 startup 全量 schema Gate，确保 scan 发生在每日卡 claim、Index load 和编辑前。
+- [x] 接通 v0.1→冻结 v3→v4 两段迁移；mixed 只进入续迁 Gate。
+- [x] Service 切换 `paper.create_draft/open/save/reconcile_save`、locator、target path、source
       digest、CAS、tagged repair、fixed save result 与 degraded warning。
-- [ ] 接通 Library v4、active/folder/Trash、全页搜索、Branch 与完整 Index verify。
-- [ ] Python protocol 与 Rust host 同时升 v2；方法恰好归入已批准分类，v1/v2 hello 错配阻塞。
-- [ ] App 根在发送前保存所有 durable pending intent；Save 另存 baseline 与 submitted。
-- [ ] 由 Startup/Migration/Library/Paper DTO 回显并核对同一 active locator；Vault preview
+- [x] 接通 Library v4、active/folder/Trash、全页搜索、Branch 与完整 Index verify。
+- [x] Python protocol 与 Rust host 同时升 v2；方法恰好归入已批准分类，v1/v2 hello 错配阻塞。
+- [x] App 根在发送前保存所有 durable pending intent；Save 另存 baseline 与 submitted。
+- [x] 由 Startup/Migration/Library/Paper DTO 回显并核对同一 active locator；Vault preview
       使用 candidate locator，只有首次 initialize 尚不存在目标时允许 null。
-- [ ] 把 CP3 已接受的候选组件接入 production Paper/Library，完成 dirty、离开、repair、
+- [x] 把 CP3 已接受的候选组件接入 production Paper/Library，完成 dirty、离开、repair、
       degraded、commit_unknown 与关闭保护；不得另写第二套卡页或 Library 投影。
-- [ ] 从 App/Library/Python protocol/Rust allowlist 删除活动 `flashcard.open`、导航和动作；
+- [x] 从 App/Library/Python protocol/Rust allowlist 删除活动 `flashcard.open`、导航和动作；
       暂不删除不可达实现文件。
-- [ ] 运行 focused/full checks、构建 sidecar，再执行合成/复制 Vault Tauri smoke。
-- [ ] 更新 PROJECT，明确 CP4 是首次 production v4，CP5 只做死代码清理。
+- [x] 运行 focused/full checks、构建 sidecar，再执行合成/复制 Vault Tauri smoke。
+- [x] 更新 PROJECT，明确 CP4 是首次 production v4，CP5 只做死代码清理。
 
 **自动检查：** 运行 §3 的完整自动检查集合。focused tests 至少覆盖 protocol v2 hello、
 strict DTO、method parity、v1/v2 mismatch、startup pure/mixed/repair、Paper save/CAS、两类

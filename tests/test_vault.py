@@ -198,7 +198,7 @@ def test_is_vault_requires_only_cache_and_index_not_trash_or_outlines(tmp_path):
     assert is_vault(tmp_path) is False
 
 
-def test_is_vault_accepts_rebuildable_v2_v3_but_rejects_newer_versions(
+def test_is_vault_accepts_rebuildable_v2_v3_v4_but_rejects_newer_versions(
     tmp_path,
 ):
     vault = tmp_path / "vault"
@@ -215,6 +215,9 @@ def test_is_vault_accepts_rebuildable_v2_v3_but_rejects_newer_versions(
     assert is_vault(vault) is True
 
     index.write_text('{"version": 4}\n', encoding="utf-8")
+    assert is_vault(vault) is True
+
+    index.write_text('{"version": 5}\n', encoding="utf-8")
     assert is_vault(vault) is False
 
     index.unlink()
@@ -292,6 +295,12 @@ def test_outside_regular_tree_can_be_classified_read_only(tmp_path, monkeypatch)
 
     (source / "keikeu_index.json").write_text(
         '{"version": 4, "papers": [], "errors": []}\n',
+        encoding="utf-8",
+    )
+    assert is_vault(source) is True
+
+    (source / "keikeu_index.json").write_text(
+        '{"version": 5, "papers": [], "errors": []}\n',
         encoding="utf-8",
     )
     assert is_vault(source) is False
