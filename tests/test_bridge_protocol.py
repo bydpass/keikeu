@@ -18,6 +18,11 @@ from keikeu_bridge.protocol import (
     JsonlDispatcher,
     run_jsonl,
 )
+from keikeu_bridge.dto import (
+    PaperOpenResultDto,
+    PaperReconcileResultDto,
+    RepairDto,
+)
 from keikeu_bridge.service import KeikeuService, ServiceError
 from keikeu_core import vault as vault_module
 
@@ -204,6 +209,28 @@ def test_reconcile_shape_is_strict_and_never_accepts_ui_handles(tmp_path):
     assert result["error"]["code"] == "invalid_request"  # type: ignore[index]
 
 
+def test_repair_and_reconcile_results_enforce_tagged_shapes():
+    with pytest.raises(ValueError, match="tagged shape"):
+        PaperOpenResultDto(state="opened")
+    with pytest.raises(ValueError, match="tagged shape"):
+        PaperOpenResultDto(
+            state="repair_required",
+            repair=RepairDto("unknown_save", "cache/broken.md", "broken"),
+        )
+    with pytest.raises(ValueError, match="tagged shape"):
+        PaperReconcileResultDto(
+            state="stale",
+            stale_reason="vault_changed",
+            index_state="current",
+        )
+    with pytest.raises(ValueError, match="tagged shape"):
+        PaperReconcileResultDto(
+            state="repair_required",
+            repair=RepairDto("open", "cache/broken.md", "broken"),
+            index_state="degraded",
+        )
+
+
 def test_malformed_json_and_request_shapes_are_structured_errors(tmp_path):
     dispatcher = JsonlDispatcher(_service(tmp_path))
     malformed = dispatcher.handle_line("{broken")
@@ -254,6 +281,42 @@ def test_dispatcher_never_retries_a_mutation():
 
     assert service.calls == 1
     assert response["error"]["code"] == "operation_failed"  # type: ignore[index]
+
+
+class _UnserializableResultService(_OneShotService):
+    def library_create_folder(self, _name: str, _locator: str) -> object:
+        self.calls += 1
+        return {"not_finite": float("nan")}
+
+    def library_query(self, **_params: object) -> object:
+        self.calls += 1
+        return {"not_finite": float("nan")}
+
+
+def test_response_serialization_failure_is_unknown_only_for_mutations():
+    durable = _UnserializableResultService()
+    durable_dispatcher = JsonlDispatcher(durable)  # type: ignore[arg-type]
+    durable_session = _hello(durable_dispatcher)
+    durable_response = _request(
+        durable_dispatcher,
+        durable_session,
+        "library.create_folder",
+        {"name": "Ideas", "vault_locator": "vault-v1:test"},
+    )
+
+    readonly = _UnserializableResultService()
+    readonly_dispatcher = JsonlDispatcher(readonly)  # type: ignore[arg-type]
+    readonly_session = _hello(readonly_dispatcher)
+    readonly_response = _request(
+        readonly_dispatcher,
+        readonly_session,
+        "library.query",
+        {},
+    )
+
+    assert durable.calls == readonly.calls == 1
+    assert durable_response["error"]["code"] == "commit_unknown"  # type: ignore[index]
+    assert readonly_response["error"]["code"] == "operation_failed"  # type: ignore[index]
 
 
 class _RecordingService:

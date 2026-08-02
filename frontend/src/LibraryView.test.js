@@ -10,6 +10,8 @@ vi.mock("./bridge.js", () => ({
 }));
 
 const runtime = { state: "ready", core_version: "paper-v4/index-v4" };
+const readyStartup = { state: "ready", vault_locator: "vault-v1:test" };
+const pickerStartup = { state: "vault_picker", vault_locator: null };
 const active = {
   path: "cache/Ideas/K-20260802-001.md",
   code: "K-20260802-001",
@@ -205,7 +207,9 @@ describe("Road v0.6 Library runtime", () => {
   });
 
   it("re-reads and settles a pending Library intent after restart", async () => {
-    const request = vi.fn(async () => library());
+    const request = vi.fn(async (method) =>
+      method === "startup.load" ? readyStartup : library()
+    );
     const wrapper = await mountLibrary(request, {
       pendingIntent: { family: "library_path", method: "library.move" },
     });
@@ -217,11 +221,69 @@ describe("Road v0.6 Library runtime", () => {
     expect(wrapper.emitted("intent-settled")).toHaveLength(1);
   });
 
+  it("audits a pending Index rebuild without replaying it", async () => {
+    const request = vi.fn(async (method) =>
+      method === "startup.load"
+        ? readyStartup
+        : library({ index_state: "degraded" })
+    );
+    const wrapper = await mountLibrary(request, {
+      pendingIntent: { family: "index", method: "library.rebuild" },
+    });
+
+    expect(request.mock.calls.some(([method, params]) =>
+      method === "library.query" && params.verify_index === true
+    )).toBe(true);
+    expect(request.mock.calls.some(([method]) => method === "library.rebuild")).toBe(false);
+    expect(wrapper.text()).toContain("Index 可能过期");
+    expect(wrapper.emitted("intent-settled")).toHaveLength(1);
+  });
+
+  it("returns to the Vault gate when restart cannot restore an active Vault", async () => {
+    const request = vi.fn(async (method) => {
+      if (method === "startup.load") return pickerStartup;
+      throw new Error(method);
+    });
+    const wrapper = await mountLibrary(request, {
+      pendingIntent: { family: "library_path", method: "library.move" },
+    });
+
+    expect(wrapper.emitted("open-vault")[0]).toEqual([pickerStartup]);
+    expect(request.mock.calls.some(([method]) => method === "library.query")).toBe(false);
+    expect(wrapper.emitted("intent-settled")).toBeUndefined();
+  });
+
   it("delegates only the selected relative path to the native open boundary", async () => {
     const wrapper = await mountLibrary(vi.fn(async () => library()));
 
     await buttonByText(wrapper, "默认编辑器打开").trigger("click");
 
     expect(openSystemTarget).toHaveBeenCalledWith("open", active.path);
+  });
+
+  it("reveals only a validated broken relative path", async () => {
+    const wrapper = await mountLibrary(vi.fn(async () => library()));
+
+    await wrapper.get(".library-errors summary").trigger("click");
+    await buttonByText(wrapper, "在 Finder 中显示").trigger("click");
+
+    expect(openSystemTarget).toHaveBeenCalledWith("reveal", "cache/broken.md");
+  });
+
+  it("classifies explicit Index rebuild separately from path mutations", async () => {
+    const request = vi.fn(async (method) => {
+      if (method === "library.query") return library({ index_state: "degraded" });
+      if (method === "library.rebuild") return library({ index_state: "current" });
+      throw new Error(method);
+    });
+    const wrapper = await mountLibrary(request);
+
+    await buttonByText(wrapper, "显式重建 Index").trigger("click");
+    await flushPromises();
+
+    expect(request.mock.calls.find(([method]) => method === "library.rebuild")[2]).toMatchObject({
+      family: "index",
+      method: "library.rebuild",
+    });
   });
 });

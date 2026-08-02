@@ -105,7 +105,7 @@ function setScope(value) {
 
 function intent(method, params) {
   return {
-    family: "library_path",
+    family: method === "library.rebuild" ? "index" : "library_path",
     method,
     vault_locator: view.value.vault_locator,
     summary: Object.fromEntries(
@@ -164,6 +164,14 @@ async function openExternally() {
     await openSystemTarget("open", selected.value.path);
   } catch (raw) {
     handleError(raw, "无法交给默认编辑器");
+  }
+}
+
+async function revealBrokenPaper(path) {
+  try {
+    await openSystemTarget("reveal", path);
+  } catch (raw) {
+    handleError(raw, "无法在 Finder 中显示损坏 Paper");
   }
 }
 
@@ -246,7 +254,22 @@ async function rebuildIndex() {
 }
 
 async function initialLoad() {
-  const reconciling = props.pendingIntent?.family?.startsWith("library");
+  const reconciling = (
+    props.pendingIntent?.family?.startsWith("library")
+    || props.pendingIntent?.family === "index"
+  );
+  if (reconciling) {
+    try {
+      const startup = await props.request("startup.load", {});
+      if (startup?.state !== "ready") {
+        emit("open-vault", startup);
+        return;
+      }
+    } catch (raw) {
+      handleError(raw, "无法在重启后恢复 Vault");
+      return;
+    }
+  }
   await refresh({ verify: reconciling });
   if (reconciling && view.value) {
     notice.value = "已在重启后重新读取 Vault；请据磁盘结果确认上次操作。";
@@ -322,6 +345,7 @@ onActivated(() => { if (view.value) refresh(); });
           @select="selectedPath = $event"
           @open="emit('open-paper', $event)"
           @rebuild-index="rebuildIndex"
+          @reveal-error="revealBrokenPaper"
         />
 
         <section v-if="selected" class="paper-operations" aria-label="所选 Paper 操作">

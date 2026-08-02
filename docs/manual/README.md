@@ -5,6 +5,7 @@
 ```text
 manual/
 ├─ keikeu-current-logic.html  系统理解
+├─ paper-v4-repair.html       Paper v4 离线人工修复
 ├─ forfresh/                  项目开发技术手册
 └─ prospect/                  产品与价值
 ```
@@ -12,6 +13,8 @@ manual/
 ## 系统理解
 
 [keikeu-current-logic.html](keikeu-current-logic.html) 与两个分类文件夹并列，交互说明当前业务链路、数据权威、保存防护与 Vue/Tauri/JSONL/Python 分层。最终核对 [PROJECT](../PROJECT.md)、[SPEC](../SPEC.md)、[RULES](../RULES.md) 与 [architecture](../architecture/architecture.html)。
+
+[paper-v4-repair.html](paper-v4-repair.html) 是面向普通纯文本编辑器用户的离线修复手册，包含完整 schema v4 示例、类型/空值、可逆转义、错误含义、Finder、未知保存、重新检查和 Index 重建；app 不会自动改写损坏文件。
 
 ## `forfresh/`：项目开发技术手册
 

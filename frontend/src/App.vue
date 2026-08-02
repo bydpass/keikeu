@@ -100,7 +100,10 @@ async function restart() {
       paperStartup.value = null;
       vaultStartup.value = null;
       libraryContextGeneration.value += 1;
-      if (pendingIntent.value?.family?.startsWith("library")) {
+      if (
+        pendingIntent.value?.family?.startsWith("library")
+        || pendingIntent.value?.family === "index"
+      ) {
         destination.value = "library";
       } else if (["vault", "migration"].includes(pendingIntent.value?.family)) {
         destination.value = "vault";
@@ -144,7 +147,10 @@ function finishVault(startup) {
   paperPath.value = null;
   vaultStartup.value = null;
   libraryContextGeneration.value += 1;
-  destination.value = "paper";
+  destination.value = (
+    pendingIntent.value?.family?.startsWith("library")
+    || pendingIntent.value?.family === "index"
+  ) ? "library" : "paper";
 }
 
 function cancelVault() {

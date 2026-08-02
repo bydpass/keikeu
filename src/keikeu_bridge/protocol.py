@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import fields, is_dataclass
 from importlib.metadata import PackageNotFoundError, version
 import json
+import math
 from pathlib import Path
 import secrets
 from typing import Any, TextIO
@@ -217,6 +218,8 @@ def _json_value(value: object) -> Any:
         return [_json_value(item) for item in value]
     if isinstance(value, dict):
         return {str(key): _json_value(item) for key, item in value.items()}
+    if isinstance(value, float) and not math.isfinite(value):
+        raise ValueError("protocol result contains a non-finite number")
     if value is None or isinstance(value, (str, int, float, bool)):
         return value
     raise TypeError(f"unsupported protocol result type: {type(value).__name__}")
@@ -348,11 +351,21 @@ class JsonlDispatcher:
                     "hello",
                 )
             result = self._dispatch(method, params)
+            try:
+                serialized = _json_value(result)
+            except Exception as error:
+                if method in MUTATION_METHODS:
+                    raise ServiceError(
+                        "commit_unknown",
+                        "durable operation completed but its response could not be serialized",
+                        "restart_then_reload",
+                    ) from error
+                raise
             return {
                 "v": PROTOCOL_VERSION,
                 "id": request_id,
                 "ok": True,
-                "result": _json_value(result),
+                "result": serialized,
             }
         except _ProtocolError as error:
             return self._error(

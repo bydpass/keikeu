@@ -97,7 +97,10 @@ describe("Road v0.6 Vault and migration gate", () => {
     expect(bridgeRequest).toHaveBeenCalledWith(
       "vault.open",
       { preview_token: previewHandle },
-      expect.objectContaining({ family: "vault" }),
+      expect.objectContaining({
+        family: "vault",
+        recovery_path: "/Users/creator/Vault",
+      }),
     );
     expect(wrapper.emitted("ready")[0]).toEqual([readyStartup]);
     wrapper.unmount();
@@ -158,7 +161,10 @@ describe("Road v0.6 Vault and migration gate", () => {
         preview_token: previewHandle,
         destination_path: "/Users/creator/SafeCopy",
       },
-      expect.objectContaining({ family: "vault" }),
+      expect.objectContaining({
+        family: "vault",
+        recovery_path: "/Users/creator/SafeCopy",
+      }),
     );
     wrapper.unmount();
   });
@@ -214,7 +220,12 @@ describe("Road v0.6 Vault and migration gate", () => {
   it("blocks on an unknown mutation commit and never retries it", async () => {
     bridgeRequest.mockImplementation(async (method) => {
       if (method === "vault.inspect") {
-        return preview({ kind: "create", paper_count: 0, source_kind: "" });
+        return preview({
+          kind: "create",
+          display_path: "/Users/creator/New",
+          paper_count: 0,
+          source_kind: "",
+        });
       }
       if (method === "vault.initialize") {
         throw {
@@ -238,6 +249,12 @@ describe("Road v0.6 Vault and migration gate", () => {
     expect(
       bridgeRequest.mock.calls.filter(([method]) => method === "vault.initialize"),
     ).toHaveLength(1);
+    expect(
+      bridgeRequest.mock.calls.find(([method]) => method === "vault.initialize")[2],
+    ).toMatchObject({
+      family: "vault",
+      recovery_path: "/Users/creator/New",
+    });
     expect(wrapper.emitted("runtime-blocked")[0][0]).toMatchObject({
       code: "commit_unknown",
       layer: "tauri_host",
@@ -248,21 +265,87 @@ describe("Road v0.6 Vault and migration gate", () => {
   it("re-reads startup and settles an unknown Vault mutation after restart", async () => {
     const request = vi.fn(async (method) => {
       if (method === "startup.load") return readyStartup;
+      if (method === "vault.inspect") {
+        return preview({ candidate_locator: readyStartup.vault_locator });
+      }
       throw new Error(method);
     });
     const wrapper = mount(VaultView, {
       props: {
         runtime,
         request,
-        pendingIntent: { family: "vault", method: "vault.open" },
+        pendingIntent: {
+          family: "vault",
+          method: "vault.open",
+          recovery_path: "/Users/creator/Vault",
+        },
       },
     });
     await flushPromises();
 
-    expect(request).toHaveBeenCalledOnce();
     expect(request).toHaveBeenCalledWith("startup.load", {});
+    expect(request).toHaveBeenCalledWith("vault.inspect", {
+      path: "/Users/creator/Vault",
+    });
     expect(wrapper.emitted("intent-settled")).toHaveLength(1);
     expect(wrapper.emitted("ready")[0]).toEqual([readyStartup]);
+    wrapper.unmount();
+  });
+
+  it("re-reads migration state after restart without replaying migration", async () => {
+    const migration = preflight({ token: "fresh-migration-token" });
+    const request = vi.fn(async (method) => {
+      if (method === "startup.load") {
+        return { ...pickerStartup, state: "migration", migration };
+      }
+      throw new Error(method);
+    });
+    const wrapper = mount(VaultView, {
+      props: {
+        runtime,
+        request,
+        pendingIntent: { family: "migration", method: "migration.run" },
+      },
+    });
+    await flushPromises();
+
+    expect(request).toHaveBeenCalledWith("startup.load", {});
+    expect(request.mock.calls.some(([method]) => method === "migration.run")).toBe(false);
+    expect(wrapper.emitted("intent-settled")).toHaveLength(1);
+    expect(wrapper.text()).toContain("迁移旧 Vault");
+    expect(wrapper.get(".migration-summary .danger").attributes("disabled")).toBeDefined();
+    wrapper.unmount();
+  });
+
+  it("shows an ambiguous unknown Vault target without replaying the mutation", async () => {
+    const request = vi.fn(async (method) => {
+      if (method === "startup.load") return pickerStartup;
+      if (method === "vault.inspect") {
+        return preview({
+          kind: "paper",
+          display_path: "/Users/creator/New",
+          candidate_locator: "vault-v1:new",
+        });
+      }
+      throw new Error(method);
+    });
+    const wrapper = mount(VaultView, {
+      props: {
+        runtime,
+        request,
+        pendingIntent: {
+          family: "vault",
+          method: "vault.initialize",
+          recovery_path: "/Users/creator/New",
+        },
+      },
+    });
+    await flushPromises();
+
+    expect(wrapper.text()).toContain("上次操作没有重放");
+    expect(wrapper.text()).toContain("检测到可用 Paper Vault");
+    expect(request.mock.calls.some(([method]) => method === "vault.initialize")).toBe(false);
+    expect(wrapper.emitted("intent-settled")).toHaveLength(1);
     wrapper.unmount();
   });
 });

@@ -272,6 +272,10 @@ async function runStartupMutation(method, params, fallback) {
       family: "vault",
       method,
       vault_locator: preview.value?.candidate_locator ?? null,
+      recovery_path:
+        method === "vault.relocate"
+          ? params.destination_path
+          : preview.value?.display_path ?? null,
       summary: { fields: Object.keys(params).sort() },
     }));
   } catch (rawError) {
@@ -370,6 +374,24 @@ onMounted(async () => {
   if (["vault", "migration"].includes(props.pendingIntent?.family)) {
     try {
       const startup = await props.request("startup.load", {});
+      if (props.pendingIntent.family === "vault" && props.pendingIntent.recovery_path) {
+        const recoveredPreview = validatePreview(
+          await props.request("vault.inspect", {
+            path: props.pendingIntent.recovery_path,
+          }),
+        );
+        emit("intent-settled");
+        if (
+          startup.state === "ready"
+          && recoveredPreview.candidate_locator === startup.vault_locator
+        ) {
+          applyStartup(startup);
+          return;
+        }
+        applyPreview(recoveredPreview);
+        notice.value = "已重新读取当前配置与目标；上次操作没有重放，请据预览重新确认。";
+        return;
+      }
       emit("intent-settled");
       applyStartup(startup);
     } catch (rawError) {

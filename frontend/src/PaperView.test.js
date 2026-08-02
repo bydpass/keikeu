@@ -2,11 +2,16 @@ import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import PaperView from "./PaperView.vue";
-import { confirmDiscardChanges, registerWindowCloseGuard } from "./bridge.js";
+import {
+  confirmDiscardChanges,
+  openSystemTarget,
+  registerWindowCloseGuard,
+} from "./bridge.js";
 
 vi.mock("./bridge.js", () => ({
   bridgeRequest: vi.fn(),
   confirmDiscardChanges: vi.fn(),
+  openSystemTarget: vi.fn(),
   registerWindowCloseGuard: vi.fn(),
 }));
 
@@ -62,7 +67,12 @@ async function mountPaper(request, extra = {}) {
 beforeEach(() => {
   vi.resetAllMocks();
   confirmDiscardChanges.mockResolvedValue(true);
+  openSystemTarget.mockResolvedValue(undefined);
   registerWindowCloseGuard.mockResolvedValue(vi.fn());
+  Object.defineProperty(navigator, "clipboard", {
+    configurable: true,
+    value: { writeText: vi.fn().mockResolvedValue(undefined) },
+  });
 });
 
 afterEach(() => {
@@ -129,13 +139,24 @@ describe("Road v0.6 Paper runtime", () => {
   });
 
   it("treats damaged open as tagged repair instead of a failed transport", async () => {
+    let checks = 0;
     const request = vi.fn(async (method) => {
       if (method === "startup.load") return ready();
-      if (method === "paper.open") return {
-        state: "repair_required",
-        paper: null,
-        repair: { path: "cache/broken.md", reason: "page marker missing" },
-      };
+      if (method === "paper.open") {
+        checks += 1;
+        return checks === 1
+          ? {
+              state: "repair_required",
+              paper: null,
+              repair: {
+                origin: "open",
+                path: "cache/broken.md",
+                reason: "page marker missing",
+                page_number: 2,
+              },
+            }
+          : { state: "opened", paper: paper({ path: "cache/broken.md" }), repair: null };
+      }
       throw new Error(method);
     });
 
@@ -143,7 +164,14 @@ describe("Road v0.6 Paper runtime", () => {
 
     expect(wrapper.text()).toContain("这份 Paper 暂时不能安全打开");
     expect(wrapper.text()).toContain("cache/broken.md");
+    expect(wrapper.text()).toContain("第 2 页");
     expect(wrapper.emitted("runtime-blocked")).toBeUndefined();
+
+    await buttonByText(wrapper, "在 Finder 中显示").trigger("click");
+    expect(openSystemTarget).toHaveBeenCalledWith("reveal", "cache/broken.md");
+    await buttonByText(wrapper, "重新检查").trigger("click");
+    await flushPromises();
+    expect(wrapper.text()).toContain("Paper 结构已通过重新检查");
   });
 
   it("reconciles an unknown save without replay and keeps not-committed draft dirty", async () => {
@@ -184,6 +212,124 @@ describe("Road v0.6 Paper runtime", () => {
     expect(request.mock.calls.filter(([method]) => method === "paper.reconcile_save")).toHaveLength(1);
     expect(wrapper.text()).toContain("草稿仍在，请检查后重新保存");
     expect(wrapper.text()).toContain("草稿有未保存修改");
+    expect(wrapper.emitted("intent-settled")).toHaveLength(1);
+  });
+
+  it("keeps an unknown-save repair in App ownership until a read-only recheck", async () => {
+    const submitted = {
+      display_name: "Retained",
+      tags: ["private"],
+      pages: [{ name: "Page", content: "Retained draft", type: "summary" }],
+    };
+    const pending = {
+      family: "paper_save",
+      method: "paper.save",
+      save: { edit_token: "old", vault_locator: "vault-v1:test", ...submitted },
+      reconcile: {
+        vault_locator: "vault-v1:test",
+        target_path: "cache/K-20260802-001.md",
+        code: "K-20260802-001",
+        created: "2026-08-02T12:00:00",
+        source_digest: "old",
+        baseline: { display_name: null, tags: [], pages: [{ name: null, content: "Old", type: null }] },
+        submitted,
+      },
+    };
+    let checks = 0;
+    const request = vi.fn(async (method) => {
+      if (method === "startup.load") return ready();
+      if (method === "paper.reconcile_save") {
+        checks += 1;
+        return checks === 1
+          ? {
+              state: "repair_required",
+              paper: null,
+              stale_reason: null,
+              repair: {
+                origin: "unknown_save",
+                path: pending.reconcile.target_path,
+                reason: "Paper v4 page 1: invalid marker",
+                page_number: 1,
+              },
+              index_state: "degraded",
+            }
+          : {
+              state: "committed",
+              paper: paper({
+                path: pending.reconcile.target_path,
+                edit_token: "fresh",
+                source_digest: "new",
+                ...submitted,
+              }),
+              stale_reason: null,
+              repair: null,
+              index_state: "current",
+            };
+      }
+      throw new Error(method);
+    });
+    const wrapper = await mountPaper(request, { pendingIntent: pending });
+
+    expect(wrapper.get(".page-content-field textarea").element.value).toBe(
+      "Retained draft",
+    );
+    expect(wrapper.text()).toContain("复制保留草稿");
+    expect(wrapper.emitted("intent-settled")).toBeUndefined();
+    await buttonByText(wrapper, "复制保留草稿").trigger("click");
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+      JSON.stringify(submitted, null, 2),
+    );
+    await buttonByText(wrapper, "重新检查").trigger("click");
+    await flushPromises();
+
+    expect(request.mock.calls.filter(([method]) => method === "paper.save")).toHaveLength(0);
+    expect(request.mock.calls.filter(([method]) => method === "paper.reconcile_save")).toHaveLength(2);
+    expect(wrapper.emitted("intent-settled")).toHaveLength(1);
+    expect(wrapper.text()).toContain("已确认上次保存落盘");
+  });
+
+  it("keeps the window close guard active until an unknown intent is abandoned", async () => {
+    const submitted = {
+      display_name: null,
+      tags: [],
+      pages: [{ name: null, content: "Same projection", type: null }],
+    };
+    const pending = {
+      family: "paper_save",
+      method: "paper.save",
+      save: { edit_token: "old", vault_locator: "vault-v1:test", ...submitted },
+      reconcile: {
+        vault_locator: "vault-v1:test",
+        target_path: "cache/K-20260802-001.md",
+        code: "K-20260802-001",
+        created: "2026-08-02T12:00:00",
+        source_digest: "old",
+        baseline: submitted,
+        submitted,
+      },
+    };
+    let closeGuard;
+    registerWindowCloseGuard.mockImplementation(async (guard) => {
+      closeGuard = guard;
+      return vi.fn();
+    });
+    const request = vi.fn(async (method) => {
+      if (method === "startup.load") return ready();
+      if (method === "paper.reconcile_save") return {
+        state: "stale",
+        paper: null,
+        stale_reason: "third_content",
+        repair: null,
+        index_state: "current",
+      };
+      throw new Error(method);
+    });
+    const wrapper = await mountPaper(request, { pendingIntent: pending });
+
+    confirmDiscardChanges.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    await expect(closeGuard()).resolves.toBe(false);
+    expect(wrapper.emitted("intent-settled")).toBeUndefined();
+    await expect(closeGuard()).resolves.toBe(true);
     expect(wrapper.emitted("intent-settled")).toHaveLength(1);
   });
 

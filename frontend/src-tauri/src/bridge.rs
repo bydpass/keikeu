@@ -788,16 +788,47 @@ mod tests {
     }
 
     #[test]
-    fn protocol_v2_policy_classifies_reconcile_as_read_only() {
+    fn protocol_v2_policy_classifies_every_public_method() {
         let timeouts = short_timeouts();
+        let readonly = [
+            "startup.load",
+            "vault.inspect",
+            "migration.preflight",
+            "paper.create_draft",
+            "paper.open",
+            "paper.reconcile_save",
+            "library.query",
+        ];
+        let durable = [
+            "vault.open",
+            "vault.initialize",
+            "vault.relocate",
+            "migration.run",
+            "paper.save",
+            "paper.soft_delete",
+            "library.rebuild",
+            "library.move",
+            "library.branch",
+            "library.soft_delete",
+            "library.restore",
+            "library.permanently_delete",
+            "library.create_folder",
+            "library.rename_folder",
+            "library.merge_folders",
+            "library.soft_delete_folder",
+            "library.restore_folder",
+            "library.permanently_delete_folder",
+        ];
 
-        assert!(!public_policy("startup.load", timeouts).unwrap().mutation);
-        assert!(
-            !public_policy("paper.reconcile_save", timeouts)
-                .unwrap()
-                .mutation
-        );
-        assert!(public_policy("paper.save", timeouts).unwrap().mutation);
+        assert!(readonly
+            .iter()
+            .all(|method| !public_policy(method, timeouts).unwrap().mutation));
+        assert!(durable
+            .iter()
+            .all(|method| public_policy(method, timeouts).unwrap().mutation));
+        assert!(public_policy("system.hello", timeouts).is_none());
+        assert!(public_policy("system.resolve_target", timeouts).is_none());
+        assert!(public_policy("removed.method", timeouts).is_none());
     }
 
     #[test]
@@ -942,7 +973,45 @@ mod tests {
     }
 
     #[test]
-    fn mutation_response_loss_is_commit_unknown_and_never_retried() {
+    fn mutation_timeout_eof_wrong_id_and_invalid_response_are_unknown_once() {
+        let failures = vec![
+            vec![],
+            vec![ChildEvent::Terminated],
+            vec![success(999, json!({}))],
+            vec![ChildEvent::Stdout(b"not-json".to_vec())],
+            vec![ChildEvent::Stdout(
+                serde_json::to_vec(&json!({
+                    "v": PROTOCOL_VERSION,
+                    "id": 2,
+                    "ok": true,
+                }))
+                .unwrap(),
+            )],
+        ];
+
+        for failure in failures {
+            let mut events = vec![hello(1, "session-a")];
+            events.extend(failure);
+            let spawner = Arc::new(FakeSpawner::new(vec![FakePlan {
+                events,
+                write_fails: false,
+            }]));
+            let handle = BridgeHandle::with_spawner(spawner.clone(), short_timeouts());
+            wait_ready(&handle);
+
+            let error = tauri::async_runtime::block_on(
+                handle.request("library.move".to_owned(), json!({})),
+            )
+            .unwrap_err();
+            assert_eq!(error.code, "commit_unknown");
+            assert!(matches!(handle.status(), RuntimeStatus::Blocked { .. }));
+            assert_eq!(spawner.writes.lock().unwrap().len(), 2);
+            handle.shutdown();
+        }
+    }
+
+    #[test]
+    fn readonly_reconcile_response_loss_is_never_commit_unknown() {
         let spawner = Arc::new(FakeSpawner::new(vec![FakePlan {
             events: vec![hello(1, "session-a")],
             write_fails: false,
@@ -950,11 +1019,12 @@ mod tests {
         let handle = BridgeHandle::with_spawner(spawner.clone(), short_timeouts());
         wait_ready(&handle);
 
-        let error =
-            tauri::async_runtime::block_on(handle.request("paper.save".to_owned(), json!({})))
-                .unwrap_err();
-        assert_eq!(error.code, "commit_unknown");
-        assert!(matches!(handle.status(), RuntimeStatus::Blocked { .. }));
+        let error = tauri::async_runtime::block_on(
+            handle.request("paper.reconcile_save".to_owned(), json!({})),
+        )
+        .unwrap_err();
+        assert_eq!(error.code, "sidecar_unavailable");
+        assert_ne!(error.code, "commit_unknown");
         assert_eq!(spawner.writes.lock().unwrap().len(), 2);
         handle.shutdown();
     }

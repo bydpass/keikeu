@@ -80,12 +80,33 @@ class RepairDto:
     reason: str
     page_number: int | None = None
 
+    def __post_init__(self) -> None:
+        if self.origin not in {"open", "unknown_save"}:
+            raise ValueError("repair origin is invalid")
+        if not self.path or not self.reason:
+            raise ValueError("repair path and reason are required")
+        if self.page_number is not None and (
+            type(self.page_number) is not int or self.page_number < 1
+        ):
+            raise ValueError("repair page_number must be a positive integer or null")
+
 
 @dataclass(frozen=True)
 class PaperOpenResultDto:
     state: str
     paper: PaperDto | None = None
     repair: RepairDto | None = None
+
+    def __post_init__(self) -> None:
+        opened = self.state == "opened" and self.paper is not None and self.repair is None
+        repairing = (
+            self.state == "repair_required"
+            and self.paper is None
+            and self.repair is not None
+            and self.repair.origin == "open"
+        )
+        if not (opened or repairing):
+            raise ValueError("PaperOpenResultDto has an invalid tagged shape")
 
 
 @dataclass(frozen=True)
@@ -106,6 +127,48 @@ class PaperReconcileResultDto:
     stale_reason: str | None = None
     repair: RepairDto | None = None
     index_state: str = "not_checked"
+
+    def __post_init__(self) -> None:
+        if self.index_state not in {"current", "degraded", "not_checked"}:
+            raise ValueError("reconcile index_state is invalid")
+        if self.state in {"committed", "not_committed"}:
+            valid = (
+                self.paper is not None
+                and self.stale_reason is None
+                and self.repair is None
+                and self.index_state in {"current", "degraded"}
+            )
+        elif self.state == "stale":
+            valid = (
+                self.paper is None
+                and self.stale_reason
+                in {
+                    "third_content",
+                    "vault_changed",
+                    "identity_changed",
+                    "missing_existing",
+                    "duplicate_code",
+                    "submitted_invalid",
+                }
+                and self.repair is None
+                and (
+                    self.index_state == "not_checked"
+                    if self.stale_reason == "vault_changed"
+                    else self.index_state in {"current", "degraded"}
+                )
+            )
+        elif self.state == "repair_required":
+            valid = (
+                self.paper is None
+                and self.stale_reason is None
+                and self.repair is not None
+                and self.repair.origin == "unknown_save"
+                and self.index_state in {"current", "degraded"}
+            )
+        else:
+            valid = False
+        if not valid:
+            raise ValueError("PaperReconcileResultDto has an invalid tagged shape")
 
 
 @dataclass(frozen=True)

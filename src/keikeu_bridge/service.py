@@ -8,6 +8,7 @@ from datetime import datetime
 import hashlib
 import os
 from pathlib import Path
+import re
 import secrets
 from typing import Iterator, Iterable, TypeVar, cast
 import unicodedata
@@ -149,6 +150,44 @@ def _translated_errors() -> Iterator[None]:
         raise
     except (OSError, TypeError, ValueError, UnicodeError) as error:
         raise _service_error(error) from error
+
+
+@contextmanager
+def _durable_result(operation: str) -> Iterator[None]:
+    """Mark failures after a durable boundary as unknown, never retryable."""
+    try:
+        yield
+    except ServiceError as error:
+        if error.code == "commit_unknown":
+            raise
+        raise ServiceError(
+            "commit_unknown",
+            f"{operation} changed durable state but its result could not be verified",
+            "restart_then_reload",
+        ) from error
+    except Exception as error:
+        raise ServiceError(
+            "commit_unknown",
+            f"{operation} changed durable state but its result could not be verified",
+            "restart_then_reload",
+        ) from error
+
+
+@contextmanager
+def _durable_mutation(operation: str) -> Iterator[None]:
+    """Keep proven precondition failures retryable; make other failures unknown."""
+    try:
+        yield
+    except (FileExistsError, FileNotFoundError, TypeError, ValueError):
+        raise
+    except ServiceError:
+        raise
+    except Exception as error:
+        raise ServiceError(
+            "commit_unknown",
+            f"{operation} may have changed durable state without a verified result",
+            "restart_then_reload",
+        ) from error
 
 
 @dataclass
@@ -516,8 +555,9 @@ class KeikeuService:
             if classify_migration_stage(preview.path) != "ready":
                 raise ValueError("Vault changed after inspection")
             set_vault(preview.path, self._config_path, selection)
-            self._discard_token(preview_token)
-            return self._startup_for_selected(preview.path, selection.root_identity)
+            with _durable_result("vault.open"):
+                self._discard_token(preview_token)
+                return self._startup_for_selected(preview.path, selection.root_identity)
 
     def vault_initialize(self, preview_token: str) -> StartupDto:
         with _translated_errors():
@@ -531,13 +571,27 @@ class KeikeuService:
                     raise ValueError("target is no longer empty")
             else:
                 require_home_path(path)
-            init_vault(path)
-            safe_vault = require_home_path(path)
-            rebuild_index_v4(safe_vault)
-            selection = capture_vault_selection_token(safe_vault)
-            set_vault(safe_vault, self._config_path, selection)
-            self._discard_token(preview_token)
-            return self._startup_for_selected(safe_vault, selection.root_identity)
+            try:
+                init_vault(path)
+            except Exception as error:
+                try:
+                    changed = os.path.lexists(path) and not self._directory_is_empty(path)
+                except (OSError, ValueError):
+                    changed = True
+                if changed:
+                    raise ServiceError(
+                        "commit_unknown",
+                        "vault.initialize changed durable state but did not return a result",
+                        "restart_then_reload",
+                    ) from error
+                raise
+            with _durable_result("vault.initialize"):
+                safe_vault = require_home_path(path)
+                rebuild_index_v4(safe_vault)
+                selection = capture_vault_selection_token(safe_vault)
+                set_vault(safe_vault, self._config_path, selection)
+                self._discard_token(preview_token)
+                return self._startup_for_selected(safe_vault, selection.root_identity)
 
     def vault_relocate(
         self,
@@ -572,10 +626,17 @@ class KeikeuService:
             result = self._startup_for_selected(copied, selection.root_identity)
             self._discard_token(preview_token)
             return result
-        except (OSError, TypeError, ValueError, UnicodeError) as error:
+        except (OSError, ServiceError, TypeError, ValueError, UnicodeError) as error:
             message = str(error)
             if copied is not None:
                 message = f"{message}; verified copy retained at {copied}"
+                raise ServiceError(
+                    "commit_unknown",
+                    message,
+                    "restart_then_reload",
+                ) from error
+            if isinstance(error, ServiceError):
+                raise
             translated = _service_error(error)
             raise ServiceError(translated.code, message, translated.recovery) from error
 
@@ -688,11 +749,12 @@ class KeikeuService:
                     report_path=str(result_v4.report_path),
                     warnings=result_v4.warnings,
                 )
-            set_vault(state.path, self._config_path, selection)
-            self._active_vault = state.path
-            self._root_identity = selection.root_identity
-            self._discard_token(preflight_token)
-            return migration_result
+            with _durable_result("migration.run"):
+                set_vault(state.path, self._config_path, selection)
+                self._active_vault = state.path
+                self._root_identity = selection.root_identity
+                self._discard_token(preflight_token)
+                return migration_result
 
     @staticmethod
     def _editable_from_paper(paper: PaperV4) -> PaperEditableDto:
@@ -759,6 +821,21 @@ class KeikeuService:
             ),
         )
 
+    @staticmethod
+    def _repair_dto(
+        origin: str,
+        relative: Path,
+        error: Exception,
+    ) -> RepairDto:
+        reason = str(error) or error.__class__.__name__
+        match = re.search(r"\bpage (\d+)\b", reason)
+        return RepairDto(
+            origin,
+            str(relative),
+            reason,
+            int(match.group(1)) if match is not None else None,
+        )
+
     def paper_create_draft(self) -> PaperDto:
         with _translated_errors():
             vault = self._require_vault()
@@ -787,7 +864,7 @@ class KeikeuService:
             except (ValueError, UnicodeError) as error:
                 return PaperOpenResultDto(
                     state="repair_required",
-                    repair=RepairDto("open", str(relative), str(error)),
+                    repair=self._repair_dto("open", relative, error),
                 )
             state = _PaperEditState(
                 path=relative,
@@ -819,7 +896,18 @@ class KeikeuService:
             paper = self._paper_from_editable(state, editable, updated=datetime.now())
             if state.path is None:
                 resolve_active_paper_path(vault, state.target_path, must_exist=False)
-                path = write_paper_v4(vault, paper, destination=state.target_path)
+                try:
+                    path = write_paper_v4(vault, paper, destination=state.target_path)
+                except FileExistsError:
+                    raise
+                except Exception as error:
+                    if os.path.lexists(vault / state.target_path):
+                        raise ServiceError(
+                            "commit_unknown",
+                            "new Paper may have been committed without a verified result",
+                            "restart_then_reconcile",
+                        ) from error
+                    raise
             else:
                 path = resolve_active_paper_path(vault, state.path)
                 if state.source_bytes is None:
@@ -839,6 +927,12 @@ class KeikeuService:
                             "reopen",
                         ) from error
                     raise
+                except Exception as error:
+                    raise ServiceError(
+                        "commit_unknown",
+                        "Paper replacement may have committed without a verified result",
+                        "restart_then_reconcile",
+                    ) from error
             try:
                 stored, source_bytes = read_paper_v4_snapshot(path)
             except (OSError, ValueError, UnicodeError) as error:
@@ -847,16 +941,20 @@ class KeikeuService:
                     f"saved Paper could not be verified: {error}",
                     "restart_then_reconcile",
                 ) from error
-            state.path = path.relative_to(vault)
-            state.target_path = state.path
-            state.paper = stored
-            state.source_bytes = source_bytes
-            warnings: tuple[str, ...] = ()
-            try:
-                rebuild_index_v4(vault)
-            except (OSError, ValueError, UnicodeError):
-                warnings = ("index_degraded",)
-            return PaperSaveResultDto(self._paper_dto(request.edit_token, state), warnings)
+            with _durable_result("paper.save"):
+                state.path = path.relative_to(vault)
+                state.target_path = state.path
+                state.paper = stored
+                state.source_bytes = source_bytes
+                warnings: tuple[str, ...] = ()
+                try:
+                    rebuild_index_v4(vault)
+                except (OSError, ValueError, UnicodeError):
+                    warnings = ("index_degraded",)
+                return PaperSaveResultDto(
+                    self._paper_dto(request.edit_token, state),
+                    warnings,
+                )
 
     @staticmethod
     def _entry_paths_for_code(vault: Path, code: str) -> set[str]:
@@ -880,7 +978,14 @@ class KeikeuService:
                 "correct_input",
             )
         with _translated_errors():
-            vault = self._require_vault()
+            try:
+                vault = self._require_vault()
+            except (OSError, ServiceError, ValueError, UnicodeError):
+                return PaperReconcileResultDto(
+                    state="stale",
+                    stale_reason="vault_changed",
+                    index_state="not_checked",
+                )
             if request.vault_locator != self._vault_locator():
                 return PaperReconcileResultDto(
                     state="stale",
@@ -934,11 +1039,7 @@ class KeikeuService:
             except (OSError, ValueError, UnicodeError) as error:
                 return PaperReconcileResultDto(
                     state="repair_required",
-                    repair=RepairDto(
-                        "unknown_save",
-                        str(relative),
-                        str(error),
-                    ),
+                    repair=self._repair_dto("unknown_save", relative, error),
                     index_state=index_state,
                 )
             if disk_paper.code != request.code or disk_paper.created != created:
@@ -1016,16 +1117,18 @@ class KeikeuService:
             state = self._get_token(edit_token, _PaperEditState)
             if state.path is None:
                 raise ValueError("unsaved Paper cannot be deleted")
-            reports = soft_delete_papers(vault, [state.path])
-            report = self._operation_dto(reports[0])
-            if report.succeeded:
-                self._discard_token(edit_token)
-            warnings: tuple[str, ...] = ()
-            try:
-                rebuild_index_v4(vault)
-            except (OSError, ValueError, UnicodeError):
-                warnings = ("index_degraded",)
-            return OperationReportResultDto(report, warnings)
+            with _durable_mutation("paper.soft_delete"):
+                reports = soft_delete_papers(vault, [state.path])
+            with _durable_result("paper.soft_delete"):
+                report = self._operation_dto(reports[0])
+                if report.succeeded:
+                    self._discard_token(edit_token)
+                warnings: tuple[str, ...] = ()
+                try:
+                    rebuild_index_v4(vault)
+                except (OSError, ValueError, UnicodeError):
+                    warnings = ("index_degraded",)
+                return OperationReportResultDto(report, warnings)
 
     @staticmethod
     def _text_key(value: str) -> str:
@@ -1160,10 +1263,12 @@ class KeikeuService:
         with _translated_errors():
             vault = self._require_vault()
             self._require_locator(vault_locator)
-            rebuild_index_v4(vault)
-            if not verify_index_v4(vault):
-                raise ValueError("Index v4 verification failed after rebuild")
-            return self.library_query(verify_index=True)
+            with _durable_mutation("library.rebuild"):
+                rebuild_index_v4(vault)
+            with _durable_result("library.rebuild"):
+                if not verify_index_v4(vault):
+                    raise ValueError("Index v4 verification failed after rebuild")
+                return self.library_query(verify_index=True)
 
     @staticmethod
     def _operation_dto(result: PathOperationResult) -> OperationReportDto:
@@ -1203,10 +1308,10 @@ class KeikeuService:
         with _translated_errors():
             vault = self._require_vault()
             self._require_locator(vault_locator)
-            return self._reports_after_rebuild(
-                vault,
-                move_papers(vault, list(paths), destination_folder),
-            )
+            with _durable_mutation("library.move"):
+                reports = move_papers(vault, list(paths), destination_folder)
+            with _durable_result("library.move"):
+                return self._reports_after_rebuild(vault, reports)
 
     def library_branch(
         self,
@@ -1220,21 +1325,23 @@ class KeikeuService:
             _paper, source_bytes = read_paper_v4_snapshot(source)
             code = next_paper_code(vault)
             destination = source.relative_to(vault).parent / f"{code}.md"
-            branch_paper_v4(
-                vault,
-                source.relative_to(vault),
-                destination,
-                code,
-                expected_source_bytes=source_bytes,
-            )
-            return OperationReportResultDto(
-                OperationReportDto(
-                    source=str(source.relative_to(vault)),
-                    destination=str(destination),
-                    error=None,
-                ),
-                self._index_warnings_after_mutation(vault),
-            )
+            with _durable_mutation("library.branch"):
+                branch_paper_v4(
+                    vault,
+                    source.relative_to(vault),
+                    destination,
+                    code,
+                    expected_source_bytes=source_bytes,
+                )
+            with _durable_result("library.branch"):
+                return OperationReportResultDto(
+                    OperationReportDto(
+                        source=str(source.relative_to(vault)),
+                        destination=str(destination),
+                        error=None,
+                    ),
+                    self._index_warnings_after_mutation(vault),
+                )
 
     def library_soft_delete(
         self,
@@ -1244,10 +1351,10 @@ class KeikeuService:
         with _translated_errors():
             vault = self._require_vault()
             self._require_locator(vault_locator)
-            return self._reports_after_rebuild(
-                vault,
-                soft_delete_papers(vault, list(paths)),
-            )
+            with _durable_mutation("library.soft_delete"):
+                reports = soft_delete_papers(vault, list(paths))
+            with _durable_result("library.soft_delete"):
+                return self._reports_after_rebuild(vault, reports)
 
     def library_restore(
         self,
@@ -1257,10 +1364,10 @@ class KeikeuService:
         with _translated_errors():
             vault = self._require_vault()
             self._require_locator(vault_locator)
-            return self._reports_after_rebuild(
-                vault,
-                restore_papers(vault, [Path(path) for path in paths]),
-            )
+            with _durable_mutation("library.restore"):
+                reports = restore_papers(vault, [Path(path) for path in paths])
+            with _durable_result("library.restore"):
+                return self._reports_after_rebuild(vault, reports)
 
     def library_permanently_delete(
         self,
@@ -1270,20 +1377,25 @@ class KeikeuService:
         with _translated_errors():
             vault = self._require_vault()
             self._require_locator(vault_locator)
-            return self._reports_after_rebuild(
-                vault,
-                permanently_delete_papers(vault, [Path(path) for path in paths]),
-            )
+            with _durable_mutation("library.permanently_delete"):
+                reports = permanently_delete_papers(
+                    vault,
+                    [Path(path) for path in paths],
+                )
+            with _durable_result("library.permanently_delete"):
+                return self._reports_after_rebuild(vault, reports)
 
     def library_create_folder(self, name: str, vault_locator: str) -> NameResultDto:
         with _translated_errors():
             vault = self._require_vault()
             self._require_locator(vault_locator)
-            created = create_folder(vault, name)
-            return NameResultDto(
-                created.name,
-                self._index_warnings_after_mutation(vault),
-            )
+            with _durable_mutation("library.create_folder"):
+                created = create_folder(vault, name)
+            with _durable_result("library.create_folder"):
+                return NameResultDto(
+                    created.name,
+                    self._index_warnings_after_mutation(vault),
+                )
 
     def library_rename_folder(
         self,
@@ -1294,11 +1406,13 @@ class KeikeuService:
         with _translated_errors():
             vault = self._require_vault()
             self._require_locator(vault_locator)
-            renamed = rename_folder(vault, folder, new_name)
-            return NameResultDto(
-                renamed.name,
-                self._index_warnings_after_mutation(vault),
-            )
+            with _durable_mutation("library.rename_folder"):
+                renamed = rename_folder(vault, folder, new_name)
+            with _durable_result("library.rename_folder"):
+                return NameResultDto(
+                    renamed.name,
+                    self._index_warnings_after_mutation(vault),
+                )
 
     def library_merge_folders(
         self,
@@ -1309,10 +1423,10 @@ class KeikeuService:
         with _translated_errors():
             vault = self._require_vault()
             self._require_locator(vault_locator)
-            return self._reports_after_rebuild(
-                vault,
-                merge_folders(vault, source, destination),
-            )
+            with _durable_mutation("library.merge_folders"):
+                reports = merge_folders(vault, source, destination)
+            with _durable_result("library.merge_folders"):
+                return self._reports_after_rebuild(vault, reports)
 
     def library_soft_delete_folder(
         self,
@@ -1322,10 +1436,10 @@ class KeikeuService:
         with _translated_errors():
             vault = self._require_vault()
             self._require_locator(vault_locator)
-            return self._reports_after_rebuild(
-                vault,
-                soft_delete_folder(vault, folder),
-            )
+            with _durable_mutation("library.soft_delete_folder"):
+                reports = soft_delete_folder(vault, folder)
+            with _durable_result("library.soft_delete_folder"):
+                return self._reports_after_rebuild(vault, reports)
 
     def library_restore_folder(
         self,
@@ -1335,10 +1449,10 @@ class KeikeuService:
         with _translated_errors():
             vault = self._require_vault()
             self._require_locator(vault_locator)
-            return self._reports_after_rebuild(
-                vault,
-                restore_folder(vault, folder),
-            )
+            with _durable_mutation("library.restore_folder"):
+                reports = restore_folder(vault, folder)
+            with _durable_result("library.restore_folder"):
+                return self._reports_after_rebuild(vault, reports)
 
     def library_permanently_delete_folder(
         self,
@@ -1348,11 +1462,13 @@ class KeikeuService:
         with _translated_errors():
             vault = self._require_vault()
             self._require_locator(vault_locator)
-            result = permanently_delete_folder(vault, folder)
-            return OperationReportResultDto(
-                self._operation_dto(result),
-                self._index_warnings_after_mutation(vault),
-            )
+            with _durable_mutation("library.permanently_delete_folder"):
+                result = permanently_delete_folder(vault, folder)
+            with _durable_result("library.permanently_delete_folder"):
+                return OperationReportResultDto(
+                    self._operation_dto(result),
+                    self._index_warnings_after_mutation(vault),
+                )
 
     def resolve_system_target(self, action: str, relative_target: str) -> Path:
         """Return one Python-validated absolute path for immediate Rust use."""

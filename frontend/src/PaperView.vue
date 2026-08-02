@@ -5,6 +5,7 @@ import PaperV4Workbench from "./PaperV4Workbench.vue";
 import {
   bridgeRequest,
   confirmDiscardChanges,
+  openSystemTarget,
   registerWindowCloseGuard,
 } from "./bridge.js";
 
@@ -38,6 +39,7 @@ let dailyTimer;
 let unlistenClose;
 
 const savedPath = computed(() => paper.value?.path ?? null);
+const hasPendingSave = computed(() => props.pendingIntent?.family === "paper_save");
 
 function normalizeError(value) {
   return value && typeof value === "object"
@@ -121,7 +123,9 @@ async function reconcilePendingSave(intent) {
       ? "磁盘 Paper 需要人工修复；草稿仍在且保存已禁用。"
       : `磁盘状态无法与草稿自动合并（${result.stale_reason ?? "stale"}）。`;
   }
-  emit("intent-settled");
+  if (["committed", "not_committed"].includes(result.state)) {
+    emit("intent-settled");
+  }
 }
 
 async function openInitialPaper() {
@@ -189,7 +193,7 @@ async function loadStartup() {
 
 async function requestDeparture(action) {
   if (busy.value) return false;
-  if (dirty.value) {
+  if (dirty.value || hasPendingSave.value) {
     try {
       if (!(await confirmDiscardChanges())) return false;
     } catch (raw) {
@@ -197,6 +201,7 @@ async function requestDeparture(action) {
       return false;
     }
   }
+  if (hasPendingSave.value) emit("intent-settled");
   await action?.();
   return true;
 }
@@ -221,6 +226,57 @@ function newPaper() {
       busy.value = false;
     }
   });
+}
+
+async function revealRepair() {
+  if (!repair.value?.path) return;
+  try {
+    await openSystemTarget("reveal", repair.value.path);
+  } catch (raw) {
+    handleError(raw, "无法在 Finder 中显示 Paper");
+  }
+}
+
+async function recheckOpenRepair() {
+  if (busy.value || !repair.value?.path) return;
+  busy.value = true;
+  try {
+    const result = await props.request("paper.open", { path: repair.value.path });
+    if (result.state === "opened" && result.paper) {
+      applyPaper(result.paper);
+      notice.value = "Paper 结构已通过重新检查。";
+    } else {
+      repair.value = result.repair;
+      notice.value = "Paper 仍需人工修复；app 没有改写文件。";
+    }
+  } catch (raw) {
+    handleError(raw, "无法重新检查 Paper");
+  } finally {
+    busy.value = false;
+  }
+}
+
+async function recheckUnknownSave() {
+  if (busy.value || !hasPendingSave.value) return;
+  busy.value = true;
+  try {
+    await reconcilePendingSave(props.pendingIntent);
+  } catch (raw) {
+    handleError(raw, "无法重新检查未知保存");
+  } finally {
+    busy.value = false;
+  }
+}
+
+async function copyRetainedDraft() {
+  const submitted = props.pendingIntent?.reconcile?.submitted;
+  if (!submitted) return;
+  try {
+    await navigator.clipboard.writeText(JSON.stringify(submitted, null, 2));
+    notice.value = "保留草稿已复制；没有写入 Vault。";
+  } catch (raw) {
+    handleError(raw, "无法复制保留草稿");
+  }
 }
 
 async function savePaper(submitted) {
@@ -358,7 +414,12 @@ onUnmounted(() => {
       <h2>这份 Paper 暂时不能安全打开</h2>
       <code>{{ repair?.path }}</code>
       <p>{{ repair?.reason }}</p>
-      <button type="button" @click="openLibrary">返回 Library</button>
+      <p v-if="repair?.page_number">可确定的位置：第 {{ repair.page_number }} 页。</p>
+      <div class="repair-actions">
+        <button type="button" @click="revealRepair">在 Finder 中显示</button>
+        <button type="button" :disabled="busy" @click="recheckOpenRepair">重新检查</button>
+        <button type="button" @click="openLibrary">返回 Library</button>
+      </div>
     </section>
 
     <section v-else-if="screen === 'error'" class="paper-gate repair-panel" role="alert">
@@ -387,6 +448,15 @@ onUnmounted(() => {
         <summary>人工修复信息</summary>
         <code>{{ repair.path }}</code>
         <p>{{ repair.reason }}</p>
+        <p v-if="repair.page_number">可确定的位置：第 {{ repair.page_number }} 页。</p>
+        <div class="repair-actions">
+          <button type="button" @click="copyRetainedDraft">复制保留草稿</button>
+          <button type="button" @click="revealRepair">在 Finder 中显示</button>
+          <button type="button" :disabled="busy" @click="recheckUnknownSave">重新检查</button>
+          <button type="button" class="quiet-danger" @click="openLibrary">
+            放弃草稿并返回 Library
+          </button>
+        </div>
       </details>
     </template>
 
@@ -417,6 +487,7 @@ button:disabled { opacity: .55; cursor: wait; }
 .paper-gate { width: min(620px, 100%); margin: 14vh auto 0; padding: 30px; border: 1px solid var(--rule); border-top: 5px solid var(--signal); background: var(--paper); }
 .paper-gate h2 { font: 500 2rem var(--font-display); }
 .repair-panel { border-top-color: var(--danger); }
+.repair-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .delete-paper-dialog { width: min(430px, calc(100% - 32px)); padding: 24px; border: 1px solid var(--rule); color: var(--ink); background: var(--paper); }
 .delete-paper-dialog::backdrop { background: rgb(27 23 20 / .42); }
 .delete-paper-dialog div { display: flex; justify-content: flex-end; gap: 8px; }

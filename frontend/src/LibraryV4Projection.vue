@@ -7,7 +7,13 @@ const props = defineProps({
   indexState: { type: String, default: "current" },
   query: { type: String, default: "" },
 });
-const emit = defineEmits(["open", "rebuild-index", "search", "select"]);
+const emit = defineEmits([
+  "open",
+  "rebuild-index",
+  "reveal-error",
+  "search",
+  "select",
+]);
 
 const query = ref(props.query);
 const selectedPath = ref(props.entries[0]?.path ?? null);
@@ -137,6 +143,9 @@ function label(entry) {
       <ul>
         <li v-for="error in errors" :key="error.path">
           <code>{{ error.path }}</code>：{{ error.reason }}
+          <button type="button" @click="emit('reveal-error', error.path)">
+            在 Finder 中显示
+          </button>
         </li>
       </ul>
     </details>
@@ -369,6 +378,15 @@ input {
 
 .library-errors code {
   font-size: 0.7rem;
+}
+
+.library-errors button {
+  min-height: 36px;
+  margin-left: 8px;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  background: transparent;
+  cursor: pointer;
 }
 
 .library-empty {

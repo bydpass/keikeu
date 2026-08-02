@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+import json
 from pathlib import Path
 import shutil
 
@@ -13,6 +15,7 @@ from keikeu_bridge.dto import (
     PaperReconcileRequestDto,
     PaperSaveDto,
 )
+from keikeu_bridge import service as service_module
 from keikeu_bridge.service import KeikeuService, ServiceError
 from keikeu_core import vault as vault_module
 from keikeu_core.indexer import rebuild_index_v4
@@ -70,6 +73,28 @@ def _save_paper(
 
 def _editable(paper) -> PaperEditableDto:
     return PaperEditableDto(paper.display_name, paper.tags, paper.pages)
+
+
+def _reconcile_request(
+    paper,
+    submitted: PaperEditableDto,
+) -> PaperReconcileRequestDto:
+    return PaperReconcileRequestDto(
+        vault_locator=paper.vault_locator,
+        target_path=paper.target_path,
+        code=paper.code,
+        created=paper.created,
+        source_digest=paper.source_digest,
+        baseline=_editable(paper) if paper.source_digest is not None else None,
+        submitted=submitted,
+    )
+
+
+def _replace_content(vault: Path, paper, content: str) -> None:
+    path = vault / paper.target_path
+    stored, _source = read_paper_v4_snapshot(path)
+    stored.pages[0].content = content
+    path.write_bytes(render_paper_v4_bytes(stored))
 
 
 def test_startup_reuses_config_without_claiming_daily_card_twice(tmp_path, monkeypatch):
@@ -158,6 +183,28 @@ def test_paper_save_reports_index_degraded_after_markdown_commit(
     assert read_paper_v4_snapshot(vault / str(saved.path))[0].pages[0].content == (
         "Durable Markdown"
     )
+
+
+def test_first_save_conflict_is_known_not_commit_unknown(service_and_vault):
+    service, vault, _locator = service_and_vault
+    draft = service.paper_create_draft()
+    target = vault / draft.target_path
+    original = PaperV4(code=draft.code, pages=[CardPageV4(content="Existing")])
+    write_paper_v4(vault, original, destination=draft.target_path)
+
+    with pytest.raises(ServiceError) as caught:
+        service.paper_save(
+            PaperSaveDto(
+                draft.edit_token,
+                draft.vault_locator,
+                None,
+                (),
+                (CardPageDto(None, "Submitted", None),),
+            )
+        )
+
+    assert caught.value.code == "conflict"
+    assert read_paper_v4_snapshot(target)[0].pages[0].content == "Existing"
 
 
 def test_paper_save_returns_stale_without_overwriting_external_change(service_and_vault):
@@ -280,6 +327,224 @@ def test_reconcile_distinguishes_not_committed_committed_and_vault_change(
     assert changed_vault.state == "stale"
     assert changed_vault.stale_reason == "vault_changed"
     assert changed_vault.index_state == "not_checked"
+
+
+def test_reconcile_existing_fault_matrix_and_page_safe_repair(service_and_vault):
+    service, vault, _locator = service_and_vault
+    saved, _warnings = _save_paper(service, "Baseline")
+    submitted = PaperEditableDto(
+        saved.display_name,
+        saved.tags,
+        (CardPageDto("First", "Submitted", "summary"),),
+    )
+    request = _reconcile_request(saved, submitted)
+    path = vault / saved.target_path
+
+    path.unlink()
+    missing = service.paper_reconcile_save(request)
+    assert missing.state == "stale" and missing.stale_reason == "missing_existing"
+
+    path.write_bytes(
+        render_paper_v4_bytes(
+            PaperV4(
+                code=saved.code,
+                created=datetime.fromisoformat(saved.created),
+                updated=datetime.fromisoformat(saved.updated),
+                pages=[CardPageV4("Third", name="First", type="summary")],
+            )
+        )
+    )
+    third = service.paper_reconcile_save(request)
+    assert third.state == "stale" and third.stale_reason == "third_content"
+
+    changed_identity = read_paper_v4_snapshot(path)[0]
+    changed_identity.code = "K-20260802-999"
+    path.write_bytes(render_paper_v4_bytes(changed_identity))
+    identity = service.paper_reconcile_save(request)
+    assert identity.state == "stale" and identity.stale_reason == "identity_changed"
+
+    broken = render_paper_v4_bytes(changed_identity).replace(
+        b'<!-- keikeu:page {"name":"First","type":"summary"} -->',
+        b'<!-- keikeu:page {"name":"First","type":"invalid"} -->',
+    )
+    path.write_bytes(broken)
+    repair = service.paper_reconcile_save(request)
+    assert repair.state == "repair_required"
+    assert repair.repair is not None and repair.repair.origin == "unknown_save"
+    assert repair.repair.page_number == 1
+    assert "Third" not in repair.repair.reason
+
+
+def test_reconcile_invalid_submitted_depends_on_whether_disk_changed(service_and_vault):
+    service, vault, _locator = service_and_vault
+    saved, _warnings = _save_paper(service, "Baseline")
+    invalid = PaperEditableDto(None, (), (CardPageDto(None, "", None),))
+    request = _reconcile_request(saved, invalid)
+
+    unchanged = service.paper_reconcile_save(request)
+    assert unchanged.state == "not_committed" and unchanged.paper is not None
+
+    _replace_content(vault, saved, "Third content")
+    changed = service.paper_reconcile_save(request)
+    assert changed.state == "stale" and changed.stale_reason == "submitted_invalid"
+
+
+def test_reconcile_first_save_missing_committed_duplicate_and_broken(service_and_vault):
+    service, vault, _locator = service_and_vault
+    draft = service.paper_create_draft()
+    submitted = PaperEditableDto(
+        "First save",
+        ("tag",),
+        (CardPageDto("Page", "Submitted", "summary"),),
+    )
+    request = _reconcile_request(draft, submitted)
+
+    missing = service.paper_reconcile_save(request)
+    assert missing.state == "not_committed" and missing.paper is not None
+
+    target = vault / draft.target_path
+    target.write_bytes(
+        render_paper_v4_bytes(
+            PaperV4(
+                code=draft.code,
+                display_name="First save",
+                tags=["tag"],
+                pages=[CardPageV4("Submitted", name="Page", type="summary")],
+                created=datetime.fromisoformat(draft.created),
+                updated=datetime(2026, 8, 2, 13, 0),
+            )
+        )
+    )
+    committed = service.paper_reconcile_save(request)
+    assert committed.state == "committed" and committed.paper is not None
+
+    target.unlink()
+    duplicate = vault / "cache" / "Elsewhere"
+    duplicate.mkdir()
+    (duplicate / f"{draft.code}.md").write_bytes(
+        render_paper_v4_bytes(
+            PaperV4(
+                code=draft.code,
+                pages=[CardPageV4("Elsewhere")],
+                created=datetime.fromisoformat(draft.created),
+            )
+        )
+    )
+    duplicate_result = service.paper_reconcile_save(request)
+    assert duplicate_result.state == "stale"
+    assert duplicate_result.stale_reason == "duplicate_code"
+
+    (duplicate / f"{draft.code}.md").unlink()
+    target.write_bytes(b"broken author bytes")
+    broken = service.paper_reconcile_save(request)
+    assert broken.state == "repair_required"
+    assert broken.repair is not None
+    assert "broken author bytes" not in broken.repair.reason
+
+
+def test_reconcile_audits_other_index_rows_and_root_identity_before_target_read(
+    service_and_vault,
+    monkeypatch,
+):
+    service, vault, _locator = service_and_vault
+    saved, _warnings = _save_paper(service, "Baseline")
+    other, _warnings = _save_paper(service, "Other")
+    _replace_content(vault, other, "Changed outside Index")
+    request = _reconcile_request(saved, _editable(saved))
+
+    degraded = service.paper_reconcile_save(request)
+    assert degraded.state == "not_committed"
+    assert degraded.index_state == "degraded"
+
+    parked = vault.with_name("parked-vault")
+    vault.rename(parked)
+    vault.mkdir()
+    monkeypatch.setattr(
+        service_module,
+        "read_paper_v4_snapshot",
+        lambda _path: (_ for _ in ()).throw(AssertionError("target was read")),
+    )
+    changed_root = service.paper_reconcile_save(request)
+    assert changed_root.state == "stale"
+    assert changed_root.stale_reason == "vault_changed"
+    assert changed_root.index_state == "not_checked"
+
+
+def test_post_commit_failures_are_never_reported_as_retryable(service_and_vault, monkeypatch):
+    service, vault, locator = service_and_vault
+    saved, _warnings = _save_paper(service, "Before")
+    opened = service.paper_open(saved.target_path)
+    assert opened.paper is not None
+
+    real_replace = service_module.replace_paper_v4_bytes
+
+    def replace_then_fail(*args, **kwargs):
+        real_replace(*args, **kwargs)
+        raise OSError("injected after Paper replacement")
+
+    monkeypatch.setattr(service_module, "replace_paper_v4_bytes", replace_then_fail)
+    with pytest.raises(ServiceError) as paper_error:
+        service.paper_save(
+            PaperSaveDto(
+                opened.paper.edit_token,
+                locator,
+                None,
+                (),
+                (CardPageDto(None, "After", None),),
+            )
+        )
+    assert paper_error.value.code == "commit_unknown"
+    assert read_paper_v4_snapshot(vault / saved.target_path)[0].pages[0].content == "After"
+
+    monkeypatch.setattr(service_module, "replace_paper_v4_bytes", real_replace)
+    real_move = service_module.move_papers
+
+    def move_then_fail(*args, **kwargs):
+        real_move(*args, **kwargs)
+        raise OSError("injected after path mutation")
+
+    service.library_create_folder("Ideas", locator)
+    monkeypatch.setattr(service_module, "move_papers", move_then_fail)
+    with pytest.raises(ServiceError) as move_error:
+        service.library_move([saved.target_path], "Ideas", locator)
+    assert move_error.value.code == "commit_unknown"
+    assert (vault / "cache" / "Ideas" / Path(saved.target_path).name).is_file()
+
+    monkeypatch.setattr(service_module, "move_papers", real_move)
+    real_rebuild = service_module.rebuild_index_v4
+
+    def rebuild_then_fail(*args, **kwargs):
+        real_rebuild(*args, **kwargs)
+        raise OSError("injected after Index replacement")
+
+    monkeypatch.setattr(service_module, "rebuild_index_v4", rebuild_then_fail)
+    with pytest.raises(ServiceError) as index_error:
+        service.library_rebuild(locator)
+    assert index_error.value.code == "commit_unknown"
+    assert json.loads((vault / "keikeu_index.json").read_text(encoding="utf-8"))["version"] == 4
+
+
+def test_vault_config_change_followed_by_readback_failure_is_commit_unknown(
+    service_and_vault,
+    monkeypatch,
+):
+    service, _vault, _locator = service_and_vault
+    destination = _vault.with_name("other-vault")
+    vault_module.init_vault(destination)
+    preview = service.vault_inspect(str(destination))
+
+    monkeypatch.setattr(
+        service,
+        "_startup_for_selected",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            OSError("injected after config mutation")
+        ),
+    )
+    with pytest.raises(ServiceError) as caught:
+        service.vault_open(preview.token)
+
+    assert caught.value.code == "commit_unknown"
+    assert vault_module.get_vault(service._config_path) == destination  # noqa: SLF001
 
 
 def test_v01_runs_as_two_explicit_migration_stages(tmp_path, monkeypatch):

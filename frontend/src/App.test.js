@@ -49,7 +49,7 @@ function startup() {
   };
 }
 
-function library() {
+function library(overrides = {}) {
   return {
     scope: "all",
     entries: [],
@@ -59,6 +59,7 @@ function library() {
     errors: [],
     vault_locator: "vault-v1:test",
     index_state: "current",
+    ...overrides,
   };
 }
 
@@ -186,5 +187,50 @@ describe("Road v0.6 desktop shell", () => {
     expect(bridgeRequest.mock.calls.filter(([method]) => method === "paper.save")).toHaveLength(1);
     expect(bridgeRequest.mock.calls.filter(([method]) => method === "paper.reconcile_save")).toHaveLength(1);
     expect(wrapper.text()).toContain("已确认上次保存落盘");
+  });
+
+  it("retains a Library intent across component unload and only refreshes after restart", async () => {
+    const entry = {
+      path: "cache/K-20260802-001.md",
+      code: "K-20260802-001",
+      display_name: "Library pending",
+      folder: null,
+      tags: [],
+      preview: "Preview",
+      page_count: 1,
+      page_names: [],
+      created: "2026-08-02T12:00:00",
+      updated: "2026-08-02T12:00:00",
+      trashed: false,
+      repair_reason: null,
+    };
+    bridgeRequest.mockImplementation(async (method, params) => {
+      if (method === "library.query") {
+        return library({ entries: [entry], index_state: "current" });
+      }
+      if (method === "library.branch") throw {
+        code: "commit_unknown",
+        layer: "tauri_host",
+        message: "response lost",
+        recovery: "restart_then_reload",
+      };
+      return defaultBridge(method, params);
+    });
+    const wrapper = await mountApp();
+    await buttonByText(wrapper, "Library").trigger("click");
+    await flushPromises();
+    await buttonByText(wrapper, "创建 Branch").trigger("click");
+    await flushPromises();
+    expect(wrapper.text()).toContain("无法安全连接 Python Core");
+
+    await buttonByText(wrapper, "重启本地 Core").trigger("click");
+    await flushPromises();
+
+    expect(bridgeRequest.mock.calls.filter(([method]) => method === "library.branch")).toHaveLength(1);
+    expect(bridgeRequest.mock.calls.filter(([method]) => method === "startup.load")).toHaveLength(2);
+    expect(bridgeRequest.mock.calls.some(([method, params]) =>
+      method === "library.query" && params.verify_index === true
+    )).toBe(true);
+    expect(wrapper.text()).toContain("已在重启后重新读取 Vault");
   });
 });

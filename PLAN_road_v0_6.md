@@ -19,7 +19,8 @@ Road 完成时，正常 runtime 使用 Paper v4、Markdown schema v4 与 JSONL p
 Markdown/Index/Vault 的进程架构不重写。
 
 CP4 已将 production 一次切换为 Paper v4、Index v4 与 protocol v2；CP5 已删除不可达
-旧正常链。冻结 v3 reader 只存在于迁移边界，CP6 是下一 Gate。
+旧正常链；CP6 已完成未知结果、repair、手册与合成安全 Gate。冻结 v3 reader 只存在于
+迁移边界，CP7 一号真实作者是下一 Gate，尚未开始。
 
 ## 1. 权威、批准与执行纪律
 
@@ -532,27 +533,27 @@ migrator 或大型 Vue；不做视觉润色、新功能、人工修复、真实�
 
 **顺序步骤：**
 
-- [ ] 用现有 fake spawner、monkeypatch 与 fixture 建故障注入，不留下 production 开关。
-- [ ] 覆盖 Save baseline/submitted/第三内容/损坏、首次目标、同 code 异路径、重复 code、
+- [x] 用现有 fake spawner、monkeypatch 与 fixture 建故障注入，不留下 production 开关。
+- [x] 覆盖 Save baseline/submitted/第三内容/损坏、首次目标、同 code 异路径、重复 code、
       已有目标消失 `missing_existing`、`code/created` 身份变化 `identity_changed`、
       invalid submitted、locator/config/root identity 变化、strict tagged DTO 与全 Index
       stale/extra。
-- [ ] 证明 App 根快照跨 PaperView 卸载、runtime blocked、sidecar restart 和关闭请求存活；
+- [x] 证明 App 根快照跨 PaperView 卸载、runtime blocked、sidecar restart 和关闭请求存活；
       原 Save 只发送一次。
-- [ ] 在 Paper 替换、Library/Vault 路径变化、迁移第 N 文件、Index 替换和 response
+- [x] 在 Paper 替换、Library/Vault 路径变化、迁移第 N 文件、Index 替换和 response
       serialization 后注入失败；结果不得降级为普通可重试错误。
-- [ ] 覆盖 mutation timeout、EOF、错误 response ID 与无效响应：均须只发送一次并成为
+- [x] 覆盖 mutation timeout、EOF、错误 response ID 与无效响应：均须只发送一次并成为
       `commit_unknown`；只读恢复调用的响应丢失不得误报 `commit_unknown`。
-- [ ] 验证 migration、Vault/config、Library path mutation、Index rebuild 各自的只读恢复
+- [x] 验证 migration、Vault/config、Library path mutation、Index rebuild 各自的只读恢复
       入口和“绝不自动重放”。
-- [ ] 验证普通 open repair 不建半成品；unknown-save repair 保留 submitted/关闭保护；
+- [x] 验证普通 open repair 不建半成品；unknown-save repair 保留 submitted/关闭保护；
       Finder、复制草稿、重新检查和 Index rebuild 可达且不回显正文。
-- [ ] 编写逐项满足设计 §12 的中文 HTML 手册：完整示例；frontmatter、page marker、
+- [x] 编写逐项满足设计 §12 的中文 HTML 手册：完整示例；frontmatter、page marker、
       `name/content/Tags`；三种类型值、中文显示名和 null/空值；两类 escape；UTF-8/换行；
       常见错误及错误信息含义；Finder、修复、重新检查和 rebuild；明确 App 不会自动
       改写损坏文件。
-- [ ] 开发者仅对故意损坏的合成 Paper 或完整副本，完全按手册完成一次修复。
-- [ ] 运行完整自动检查、sidecar build 与 Tauri 安全 smoke，删除临时故障入口。
+- [x] 开发者仅对故意损坏的合成 Paper 或完整副本，完全按手册完成一次修复。
+- [x] 运行完整自动检查、sidecar build 与 Tauri 安全 smoke，删除临时故障入口。
 
 **Tauri smoke：** fake Home/config 下至少完成一次 response-loss→restart→reconcile、四态
 代表 UI、degraded→rebuild、非 Save unknown 不重发、Finder 修复复制 Paper、正常关闭
