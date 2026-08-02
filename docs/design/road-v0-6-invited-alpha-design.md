@@ -197,7 +197,7 @@ post-staple hash.
 
 Create one runbook at:
 
-`docs/manual/macos-developer-id-release.md`
+`docs/manual/forfresh/macos-developer-id-release.md`
 
 The manual is non-authoritative teaching material. Acceptance and stop rules
 remain in the active Road specification, plan, and `docs/RULES.md`. If the
@@ -483,7 +483,7 @@ CP0 or its implementation plan assigns authority updates by responsibility:
 - `docs/RULES.md` — durable credential, artifact, and evidence safeguards;
 - `docs/PROJECT.md` — current checkpoint and next Gate;
 - README files — reader-facing current platform support;
-- `docs/manual/macos-developer-id-release.md` — non-authoritative release
+- `docs/manual/forfresh/macos-developer-id-release.md` — non-authoritative release
   teaching;
 - `docs/manual/invited-alpha-test-guide.md` — one-page tester privacy,
   installation, task, and stop guide;

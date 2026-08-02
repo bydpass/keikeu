@@ -2,7 +2,7 @@
 
 > Non-authoritative working material. Product scope and implementation behavior remain owned by `docs/SPEC.md`, `docs/RULES.md`, runtime source, and passing tests.
 
-- [Road v0.5 Planbook](../road-v0-5-planbook.html)
+- [Road v0.5 Planbook](../archive/road-v0-5/road-v0-5-planbook.html)
 - [Road v0.5 final UI prototype](keikeu_opendesign/keikeu-v05-prototype.html)
 - [Earlier design exploration](boh_design.html)
 - Open Design generation context:

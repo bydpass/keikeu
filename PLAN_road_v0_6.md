@@ -179,7 +179,7 @@ git status --short
 - 修改：`docs/PROJECT.md`
 - 修改：`README.md`
 - 修改：`README_EN.md`
-- 创建：`docs/manual/macos-developer-id-release.md`
+- 创建：`docs/manual/forfresh/macos-developer-id-release.md`
 - 修改：`docs/manual/README.md`
 - 仅当 CP0 beta 条件成立时创建：
   `docs/architecture/decisions/0006-beta-toolchain-release-exception.md`
@@ -362,7 +362,7 @@ cargo metadata --manifest-path frontend/src-tauri/Cargo.toml \
 
 - [ ] **步骤 7：创建发布手册的 CP0 章节**
 
-创建 `docs/manual/macos-developer-id-release.md`，包含以下章节：
+创建 `docs/manual/forfresh/macos-developer-id-release.md`，包含以下章节：
 
 1. 权威与范围；
 2. 支持的主机与产物；
@@ -480,7 +480,7 @@ target、工具链、文档或测试任一失败，都会阻止 CP0。
 
 - 修改：`scripts/build_sidecar.py`
 - 创建：`tests/test_build_sidecar.py`
-- 修改：`docs/manual/macos-developer-id-release.md`
+- 修改：`docs/manual/forfresh/macos-developer-id-release.md`
 - 修改：`docs/PROJECT.md`
 - 创建：
   `docs/acceptance/road-v0-6/cp1-arm64-candidate/report.md`
@@ -744,7 +744,7 @@ git diff --check
 
 **文件：**
 
-- 修改：`docs/manual/macos-developer-id-release.md`
+- 修改：`docs/manual/forfresh/macos-developer-id-release.md`
 - 修改：`docs/PROJECT.md`
 - 创建：
   `docs/acceptance/road-v0-6/cp2-developer-id-trust/report.md`
@@ -1128,7 +1128,7 @@ unset KEIKEU_SUBMISSION_ID
 **文件：**
 
 - 仅当独立执行失败时修改：
-  `docs/manual/macos-developer-id-release.md`
+  `docs/manual/forfresh/macos-developer-id-release.md`
 - 修改：`docs/PROJECT.md`
 - 创建：
   `docs/acceptance/road-v0-6/cp3-release-rehearsal/report.md`

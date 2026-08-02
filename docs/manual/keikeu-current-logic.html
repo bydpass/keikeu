@@ -180,7 +180,7 @@
   <div class="shell">
     <aside class="rail" aria-label="页面目录">
       <div class="brand">KEIKEU / NOW</div>
-      <small>ROAD V0.3 · 本地代码与规范核对<br>2026-07-25</small>
+      <small>ROAD V0.5 · 本地代码、架构与规范核对<br>2026-08-02</small>
       <nav>
         <a href="#product">产品链路</a>
         <a href="#save">一次保存</a>
@@ -211,7 +211,7 @@
           <span class="pill good">Core 不依赖 GUI 或 transport</span>
           <span class="pill">索引可以重建</span>
           <span class="pill">设备状态只记日期</span>
-          <span class="pill good">Road v0.4 产品与兼容性已验收</span>
+          <span class="pill good">Road v0.5 产品与最终 UI Gate 已验收</span>
         </div>
       </header>
 
@@ -344,20 +344,20 @@
           </div>
         </section>
 
-        <section class="section searchable" id="principles" data-search="原则 现状 v0.4 CP14 验收 隐私 author control local first 测试">
+        <section class="section searchable" id="principles" data-search="原则 现状 v0.5 CP7 验收 归档 隐私 author control local first 测试">
           <div class="section-head"><div class="step-no">07</div><div><h2>实现原则与当前状态</h2><p>这些规则约束产品扩张，也让作者在文件出问题时能理解和修复。</p></div></div>
           <div class="grid two">
             <article class="card"><h3>实现原则</h3><ul class="principle-list"><li>Markdown 保存作者内容，JSON 只做可重建的辅助索引。</li><li>UI 只调用 Application Service，不渲染 Markdown，也不直接编辑索引 JSON。</li><li>保存、迁移、删除和恢复先保护已有文件，再报告失败原因。</li><li>keikeu 不生成、改写、评价、上传或合并作者的创作文本。</li><li>系统功能在边界外处理：正文在外部编辑器，同步和冲突由 provider 负责。</li></ul></article>
-            <article class="card status"><h3>Road v0.4 的当前位置</h3><p>Gate A、Gate B、production bundle、真实作者场景 A/B、macOS 15.7+ 兼容性与 CP14 Flet 退役均已验收；Road v0.4 完成。</p><div class="source">PROJECT.md · Current coordinates<br>acceptance/road_v0_4_cp14.md</div></article>
+            <article class="card status"><h3>Road v0.5 已验收基线</h3><p>当前 Vue/Tauri/JSONL/Python 架构建立于 Road v0.4；Road v0.5 没有改变这条边界，并已完成产品验收、最终 UI Gate 与归档。</p><div class="source">PROJECT.md · Current coordinates<br>acceptance/road-v0-5/cp6-dogfood/report.md · cp7-fixed-sidebars/report.md</div></article>
           </div>
           <div class="table-wrap" style="margin-top:14px">
             <table>
               <thead><tr><th>结论</th><th>当前状态</th><th>能证明什么</th></tr></thead>
               <tbody>
-                <tr><td>代码实现</td><td>已完成</td><td>Vue/Tauri/JSONL/Python 边界覆盖 Road v0.4 的核心约束。</td></tr>
-                <tr><td>macOS 候选与兼容性</td><td>已验收</td><td>同一 arm64 artifact 已在 macOS 15.7 runner 与当前工作站启动。</td></tr>
-                <tr><td>真实作者验收</td><td>已完成</td><td>场景 A/B 验证检索、编辑器交接、视觉层级和作者控制。</td></tr>
-                <tr><td>Road 打标或归档</td><td>尚未授权</td><td>tag、archive 与 push 仍是独立开发者决策。</td></tr>
+                <tr><td>代码实现</td><td>已完成</td><td>Road v0.5 保持 Vue/Tauri/JSONL/Python 边界，并完成交互收口。</td></tr>
+                <tr><td>当前源 Tauri smoke</td><td>已完成</td><td>CP7 验证固定侧栏、滚动边界与两个受支持窗口尺寸；不证明签名或分发。</td></tr>
+                <tr><td>产品与最终 UI 验收</td><td>已完成</td><td>CP6 dogfood 与 CP7 最终条件通过，无未解决 P0/P1。</td></tr>
+                <tr><td>Road 归档</td><td>已完成</td><td>快照绑定最终 checkpoint；tag、push、签名、公证与分发仍是独立决定。</td></tr>
               </tbody>
             </table>
           </div>

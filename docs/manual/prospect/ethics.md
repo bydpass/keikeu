@@ -1,4 +1,4 @@
-> **HUMAN MANUAL — NON-NORMATIVE.** 本页解释 keikeu 的伦理判断方法，不新增产品规则。可执行边界只以 [`SPEC`](../SPEC.md) 与 [`RULES`](../RULES.md) 为准。
+> **HUMAN MANUAL — NON-NORMATIVE.** 本页解释 keikeu 的伦理判断方法，不新增产品规则。可执行边界只以 [`SPEC`](../../SPEC.md) 与 [`RULES`](../../RULES.md) 为准。
 
 # keikeu 技术伦理手册
 
@@ -68,12 +68,12 @@ keikeu 处理的是作者尚未公开、尚未定稿的创作材料。这里的�
 
 | 提议 | 伦理判断 | 当前 truth |
 | --- | --- | --- |
-| 保存用户自己输入的 Summary 与 Highlights | 输入权属清楚，Markdown 可检查、导出和修复 | [`SPEC §3–4`](../SPEC.md#3-author-asset-contract) |
-| 将用户选择的文件服务目录当普通路径 | keikeu 不接管账号、同步时机或冲突合并 | [`SPEC §7`](../SPEC.md#7-vault-and-network-boundary) |
-| 自动抓取外部作品或建立作者数据库 | 授权不清，扩大语境并把风险转给原作者 | [`SPEC §11`](../SPEC.md#11-explicit-non-goals-before-acceptance) |
-| 默认上传草稿或记录内容行为 | 制造不必要的数据与监控面 | [`RULES §3`](../RULES.md#3-author-text-and-privacy) |
-| 让生成结果不可编辑 | 系统判断压过作者判断 | [`SPEC §3`](../SPEC.md#3-author-asset-contract) |
-| 公共评分、推荐、榜单或社区 | 改变权力结构，也把工具推向平台 | [`SPEC §11`](../SPEC.md#11-explicit-non-goals-before-acceptance) |
+| 保存用户自己输入的 Summary 与 Highlights | 输入权属清楚，Markdown 可检查、导出和修复 | [`SPEC §3–4`](../../SPEC.md#3-author-asset-contract) |
+| 将用户选择的文件服务目录当普通路径 | keikeu 不接管账号、同步时机或冲突合并 | [`SPEC §7`](../../SPEC.md#7-vault-and-network-boundary) |
+| 自动抓取外部作品或建立作者数据库 | 授权不清，扩大语境并把风险转给原作者 | [`SPEC §11`](../../SPEC.md#11-explicit-non-goals-before-acceptance) |
+| 默认上传草稿或记录内容行为 | 制造不必要的数据与监控面 | [`RULES §3`](../../RULES.md#3-author-text-and-privacy) |
+| 让生成结果不可编辑 | 系统判断压过作者判断 | [`SPEC §3`](../../SPEC.md#3-author-asset-contract) |
+| 公共评分、推荐、榜单或社区 | 改变权力结构，也把工具推向平台 | [`SPEC §11`](../../SPEC.md#11-explicit-non-goals-before-acceptance) |
 
 例子说明“为什么”，不冻结未来。若开发者决定改变边界，应先在唯一 truth 中明确范围、数据流、默认值和退出方式。
 
@@ -96,4 +96,4 @@ keikeu 的伦理方向可以压成一句话：
 
 > 帮作者组织自己的创作材料，同时让内容、决策和退出权继续留在作者手里。
 
-需要判断“现在允许做什么”时，离开本页，回到 [`SPEC`](../SPEC.md) 与 [`RULES`](../RULES.md)。
+需要判断“现在允许做什么”时，离开本页，回到 [`SPEC`](../../SPEC.md) 与 [`RULES`](../../RULES.md)。

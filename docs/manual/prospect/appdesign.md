@@ -1,4 +1,4 @@
-> **HUMAN MANUAL — NON-NORMATIVE.** Road v0.2 design narrative for people. Current product truth lives in [`docs/SPEC.md`](../SPEC.md), and current coordinates live in [`docs/PROJECT.md`](../PROJECT.md).
+> **HUMAN MANUAL — NON-NORMATIVE.** Road v0.2 design narrative for people. Current product truth lives in [`docs/SPEC.md`](../../SPEC.md), and current coordinates live in [`docs/PROJECT.md`](../../PROJECT.md).
 
 # keikeu APPDESIGN.md
 
@@ -12,7 +12,7 @@
 
 本文保留 Road v0.2 产品设计的完整叙述，帮助人理解决策背景；它不定义当前行为。
 
-当前产品行为只以 [`docs/SPEC.md`](../SPEC.md) 为准。
+当前产品行为只以 [`docs/SPEC.md`](../../SPEC.md) 为准。
 
 它定义目标用户、核心内容模型、页面职责、资产边界和 MVP 验收标准。Road 规格负责把这些要求拆成可执行阶段；历史规格只记录当时的实现，不再约束当前产品。
 

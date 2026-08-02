@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="keikeu 的 macOS Developer ID、签名、公证、staple 与 Gatekeeper 入门手册；打包工作已延期至 Road v0.8。">
+  <title>macOS 开发者入门手册 · keikeu</title>
+  <style>
+    :root {
+      --page: #eee9df;
+      --paper: #fffdf8;
+      --soft: #f5efe4;
+      --ink: #242721;
+      --muted: #62665d;
+      --line: #cec5b5;
+      --accent: #315f57;
+      --accent-soft: #dce9e4;
+      --warn: #9b4a35;
+      --warn-soft: #f4dfd7;
+      --gold: #8a651d;
+      --shadow: 0 16px 42px rgb(58 50 38 / 10%);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --page: #171a17;
+        --paper: #222622;
+        --soft: #2c312b;
+        --ink: #eff1eb;
+        --muted: #bcc2b8;
+        --line: #4b524a;
+        --accent: #94c8b9;
+        --accent-soft: #263f38;
+        --warn: #efa18b;
+        --warn-soft: #4b302a;
+        --gold: #e1bd69;
+        --shadow: none;
+      }
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      color: var(--ink);
+      background: var(--page);
+      font: 16px/1.68 -apple-system, BlinkMacSystemFont, "PingFang SC",
+        "Noto Sans CJK SC", sans-serif;
+    }
+    a { color: var(--accent); text-underline-offset: .18em; }
+    a:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+    code, .eyebrow {
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    }
+    code { color: var(--accent); overflow-wrap: anywhere; }
+    .skip {
+      position: fixed;
+      top: -80px;
+      left: 16px;
+      z-index: 10;
+      padding: 8px 12px;
+      color: var(--paper);
+      background: var(--ink);
+    }
+    .skip:focus { top: 16px; }
+    header, main, footer {
+      width: min(1060px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+    header { padding: clamp(54px, 9vw, 96px) 0 34px; }
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3 { line-height: 1.16; text-wrap: balance; }
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(40px, 7vw, 76px);
+      letter-spacing: -.045em;
+    }
+    h2 { margin: 0 0 10px; font-size: clamp(27px, 4vw, 40px); }
+    h3 { margin: 0 0 8px; font-size: 20px; }
+    p { margin: 10px 0; }
+    .lede {
+      max-width: 800px;
+      margin: 22px 0 0;
+      color: var(--muted);
+      font-size: clamp(18px, 2.3vw, 22px);
+    }
+    .banner, .note {
+      margin-top: 22px;
+      padding: 15px 17px;
+      background: var(--accent-soft);
+      border-left: 5px solid var(--accent);
+    }
+    .banner {
+      background: var(--warn-soft);
+      border-left-color: var(--warn);
+    }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 22px;
+    }
+    nav a {
+      padding: 6px 10px;
+      color: var(--ink);
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      text-decoration: none;
+    }
+    main { padding-bottom: 70px; }
+    section {
+      margin-top: 18px;
+      padding: clamp(24px, 4vw, 42px);
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      scroll-margin-top: 16px;
+    }
+    .muted { color: var(--muted); }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 20px;
+    }
+    .card {
+      padding: 18px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+    }
+    .card.good { border-top: 4px solid var(--accent); }
+    .card.bad { border-top: 4px solid var(--warn); }
+    .card ul { margin: 10px 0 0; padding-left: 20px; }
+    .card li { margin: 7px 0; }
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin: 24px 0 0;
+      padding: 0;
+      list-style: none;
+      counter-reset: trust;
+    }
+    .flow li {
+      min-height: 165px;
+      padding: 18px;
+      background: var(--soft);
+      border-top: 5px solid var(--accent);
+      counter-increment: trust;
+    }
+    .flow li::before {
+      content: "0" counter(trust);
+      display: block;
+      margin-bottom: 22px;
+      color: var(--accent);
+      font: 800 12px/1 ui-monospace, "SF Mono", monospace;
+    }
+    .flow strong { display: block; font-size: 18px; }
+    .flow span {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .table-wrap { margin-top: 22px; overflow-x: auto; }
+    table { width: 100%; min-width: 760px; border-collapse: collapse; }
+    th, td {
+      padding: 13px;
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--line);
+    }
+    th { color: var(--muted); background: var(--soft); font-size: 13px; }
+    tr:last-child td { border-bottom: 0; }
+    ol li, .sources li { margin: 9px 0; }
+    footer {
+      padding: 28px 0 54px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    @media (max-width: 760px) {
+      .grid, .flow { grid-template-columns: 1fr; }
+      .flow li { min-height: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+    @media print {
+      body { background: white; }
+      .skip, nav { display: none; }
+      header, main, footer { width: 100%; }
+      section { break-inside: avoid; box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+
+  <header>
+    <p class="eyebrow">keikeu · macOS direct distribution</p>
+    <h1>第一次理解 Developer ID 发布。</h1>
+    <p class="lede">
+      本页解释 Apple Developer Program、证书、签名、公证、staple 和
+      Gatekeeper 如何组成 Mac App Store 外的分发链路。它是教学材料，不是
+      当前可执行的打包计划。
+    </p>
+    <div class="banner">
+      <strong>暂停状态 · 2026-08-01：</strong>
+      keikeu 打包与受邀 Alpha 计划已延期至 Road v0.8。app-specific
+      password 已停用，现有 Keychain 公证 profile 必须视为不可用。现在不要
+      创建、替换或测试公证凭据，也不要执行签名、公证或打包命令。
+    </div>
+    <nav aria-label="本页目录">
+      <a href="#status">当前状态</a>
+      <a href="#route">路线</a>
+      <a href="#words">新手词典</a>
+      <a href="#trust">四个信任动作</a>
+      <a href="#credentials">证书与凭据</a>
+      <a href="#workflow">未来工作流</a>
+      <a href="#evidence">证据边界</a>
+      <a href="#trouble">失败处理</a>
+      <a href="#restart">v0.8 重启条件</a>
+      <a href="#official">官方参考</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section id="status">
+      <p class="eyebrow">Current state</p>
+      <h2>已知什么，尚未决定什么</h2>
+      <div class="grid">
+        <article class="card good">
+          <h3>可以保留的知识</h3>
+          <ul>
+            <li>开发者已经加入 Apple Developer Program；</li>
+            <li>本机曾安装 Developer ID Application 证书及匹配私钥；</li>
+            <li>签名、公证、staple 与 Gatekeeper 是四个独立结论；</li>
+            <li>凭据、原始日志和本机身份信息不进入 Git。</li>
+          </ul>
+        </article>
+        <article class="card bad">
+          <h3>现在不能声称</h3>
+          <ul>
+            <li>公证 profile 可用（app-specific password 已停用，残留 profile 必须视为不可用）；</li>
+            <li>v0.8 的版本号、bundle ID、最低 macOS 或候选名已锁定；</li>
+            <li>任何 keikeu 产物已经签名、公证、staple 或通过 Gatekeeper；</li>
+            <li>旧工具版本和旧命令可以直接用于 v0.8。</li>
+          </ul>
+        </article>
+      </div>
+      <p class="note">
+        本页不删除 Keychain 中可能残留的 profile，也不把残留项当成可用凭据。
+        v0.8 开始时必须重新盘点会员、证书、私钥、工具链与公证认证状态。
+      </p>
+    </section>
+
+    <section id="route">
+      <p class="eyebrow">Route</p>
+      <h2>这条路线解决什么问题</h2>
+      <p>
+        Mac App Store 外分发时，开发者需要让接收者确认软件来自已识别的
+        Developer ID、签名后没有被改、Apple 公证服务没有发现已知恶意内容，
+        并让接收者 Mac 的 Gatekeeper 按普通安全策略评估最终产物。
+      </p>
+      <ol class="flow">
+        <li>
+          <strong>准备身份</strong>
+          <span>会员、Developer ID 证书、匹配私钥和应用发布身份。</span>
+        </li>
+        <li>
+          <strong>构建与签名</strong>
+          <span>生成确定的应用与分发容器，再验证签名完整性。</span>
+        </li>
+        <li>
+          <strong>公证与 staple</strong>
+          <span>Apple 自动检查候选并生成票据，再把票据附到产物。</span>
+        </li>
+        <li>
+          <strong>接收者验证</strong>
+          <span>保留 quarantine，通过普通安装与 Gatekeeper 路径验证。</span>
+        </li>
+      </ol>
+      <p class="note">
+        Apple 官方资料同时覆盖 App Store、Xcode 原生工程、DMG、ZIP 和 PKG。
+        v0.8 必须先决定 keikeu 的精确分发契约，再选择对应步骤。
+      </p>
+    </section>
+
+    <section id="words">
+      <p class="eyebrow">Beginner vocabulary</p>
+      <h2>最容易混淆的词</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>词</th>
+              <th>准确含义</th>
+              <th>不等于</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Apple Developer Program</td>
+              <td>取得 Apple 分发证书与公证服务能力的会员资格。</td>
+              <td>应用批准或发布许可。</td>
+            </tr>
+            <tr>
+              <td>CSR</td>
+              <td>Certificate Signing Request；请求 Apple 签发证书的材料。</td>
+              <td>证书或私钥备份。</td>
+            </tr>
+            <tr>
+              <td>证书</td>
+              <td>把 Developer ID 身份与公钥关联起来的公开材料。</td>
+              <td>对某个应用已经完成的签名。</td>
+            </tr>
+            <tr>
+              <td>私钥</td>
+              <td>留在 Keychain、实际执行签名的秘密材料。</td>
+              <td>可以分享的项目文件。</td>
+            </tr>
+            <tr>
+              <td><code>.app</code></td>
+              <td>包含程序、资源、元数据和嵌套代码的 macOS bundle。</td>
+              <td>单个普通文件。</td>
+            </tr>
+            <tr>
+              <td>DMG</td>
+              <td>常见的磁盘映像分发容器。</td>
+              <td>自动完成签名或公证。</td>
+            </tr>
+            <tr>
+              <td>公证票据</td>
+              <td>Apple 接受公证提交后生成、与软件关联的证明。</td>
+              <td>App Review、法律背书或无漏洞保证。</td>
+            </tr>
+            <tr>
+              <td>Quarantine</td>
+              <td>标识外来下载来源、触发普通接收者安全路径的 macOS 属性。</td>
+              <td>应该删除的安装障碍。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="trust">
+      <p class="eyebrow">Trust chain</p>
+      <h2>四个动作，各管一件事</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>动作</th>
+              <th>它做什么</th>
+              <th>它不证明什么</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Developer ID 签名</td>
+              <td>开发者用私钥声明签署来源，并使签名后的代码与资源改动可被检测。</td>
+              <td>不是发布申请，不证明 Apple 已检查或应用功能正确。</td>
+            </tr>
+            <tr>
+              <td>Apple 公证</td>
+              <td>Apple 自动扫描提交软件中的已知恶意内容和代码签名问题；接受后生成票据。</td>
+              <td>不是 App Review，不替代有效签名，也不保证没有未知漏洞。</td>
+            </tr>
+            <tr>
+              <td>Staple</td>
+              <td>把已经存在的公证票据附到对应应用、DMG 或安装包。</td>
+              <td>不重新审批、不修复签名、不重新扫描，也不决定放行。</td>
+            </tr>
+            <tr>
+              <td>Gatekeeper</td>
+              <td>接收者 Mac 根据来源、签名、公证证据和本机策略决定是否放行。</td>
+              <td>不执行签名、公证或 staple，也不证明产品质量。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">
+        记忆方式：签名封住字节并声明签署者；公证让 Apple 自动检查并产生
+        票据；staple 让产物携带票据；Gatekeeper 在接收者 Mac 上消费这些
+        证据。执行者、输入、输出不同，因此一步通过不能替代另外三步。
+      </p>
+    </section>
+
+    <section id="credentials">
+      <p class="eyebrow">Credentials</p>
+      <h2>证书与公证凭据不是一回事</h2>
+      <div class="grid">
+        <article class="card good">
+          <h3>Developer ID 签名身份</h3>
+          <p>
+            由证书与匹配私钥组成，用来签应用。证书可以公开验证，私钥必须留在
+            Keychain 或另行批准的私密存储。本 Road 不导出任何私钥或
+            <code>.p12</code>。
+          </p>
+        </article>
+        <article class="card bad">
+          <h3>Notary 认证凭据</h3>
+          <p>
+            用来让 <code>notarytool</code> 代表开发者向 Apple 提交。当前
+            app-specific password 已停用，因此残留 profile 不可使用。它的
+            失效不等于签名证书或私钥被撤销。
+          </p>
+        </article>
+      </div>
+      <p class="banner">
+        v0.8 启动前不要为了练习创建新 app-specific password 或覆盖 Keychain
+        profile。届时只有在明确批准持久修改后，才重新配置并立即验证。
+      </p>
+      <p>
+        密码、token、API 私钥和签名私钥不进入参数、环境变量、仓库、脚本、
+        聊天、截图、日志或 shell history。本机 Apple ID、Team ID 与 profile
+        名也不进入 Git 或证据。
+      </p>
+    </section>
+
+    <section id="workflow">
+      <p class="eyebrow">Future workflow</p>
+      <h2>v0.8 以后实际要验证的顺序</h2>
+      <ol>
+        <li>开发者批准 v0.8 发布契约：版本、bundle ID、架构、最低系统和容器。</li>
+        <li>盘点稳定工具链、会员、证书、匹配私钥与重新建立的公证认证。</li>
+        <li>从明确 source commit 构建应用及所有嵌套代码。</li>
+        <li>验证架构、版本、最低系统、hardened runtime 和运行时 smoke。</li>
+        <li>从同一源代码生成新的 Developer ID 签名候选。</li>
+        <li>验证嵌套签名与时间戳，建立不可变候选名和 staple 前哈希。</li>
+        <li>只提交该候选公证，审查同一次提交状态与日志。</li>
+        <li>对同一候选 staple、验证票据，并计算最终哈希。</li>
+        <li>保留 quarantine，通过普通 Gatekeeper、安装、启动和重启路径。</li>
+        <li>只分发经过验证的最终哈希；任何实质修改都生成新候选。</li>
+      </ol>
+      <p class="banner">
+        本页故意不提供构建、codesign、notarytool 或 DMG 命令。v0.8 工具链、
+        Tauri 配置和发布契约尚未锁定；复制旧命令会制造伪证据。
+      </p>
+    </section>
+
+    <section id="evidence">
+      <p class="eyebrow">Evidence</p>
+      <h2>安全链、运行时和产品价值要分别证明</h2>
+      <div class="grid">
+        <article class="card good">
+          <h3>未来可以记录</h3>
+          <ul>
+            <li>版本、source commit、候选编号与工具版本；</li>
+            <li>签名、公证、staple、Gatekeeper 的脱敏结论；</li>
+            <li>staple 前后 SHA-256；</li>
+            <li>安装、启动、重启、遗漏和风险。</li>
+          </ul>
+        </article>
+        <article class="card bad">
+          <h3>永远不记录</h3>
+          <ul>
+            <li>私钥、密码、token、CSR 或完整签名身份；</li>
+            <li>账户数据、profile 名、本机路径和原始公证日志；</li>
+            <li>DMG、应用 bundle 或构建输出；</li>
+            <li>测试者身份、作品内容或真实 Vault 路径。</li>
+          </ul>
+        </article>
+      </div>
+      <p class="note">
+        签名通过不代表公证通过；公证通过不代表 Gatekeeper 通过；安全链通过
+        不代表应用能保存和重启；工程通过也不代表产品达到 MVP。
+      </p>
+    </section>
+
+    <section id="trouble">
+      <p class="eyebrow">Stop conditions</p>
+      <h2>失败时停止，不绕过</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>情况</th>
+              <th>正确反应</th>
+              <th>禁止动作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>证书没有匹配私钥</td>
+              <td>停止签名，核对 CSR、证书和 Keychain 归属。</td>
+              <td>导出或分享私钥来碰运气。</td>
+            </tr>
+            <tr>
+              <td>公证认证失败</td>
+              <td>停止提交，确认凭据是否有效；当前状态下预期不可用。</td>
+              <td>把密码贴进命令、聊天或脚本。</td>
+            </tr>
+            <tr>
+              <td>签名或公证失败</td>
+              <td>本机审查最小诊断，修复根因后生成新候选。</td>
+              <td>用 <code>--deep --force</code> 或旧票据掩盖问题。</td>
+            </tr>
+            <tr>
+              <td>Gatekeeper 阻止</td>
+              <td>核对最终哈希、签名、公证、quarantine 与当前策略。</td>
+              <td>右键绕过、删除 quarantine 或关闭安全策略。</td>
+            </tr>
+            <tr>
+              <td>怀疑凭据泄漏</td>
+              <td>停止发布、撤销相关凭据、销毁明文并重新盘点暴露面。</td>
+              <td>只移动明文文件或继续复用旧密码。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="restart">
+      <p class="eyebrow">Road v0.8 restart gate</p>
+      <h2>什么时候才重新开始打包</h2>
+      <ol>
+        <li>开发者明确批准 Road v0.8 的发布目标与 no-YOLO Gate；</li>
+        <li>重新锁定版本、bundle ID、架构、最低 macOS 和候选命名；</li>
+        <li>在当时的稳定 macOS、Xcode、Rust、Node、Python 与 Tauri 上盘点；</li>
+        <li>重新验证 Developer ID 证书与匹配私钥；</li>
+        <li>经明确批准生成新的公证认证，并直接保存到 Keychain；</li>
+        <li>从零实测构建、签名、公证、staple、Gatekeeper 和安装手册。</li>
+      </ol>
+      <p class="note">
+        在这些条件完成前，本页只用于学习概念，不授权产生候选、修改 Keychain
+        或向 Apple 上传软件。
+      </p>
+    </section>
+
+    <section id="official">
+      <p class="eyebrow">Apple official references</p>
+      <h2>官方资料</h2>
+      <ul class="sources">
+        <li><a href="https://developer.apple.com/documentation/xcode/preparing-your-app-for-distribution">Preparing your app for distribution</a>：分发前应用身份与配置。</li>
+        <li><a href="https://developer.apple.com/help/account/certificates/create-developer-id-certificates/">Developer ID certificates</a>：证书类型、CSR、下载和安装。</li>
+        <li><a href="https://developer.apple.com/documentation/xcode/packaging-mac-software-for-distribution">Packaging Mac software for distribution</a>：应用与分发容器。</li>
+        <li><a href="https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution">Notarizing macOS software before distribution</a>：公证服务、票据和 staple。</li>
+        <li><a href="https://developer.apple.com/documentation/security/resolving-common-notarization-issues">Resolving common notarization issues</a>：签名、公证和 entitlement 排障。</li>
+        <li><a href="https://support.apple.com/guide/security/app-code-signing-process-sec3ad8e6e53/web">App code signing process in macOS</a>：签名与公证的独立职责。</li>
+        <li><a href="https://support.apple.com/guide/security/gatekeeper-and-runtime-protection-sec5599b66df/web">Gatekeeper and runtime protection</a>：接收者侧策略。</li>
+      </ul>
+      <p>
+        keikeu 的产品和工程边界仍以
+        <a href="../../SPEC.md">SPEC</a>、<a href="../../RULES.md">RULES</a> 与
+        <a href="../../PROJECT.md">PROJECT</a> 为准。Road v0.8 的新计划获批后，
+        再由新计划决定精确发布契约。
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    keikeu · macOS 开发者入门手册 · 2026-08-01 · 打包延期至 Road v0.8 ·
+    静态 HTML，无外部脚本、无凭据、无本机路径
+  </footer>
+</body>
+</html>

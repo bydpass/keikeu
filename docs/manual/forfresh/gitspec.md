@@ -1,4 +1,4 @@
-> **HUMAN MANUAL — NON-NORMATIVE.** 这是给人看的入门说明。仓库权限与正式规则只看 [`docs/RULES.md` §7](../RULES.md#7-git)；下面的命令示例不会自动授权 agent 提交、合并或推送。
+> **HUMAN MANUAL — NON-NORMATIVE.** 这是给人看的入门说明。仓库权限与正式规则只看 [`docs/RULES.md` §7](../../RULES.md#7-git)；下面的命令示例不会自动授权 agent 提交、合并或推送。
 
 # Git 手册
 
@@ -310,4 +310,4 @@ Agent 写代码。人拥有 diff 和历史。
 看不懂就停。
 ```
 
-想看四个区域如何移动，打开 [`git-interactive.html`](git-interactive.html)。正式权限永远回到 [`RULES §7`](../RULES.md#7-git)。
+想看四个区域如何移动，打开 [`git-interactive.html`](git-interactive.html)。正式权限永远回到 [`RULES §7`](../../RULES.md#7-git)。
