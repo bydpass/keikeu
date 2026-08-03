@@ -2,10 +2,11 @@ import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import LibraryView from "./LibraryView.vue";
-import { openSystemTarget } from "./bridge.js";
+import { confirmAction, openSystemTarget } from "./bridge.js";
 
 vi.mock("./bridge.js", () => ({
   bridgeRequest: vi.fn(),
+  confirmAction: vi.fn(),
   openSystemTarget: vi.fn(),
 }));
 
@@ -71,7 +72,7 @@ async function mountLibrary(request, extra = {}) {
 
 beforeEach(() => {
   vi.resetAllMocks();
-  vi.spyOn(window, "confirm").mockReturnValue(true);
+  confirmAction.mockResolvedValue(true);
 });
 
 afterEach(() => {
@@ -175,6 +176,38 @@ describe("Road v0.6 Library runtime", () => {
     await flushPromises();
     expect(request).toHaveBeenCalledWith(
       "library.restore",
+      { paths: [trashed.path], vault_locator: "vault-v1:test" },
+      expect.objectContaining({ family: "library_path" }),
+    );
+  });
+
+  it("routes permanent deletion through the async confirmation boundary", async () => {
+    const browserConfirm = vi.spyOn(window, "confirm").mockReturnValue(true);
+    const request = vi.fn(async (method, params) => {
+      if (method === "library.query") {
+        return params.scope === "trash"
+          ? library({ scope: "trash", entries: [trashed] })
+          : library();
+      }
+      if (method === "library.permanently_delete") {
+        return { reports: [{ source: trashed.path, destination: null, error: null }], warnings: [] };
+      }
+      throw new Error(method);
+    });
+    const wrapper = await mountLibrary(request);
+    await buttonByText(wrapper, "废纸篓 · 1").trigger("click");
+    await flushPromises();
+
+    await buttonByText(wrapper, "永久删除").trigger("click");
+    await flushPromises();
+
+    expect(confirmAction).toHaveBeenCalledWith(
+      "永久删除这份 Paper？此操作不可撤销。",
+      { okLabel: "永久删除", cancelLabel: "取消" },
+    );
+    expect(browserConfirm).not.toHaveBeenCalled();
+    expect(request).toHaveBeenCalledWith(
+      "library.permanently_delete",
       { paths: [trashed.path], vault_locator: "vault-v1:test" },
       expect.objectContaining({ family: "library_path" }),
     );

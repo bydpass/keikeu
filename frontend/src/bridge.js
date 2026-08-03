@@ -33,14 +33,19 @@ export function openSystemTarget(action, relativeTarget) {
   return invoke("open_system_target", { action, relativeTarget });
 }
 
-export function confirmDiscardChanges() {
-  const message = "当前有未保存的更改。要放弃更改并继续吗？";
+export function confirmAction(message, options = {}) {
   if (!isTauri()) {
     return Promise.resolve(window.confirm(message));
   }
   return confirm(message, {
     title: "keikeu",
     kind: "warning",
+    ...options,
+  });
+}
+
+export function confirmDiscardChanges() {
+  return confirmAction("当前有未保存的更改。要放弃更改并继续吗？", {
     okLabel: "放弃更改",
     cancelLabel: "继续编辑",
   });

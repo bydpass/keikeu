@@ -20,7 +20,8 @@ Markdown/Index/Vault 的进程架构不重写。
 
 CP4 已将 production 一次切换为 Paper v4、Index v4 与 protocol v2；CP5 已删除不可达
 旧正常链；CP6 已完成未知结果、repair、手册与合成安全 Gate。冻结 v3 reader 只存在于
-迁移边界，CP7 一号真实作者是下一 Gate，尚未开始。
+迁移边界。CP7 一号真实作者 Gate 已完成实际场景、修复并复验一个确认框 P1，现由
+advance YOLO 通过；开发者随后授权 CP7 checkpoint commit，Road closeout 仍未授权。
 
 ## 1. 权威、批准与执行纪律
 
@@ -586,21 +587,20 @@ migrator 或大型 Vue；不做视觉润色、新功能、人工修复、真实�
 
 **顺序步骤：**
 
-- [ ] 重跑 §3 完整自动检查与 sidecar build，记录候选 commit、Apple Silicon 环境和
+- [x] 重跑 §3 完整自动检查与 sidecar build，记录候选 commit、Apple Silicon 环境和
       启动方式，不记录私密路径。
-- [ ] 开发者选择已有真实 Vault 或新 v4 Vault；已有 v3 Vault 必须先只读 preflight、
-      在 Home 下但 active Vault 外创建完整备份并完成 regular-file manifest/逐字节验证、
-      staging 验证，再单独批准迁移。
-- [ ] 测试前只说明隐私、停止条件和不记录作品内容，不先做功能教学。
-- [ ] 一号作者创建 Paper，编辑 Paper 名称、页标题和正文，在真实光标处分割新页，
+- [x] 开发者选择已有真实 Vault；只读 inspect 证明它已经是 pure v4，因此未进入仅适用于
+      v3 的外部备份、regular-file manifest/逐字节验证、staging 与迁移授权分支。
+- [x] 测试前只说明隐私、停止条件和不记录作品内容，不先做功能教学。
+- [x] 一号作者创建 Paper，编辑 Paper 名称、页标题和正文，在真实光标处分割新页，
       设置需要的类型，删除一页并确认，然后整体保存。
-- [ ] 正常退出并重启，从 Library 搜索或浏览找回整份 Paper，打开并继续编辑。
-- [ ] 只记录完成/未完成、犹豫点、介入次数、错误等级和脱敏原话；不记录正文、名称、
+- [x] 正常退出并重启，从 Library 搜索或浏览找回整份 Paper，打开并继续编辑。
+- [x] 只记录完成/未完成、犹豫点、介入次数、错误等级和脱敏原话；不记录正文、名称、
       Tags、路径或含内容截图。
-- [ ] 不在唯一真实 Vault 故意制造损坏；repair 只复用 CP6 合成/副本证据。
-- [ ] P0 立即停止写入并保留原 Vault/备份；P1 停止接受，先在 fixture/副本修复并重跑
+- [x] 不在唯一真实 Vault 故意制造损坏；repair 只复用 CP6 合成/副本证据。
+- [x] P0 立即停止写入并保留原 Vault/备份；P1 停止接受，先在 fixture/副本修复并重跑
       CP6 相关 Gate，再申请重试。
-- [ ] 无 P0/P1 后完成报告；实际场景证据满足时，CP7 由 advance YOLO 通过。
+- [x] 无 P0/P1 后完成报告；实际场景证据满足时，CP7 由 advance YOLO 通过。
 
 **退出 Gate（advance YOLO）：** 必须确认哪里可写、如何分页/删页/保存；退出重开和 Library 找回符合
 预期；无内容丢失、静默改写或危险继续；没有未解决 P0/P1。CP7 只证明一号作者接受，

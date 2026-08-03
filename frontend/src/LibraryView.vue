@@ -2,7 +2,7 @@
 import { computed, onActivated, onMounted, ref } from "vue";
 
 import LibraryV4Projection from "./LibraryV4Projection.vue";
-import { bridgeRequest, openSystemTarget } from "./bridge.js";
+import { bridgeRequest, confirmAction, openSystemTarget } from "./bridge.js";
 
 const props = defineProps({
   runtime: { type: Object, required: true },
@@ -195,10 +195,15 @@ function restoreSelected() {
   if (selected.value) mutate("library.restore", { paths: [selected.value.path] }, "恢复 Paper");
 }
 
-function permanentlyDeleteSelected() {
-  if (selected.value && window.confirm("永久删除这份 Paper？此操作不可撤销。")) {
-    mutate("library.permanently_delete", { paths: [selected.value.path] }, "永久删除 Paper");
-  }
+async function permanentlyDeleteSelected() {
+  if (
+    !selected.value
+    || !(await confirmAction("永久删除这份 Paper？此操作不可撤销。", {
+      okLabel: "永久删除",
+      cancelLabel: "取消",
+    }))
+  ) return;
+  await mutate("library.permanently_delete", { paths: [selected.value.path] }, "永久删除 Paper");
 }
 
 async function createFolder() {
@@ -229,7 +234,13 @@ async function mergeFolder() {
 }
 
 async function deleteFolder() {
-  if (!currentFolder.value || !window.confirm("将这个文件夹及其中 Paper 移入废纸篓？")) return;
+  if (
+    !currentFolder.value
+    || !(await confirmAction("将这个文件夹及其中 Paper 移入废纸篓？", {
+      okLabel: "移入废纸篓",
+      cancelLabel: "取消",
+    }))
+  ) return;
   await mutate("library.soft_delete_folder", { folder: currentFolder.value }, "删除文件夹");
   scope.value = "all";
   await refresh({ verify: true, preserveNotice: true });
@@ -243,7 +254,13 @@ async function restoreFolder() {
 }
 
 async function permanentlyDeleteFolder() {
-  if (!currentTrashFolder.value || !window.confirm("永久删除这个废纸篓文件夹？此操作不可撤销。")) return;
+  if (
+    !currentTrashFolder.value
+    || !(await confirmAction("永久删除这个废纸篓文件夹？此操作不可撤销。", {
+      okLabel: "永久删除",
+      cancelLabel: "取消",
+    }))
+  ) return;
   await mutate("library.permanently_delete_folder", { folder: currentTrashFolder.value }, "永久删除文件夹");
   scope.value = "trash";
   await refresh({ verify: true, preserveNotice: true });

@@ -6,6 +6,7 @@ import { confirm } from "@tauri-apps/plugin-dialog";
 import {
   bridgeRequest,
   chooseVaultDirectory,
+  confirmAction,
   confirmDiscardChanges,
   openSystemTarget,
   registerWindowCloseGuard,
@@ -86,6 +87,23 @@ describe("Tauri bridge envelope", () => {
       "当前有未保存的更改。要放弃更改并继续吗？",
     );
     expect(confirm).not.toHaveBeenCalled();
+  });
+
+  it("routes arbitrary Tauri confirmations through the native dialog", async () => {
+    isTauri.mockReturnValue(true);
+    confirm.mockResolvedValue(true);
+
+    await expect(confirmAction("永久删除？", {
+      okLabel: "永久删除",
+      cancelLabel: "取消",
+    })).resolves.toBe(true);
+
+    expect(confirm).toHaveBeenCalledWith("永久删除？", {
+      title: "keikeu",
+      kind: "warning",
+      okLabel: "永久删除",
+      cancelLabel: "取消",
+    });
   });
 
   it("uses the native two-option dialog with the required labels in Tauri", async () => {

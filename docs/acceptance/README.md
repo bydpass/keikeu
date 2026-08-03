@@ -18,6 +18,7 @@
 - [`road-v0-6/cp4-runtime/report.md`](road-v0-6/cp4-runtime/report.md) — Road v0.6 CP4 production Paper v4/protocol v2 cutover, locator/pending-intent recovery, responsive QA, and isolated full Tauri vertical-smoke evidence.
 - [`road-v0-6/cp5-cleanup/report.md`](road-v0-6/cp5-cleanup/report.md) — Road v0.6 CP5 Flashcard/v3 normal-runtime deletion, zero-reference gate, retained legacy migration coverage, and isolated Tauri navigation evidence.
 - [`road-v0-6/cp6-safety/report.md`](road-v0-6/cp6-safety/report.md) — Road v0.6 CP6 unknown-result fault matrix, no-replay recovery, repair manual/rehearsal, and isolated Tauri safety-smoke evidence.
+- [`road-v0-6/cp7-author/report.md`](road-v0-6/cp7-author/report.md) — Road v0.6 CP7 de-identified first-author flow, real-v4-Vault boundary, native-confirmation P1 fix/retest, and product-acceptance evidence.
 - [`../archive/docs-archive-documentation-reform-report/`](../archive/docs-archive-documentation-reform-report/): read-only pre-completion record and the SOP used for the checks.
 
 Do not place prose, inspirations, names, relationships, Vault paths, device identifiers, or secrets here. Acceptance, archive, tag, commit, and push remain separate decisions.
