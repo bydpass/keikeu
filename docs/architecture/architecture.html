@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>keikeu Architecture — Road v0.6 current / cleanup</title>
+  <title>keikeu Architecture — Road v0.6 complete</title>
   <style>
     :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #1e2523; background: #eceae4; }
     * { box-sizing: border-box; }
@@ -33,9 +33,9 @@
 <body>
   <main>
     <header>
-      <p class="eyebrow">Road v0.6 · current / cleanup map</p>
+      <p class="eyebrow">Road v0.6 · completed runtime map</p>
       <h1>进程架构不重写，Paper 契约垂直切换</h1>
-      <p class="status">CP5 已留下唯一的 Paper v4 / Index v4 / protocol v2 正常运行链；冻结 v3 reader 仅供迁移。</p>
+      <p class="status">CP7 已验收：唯一正常运行链为 Paper v4 / Index v4 / protocol v2；冻结 v3 reader 仅供迁移。</p>
       <nav>
         <a href="../PROJECT.md">当前坐标</a>
         <a href="../SPEC.md">产品边界</a>
@@ -48,7 +48,7 @@
     </header>
 
     <section>
-      <p class="label">Current at CP5 · protocol v2</p>
+      <p class="label">Completed runtime · protocol v2</p>
       <div class="flow target">
         <div class="node"><strong>Vue 3</strong><span>pages[] draft/baseline + App-root pending intent</span></div>
         <div class="node"><strong>Tauri / Rust</strong><span>窗口、sidecar、单队列、窄系统动作</span></div>
@@ -60,14 +60,14 @@
     </section>
 
     <section>
-      <p class="label">Next at CP6 · safety integration</p>
+      <p class="label">Completed CP6–CP7 Gates · safety and author acceptance</p>
       <div class="flow target">
-        <div class="node"><strong>Vue 3</strong><span>验证未知提交与两类 repair UI</span></div>
-        <div class="node"><strong>Tauri / Rust</strong><span>验证 response-loss ownership</span></div>
-        <div class="node"><strong>JSONL v2</strong><span>保持一次 mutation、只读对账</span></div>
-        <div class="node"><strong>Python service</strong><span>覆盖 fault matrix 与 Index warning</span></div>
-        <div class="node"><strong>Python Core</strong><span>演练迁移、locator 与恢复边界</span></div>
-        <div class="node"><strong>Author assets</strong><span>只使用 fixture、合成 Vault 或完整副本</span></div>
+        <div class="node"><strong>Vue 3</strong><span>unknown-result 与两类 repair UI 已验证</span></div>
+        <div class="node"><strong>Tauri / Rust</strong><span>response-loss ownership 与原生确认已验证</span></div>
+        <div class="node"><strong>JSONL v2</strong><span>一次 mutation、只读对账，无 replay</span></div>
+        <div class="node"><strong>Python service</strong><span>fault matrix 与 Index warning 已覆盖</span></div>
+        <div class="node"><strong>Python Core</strong><span>迁移、locator 与恢复边界已演练</span></div>
+        <div class="node"><strong>Author Gate</strong><span>真实创建、保存、重开与找回已通过</span></div>
       </div>
     </section>
 
@@ -89,7 +89,7 @@
           <li>CP2 additive migration/Index；只由 fixture/copy 调用。</li>
           <li>CP3 development-only Vue 候选组件；零 Vault 写入。</li>
           <li>CP4 同一 Checkpoint 激活 v2 全栈并退役活动旧 caller。</li>
-          <li>CP5 删除已不可达旧链；CP6 完成恢复与修复 Gate。</li>
+          <li>CP5 删除已不可达旧链；CP6 完成恢复与修复 Gate；CP7 完成一号作者 Gate。</li>
         </ol>
       </div>
     </section>

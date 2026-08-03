@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>keikeu Road v0.6 · 完整施工记录</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --canvas: #e7e3d8;
+      --paper: #f7f4ea;
+      --soft: #eee9dc;
+      --ink: #171612;
+      --muted: #625f56;
+      --accent: #193c68;
+      --rule: #b8b2a6;
+      --success: #365d31;
+      --danger: #8b3e31;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 20px; }
+    body { margin: 0; color: var(--ink); background: var(--canvas); line-height: 1.58; }
+    a { color: var(--accent); text-underline-offset: 3px; }
+    a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+    code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
+    h1, h2, h3 { font-family: Georgia, "Songti SC", serif; font-weight: 500; line-height: 1.08; }
+    h1 { margin: 12px 0 20px; font-size: clamp(2.8rem, 8vw, 6.5rem); }
+    h2 { margin: 0 0 18px; font-size: clamp(1.9rem, 4vw, 3rem); }
+    h3 { margin: 0 0 9px; font-size: 1.35rem; }
+    p { margin: 0 0 13px; }
+    .archive-bar { padding: 11px 18px; color: var(--paper); background: var(--danger); font: 800 .72rem/1.45 ui-monospace, monospace; letter-spacing: .08em; text-align: center; }
+    .shell { display: grid; grid-template-columns: 220px minmax(0, 1fr); width: min(1480px, 100%); margin: 0 auto; }
+    aside { position: sticky; top: 0; align-self: start; height: 100vh; padding: 28px 20px; color: var(--paper); background: var(--ink); overflow-y: auto; }
+    aside strong { display: inline-block; padding: 7px 9px; color: var(--ink); background: var(--paper); }
+    aside p { margin-top: 18px; color: #cac5b8; font-size: .84rem; }
+    nav { display: grid; gap: 2px; margin: 24px 0; }
+    nav a { padding: 7px 9px; color: var(--paper); text-decoration: none; border-left: 2px solid transparent; }
+    nav a:hover { border-left-color: #8eacca; background: #292824; }
+    main { min-width: 0; padding: 30px clamp(16px, 5vw, 64px) 72px; }
+    .hero, section { max-width: 1120px; margin: 0 auto 18px; padding: clamp(24px, 4vw, 44px); background: var(--paper); border: 1px solid var(--rule); }
+    .hero { border-top: 5px solid var(--accent); }
+    .eyebrow, .label { color: var(--accent); font-size: .73rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    .lede { max-width: 820px; color: var(--muted); font-size: 1.08rem; }
+    .hash { margin-top: 28px; padding: 14px; background: var(--soft); border-left: 4px solid var(--accent); }
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 24px; }
+    .metric { padding: 16px; background: var(--soft); border-top: 3px solid var(--accent); }
+    .metric strong { display: block; font: 500 2rem/1 Georgia, serif; }
+    .metric span { display: block; margin-top: 6px; color: var(--muted); font-size: .85rem; }
+    .flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+    .flow div { padding: 14px; background: var(--soft); border-top: 3px solid var(--accent); }
+    .flow span { display: block; margin-top: 5px; color: var(--muted); font-size: .84rem; }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .checkpoints { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    article { min-width: 0; padding: 20px; background: var(--soft); border-top: 4px solid var(--accent); }
+    article .identity { color: var(--muted); font-size: .82rem; }
+    article dl { margin: 14px 0 0; }
+    article dt { margin-top: 11px; color: var(--accent); font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    article dd { margin: 3px 0 0; }
+    .pass { color: var(--success); font-weight: 800; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px; border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; }
+    th { color: var(--accent); }
+    footer { max-width: 1120px; margin: 0 auto; padding: 20px; color: var(--muted); font-size: .86rem; }
+    @media (max-width: 900px) { .shell { grid-template-columns: 1fr; } aside { position: static; height: auto; } nav { grid-template-columns: repeat(2, 1fr); } .metrics, .flow, .checkpoints, .two { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 600px) { main { padding-inline: 12px; } .metrics, .flow, .checkpoints, .two, nav { grid-template-columns: 1fr; } }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  </style>
+</head>
+<body>
+  <div class="archive-bar">ARCHIVED · READ ONLY · ROAD v0.6 CLOSEOUT · 2026-08-02</div>
+  <div class="shell">
+    <aside>
+      <strong>keikeu / v0.6</strong>
+      <p>这是绑定最终 CP7 checkpoint 的只读施工快照，不定义当前产品行为。</p>
+      <nav aria-label="页面目录">
+        <a href="#boundary">归档边界</a>
+        <a href="#result">最终结果</a>
+        <a href="#checkpoints">CP0–CP7</a>
+        <a href="#evidence">证据分层</a>
+        <a href="#risks">遗漏与风险</a>
+        <a href="#sources">来源</a>
+      </nav>
+      <p>当前权威仍是 PROJECT、SPEC、RULES、运行时代码与测试。</p>
+    </aside>
+    <main>
+      <header class="hero" id="boundary">
+        <div>
+          <p class="eyebrow">Road v0.6 · Paper v4 reconstruction</p>
+          <h1>Paper 就是最终带走的卡页作品</h1>
+          <p class="lede">Road v0.6 将“编辑 Paper，再渲染 Flashcard”改为“直接编辑、保存并找回由有序卡页组成的 Paper”，同时保留 Vue 3 → Tauri/Rust → JSONL → Python → Markdown 的本地进程边界。</p>
+          <div class="hash"><strong>绑定 checkpoint</strong><br><code>18a102460217235c027c91dad5400d21c5bc5797</code><br><span class="mono">fix(library): route delete confirmations through native dialog</span></div>
+          <div class="metrics">
+            <div class="metric"><strong>8</strong><span>已提交 checkpoints</span></div>
+            <div class="metric"><strong>0</strong><span>未解决 P0/P1</span></div>
+            <div class="metric"><strong>1</strong><span>真实作者 Gate</span></div>
+            <div class="metric"><strong>v4</strong><span>唯一正常 Paper schema</span></div>
+          </div>
+        </div>
+      </header>
+
+      <section id="result">
+        <p class="label">Final product and runtime</p>
+        <h2>产品模型改变，进程架构不重写</h2>
+        <div class="flow">
+          <div><strong>灵感</strong><span>作者自带真实素材</span></div>
+          <div><strong>卡页 Paper</strong><span>名称、页标题、正文、可空类型</span></div>
+          <div><strong>整体保存</strong><span>一次 CAS 提交 pages[]</span></div>
+          <div><strong>Library</strong><span>全页搜索、组织、Trash、恢复</span></div>
+          <div><strong>离开</strong><span>带着 Paper 进入正文创作</span></div>
+        </div>
+        <div class="two" style="margin-top: 24px">
+          <div><h3>纳入 Road</h3><ul><li>Paper/Markdown/Index v4 与 protocol v2。</li><li>v2/v3 显式迁移、备份与 loss audit。</li><li>卡页编辑、Library、未知结果与人工修复。</li><li>一号真实作者创建、保存、重开与找回。</li></ul></div>
+          <div><h3>未纳入 Road</h3><ul><li>签名、公证、DMG、tag、push 或发布。</li><li>二号用户、移动端、多用户 MVP 或市场匹配。</li><li>云同步、账号、遥测、AI 代写或内置正文编辑器。</li><li>Intel Mac、Linux、watchOS 支持。</li></ul></div>
+        </div>
+      </section>
+
+      <section id="checkpoints">
+        <p class="label">Linear checkpoint ledger</p>
+        <h2>CP0–CP7</h2>
+        <p>规划批准基线：<code>9bb722aba09619b9ec69782c02da02a02b1cb231</code>。以下每项均从前一已通过 checkpoint 继续。</p>
+        <div class="checkpoints">
+          <article>
+            <h3>CP0 · 契约与基线</h3><p class="identity"><code>docs/cp0-v06-contract-baseline</code><br><code>08626a93a8a7580016fd65608b14ac6e5cd27813</code></p>
+            <dl><dt>范围 / 变化</dt><dd>校准 SPEC、RULES、计划、三张活动 map、Markdown/protocol 契约、Node 22.23.2 与两份 ADR；production 仍为 v0.5/v1。</dd><dt>检查 / QA</dt><dd>Python 235、Vue 64、Rust 10、compile、sidecar、文档 Gate；1220×780 与 920×680 无溢出。</dd><dt>遗漏 / 风险</dt><dd>未做 Tauri 功能 smoke、真实 Vault、迁移或发布；此阶段只证明契约一致。</dd><dt>Gate</dt><dd class="pass">advance YOLO；无 P0/P1。</dd></dl>
+          </article>
+          <article>
+            <h3>CP1 · Paper v4 Core</h3><p class="identity"><code>core/cp1-paper-v4-core</code><br><code>cc41eff3f83d46a4adaed01c242c5159462c469d</code></p>
+            <dl><dt>范围 / 变化</dt><dd>additive 增加 CardPageV4、PaperV4 与严格 v4 parser/renderer；production import 保持 v3/v1。</dd><dt>检查 / QA</dt><dd>聚焦 57、Python 292、compile、sidecar、文档 Gate；prototype route 启停且 v1 hello 正常。</dd><dt>遗漏 / 风险</dt><dd>未运行 Vitest/Vite/Cargo，未触碰 Vault 或迁移；新 Core 尚未进入 production。</dd><dt>Gate</dt><dd class="pass">advance YOLO；无 P0/P1。</dd></dl>
+          </article>
+          <article>
+            <h3>CP2 · 迁移与 Index</h3><p class="identity"><code>core/cp2-paper-v4-migration-index</code><br><code>8c9dae91167efd7ed46f7a2cd775dc8b48b71a8d</code></p>
+            <dl><dt>范围 / 变化</dt><dd>增加测试限定的 v2/v3→v4 迁移、raw loss audit、验证备份、Index v4、Trash 投影与 v4 Branch。</dd><dt>检查 / QA</dt><dd>聚焦 66、新迁移/Index 24、Python 316、compile、sidecar、文档 Gate；prototype route 启停。</dd><dt>遗漏 / 风险</dt><dd>production 仍为 v3/v1；未运行 Vitest/Vite/Cargo，未执行真实 Vault 迁移。</dd><dt>Gate</dt><dd class="pass">advance YOLO；无 P0/P1。</dd></dl>
+          </article>
+          <article>
+            <h3>CP3 · Vue v4 预备层</h3><p class="identity"><code>ui/cp3-paper-v4-development</code><br><code>48f88a4a12bcd772971d2b2d1f8c4332462831c7</code></p>
+            <dl><dt>范围 / 变化</dt><dd>development-only Paper v4 workbench 与 Library projection；修复搜索结果/详情选择 P1；production 仍为 v3/v1。</dd><dt>检查 / QA</dt><dd>聚焦 Vitest 32、完整 83、Vite 29 modules、Rust 10、文档 Gate；两种窗口与 200% 文字 browser QA，contrast 5.60:1–15.78:1。</dd><dt>遗漏 / 风险</dt><dd>只用合成 DTO；未写 Vault，未声称 native Flashcard 点击或真实迁移。</dd><dt>Gate</dt><dd class="pass">P1 修复后 advance YOLO；无遗留 P0/P1。</dd></dl>
+          </article>
+          <article>
+            <h3>CP4 · 全栈垂直切换</h3><p class="identity"><code>feat/cp4-runtime-v2-cutover</code><br><code>8c0ba338955040804c8f166ddff7ead89fcce8c1</code></p>
+            <dl><dt>范围 / 变化</dt><dd>同一 checkpoint 激活 Paper/Index v4 与 protocol v2：startup Gates、DTO、locator、pending intent、整体保存及 Library lifecycle；活动 Flashcard caller 退役。</dd><dt>检查 / QA</dt><dd>Python 321、Vitest 58、Rust 11、protocol 36、迁移/service 66、core path/service 121、sidecar、Vite；合成 v3 Vault Tauri smoke 覆盖迁移与全生命周期。</dd><dt>遗漏 / 风险</dt><dd>无真实 Vault/provider/作者；完整故障矩阵延期 CP6；旧不可达实现留给 CP5。</dd><dt>Gate</dt><dd class="pass">advance YOLO；无 P0/P1。</dd></dl>
+          </article>
+          <article>
+            <h3>CP5 · 旧链退役</h3><p class="identity"><code>refactor/cp5-retire-flashcard-v3</code><br><code>30f2491784b924ec34ade8c62b1b258499ea7dc6</code></p>
+            <dl><dt>范围 / 变化</dt><dd>删除不可达 Flashcard/v3 正常 runtime 链，只在迁移边界保留冻结 legacy reader；零引用 Gate 通过。</dd><dt>检查 / QA</dt><dd>Python 256、Vitest 52、Rust 11、聚焦 241、Vite、sidecar、rustfmt；合成 Tauri 导航 smoke。</dd><dt>遗漏 / 风险</dt><dd>故障/repair 留给 CP6；无真实 Vault、provider、作者或发布证据。</dd><dt>Gate</dt><dd class="pass">advance YOLO；无 P0/P1。</dd></dl>
+          </article>
+          <article>
+            <h3>CP6 · 安全整合 Gate</h3><p class="identity"><code>test/cp6-recovery-repair-gate</code><br><code>02d8ed5f9f4343490278a514aaac35b7b094fbaf</code></p>
+            <dl><dt>范围 / 变化</dt><dd>完成 unknown-result fault matrix、commit_unknown 无 replay、只读对账、repair UI/手册/演练，并修复 Library startup P1。</dd><dt>检查 / QA</dt><dd>Python 265、Vitest 61、Rust 12、Vite、sidecar、文档 Gate、rustfmt；带 fault injection 的合成 Tauri safety smoke。</dd><dt>遗漏 / 风险</dt><dd>只使用 fixture、临时或合成 Vault；macOS 27 自动化受 System Events -10827 限制；无真实作者与发布证据。</dd><dt>Gate</dt><dd class="pass">P1 修复后 advance YOLO；无遗留 P0/P1。</dd></dl>
+          </article>
+          <article>
+            <h3>CP7 · 一号真实作者 Gate</h3><p class="identity"><code>test/cp7-real-author-gate</code><br><code>18a102460217235c027c91dad5400d21c5bc5797</code></p>
+            <dl><dt>范围 / 变化</dt><dd>在获准的既有 provider-backed v4 Vault 完成真实创建、命名、分页、类型、删页、保存、重启、Library 找回；原生确认 P1 修复并复验。</dd><dt>检查 / QA</dt><dd>Python 265、Vitest 63、Rust 12、Vite、sidecar、文档 Gate、rustfmt；作者人工确认基本功能与 Library 连带删除通过。</dd><dt>遗漏 / 风险</dt><dd>未发生真实旧 schema 迁移，不证明 provider 同步、外部编辑器、移动端、第二用户、兼容性或发布；不保存作者内容与敏感路径。</dd><dt>Gate</dt><dd class="pass">开发者人工接受并授权 checkpoint；无遗留 P0/P1。</dd></dl>
+          </article>
+        </div>
+      </section>
+
+      <section id="evidence">
+        <p class="label">Evidence boundaries</p>
+        <h2>四层证据，不互相冒充</h2>
+        <table><thead><tr><th>结论</th><th>实际证据</th><th>不证明</th></tr></thead><tbody>
+          <tr><td>代码实现</td><td>CP1–CP6 source inspection、聚焦测试与完整自动检查。</td><td>真实作者接受或平台发布。</td></tr>
+          <tr><td>文件服务与安全</td><td>合成/fixture/临时 Vault 的迁移、生命周期、fault injection 与 repair 演练。</td><td>provider 同步正确或真实旧 Vault 已迁移。</td></tr>
+          <tr><td>产品接受</td><td>CP7 一号作者在获准既有 v4 Vault 的真实创建—保存—重开—找回流程。</td><td>第二用户、多用户 MVP、移动端或市场匹配。</td></tr>
+          <tr><td>Road closeout</td><td>本页绑定 CP7 checkpoint，汇总已记录范围、检查、Gate、遗漏与风险。</td><td>tag、push、签名、公证、打包或发布。</td></tr>
+        </tbody></table>
+      </section>
+
+      <section id="risks">
+        <p class="label">Known omissions and residual risk</p>
+        <h2>Road 完成，不等于发布完成</h2>
+        <div class="two">
+          <div><h3>数据与恢复</h3><ul><li>未知提交草稿只保存在当前 App 内存；强制终止仍可能丢失内存态。</li><li>CP7 Vault 已是 v4，因此真实旧 schema 迁移仍无真实作者证据。</li><li>provider-backed 只描述存储位置类别，不声称同步一致性。</li><li>Index 可重建且不是权威；作者 Markdown 仍是权威资产。</li></ul></div>
+          <div><h3>平台与交付</h3><ul><li>macOS 27/Xcode 27 beta 只提供本 Road 工程证据，不继承为发布兼容性。</li><li>Apple Silicon 是当前 Mac 方向；Intel Mac 明确不支持。</li><li>移动端延期到后续 Road；二号用户在移动版前不进入 Gate。</li><li>签名、公证、staple、DMG、tag、push 与发布均未执行。</li></ul></div>
+        </div>
+      </section>
+
+      <section id="sources">
+        <p class="label">Source records</p>
+        <h2>可追溯入口</h2>
+        <p><a href="../../../PLAN_road_v0_6.md">中文实施计划</a> · <a href="../../design/road-v0-6-paper-v4-design.md">批准设计</a> · <a href="../../PROJECT.md">当前坐标</a> · <a href="../../RULES.md">证据与 Git 规则</a></p>
+        <p><a href="../../acceptance/road-v0-6/cp0-contract/report.md">CP0</a> · <a href="../../acceptance/road-v0-6/cp1-core/report.md">CP1</a> · <a href="../../acceptance/road-v0-6/cp2-migration-index/report.md">CP2</a> · <a href="../../acceptance/road-v0-6/cp3-ui/report.md">CP3</a> · <a href="../../acceptance/road-v0-6/cp4-runtime/report.md">CP4</a> · <a href="../../acceptance/road-v0-6/cp5-cleanup/report.md">CP5</a> · <a href="../../acceptance/road-v0-6/cp6-safety/report.md">CP6</a> · <a href="../../acceptance/road-v0-6/cp7-author/report.md">CP7</a></p>
+      </section>
+
+      <footer>本 snapshot 在目标 checkpoint 之后以独立文档 closeout 变更加入，因此不属于 <code>18a1024</code> 本身。后续 repository-policy commit <code>3df9760</code> 不属于 CP0–CP7 checkpoint ledger。本页不保存作者内容、Vault 路径或稳定设备标识。</footer>
+    </main>
+  </div>
+</body>
+</html>

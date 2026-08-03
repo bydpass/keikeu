@@ -4,7 +4,7 @@
 
 ## Why this exists
 
-Phase 8.5 originally replaced overlapping root documents, Road notebooks, prototypes, and status pages with explicit active authorities and non-normative [human manuals](../manual/README.md). Road v0.3's version-specific design set lives in [`road-v0-3/`](road-v0-3/); the completed Road v0.4 Planbook and understanding gate live in [`road-v0-4/`](road-v0-4/); Road v0.5 construction is preserved in [`road-v0-5.html`](snapshots/road-v0-5.html). Current entry points are:
+Phase 8.5 originally replaced overlapping root documents, Road notebooks, prototypes, and status pages with explicit active authorities and non-normative [human manuals](../manual/README.md). Road v0.3's version-specific design set lives in [`road-v0-3/`](road-v0-3/); the completed Road v0.4 Planbook and understanding gate live in [`road-v0-4/`](road-v0-4/); Road v0.5 and v0.6 construction are preserved in [`road-v0-5.html`](snapshots/road-v0-5.html) and [`road-v0-6.html`](snapshots/road-v0-6.html). Current entry points are:
 
 - stable product and author-control boundary → [`docs/SPEC.md`](../SPEC.md)
 - current coordinates → [`docs/PROJECT.md`](../PROJECT.md)
@@ -39,6 +39,7 @@ Archive files retain historical reasoning and evidence. Their internal links may
 | [`feat-complete-road-v0-3-candidate.html`](snapshots/feat-complete-road-v0-3-candidate.html) | `2cc40ba` | `feat: complete Road v0.3 candidate` |
 | [`refactor-retire-flet-after-road-v0-4-acceptance.html`](snapshots/refactor-retire-flet-after-road-v0-4-acceptance.html) | `9389f9a` | `refactor: retire Flet after Road v0.4 acceptance` |
 | [`road-v0-5.html`](snapshots/road-v0-5.html) | `d900953` | `feat(ui): add fixed context rails, bounded scrolling, and hidden scrollbar` |
+| [`road-v0-6.html`](snapshots/road-v0-6.html) | `18a1024` | `fix(library): route delete confirmations through native dialog` |
 
 ## Archive rule
 

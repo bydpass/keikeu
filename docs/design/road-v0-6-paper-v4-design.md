@@ -1,12 +1,10 @@
 # Road v0.6：Paper v4 产品与架构设计
 
-> 状态：对话设计、本书面稿与中文实施计划均已由开发者于 2026-08-02 批准；
-> CP0–CP7 的开发者退出判断采用 advance YOLO；CP0–CP6 的分支、精确暂存、
-> DeepSeek `aic`、checkpoint commit 与连续执行另由“全部 YOLO”预先授权。
+> 状态：设计、CP0–CP7 与 Road closeout 均已完成；最终 checkpoint 为 `18a1024`，
+> 完整施工证据见只读 [Road v0.6 snapshot](../archive/snapshots/road-v0-6.html)。
 >
-> CP4 已实现 production Paper v4、Index v4 与 protocol v2；CP5 已删除不可达旧实现，
-> 正常 runtime 只剩 v4。本设计不代表 CP6、真实 Vault 迁移、CP7 产品接受、
-> Road closeout 或发布已经完成，也不授权修改真实 Vault。
+> production 已使用 Paper v4、Index v4 与 protocol v2；不可达旧实现已删除，CP6 安全
+> Gate 与 CP7 一号作者 Gate 已通过。未发生真实旧 schema 迁移，也不声称发布已完成。
 
 ## 1. 核心判断
 
@@ -31,9 +29,9 @@ Road v0.6 是一次产品模型重构，不是 runtime 重写，也不是发布 
 Road v0.6 保留本地优先、Markdown 权威、作者控制和现有桌面进程边界。它不增加
 数据库、云同步、账号、遥测、AI 代写或隐藏后台服务。
 
-## 2. Road 基线与 CP5 当前边界
+## 2. Road 基线与完成边界
 
-| 边界 | Road v0.5 基线 | CP5 当前事实 |
+| 边界 | Road v0.5 基线 | Road v0.6 完成事实 |
 | --- | --- | --- |
 | 产品模型 | Paper v3：frozen initial Summary、current Summary、Highlights、Tags | Paper v4：`Paper.pages[]` 是权威内容 |
 | 阅读体验 | 独立、只读、Summary-first Flashcard | 同一组卡页直接浏览，不再生成 Flashcard |
@@ -42,9 +40,9 @@ Road v0.6 保留本地优先、Markdown 权威、作者控制和现有桌面进�
 | Bridge | JSONL protocol v1 | framing 不变，breaking contract 升至 protocol v2 |
 | Library | Summary 预览与 Highlight 名称 | Paper 名称、第一页预览、页数、页标题与全页搜索 |
 
-CP4 已完成表中纵切换，CP5 已删除不可达旧链；[SPEC](../SPEC.md)、[RULES](../RULES.md)、
-`src/` 与 `tests/` 现共同描述 Paper v4/protocol v2。CP6 才完成故障与修复 Gate；
-不得把工程 checkpoint 写成真实作者接受或 Road 完成。
+CP4 完成表中纵切换，CP5 删除不可达旧链，CP6 完成故障与修复 Gate，CP7 完成一号
+真实作者接受；[SPEC](../SPEC.md)、[RULES](../RULES.md)、`src/` 与 `tests/` 共同描述
+Paper v4/protocol v2。各层证据仍不得互相冒充。
 
 ## 3. 范围与明确排除
 
@@ -916,7 +914,7 @@ Road v0.6 只有在以下条件全部满足后才能完成：
 5. 保存、stale、repair、index degraded 与 commit_unknown 均有自动测试和相关 smoke。
 6. Paper v4 人工修复手册完成并通过开发者演练。
 7. 一号作者真实工作流完成，且没有未解决 P0/P1。
-8. 最终 Checkpoint 已获提交授权；Road closeout 另行进行。
+8. 最终 Checkpoint 已获提交授权；Road closeout 已另行获批并归档。
 
 这些条件不产生签名、公证、DMG、push、二号用户、移动端或多用户 MVP 声称。
 

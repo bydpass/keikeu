@@ -1,10 +1,11 @@
-# Road v0.6 实施计划（已批准；CP0–CP7 advance YOLO）
+# Road v0.6 实施计划（已完成并归档）
 
 > 状态：依据已批准的 [Paper v4 产品与架构设计](docs/design/road-v0-6-paper-v4-design.md)
 > 于 2026-08-02 重写；开发者于同日授权开始执行 Road v0.6，并以 advance YOLO
 > 预先覆盖 CP0–CP7 的开发者退出判断，随后以“全部 YOLO”预先授权 CP0–CP6 的分支、
 > 精确暂存、DeepSeek `aic`、checkpoint commit 与连续执行。YOLO 不替代实际证据，也
-> 不授权真实 Vault、push、tag、发布、closeout 或 CP7 commit。
+> 不授权真实 Vault、push、tag、发布、closeout 或 CP7 commit。其后开发者分别授权了
+> 真实作者 Gate、CP7 commit 与 Road closeout；tag、push 和发布仍未授权、未执行。
 
 ## 0. Road 目标
 
@@ -20,8 +21,9 @@ Markdown/Index/Vault 的进程架构不重写。
 
 CP4 已将 production 一次切换为 Paper v4、Index v4 与 protocol v2；CP5 已删除不可达
 旧正常链；CP6 已完成未知结果、repair、手册与合成安全 Gate。冻结 v3 reader 只存在于
-迁移边界。CP7 一号真实作者 Gate 已完成实际场景、修复并复验一个确认框 P1，现由
-advance YOLO 通过；开发者随后授权 CP7 checkpoint commit，Road closeout 仍未授权。
+迁移边界。CP7 一号真实作者 Gate 已完成实际场景、修复并复验一个确认框 P1，随后以
+`18a1024` 提交。Road closeout 已获授权并形成
+[`road-v0-6.html`](docs/archive/snapshots/road-v0-6.html)；tag、push 与发布未执行。
 
 ## 1. 权威、批准与执行纪律
 
@@ -618,12 +620,12 @@ Road v0.6 只有在 CP0–CP7 逐项完成声明证据、由 advance YOLO 通过
 没有未处理旧 schema、Flashcard 活动链清零、修复手册演练完成、一号作者 Gate 通过且
 无未解决 P0/P1 后，才达到“可申请 closeout”。
 
-随后仍需开发者另行决定：
+2026-08-02 的开发者 closeout 决定为：
 
-1. 是否创建 `docs/archive/snapshots/road-v0-6.html` 的独立 closeout 变更；
-2. 是否提交该 snapshot；
-3. 是否 tag；
-4. 是否 push。
+1. 创建 `docs/archive/snapshots/road-v0-6.html` 的独立 closeout 变更；
+2. 提交该 snapshot 与必要的当前状态校准；
+3. 不创建 tag；
+4. 不 push，不进入发布流程。
 
 这些决定不产生签名、公证、DMG、移动端、二号用户或多用户 MVP 声称。
 
