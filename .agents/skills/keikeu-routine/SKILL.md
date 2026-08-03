@@ -63,6 +63,6 @@ Follow `AGENTS.md`, `docs/SPEC.md`, and `docs/RULES.md`; this skill compresses t
 2. Summarize what changed and why.
 3. Report implementation, automated evidence, and developer QA as separate states.
 4. Report data, provider, external-editor, platform, and acceptance risks plus staged, committed, and pushed state.
-5. If a commit was explicitly authorized, follow the exact-staging and `aic` procedure in `docs/RULES.md` §7, then inspect the resulting commit. Treat the approved `aic` invocation and the commit it creates as one transaction: once the developer approves the reviewed staged diff, named provider, and commit, execute both without requesting a second authorization.
+5. If a commit was explicitly authorized, follow the exact-staging and `aic` procedure in `docs/RULES.md` §7, then inspect the resulting commit. DeepSeek `aic` has standing developer authorization for this repository after the staged diff is reviewed and found free of secrets and author content: name DeepSeek and report the staged boundary, but do not ask again for provider approval. Explicit commit authority is still required; another provider, a sensitive or unexpected diff, or revoked authorization requires a new decision. Treat the authorized invocation and the commit it creates as one transaction without a second authorization.
 6. After the final accepted Road checkpoint commit, follow `docs/RULES.md` §8 for the separate Road snapshot closeout.
 7. Give the safest next command.
