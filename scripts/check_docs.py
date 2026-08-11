@@ -5,6 +5,7 @@ from __future__ import annotations
 from html.parser import HTMLParser
 from pathlib import Path
 import re
+import subprocess
 import sys
 from urllib.parse import unquote, urlsplit
 
@@ -58,6 +59,15 @@ class LinkParser(HTMLParser):
 
 
 def active_documents() -> list[Path]:
+    visible_files = {
+        ROOT / relative_path
+        for relative_path in subprocess.check_output(
+            ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"],
+            cwd=ROOT,
+            text=True,
+        ).split("\0")
+        if relative_path
+    }
     roots = [
         ROOT / "README.md",
         ROOT / "README_EN.md",
@@ -70,6 +80,7 @@ def active_documents() -> list[Path]:
         for path in (ROOT / "docs").rglob("*")
         if path.is_file()
         and path.suffix in DOCUMENT_SUFFIXES
+        and path in visible_files
         and ARCHIVE not in path.parents
         and (GENERATED not in path.parents or path.name == "README.md")
     ]
