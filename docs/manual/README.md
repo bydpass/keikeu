@@ -22,6 +22,10 @@ manual/
 
 | 阅读路径 | 读到什么 | 最终核对 |
 | --- | --- | --- |
+| [npm 新人手册](forfresh/npm-beginner-guide.html)（[PDF](forfresh/npm-beginner-guide.pdf)） | Node/npm 边界、锁文件、当前脚本、依赖纪律与故障速查 | [frontend/package.json](../../frontend/package.json)、[PROJECT](../PROJECT.md) 与 [RULES](../RULES.md) |
+| [Tauri + Vue 入门](forfresh/tauri-vue-beginner-guide.html)（[PDF](forfresh/tauri-vue-beginner-guide.pdf)） | Vue 状态流、Tauri command、Sidecar、一次保存与恢复语义 | [architecture](../architecture/architecture.html)、[SPEC](../SPEC.md) 与 [RULES](../RULES.md) |
+| [Python Caveman 诠释](forfresh/python-caveman-guide.html)（[PDF](forfresh/python-caveman-guide.pdf)） | Python 对象、core/bridge 分层、Markdown 权威与安全追代码 | [SPEC](../SPEC.md)、[RULES](../RULES.md) 与当前 `src/` / `tests/` |
+| [Rust 简易入门](forfresh/rust-beginner-guide.html)（[PDF](forfresh/rust-beginner-guide.pdf)） | Tauri 宿主、Option/Result、所有权、单 worker 与 Sidecar 生命周期 | [architecture](../architecture/architecture.html)、[RULES](../RULES.md) 与当前 `frontend/src-tauri/` |
 | [Git 状态地图](forfresh/git-interactive.html) → [Git 手册](forfresh/gitspec.md) | 工作区、暂存区、本地历史、远端与最短安全路径 | [RULES §7](../RULES.md#7-git) |
 | [macOS 开发者入门](forfresh/macos-developer-beginner-guide.html) → [Developer ID 发布手册](forfresh/macos-developer-id-release.md) | 签名、公证、staple、Gatekeeper 与延期至 Road v0.8 的发布骨架 | [PROJECT](../PROJECT.md)、[SPEC](../SPEC.md) 与 [RULES](../RULES.md) |
 

@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="keikeu contributors">
+  <meta name="description" content="面向 keikeu 新维护者的 Rust 1.88 入门手册：四文件宿主、所有权、错误、Tauri command 与单 Sidecar worker。">
+  <meta name="keywords" content="keikeu, Rust, Tauri, Sidecar, 新人手册">
+  <meta name="generator" content="Kami 1.12.0">
+  <title>Rust 简易入门手册 · keikeu</title>
+  <link rel="stylesheet" href="kami-manual.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到正文</a>
+
+  <div class="manual-shell">
+    <aside class="manual-sidebar" aria-label="forfresh 手册系列">
+      <a class="series" href="../README.md">keikeu · forfresh</a>
+      <nav aria-label="同系列手册">
+        <a href="npm-beginner-guide.html">npm 手册</a>
+        <a href="tauri-vue-beginner-guide.html">Tauri + Vue</a>
+        <a href="python-caveman-guide.html">Python Caveman</a>
+        <a href="rust-beginner-guide.html" aria-current="page">Rust 简易入门</a>
+        <a href="git-interactive.html">Git 状态地图</a>
+        <a href="gitspec.md">Git 手册</a>
+        <a href="macos-developer-beginner-guide.html">macOS 开发者入门</a>
+        <a href="macos-developer-id-release.md">Developer ID 发布</a>
+      </nav>
+      <p class="rail-note">人工手册只帮助理解。当前实现看源码与测试，产品边界看 SPEC，工程规则看 RULES。</p>
+    </aside>
+
+    <main class="manual-document" id="main" tabindex="-1">
+      <header class="cover" id="top">
+        <p class="eyebrow">keikeu 技术手册 · 04</p>
+        <h1>给新人的 Rust 简易入门手册</h1>
+        <p class="subtitle">只学 keikeu 的 Tauri 宿主今天真正使用的 Rust。能沿一条请求走完全程，能读懂失败，能做一处小而安全的改动，就够开工。</p>
+        <p class="meta">
+          <span>keikeu contributors</span>
+          <span>Rust 1.88</span>
+          <span>edition 2021</span>
+          <span>2026-08-11</span>
+          <a href="rust-beginner-guide.pdf">下载 PDF</a>
+        </p>
+      </header>
+
+      <section class="summary" aria-labelledby="summary-title">
+        <h2 id="summary-title">先记住三件事</h2>
+        <p class="lead">keikeu 的 Rust 是窄桌面宿主，不是第二套业务后端。它管理窗口、五个 Tauri command、原生能力、唯一 Python Sidecar 与 JSONL 边界。</p>
+        <ol class="takeaways">
+          <li><span>先读 <span class="inline-code">main.rs</span>、<span class="inline-code">lib.rs</span>、<span class="inline-code">commands.rs</span>、<span class="inline-code">bridge.rs</span>；业务规则不在这里。</span></li>
+          <li><span><span class="inline-code">Option</span> 表示“可能没有”，<span class="inline-code">Result</span> 表示“可能失败”，所有权明确谁拿着 child、session 和字符串。</span></li>
+          <li><span>单 worker 串行化是协议正确性；写请求丢响应时返回 <span class="inline-code">commit_unknown</span>，绝不自动重试。</span></li>
+        </ol>
+        <div class="truth-boundary">
+          <strong>权威边界：</strong>本页是给人的非规范说明。运行时事实以 <code>frontend/src-tauri/</code> 与通过的测试为准；产品与工程边界最终核对 <a href="../../SPEC.md">SPEC</a>、<a href="../../RULES.md">RULES</a> 和 <a href="../../PROJECT.md">PROJECT</a>。若手册与它们冲突，手册错。
+        </div>
+      </section>
+
+      <nav class="toc" aria-labelledby="toc-title">
+        <h2 id="toc-title">阅读路线</h2>
+        <ol>
+          <li><a href="#chapter-1">Rust 只管桌面宿主</a></li>
+          <li><a href="#chapter-2">四个文件，把壳拼起来</a></li>
+          <li><a href="#chapter-3">先认这些 Rust 句子</a></li>
+          <li><a href="#chapter-4">所有权：谁拿着哪样东西</a></li>
+          <li><a href="#chapter-5">Option、Result 与 Serde</a></li>
+          <li><a href="#chapter-6">Tauri command 是窄门</a></li>
+          <li><a href="#chapter-7">一条队列，一个 Sidecar</a></li>
+          <li><a href="#chapter-8">安全改动与最小检查</a></li>
+        </ol>
+      </nav>
+
+      <section class="chapter" id="chapter-1">
+        <p class="chapter-number">Chapter 01</p>
+        <h2>Rust 只管桌面宿主</h2>
+        <p class="claim">Rust 把 Vue WebView、原生系统能力与 Python Sidecar 接起来；Paper、Markdown、Vault 和迁移规则仍由 Python 负责。</p>
+
+        <pre><code>Vue 界面
+  ↓ invoke
+Tauri / Rust 宿主
+  ↓ stdin / stdout，每条消息一行 JSON
+Python Sidecar → service → keikeu_core
+  ↓
+Paper Markdown / Index / Vault</code></pre>
+
+        <h3>Rust 拿什么，不拿什么</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Rust 拿着</th>
+                <th scope="col">Rust 不拿</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Tauri 应用生命周期、一个 Sidecar 子进程、单请求队列</td>
+                <td>Paper 字段、卡页规则、Markdown 解析与序列化</td>
+              </tr>
+              <tr>
+                <td>JSONL 请求编号、session、超时与响应匹配</td>
+                <td>Vault 目录结构、迁移、搜索、Trash 与 Index 业务规则</td>
+              </tr>
+              <tr>
+                <td>原生目录选择，以及执行 Python 已验证的 open/reveal</td>
+                <td>直接读取或写入作者文件，也不替 Vue 管可见草稿状态</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>这条边界不是“以后再整理”。它是数据安全设计：JavaScript 不获得作者文件权限，Rust 不复制 Python 的业务判断，Python Core 继续是<span class="keep">唯一文件规则拥有者。</span></p>
+
+        <h3>当前工具坐标</h3>
+        <ul>
+          <li><code>frontend/src-tauri/Cargo.toml</code> 使用 Rust <code>1.88</code>、edition <code>2021</code>。</li>
+          <li>直接依赖只有 Tauri、Serde、<code>serde_json</code> 与 shell/dialog/opener 三个 Tauri 插件。</li>
+          <li>版本均精确锁定；不要为了“学 Rust”运行 <code>cargo update</code> 或引入新 crate。</li>
+          <li>项目没有直接依赖 Tokio；需要的异步运行时由 Tauri 暴露。</li>
+        </ul>
+
+        <div class="callout">
+          <span class="mini-label">最短判断</span>
+          <p>改动涉及 Markdown、Paper、Vault、搜索或迁移？先离开 Rust，去找 Python owner。只有窗口、Sidecar、IPC 或原生动作才继续看这里。</p>
+        </div>
+      </section>
+
+      <section class="chapter" id="chapter-2">
+        <p class="chapter-number">Chapter 02</p>
+        <h2>四个文件，把壳拼起来</h2>
+        <p class="claim">不要从 1100 行的 <span class="inline-code">bridge.rs</span> 开始硬啃。先读入口和命令，再顺着一次请求进入 worker。</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">文件</th>
+                <th scope="col">一句话职责</th>
+                <th scope="col">先看哪里</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="path">src/main.rs</span></td>
+                <td>二进制入口，只调用 library 的 <code>run()</code></td>
+                <td>全文，只有三行</td>
+              </tr>
+              <tr>
+                <td><span class="path">src/lib.rs</span></td>
+                <td>组合根：插件、托管状态、五个 command、退出清理</td>
+                <td><code>run()</code></td>
+              </tr>
+              <tr>
+                <td><span class="path">src/commands.rs</span></td>
+                <td>Vue IPC 与原生能力的窄边界</td>
+                <td>五个 <code>#[tauri::command]</code></td>
+              </tr>
+              <tr>
+                <td><span class="path">src/bridge.rs</span></td>
+                <td>Sidecar、握手、单队列、JSONL、失败状态与 12 个测试</td>
+                <td><code>BridgeHandle</code>，再看 <code>Worker</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="meta">以上路径都相对于 <code>frontend/src-tauri/</code>。</p>
+
+        <h3>启动顺序</h3>
+        <ol class="flow">
+          <li><span><code>main.rs</code> 调用 <code>keikeu_desktop_lib::run()</code>。</span></li>
+          <li><span><code>lib.rs</code> 创建 <code>tauri::Builder</code>，注册 shell、dialog、opener 插件。</span></li>
+          <li><span><code>setup</code> 创建一个 <code>BridgeHandle</code>，交给 Tauri 的 <code>manage</code> 托管。</span></li>
+          <li><span><code>generate_handler!</code> 一次注册五个 command，Vue 才能按名字调用。</span></li>
+          <li><span>Tauri build 成功后进入事件循环；退出时取回同一个 <code>BridgeHandle</code>，<span class="keep">并调用 <code>shutdown()</code>。</span></span></li>
+        </ol>
+
+        <pre><code>fn main() {
+    keikeu_desktop_lib::run();
+}</code></pre>
+
+        <p><code>build.rs</code> 只是 Cargo 构建脚本，调用 <code>tauri_build::build()</code> 生成 Tauri 需要的构建信息；它不是应用启动后的第五个业务模块。</p>
+
+        <h3>推荐阅读顺序</h3>
+        <p>第一次读时走 <code>main.rs → lib.rs → commands.rs → frontend/src/bridge.js → bridge.rs</code>。这样先知道谁调用谁，再看并发细节。倒过来读只会在 trait、channel 和状态机里迷路。</p>
+      </section>
+
+      <section class="chapter" id="chapter-3">
+        <p class="chapter-number">Chapter 03</p>
+        <h2>先认这些 Rust 句子</h2>
+        <p class="claim">项目里的主要句型是：定义数据、给数据加方法、按状态分支、把错误向上传。先会读，不必先背完整语法书。</p>
+
+        <h3>绑定、类型与返回值</h3>
+        <pre><code>const PROTOCOL_VERSION: u64 = 2;
+
+let id = self.next_id;          // 不可重新赋值
+let mut bytes = ...;            // 后面会 push，所以加 mut
+
+fn validate_response(...) -> Result&lt;(), ()&gt; {
+    ...
+}</code></pre>
+        <ul>
+          <li><code>let</code> 创建绑定；默认不可重新赋值。确实需要变化才加 <code>mut</code>。</li>
+          <li>冒号后是类型；<code>u64</code> 是 64 位无符号整数。</li>
+          <li><code>-&gt;</code> 后是返回类型；<code>()</code> 是“不返回有用值”。</li>
+          <li>函数最后一个没有分号的表达式就是返回值。</li>
+        </ul>
+
+        <h3><code>struct</code>、<code>enum</code> 与 <code>impl</code></h3>
+        <p><code>struct</code> 把固定字段装成一个类型，例如 <code>BridgeError</code> 有 code、message、recovery、layer。<code>impl BridgeError</code> 再给它增加 <code>host()</code>、<span class="keep"><code>protocol()</code> 等构造方法。</span></p>
+        <p><code>enum</code> 表示“只可能是这些形状之一”。<code>RuntimeStatus</code> 可以是 Starting、带版本数据的 Ready、带错误的 Blocked，或 Stopped。它比四个互相矛盾的布尔值更难写错。</p>
+
+        <pre><code>match current_status(status) {
+    RuntimeStatus::Blocked { error } =&gt; error,
+    RuntimeStatus::Stopped =&gt; BridgeError::unavailable("Sidecar 已停止。"),
+    RuntimeStatus::Starting =&gt; BridgeError::unavailable("Sidecar 尚未完成握手。"),
+    RuntimeStatus::Ready { .. } =&gt; BridgeError::unavailable("Sidecar 状态发生竞争。"),
+}</code></pre>
+        <p><code>match</code> 必须覆盖全部可能形状。<code>{ error }</code> 顺手取出字段，<code>{ .. }</code> 表示其余字段此处不关心。项目也使用 <code>if let</code>、<code>let ... else</code> 与 <code>matches!</code> 处理只关心一两个分支的情况。</p>
+
+        <h3>路径、可见性、属性与宏</h3>
+        <dl>
+          <dt><code>use crate::bridge::BridgeHandle;</code></dt>
+          <dd>从当前 crate 的 bridge 模块引入名字。双冒号 <code>::</code> 是路径分隔。</dd>
+          <dt><code>pub</code> 与 <code>pub(crate)</code></dt>
+          <dd>前者可给 crate 外部使用；后者只给当前 crate 使用。不写则默认私有。</dd>
+          <dt><code>#[derive(Clone, Serialize)]</code></dt>
+          <dd>让编译器或库生成常规实现，避免手写样板。</dd>
+          <dt><code>json!({...})</code> 与 <code>matches!(...)</code></dt>
+          <dd>末尾叹号表示宏。宏接受的形状可以比普通函数更灵活。</dd>
+        </dl>
+
+        <div class="callout">
+          <span class="mini-label">先跳过</span>
+          <p>测试中的 <code>AtomicUsize</code>、<code>Ordering::SeqCst</code> 和 trait object 细节不是第一天必修。先知道它们让 fake child 能安全计数和替换真实进程即可。</p>
+        </div>
+      </section>
+
+      <section class="chapter" id="chapter-4">
+        <p class="chapter-number">Chapter 04</p>
+        <h2>所有权：谁拿着哪样东西</h2>
+        <p class="claim">所有权不是考试题。它回答一个实际问题：字符串、子进程和状态现在归谁，谁能改，什么时候释放。</p>
+
+        <h3><code>String</code> 与 <code>&amp;str</code></h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">写法</th>
+                <th scope="col">白话</th>
+                <th scope="col">本项目用途</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>String</code></td>
+                <td>自己拥有一段可增长的 UTF-8 文字</td>
+                <td>跨 command、channel、thread 或 <code>move</code> closure 传递 method、params、路径</td>
+              </tr>
+              <tr>
+                <td><code>&amp;str</code></td>
+                <td>临时借看别人的字符串切片</td>
+                <td>worker 内部同步函数只读 method/action，不拿走所有权</td>
+              </tr>
+              <tr>
+                <td><code>&amp;self</code></td>
+                <td>借用对象，只承诺不直接改它</td>
+                <td><code>BridgeHandle::status()</code>；内部 Mutex 仍可受控更新</td>
+              </tr>
+              <tr>
+                <td><code>&amp;mut self</code></td>
+                <td>独占借用对象，可以改字段</td>
+                <td><code>Worker::restart()</code>、<code>request()</code>、<code>stop()</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p><code>move || { ... }</code> 把 closure 用到的拥有值搬进去。worker thread 可能比创建它的函数活得久，所以不能借用函数栈上马上消失的数据。</p>
+
+        <h3><code>Clone</code> 不等于再造一套系统</h3>
+        <p><code>BridgeHandle</code> 可以 clone，但其字段是 channel sender、<code>Arc&lt;Mutex&lt;...&gt;&gt;</code> 和共享 child。clone 出来的 handle 仍指向同一个 worker、同一个状态和同一个 Sidecar，不会复制 Python 进程。</p>
+
+        <pre><code>let jobs = self.jobs.clone();
+let fallback = self.clone();
+tauri::async_runtime::spawn_blocking(move || {
+    // jobs 与 fallback 已被搬进 blocking task
+})</code></pre>
+
+        <h3><code>Option::take()</code> 让 child 只死一次</h3>
+        <p><code>TauriChild</code> 内部存 <code>Option&lt;CommandChild&gt;</code>。kill 时用 <code>take()</code> 把 child 从 Some 变成 None，再消费 child。以后再次 kill 只看到 None，不会重复使用已经被移动的进程句柄。</p>
+
+        <h3><code>Arc&lt;Mutex&lt;T&gt;&gt;</code> 是共享柜子</h3>
+        <ul>
+          <li><code>Arc</code>：多个线程各拿一把指向同一对象的钥匙。</li>
+          <li><code>Mutex</code>：一次只允许一个持有者打开柜子。</li>
+          <li><code>lock()</code> 可能失败，所以生产代码把失败转为结构化错误或 Blocked，不直接 <code>unwrap()</code>。</li>
+        </ul>
+        <p><code>SharedChild::kill()</code> 先在锁内 <code>take()</code>，然后释放锁，再执行较慢的 kill。不要把进程操作搬回锁内，否则其他线程可能无谓地一直等柜门。</p>
+
+        <h3>trait 与 <code>Box&lt;dyn Trait&gt;</code></h3>
+        <p><code>ChildControl</code> 规定 child 至少会 write 与 kill，<code>SidecarSpawner</code> 规定能 spawn。生产环境使用 Tauri 实现，测试使用 Fake 实现；这里已有两个真实用途，所以这不是“为未来”造的抽象。</p>
+      </section>
+
+      <section class="chapter" id="chapter-5">
+        <p class="chapter-number">Chapter 05</p>
+        <h2>Option、Result 与 Serde</h2>
+        <p class="claim">Rust 不靠异常把失败藏到远处：可能缺失用 Option，可能失败用 Result，跨层数据用 Serde 明确变成 JSON。</p>
+
+        <h3><code>Option&lt;T&gt;</code>：有或没有</h3>
+        <p>目录选择器取消时没有路径；worker 启动前没有 session；child 被杀后没有 child。这些都不是神秘空指针，而是必须处理的 <span class="keep"><code>Some(value)</code> 或 <code>None</code>。</span></p>
+
+        <pre><code>pub async fn choose_vault_directory(...) -&gt; Result&lt;Option&lt;String&gt;, BridgeError&gt;</code></pre>
+        <p>这句同时表达三种结果：选到目录是 <code>Ok(Some(path))</code>，用户取消是 <code>Ok(None)</code>，选择器或路径转换失败是 <code>Err(error)</code>。</p>
+        <p>实现末尾的 <code>.transpose()</code> 把 <code>Option&lt;Result&lt;String, E&gt;&gt;</code> 翻成 <code>Result&lt;Option&lt;String&gt;, E&gt;</code>。别把取消误报成错误。</p>
+
+        <h3><code>Result&lt;T, E&gt;</code>：成功或失败</h3>
+        <dl>
+          <dt><code>?</code></dt>
+          <dd>遇到 Err 就立刻向调用者返回；遇到 Ok 则取出里面的值继续。</dd>
+          <dt><code>map_err(...)</code></dt>
+          <dd>把底层库错误翻译成稳定的 <code>BridgeError</code>，不把插件内部细节漏给界面。</dd>
+          <dt><code>ok_or_else(...)</code></dt>
+          <dd>把缺失的 Option 变成带上下文的错误，并且只在确实缺失时构造错误。</dd>
+          <dt><code>unwrap_or_else(...)</code></dt>
+          <dd>失败时使用保守 fallback，例如返回当前 runtime status。</dd>
+        </dl>
+
+        <h3>错误也要有稳定形状</h3>
+        <pre><code>pub struct BridgeError {
+    pub code: String,
+    pub message: String,
+    pub recovery: String,
+    pub layer: String,
+}</code></pre>
+        <p><code>code</code> 给程序判断，<code>message</code> 给人看，<code>recovery</code> 指明恢复入口，<code>layer</code> 说明错误归属。不要把它降级成一段随意字符串。</p>
+
+        <h3>Serde 把 Rust 类型送过边界</h3>
+        <ul>
+          <li><code>#[derive(Serialize, Deserialize)]</code> 生成 JSON 转换能力。</li>
+          <li><code>RuntimeStatus</code> 使用 <code>#[serde(tag = "state", rename_all = "snake_case")]</code>，<span class="keep">Vue 因此看到 <code>state: "ready"</code>。</span></li>
+          <li><code>serde_json::Value</code> 让 host 只搬运协议 envelope，不在 Rust 复制全部 Python DTO。</li>
+          <li><code>json!({...})</code> 组装 hello 与业务请求；发送前用 <code>to_vec</code> 编码并补一个换行。</li>
+        </ul>
+
+        <h3>什么时候可以 panic</h3>
+        <p>正常失败返回 <code>Result</code>。当前生产代码的 <code>expect("failed to build keikeu desktop host")</code> 位于应用根本无法创建的启动点；<code>unreachable!</code> 位于 action 已由前一步验证的分支。测试里的 <code>unwrap()</code> 用于让测试立即暴露“不该失败”的情况。不要把测试习惯复制进运行时 I/O。</p>
+      </section>
+
+      <section class="chapter" id="chapter-6">
+        <p class="chapter-number">Chapter 06</p>
+        <h2>Tauri command 是窄门</h2>
+        <p class="claim">Vue 不能随意碰文件或子进程。它只能按名字穿过五个已注册 command，每个入口都把权限限制在最小范围。</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Command</th>
+                <th scope="col">用途</th>
+                <th scope="col">是否进 Python</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>runtime_status</code></td>
+                <td>读取 Starting / Ready / Blocked / Stopped</td>
+                <td>否</td>
+              </tr>
+              <tr>
+                <td><code>bridge_request</code></td>
+                <td>承载获准的业务 protocol method</td>
+                <td>是</td>
+              </tr>
+              <tr>
+                <td><code>restart_sidecar</code></td>
+                <td>杀旧 child、启动新 child、重新 hello</td>
+                <td>只做 hello</td>
+              </tr>
+              <tr>
+                <td><code>choose_vault_directory</code></td>
+                <td>打开原生文件夹选择器，返回路径或取消</td>
+                <td>否</td>
+              </tr>
+              <tr>
+                <td><code>open_system_target</code></td>
+                <td>打开或在 Finder 显示已验证目标</td>
+                <td>先验证，再执行</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>从 JavaScript 到 Rust</h3>
+        <pre><code>// frontend/src/bridge.js
+invoke("open_system_target", { action, relativeTarget })
+
+// frontend/src-tauri/src/commands.rs
+pub async fn open_system_target(
+    action: String,
+    relative_target: String,
+    ...
+) -&gt; Result&lt;(), BridgeError&gt;</code></pre>
+        <p>Tauri 默认把 JavaScript 的 camelCase 参数映射到 Rust 的 snake_case，所以 <code>relativeTarget</code> 对应 <code>relative_target</code>。改名字时必须同时看两边。</p>
+
+        <h3><code>State&lt;'_, BridgeHandle&gt;</code> 是同一个托管句柄</h3>
+        <p><code>lib.rs</code> 在 setup 中调用 <code>app.manage(...)</code>；command 用 <code>State&lt;'_, BridgeHandle&gt;</code> 借到它。<code>'_</code> 表示借用生命周期由编译器推断，新人此处不需要自己发明生命周期名字。</p>
+
+        <h3>为什么目录与 open/reveal 分成两条路</h3>
+        <p>目录选择是纯原生意图：Rust 打开 picker，取消返回 None；若系统路径不能无损表示为 UTF-8，就返回错误。不要用 <code>to_string_lossy()</code> 静默改路径。</p>
+        <p>open/reveal 涉及作者文件，必须先走内部 <code>system.resolve_target</code> 让 Python 校验 action、Vault locator 与相对路径。Rust 只把 Python 返回的已验证绝对路径交给 opener。公开 <code>bridge_request</code> 不允许 Vue 直接调用这个内部 method。</p>
+
+        <h3><code>async</code> 不会自动消灭阻塞</h3>
+        <p>标准库 channel 的 <code>recv()</code>、blocking picker 与系统 opener 都会阻塞线程，所以 command 用 <code>tauri::async_runtime::spawn_blocking</code> 把它们放到专门的 blocking executor。不要在 async command 里直接等阻塞 I/O。</p>
+
+        <div class="callout">
+          <span class="mini-label">权限边界</span>
+          <p>前端 capability 没有通用 shell/opener 权限。不要为了省一层 command 把它们开放给 Vue；那会绕过 Python 的路径验证与当前审计边界。</p>
+        </div>
+      </section>
+
+      <section class="chapter" id="chapter-7">
+        <p class="chapter-number">Chapter 07</p>
+        <h2>一条队列，一个 Sidecar</h2>
+        <p class="claim">并发调用者可以很多，但真正与 stdout 对话的 worker 只有一个。它一次发送一个请求并等回对应响应。</p>
+
+        <pre><code>多个 Tauri command
+  ↓ WorkerJob（mpsc::Sender 可 clone）
+唯一 keikeu-sidecar-worker 线程
+  ↓ 一次写一行 JSON，等待同 id 响应
+唯一 Python Sidecar
+  ↓ stdout event
+Tauri async task → std::sync::mpsc → worker</code></pre>
+
+        <h3>三个并发零件</h3>
+        <dl>
+          <dt><code>mpsc::channel()</code></dt>
+          <dd>多个 producer 把 job 发给一个 consumer；consumer 就是唯一 worker。</dd>
+          <dt><code>mpsc::sync_channel(1)</code></dt>
+          <dd>每个 job 自带一条容量为 1 的回复通道，调用者只等自己的结果。</dd>
+          <dt><code>Arc&lt;Mutex&lt;...&gt;&gt;</code></dt>
+          <dd>让 Tauri 线程、worker 与 shutdown 路径共享 runtime status 和当前 child。</dd>
+        </dl>
+
+        <p>worker 在 <code>run()</code> 的循环里逐个接收 Request、ResolveTarget、Restart、Shutdown。即使两个前端调用同时到达，写入顺序和 request id 仍由一个 worker 决定。这里的串行化不是暂时偷懒，而是避免两次 stdout 响应串线。</p>
+
+        <h3>启动与重启都先握手</h3>
+        <ol class="flow">
+          <li><span>杀掉旧 child，清空 events 与 session，把 next id 重置为 1。</span></li>
+          <li><span>启动打包的 <code>keikeu-sidecar</code>。</span></li>
+          <li><span>发送 protocol v2 的 <code>system.hello</code>，hello 不带旧 session。</span></li>
+          <li><span>检查响应 v、id、protocol version、非空 session 和版本字段。</span></li>
+          <li><span>成功后设为 Ready；失败则杀 child 并进入 Blocked。</span></li>
+        </ol>
+
+        <h3>失败语义比“再试一次”重要</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">情况</th>
+                <th scope="col">Rust 结果</th>
+                <th scope="col">为什么</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>hello 版本不兼容</td>
+                <td><code>protocol_mismatch</code> + Blocked</td>
+                <td>错配 host/sidecar 不能继续猜</td>
+              </tr>
+              <tr>
+                <td>只读请求超时、EOF 或 child 崩溃</td>
+                <td><code>sidecar_unavailable</code> + Blocked</td>
+                <td>没有磁盘 mutation 需要对账</td>
+              </tr>
+              <tr>
+                <td>只读响应 JSON、v、id 或 envelope 无效</td>
+                <td><code>protocol_mismatch</code> + Blocked</td>
+                <td>收到数据，但不能信任协议</td>
+              </tr>
+              <tr>
+                <td>写请求发送后响应丢失或无效</td>
+                <td><code>commit_unknown</code> + Blocked</td>
+                <td>磁盘可能已提交，自动重发会重复 mutation</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p><code>commit_unknown</code> 不是普通网络错误。界面必须保留 durable intent，重启 Sidecar 后走对应只读刷新或 <code>paper.reconcile_save</code>，不能再发原 mutation。</p>
+
+        <h3>stdout 是协议，不是日志板</h3>
+        <p>Rust 把每条 Sidecar stdout event 当作等待中的响应。Python 若向 stdout 打一行调试文字，Rust 会把它解析为 JSON，失败后阻塞整个 bridge。Sidecar 日志只能走 stderr；当前 Rust 会忽略 stderr 内容，不把私密作者数据带回前端。</p>
+      </section>
+
+      <section class="chapter" id="chapter-8">
+        <p class="chapter-number">Chapter 08</p>
+        <h2>安全改动与最小检查</h2>
+        <p class="claim">最好的第一处 Rust 改动不是新架构，而是一处边界明确、测试能钉住的小改动。先找 owner 和 caller，再写最小 diff。</p>
+
+        <h3>动手前的五步</h3>
+        <pre><code>git status --short --branch
+git branch --show-current</code></pre>
+        <ol class="flow">
+          <li><span>先跑上面两条 Git gate 命令，确认当前分支和工作树状态。</span></li>
+          <li><span>用 <code>rg</code> 找准备改的函数、所有 caller，以及同一 command 在 Vue 和 Python 的对应点。</span></li>
+          <li><span>判断责任：是 Tauri/Sidecar/IPC/原生动作，还是应该留在 Python 或 Vue。</span></li>
+          <li><span>若新增 protocol method，先明确 readonly 或 mutation；这会改变 timeout 与失败恢复。</span></li>
+          <li><span>做最小 patch，跑格式、编译和 12 个 Rust 单元测试，再决定是否需要全栈 smoke。</span></li>
+        </ol>
+
+        <h3>新增一个 bridge method 不是改一个字符串</h3>
+        <p>至少要同步检查四处：Python method 分类与 dispatcher、Rust <code>public_policy</code>、Vue 调用者、两边测试。内部 <code>system.hello</code> 与 <code>system.resolve_target</code> 仍不能从公开 <code>bridge_request</code> 直达。</p>
+
+        <h3>最小命令集</h3>
+        <pre><code>cargo fmt --manifest-path frontend/src-tauri/Cargo.toml --check
+cargo check --manifest-path frontend/src-tauri/Cargo.toml
+cargo test --manifest-path frontend/src-tauri/Cargo.toml</code></pre>
+
+        <p>完整桌面联调还要准备 Python Sidecar 和 Vue：</p>
+        <pre><code>.venv/bin/python scripts/build_sidecar.py
+npm --prefix frontend run tauri:dev</code></pre>
+        <p>不要把 <code>cargo run</code> 当成 keikeu 的完整启动方式；它不能替代 Vue 构建和打包 Sidecar。</p>
+
+        <h3>现有 12 个测试守住什么</h3>
+        <ul>
+          <li>每个公开 method 的 readonly/mutation 分类；内部 method 不可公开直达。</li>
+          <li>hello 协议版本、session 与响应 id 匹配。</li>
+          <li>并发 caller 被串行化，id 单调递增。</li>
+          <li>validated system target 只留在 Rust 内部。</li>
+          <li>mutation 的 timeout、EOF、错 id、坏 JSON 与坏 envelope <span class="keep">都只产生一次 <code>commit_unknown</code>。</span></li>
+          <li>只读 response loss、协议损坏与 child crash 使用不同错误。</li>
+          <li>restart 创建新 session 并杀旧 child；shutdown 杀 child 并标记 Stopped。</li>
+        </ul>
+
+        <h3>交付前扫一遍</h3>
+        <ul>
+          <li>没有把业务规则、Markdown 或文件写入塞进 Rust。</li>
+          <li>没有给 Vue 新增通用 shell/opener 权限。</li>
+          <li>没有自动重试 mutation，也没有把 <code>commit_unknown</code> 改成普通失败。</li>
+          <li>没有在生产 I/O 路径增加 <code>unwrap()</code>。</li>
+          <li>没有在 async command 里直接执行阻塞等待。</li>
+          <li>没有用 <code>to_string_lossy()</code> 静默改变路径。</li>
+          <li>没有新增 crate；若确实需要，先说明现有代码和 stdlib 为什么不够。</li>
+          <li>报告实际跑过与未跑的检查，不把 Cargo test 冒充 Tauri 应用 smoke。</li>
+        </ul>
+
+        <div class="callout">
+          <span class="mini-label">第一个练习</span>
+          <p>先从 <code>frontend/src/bridge.js</code> 的 <code>getRuntimeStatus()</code> 追到 <code>commands::runtime_status</code>，再追到 <code>BridgeHandle::status()</code>。这条链没有 Python 和磁盘 mutation，最适合练习模块、State、借用、Mutex 与 Serde。</p>
+        </div>
+      </section>
+
+      <section class="sources" aria-labelledby="sources-title">
+        <h2 id="sources-title">来源与继续阅读</h2>
+        <ol>
+          <li>项目源码：<a href="../../../frontend/src-tauri/src/main.rs"><code>main.rs</code></a>、<a href="../../../frontend/src-tauri/src/lib.rs"><code>lib.rs</code></a>、<a href="../../../frontend/src-tauri/src/commands.rs"><code>commands.rs</code></a>、<a href="../../../frontend/src-tauri/src/bridge.rs"><code>bridge.rs</code></a>。</li>
+          <li>构建坐标：<a href="../../../frontend/src-tauri/Cargo.toml"><code>Cargo.toml</code></a>、<a href="../../../frontend/src-tauri/tauri.conf.json"><code>tauri.conf.json</code></a>、<a href="../../../frontend/src-tauri/capabilities/main.json"><code>capabilities/main.json</code></a>。</li>
+          <li>相邻边界：<a href="../../../frontend/src/bridge.js"><code>frontend/src/bridge.js</code></a>、<a href="../../../src/keikeu_bridge/sidecar.py"><code>sidecar.py</code></a>、<a href="../../../src/keikeu_bridge/protocol.py"><code>protocol.py</code></a>。</li>
+          <li><a href="https://doc.rust-lang.org/book/ch04-00-understanding-ownership.html">The Rust Programming Language：所有权与借用</a>。</li>
+          <li><a href="https://doc.rust-lang.org/book/ch06-00-enums.html">Rust Book：枚举、Option 与模式匹配</a>；<a href="https://doc.rust-lang.org/book/ch09-00-error-handling.html">错误处理</a>。</li>
+          <li><a href="https://doc.rust-lang.org/book/ch16-00-concurrency.html">Rust Book：并发</a>；标准库 <a href="https://doc.rust-lang.org/std/sync/mpsc/">mpsc</a>、<a href="https://doc.rust-lang.org/std/sync/struct.Arc.html">Arc</a>、<a href="https://doc.rust-lang.org/std/sync/struct.Mutex.html">Mutex</a>。</li>
+          <li><a href="https://v2.tauri.app/develop/calling-rust/">Tauri：从前端调用 Rust</a>、<a href="https://v2.tauri.app/develop/sidecar/">嵌入外部 Sidecar</a>、<a href="https://docs.rs/tauri/latest/tauri/async_runtime/">Tauri async runtime API</a>。</li>
+        </ol>
+        <div class="truth-boundary">
+          <strong>检查时间：</strong>2026-08-11。现场为 <code>rustc 1.88.0</code>、<code>cargo 1.88.0</code>；<code>cargo fmt --check</code>、<code>cargo check</code> 与 <code>cargo test</code> 均通过，Rust 单元测试为 <code>12 passed</code>。这些是工程检查，不等于 Tauri GUI smoke、平台兼容或产品验收。
+        </div>
+      </section>
+
+      <nav class="manual-pager" aria-label="上一篇与下一篇">
+        <a href="python-caveman-guide.html" rel="prev">
+          <span>上一篇</span>
+          Python 代码的 Caveman 诠释手册
+        </a>
+        <a href="git-interactive.html" rel="next">
+          <span>下一篇</span>
+          Git 状态地图
+        </a>
+      </nav>
+    </main>
+  </div>
+</body>
+</html>

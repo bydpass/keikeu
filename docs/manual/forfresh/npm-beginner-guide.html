@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="author" content="keikeu contributors">
+  <meta name="description" content="面向 keikeu 新人的 npm 手册：版本核对、冻结安装、前端脚本、Tauri 联调与依赖纪律。">
+  <meta name="keywords" content="keikeu, npm, Node.js, Vite, Tauri">
+  <meta name="generator" content="Kami 1.12.0">
+  <title>给新人的 npm 手册 · keikeu</title>
+  <link rel="stylesheet" href="kami-manual.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到正文</a>
+
+  <div class="manual-shell">
+    <aside class="manual-sidebar" aria-label="forfresh 手册系列">
+      <a class="series" href="../README.md">keikeu · forfresh</a>
+      <nav aria-label="同系列手册">
+        <a href="npm-beginner-guide.html" aria-current="page">npm 手册</a>
+        <a href="tauri-vue-beginner-guide.html">Tauri + Vue</a>
+        <a href="python-caveman-guide.html">Python Caveman</a>
+        <a href="rust-beginner-guide.html">Rust 简易入门</a>
+        <a href="git-interactive.html">Git 状态地图</a>
+        <a href="gitspec.md">Git 手册</a>
+        <a href="macos-developer-beginner-guide.html">macOS 开发者入门</a>
+        <a href="macos-developer-id-release.md">Developer ID 发布</a>
+      </nav>
+      <p class="rail-note">
+        HUMAN MANUAL · NON-NORMATIVE<br>
+        当前状态看 PROJECT；权限与证据规则看 RULES。
+      </p>
+    </aside>
+
+    <main class="manual-document" id="main" tabindex="-1">
+      <header class="cover">
+        <p class="eyebrow">keikeu / frontend toolchain / beginner</p>
+        <h1>给新人的<br>npm 手册</h1>
+        <p class="subtitle">
+          只学 keikeu 今天真正使用的 Node、npm 与前端命令：先核对版本，按锁文件安装，
+          再分清 Vite 页面和完整桌面应用。
+        </p>
+        <p class="meta">
+          <span>keikeu contributors</span>
+          <span>2026-08-11</span>
+          <span>Node 22.23.2</span>
+          <span>npm 10.9.8</span>
+          <a href="npm-beginner-guide.pdf">PDF 版</a>
+        </p>
+      </header>
+
+      <section class="summary" aria-labelledby="summary-title">
+        <h2 id="summary-title">先记住三件事</h2>
+        <p class="lead">
+          在 keikeu 里，npm 只管理 <code>frontend/</code> 的 JavaScript 依赖与脚本。
+          它不是 Python 后端，也不会替你完成 Rust、Sidecar 或产品验收。
+        </p>
+        <ol class="takeaways">
+          <li><span>从仓库根目录运行命令时，始终带上 <span class="inline-code">--prefix frontend</span>。</span></li>
+          <li><span><span class="inline-code">package.json</span> 写直接需求，lockfile 锁完整依赖树，<span class="inline-code">node_modules</span> 可以重建。</span></li>
+          <li><span>网页能打开只证明 Vite 在工作；完整桌面链路还需要 Tauri、Rust 和 Python Sidecar。</span></li>
+        </ol>
+      </section>
+
+      <nav class="toc" aria-labelledby="toc-title">
+        <p class="toc-label">Contents</p>
+        <h2 id="toc-title">阅读路线</h2>
+        <ol>
+          <li><a href="#role">npm 在项目里的位置</a></li>
+          <li><a href="#files">五个文件与目录</a></li>
+          <li><a href="#install">第一次安装</a></li>
+          <li><a href="#commands">日常命令</a></li>
+          <li><a href="#desktop">走到完整桌面应用</a></li>
+          <li><a href="#dependencies">依赖变更纪律</a></li>
+          <li><a href="#trouble">故障与证据边界</a></li>
+        </ol>
+      </nav>
+
+      <section class="chapter" id="role">
+        <p class="chapter-number">Chapter 01</p>
+        <h2>npm 在项目里的位置</h2>
+        <p class="claim">
+          Node 运行前端工具，npm 安装这些工具并调用项目脚本；keikeu 的业务核心仍在 Python，
+          桌面宿主仍在 Rust/Tauri。
+        </p>
+
+        <h3>先把四层分开</h3>
+        <ul class="flow">
+          <li><span><strong>Vue</strong><br>描述界面组件、状态与交互。</span></li>
+          <li><span><strong>Vite / Vitest</strong><br>开发、构建和测试 Vue 代码。</span></li>
+          <li><span><strong>Tauri / Rust</strong><br>提供桌面窗口、生命周期与本机能力。</span></li>
+          <li><span><strong>Python Sidecar</strong><br>执行 Vault、Markdown、索引与业务规则。</span></li>
+        </ul>
+        <p>
+          npm 主要站在第二层，也负责调用本地安装的 Tauri CLI。它不会安装 Python 包，
+          不会运行 Cargo 测试，也不是一个常驻 Web 后端。
+        </p>
+
+        <h3>当前直接依赖</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">用途</th>
+                <th scope="col">当前包</th>
+                <th scope="col">新人怎么理解</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>界面运行时</td>
+                <td><code>vue 3.5.40</code></td>
+                <td>组件与响应式状态。</td>
+              </tr>
+              <tr>
+                <td>Tauri 前端接口</td>
+                <td><code>@tauri-apps/api 2.11.1</code><br><code>@tauri-apps/plugin-dialog 2.7.2</code></td>
+                <td>让 WebView 中的界面调用被允许的桌面能力。</td>
+              </tr>
+              <tr>
+                <td>开发与构建</td>
+                <td><code>vite 8.1.5</code><br><code>@vitejs/plugin-vue 6.0.8</code></td>
+                <td>开发服务器与静态资源构建。</td>
+              </tr>
+              <tr>
+                <td>测试</td>
+                <td><code>vitest 4.1.10</code><br><code>@vue/test-utils 2.4.11</code><br><code>jsdom 29.1.1</code></td>
+                <td>在模拟浏览器环境中检查 Vue 行为。</td>
+              </tr>
+              <tr>
+                <td>桌面命令</td>
+                <td><code>@tauri-apps/cli 2.11.4</code></td>
+                <td>把 npm 命令交给 Tauri 与 Cargo。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <aside class="callout">
+          <span class="mini-label">版本不是 Road 名称</span>
+          <p>
+            npm 项目当前名为 <code>keikeu-desktop</code>，manifest 版本是 <code>0.1.0</code>。
+            这个字段不能直接证明 Road v0.6、发布候选或用户可见版本已经成立。
+          </p>
+        </aside>
+      </section>
+
+      <section class="chapter" id="files">
+        <p class="chapter-number">Chapter 02</p>
+        <h2>五个文件与目录</h2>
+        <p class="claim">
+          只要能区分“需求、冻结结果、安装结果、构建结果”，就不会把依赖问题修成更大的依赖问题。
+        </p>
+
+        <dl>
+          <dt><span class="path">frontend/package.json</span></dt>
+          <dd>
+            直接依赖、精确工具版本和脚本入口。<code>private: true</code> 防止误发布，
+            <code>type: module</code> 表示前端 JavaScript 使用 ESM。
+          </dd>
+
+          <dt><span class="path">frontend/package-lock.json</span></dt>
+          <dd>
+            npm 解析后的完整依赖树，当前格式为 lockfile v3。它必须进入 Git，团队与 CI 才能重建同一棵树。
+          </dd>
+
+          <dt><span class="path">frontend/node_modules/</span></dt>
+          <dd>
+            本机安装结果，体积大、可重建、已被 Git 忽略。不要手改，也不要提交。
+          </dd>
+
+          <dt><span class="path">frontend/dist/</span></dt>
+          <dd>
+            Vite 的构建输出，运行 <code>npm run build</code> 后生成，同样不进入 Git。
+          </dd>
+
+          <dt><span class="path">frontend/vite.config.js</span></dt>
+          <dd>
+            当前开发服务器固定在 <code>127.0.0.1:1420</code>，并启用 <code>strictPort</code>；
+            Vitest 使用 <code>jsdom</code> 环境。
+          </dd>
+        </dl>
+
+        <h3>一句话地图</h3>
+        <pre><code>package.json + package-lock.json
+              │
+              └── npm ci ──▶ node_modules/
+
+Vue source ── npm run build ──▶ dist/</code></pre>
+
+        <aside class="callout">
+          <span class="mini-label">谁该进 Git</span>
+          <p>
+            提交 <code>package.json</code> 与 <code>package-lock.json</code>；不提交
+            <code>node_modules/</code> 或 <code>dist/</code>。删除 lockfile 不是“清缓存”，而是放弃当前冻结结果。
+          </p>
+        </aside>
+      </section>
+
+      <section class="chapter" id="install">
+        <p class="chapter-number">Chapter 03</p>
+        <h2>第一次安装</h2>
+        <p class="claim">
+          先核对真正运行的版本，再用冻结安装；不要假设版本文件或包管理器会自动替你守好这道门。
+        </p>
+
+        <h3>第一步：从仓库根目录核对版本</h3>
+        <pre><code>node --version
+npm --version</code></pre>
+        <p>当前前端契约应输出：</p>
+        <pre><code>v22.23.2
+10.9.8</code></pre>
+        <p>
+          <code>frontend/package.json</code> 的 <code>engines</code> 同样写着这两个精确值，
+          但 <code>engines</code> 不一定是硬失败闸门；命令输出才是你此刻真正使用的工具。
+        </p>
+
+        <aside class="callout">
+          <span class="mini-label">已知漂移 · 不要藏起来</span>
+          <p>
+            当前 <code>frontend/package.json</code>、lockfile、README、PROJECT 与 Road v0.6 都写
+            Node <code>22.23.2</code>，但仓库根目录 <code>.node-version</code> 仍是旧值
+            <code>22.23.1</code>。新人以当前 manifest 与 Road 契约为准；校准该文件应当是独立、可审阅的任务，
+            不在安装时偷偷改。
+          </p>
+        </aside>
+
+        <h3>第二步：按 lockfile 安装</h3>
+        <pre><code>npm --prefix frontend ci</code></pre>
+        <p><code>npm ci</code> 会：</p>
+        <ul>
+          <li>要求 <code>package.json</code> 与 lockfile 一致；</li>
+          <li>先删除现有 <code>frontend/node_modules/</code>，再重建；</li>
+          <li>按 lockfile 安装，不更新两个声明文件；</li>
+          <li>首次安装或缓存未命中时访问 npm registry。</li>
+        </ul>
+        <p>
+          因此它适合新人、CI 和“把本机恢复到仓库声明状态”。不要给它加 <code>sudo</code>，
+          也不要为了消除报错先删 lockfile。
+        </p>
+
+        <h3>第三步：只读核对顶层依赖</h3>
+        <pre><code>npm --prefix frontend ls --depth=0</code></pre>
+        <p>
+          成功时应看到本手册第一章列出的直接依赖；缺包或版本不符时，先保留完整错误输出。
+        </p>
+      </section>
+
+      <section class="chapter" id="commands">
+        <p class="chapter-number">Chapter 04</p>
+        <h2>日常命令</h2>
+        <p class="claim">
+          npm 脚本只是项目预先写好的短命令。先看它展开成什么，再判断它能证明什么。
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">从仓库根目录运行</th>
+                <th scope="col">实际脚本</th>
+                <th scope="col">结果</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>npm --prefix frontend run dev</code></td>
+                <td><code>vite</code></td>
+                <td>启动本机 Vite 页面；进程持续运行，<kbd>Control</kbd> + <kbd>C</kbd> 停止。</td>
+              </tr>
+              <tr>
+                <td><code>npm --prefix frontend run test</code></td>
+                <td><code>vitest run</code></td>
+                <td>单次运行全部前端测试，结束后退出。</td>
+              </tr>
+              <tr>
+                <td><code>npm --prefix frontend run test -- App.test.js</code></td>
+                <td><code>vitest run App.test.js</code></td>
+                <td>把 <code>--</code> 后面的文件名交给 Vitest，只跑相关测试。</td>
+              </tr>
+              <tr>
+                <td><code>npm --prefix frontend run build</code></td>
+                <td><code>vite build</code></td>
+                <td>检查生产构建并写入 <code>frontend/dist/</code>。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>拆开命令语法</h3>
+        <pre><code>npm  --prefix frontend  run  test  --  App.test.js
+│          │             │     │    │        │
+工具    npm 项目目录     跑脚本  脚本名 分隔符  交给 Vitest</code></pre>
+        <p>
+          <code>npm run</code> 会把本地 <code>node_modules/.bin</code> 加入 PATH，所以本项目不需要
+          全局安装 Vite、Vitest 或 Tauri CLI。脚本清单的唯一事实源是
+          <code>frontend/package.json</code>；<span class="keep">仓库没有定义 <code>npm start</code>。</span>
+        </p>
+
+        <aside class="callout">
+          <span class="mini-label">dev 不是完整应用</span>
+          <p>
+            <code>npm run dev</code> 只监听 <code>127.0.0.1:1420</code>。端口已被占用时，
+            <code>strictPort</code> 会让它失败，而不是偷偷换端口；先找出占用者，不要随手改配置。
+          </p>
+        </aside>
+      </section>
+
+      <section class="chapter" id="desktop">
+        <p class="chapter-number">Chapter 05</p>
+        <h2>走到完整桌面应用</h2>
+        <p class="claim">
+          Tauri 开发命令会启动 Vite 和 Rust 宿主，但不会替你制造 Python Sidecar；缺一层就不是完整链路。
+        </p>
+
+        <h3>最短开发启动路径</h3>
+        <ol class="flow">
+          <li>
+            <span><strong>安装前端依赖</strong><br><code>npm --prefix frontend ci</code></span>
+          </li>
+          <li>
+            <span><strong>构建 Python Sidecar</strong><br><code>.venv/bin/python scripts/build_sidecar.py</code></span>
+          </li>
+          <li>
+            <span><strong>启动桌面应用</strong><br><code>npm --prefix frontend run tauri:dev</code></span>
+          </li>
+        </ol>
+        <p>
+          第三步展开为 <code>tauri dev</code>。Tauri 读取
+          <code>frontend/src-tauri/tauri.conf.json</code>，先执行 <code>npm run dev</code>，
+          再让 Rust 宿主连接 <code>http://127.0.0.1:1420</code>，并启动已存在的 Sidecar 二进制。
+        </p>
+
+        <h3>为什么 Sidecar 必须先构建</h3>
+        <p>
+          Tauri 配置声明外部二进制 <code>binaries/keikeu-sidecar</code>；真正生成的文件名会带当前
+          Rust target triple。npm 既不安装 PyInstaller，也不运行
+          <code>scripts/build_sidecar.py</code>，所以缺 Sidecar 时应回到第二步，而不是重装 Vue 依赖。
+        </p>
+
+        <h3>生产构建入口</h3>
+        <pre><code>.venv/bin/python scripts/build_sidecar.py
+npm --prefix frontend run tauri:build</code></pre>
+        <p>
+          <code>tauri:build</code> 会自动执行 Vite build，再调用 Cargo/Tauri 组装桌面产物。
+          它比 <code>npm run build</code> 多，但仍不自动证明签名、公证、真实 Vault smoke 或产品验收通过。
+        </p>
+
+        <aside class="callout">
+          <span class="mini-label">保护作者数据</span>
+          <p>
+            启动真实桌面应用可能读取已选择的 Vault 与本地应用状态。测试迁移、删除、恢复或持久配置时，
+            先用 fixture、合成 Vault 或副本；npm 命令不会替你隔离真实作者内容。
+          </p>
+        </aside>
+      </section>
+
+      <section class="chapter" id="dependencies">
+        <p class="chapter-number">Chapter 06</p>
+        <h2>依赖变更纪律</h2>
+        <p class="claim">
+          新依赖不是修复手段，而是新的维护责任。先证明现有代码、平台能力和已安装包都不够，再增加。
+        </p>
+
+        <h3>默认：不要改依赖树</h3>
+        <ul>
+          <li>不为“以后也许会用”安装包；</li>
+          <li>不全局安装项目已经本地声明的 CLI；</li>
+          <li>不运行 <code>npm update</code> 做顺手升级；</li>
+          <li>不运行 <code>npm audit fix</code> 自动改树；</li>
+          <li>不删除 lockfile 后重新解析“碰碰运气”。</li>
+        </ul>
+        <p>
+          本项目直接依赖全部使用精确版本。版本范围前的 <code>^</code> 或 <code>~</code> 会改变升级语义，
+          不应在无设计决定时顺手加入。
+        </p>
+
+        <h3>任务明确批准增加依赖时</h3>
+        <pre><code># 运行时依赖
+npm --prefix frontend install --save-exact &lt;package&gt;@&lt;exact-version&gt;
+
+# 只用于构建或测试
+npm --prefix frontend install --save-dev --save-exact &lt;package&gt;@&lt;exact-version&gt;</code></pre>
+        <ol>
+          <li>先说明为什么现有代码、浏览器/Tauri 原生能力和当前依赖不够。</li>
+          <li>确认它属于 <code>dependencies</code> 还是 <code>devDependencies</code>。</li>
+          <li>只审阅 <code>frontend/package.json</code> 与 lockfile 的预期差异。</li>
+          <li>重新运行前端测试与构建；跨桌面边界时再跑相应 Cargo/Tauri 检查。</li>
+        </ol>
+
+        <h3>安全报告不是自动改动授权</h3>
+        <p>
+          <code>npm --prefix frontend audit --omit=dev</code> 可以查询生产依赖报告，但它访问 registry，
+          结果只代表查询时刻。发现告警后先确认受影响路径和升级范围；不要把
+          <code>npm audit fix</code> 当成无害清理。
+        </p>
+      </section>
+
+      <section class="chapter" id="trouble">
+        <p class="chapter-number">Chapter 07</p>
+        <h2>故障与证据边界</h2>
+        <p class="claim">
+          先按错误属于哪一层分类。重装所有东西通常只会抹掉线索，并不能修复根因。
+        </p>
+
+        <h3>最短故障表</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">症状</th>
+                <th scope="col">最可能原因</th>
+                <th scope="col">下一步</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>找不到 <code>package.json</code></td>
+                <td>在仓库根目录漏了 <code>--prefix frontend</code></td>
+                <td>回到根目录，使用本手册中的完整命令。</td>
+              </tr>
+              <tr>
+                <td><code>EBADENGINE</code> 或版本警告</td>
+                <td>实际 Node/npm 不符合 manifest；也可能被旧 <code>.node-version</code> 带到 22.23.1</td>
+                <td>先记录 <code>node --version</code> 与 <code>npm --version</code>，校准到 22.23.2 / 10.9.8。</td>
+              </tr>
+              <tr>
+                <td><code>npm ci</code> 说 manifest 与 lock 不一致</td>
+                <td>声明文件真的发生了漂移</td>
+                <td>查看 Git diff；不要让 <code>npm install</code> 静默重写现场。</td>
+              </tr>
+              <tr>
+                <td>1420 端口占用</td>
+                <td>旧 Vite/Tauri 进程仍在运行</td>
+                <td>确认并停止占用者；不要绕开 <code>strictPort</code>。</td>
+              </tr>
+              <tr>
+                <td>浏览器页面能开，桌面调用失败</td>
+                <td>只运行了 Vite，没有 Tauri bridge</td>
+                <td>先构建 Sidecar，再运行 <code>tauri:dev</code>。</td>
+              </tr>
+              <tr>
+                <td>Tauri 报 Sidecar 不存在</td>
+                <td>Python 二进制尚未为当前 target 构建</td>
+                <td>运行 <code>.venv/bin/python scripts/build_sidecar.py</code>，保留原错误。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>每条命令到底证明什么</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">检查</th>
+                <th scope="col">可以声称</th>
+                <th scope="col">不能顺带声称</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>npm run test</code></td>
+                <td>当前 Vitest 测试通过。</td>
+                <td>Python、Rust、真机或产品验收通过。</td>
+              </tr>
+              <tr>
+                <td><code>npm run build</code></td>
+                <td>当前 Vue/Vite 生产构建完成。</td>
+                <td>桌面包可以启动。</td>
+              </tr>
+              <tr>
+                <td><code>npm run tauri:dev</code></td>
+                <td>在实际观察到的路径上，开发宿主能够启动。</td>
+                <td>签名、公证、安装包或真实作者场景通过。</td>
+              </tr>
+              <tr>
+                <td><code>npm run tauri:build</code></td>
+                <td>当前本机桌面构建完成。</td>
+                <td>发布、兼容性或产品接受已经成立。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>新人完成一次前端改动的最短检查</h3>
+        <pre><code>npm --prefix frontend run test
+npm --prefix frontend run build
+git diff --check</code></pre>
+        <p>
+          UI 行为变化还需要聚焦的 Vitest 与适当的 Tauri smoke；文档检查不能替代应用检查。
+          未运行的检查要明说。
+        </p>
+      </section>
+
+      <section class="sources" aria-labelledby="sources-title">
+        <p class="kicker">Sources</p>
+        <h2 id="sources-title">事实来源</h2>
+        <ol>
+          <li><a href="../../../frontend/package.json"><code>frontend/package.json</code></a>：版本、直接依赖与脚本。</li>
+          <li><a href="../../../frontend/package-lock.json"><code>frontend/package-lock.json</code></a>：lockfile v3 与完整依赖树。</li>
+          <li><a href="../../../frontend/vite.config.js"><code>frontend/vite.config.js</code></a>：端口、strictPort 与 jsdom。</li>
+          <li><a href="../../../frontend/src-tauri/tauri.conf.json"><code>frontend/src-tauri/tauri.conf.json</code></a>：Vite 前置命令与 Sidecar 声明。</li>
+          <li><a href="../../../scripts/build_sidecar.py"><code>scripts/build_sidecar.py</code></a>：Sidecar 构建与 target 命名。</li>
+          <li><a href="../../../.github/workflows/cp13-macos-15-compat.yml">CP13 macOS workflow</a>：冻结安装、测试与桌面构建顺序。</li>
+          <li><a href="../../../.gitignore"><code>.gitignore</code></a>：前端与桌面生成物边界。</li>
+          <li><a href="../../../README.md">README</a>、<a href="../../PROJECT.md">PROJECT</a> 与 <a href="../../../PLAN_road_v0_6.md">Road v0.6 计划书</a>：当前工具链契约与检查命令。</li>
+          <li><a href="../../../.node-version"><code>.node-version</code></a>：仍为 22.23.1 的已知漂移。</li>
+          <li><a href="https://nodejs.org/en/blog/release/v22.23.2">Node.js 22.23.2 官方发布页</a>。</li>
+          <li><a href="https://docs.npmjs.com/cli/v10/commands/npm-ci/">npm CLI v10：<code>npm ci</code></a>。</li>
+          <li><a href="https://docs.npmjs.com/cli/v10/commands/npm-run-script/">npm CLI v10：<code>npm run-script</code></a>。</li>
+          <li><a href="https://docs.npmjs.com/cli/v10/commands/npm-audit/">npm CLI v10：<code>npm audit</code></a>。</li>
+          <li><a href="https://docs.npmjs.com/cli/v10/configuring-npm/package-json/">npm CLI v10：<code>package.json</code></a>。</li>
+          <li><a href="https://docs.npmjs.com/cli/v10/configuring-npm/package-lock-json/">npm CLI v10：<code>package-lock.json</code></a>。</li>
+        </ol>
+
+        <aside class="truth-boundary" aria-labelledby="truth-title">
+          <h3 id="truth-title">Truth boundary</h3>
+          <p>
+            本页是非规范性新人手册，不创造版本、依赖、Git、发布或真实 Vault 操作权限。
+            当前状态以 <a href="../../PROJECT.md">PROJECT</a> 为准，工程与证据规则以
+            <a href="../../RULES.md">RULES</a> 为准，实际脚本与依赖以当前源码为准。
+            若它们与本页冲突，本页错；修本页，不复制一套新规则。
+          </p>
+        </aside>
+      </section>
+
+      <nav class="manual-pager" aria-label="相邻手册">
+        <a href="git-interactive.html">
+          <span>上一篇</span>
+          Git 状态地图
+        </a>
+        <a href="tauri-vue-beginner-guide.html">
+          <span>下一篇</span>
+          Tauri + Vue 入门
+        </a>
+      </nav>
+    </main>
+  </div>
+</body>
+</html>

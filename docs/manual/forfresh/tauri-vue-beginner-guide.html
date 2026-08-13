@@ -1,0 +1,645 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="author" content="keikeu contributors">
+  <meta name="description" content="给 keikeu 新人的 Tauri 2 与 Vue 3 入门手册：从 WebView、五个 Tauri command、JSONL Python Sidecar 到 paper.save 与未知结果恢复。">
+  <meta name="keywords" content="keikeu, Vue 3, Tauri 2, Python Sidecar, JSONL">
+  <meta name="generator" content="Kami 1.12.0">
+  <title>给新人的 Tauri + Vue 入门手册 · keikeu</title>
+  <link rel="stylesheet" href="kami-manual.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">跳到正文</a>
+
+  <div class="manual-shell">
+    <aside class="manual-sidebar" aria-label="Forfresh 手册系列">
+      <a class="series" href="../README.md">keikeu · forfresh manuals</a>
+      <nav aria-label="系列目录">
+        <a href="npm-beginner-guide.html">npm 入门</a>
+        <a href="tauri-vue-beginner-guide.html" aria-current="page">Tauri + Vue</a>
+        <a href="python-caveman-guide.html">Python Caveman</a>
+        <a href="rust-beginner-guide.html">Rust 入门</a>
+        <a href="git-interactive.html">Git 状态地图</a>
+        <a href="gitspec.md">Git 手册</a>
+        <a href="macos-developer-beginner-guide.html">macOS 开发者</a>
+        <a href="macos-developer-id-release.md">Developer ID 发布</a>
+        <a href="tauri-vue-beginner-guide.pdf">下载本页 PDF</a>
+      </nav>
+      <p class="rail-note">
+        人工说明，不是规范。若本页与源码冲突，以源码、测试、
+        <a href="../../RULES.md">RULES</a> 和
+        <a href="../../SPEC.md">SPEC</a> 为准。
+      </p>
+    </aside>
+
+    <main id="main-content" class="manual-document">
+      <header class="cover">
+        <p class="eyebrow">keikeu · desktop runtime · beginner manual</p>
+        <h1>给新人的 Tauri + Vue 入门</h1>
+        <p class="subtitle">
+          不从脚手架学一套虚构项目。直接沿 keikeu 今天的 WebView、Rust 宿主与
+          Python Sidecar，走完一次真实保存。
+        </p>
+        <p class="meta">
+          <span>keikeu contributors</span>
+          <span>简体中文</span>
+          <span>2026-08-11</span>
+          <span>Vue 3.5.40</span>
+          <span>Tauri 2.11</span>
+          <a href="tauri-vue-beginner-guide.pdf">PDF 版</a>
+        </p>
+      </header>
+
+      <section class="summary" aria-labelledby="summary-title">
+        <h2 id="summary-title">先记住这句话</h2>
+        <p class="lead">
+          keikeu 不是“Vue 网站 + HTTP 后端”。Vue 只负责可见界面；Tauri/Rust
+          负责桌面生命周期、五个窄 command 与唯一 Sidecar；Python 才解释
+          Paper、Vault、Markdown 和 Index。
+        </p>
+        <ol class="takeaways">
+          <li><span>入口是 <span class="inline-code">index.html → main.js → App.vue</span>，当前导航只用一个 <span class="inline-code">ref</span>，没有 Router 或 Pinia。</span></li>
+          <li><span>项目自有的 Rust IPC 入口只有五个 command；<span class="inline-code">paper.save</span> 是装在 <span class="inline-code">bridge_request</span> 里的 Python protocol method。</span></li>
+          <li><span>写请求丢了响应时不能重发。App 保留 intent，重启 Sidecar 后只读对账。</span></li>
+        </ol>
+        <aside class="truth-boundary">
+          <strong>事实边界：</strong>本手册解释当前实现，不定义新架构，也不授予修改
+          Vault、依赖、protocol 或发布配置的权限。运行时事实最终核对
+          <a href="../../PROJECT.md">PROJECT</a>、
+          <a href="../../SPEC.md">SPEC</a>、
+          <a href="../../RULES.md">RULES</a>、
+          <a href="../../architecture/architecture.html">Architecture</a> 与通过的测试。
+        </aside>
+      </section>
+
+      <nav class="toc" aria-labelledby="toc-title">
+        <h2 id="toc-title">目录</h2>
+        <ol>
+          <li><a href="#chapter-1">三个运行角色，一条本地链</a></li>
+          <li><a href="#chapter-2">启动项目时发生了什么</a></li>
+          <li><a href="#chapter-3">Vue 的最小语法</a></li>
+          <li><a href="#chapter-4">组件、状态与手写导航</a></li>
+          <li><a href="#chapter-5">Tauri/Rust 的五扇门</a></li>
+          <li><a href="#chapter-6">Sidecar 与 JSONL v2</a></li>
+          <li><a href="#chapter-7">走完一次 paper.save</a></li>
+          <li><a href="#chapter-8">失败、恢复与安全改动</a></li>
+        </ol>
+      </nav>
+
+      <article id="chapter-1" class="chapter">
+        <p class="chapter-number">Chapter 01</p>
+        <h2>三个运行角色，一条本地链</h2>
+        <p class="claim">
+          每层只做一类工作。新人判断文件归属时，先问“这是画界面、管桌面，还是处理作者文件？”
+        </p>
+
+        <pre><code>Vue 3 / WebView
+  可见状态、表单、draft、导航
+          │ Tauri invoke
+          ▼
+Tauri / Rust core process
+  窗口、原生能力、Sidecar 生命周期、单队列
+          │ stdin/stdout JSONL v2
+          ▼
+Python service + core
+  DTO、业务编排、Vault、Markdown、Index
+          │
+          ▼
+作者拥有的 Paper Markdown + 可重建 Index</code></pre>
+
+        <h3>Vue 是界面，不是文件服务</h3>
+        <p>
+          Vue 跑在操作系统 WebView 中。它知道当前显示 Paper、Library 还是 Vault，
+          也知道输入框里的草稿；它不直接读取 Markdown，不拼 Vault 绝对路径，
+          不写 Index JSON。Vue 收到的是 Python 已经整理好的 DTO。
+        </p>
+
+        <h3>Rust 是窄宿主，不是第二套业务后端</h3>
+        <p>
+          Rust 创建窗口，持有唯一 Python 子进程，按顺序收发 JSONL，并提供目录选择、
+          Finder 打开和原生确认等桌面能力。它不解析卡页、不实现搜索、Trash 或迁移规则。
+        </p>
+
+        <h3>Python 才拥有产品与文件规则</h3>
+        <p>
+          <code>keikeu_bridge</code> 把 protocol 请求变成 application service 调用，并返回
+          DTO（只含跨层所需字段的数据对象）；<code>keikeu_core</code> 校验模型、路径和
+          Markdown。Markdown 是作者资产，
+          Index 和设备状态只是可重建辅助数据。
+        </p>
+
+        <div class="callout">
+          <span class="mini-label">不是 HTTP</span>
+          <p>
+            开发时出现的 <code>http://127.0.0.1:1420</code> 只是 Vite 热更新页面。
+            CSP 里的 <code>http://ipc.localhost</code> 是 Tauri IPC 所需来源。项目没有
+            localhost 业务服务器、REST API、WebSocket、账号或云后端。
+          </p>
+        </div>
+      </article>
+
+      <article id="chapter-2" class="chapter">
+        <p class="chapter-number">Chapter 02</p>
+        <h2>启动项目时发生了什么</h2>
+        <p class="claim">
+          完整桌面启动不是“开一个网页”。它要先准备 Python 可执行文件，再由 Tauri 同时组织 Vite、Rust 与 WebView。
+        </p>
+
+        <h3>第一次安装与启动</h3>
+        <pre><code>npm --prefix frontend ci
+.venv/bin/python scripts/build_sidecar.py
+npm --prefix frontend run tauri:dev</code></pre>
+        <p>
+          第一条按 lockfile 安装前端工具；第二条用 PyInstaller 生成带当前 Rust target
+          triple 后缀的 Sidecar；第三条让 Tauri CLI 启动完整桌面链。Python 代码改变后，
+          做 Tauri smoke 前要重新构建 Sidecar。
+        </p>
+
+        <h3>启动顺序</h3>
+        <ol class="flow">
+          <li><span><code>tauri:dev</code> 读取 <span class="path">frontend/src-tauri/tauri.conf.json</span>。</span></li>
+          <li><span><code>beforeDevCommand</code> 运行 <code>npm run dev</code>，Vite <span class="keep">固定监听 <code>127.0.0.1:1420</code>。</span></span></li>
+          <li><span>Rust 从 <span class="path">main.rs</span> 进入 <span class="path">lib.rs</span>，注册插件和五个 command。</span></li>
+          <li><span><code>BridgeHandle</code> 建立唯一 worker，并启动打包好的 <code>keikeu-sidecar</code>。</span></li>
+          <li><span>Rust 发 <code>system.hello</code>，核对 protocol v2、session、<span class="keep">应用与 Core 版本。</span></span></li>
+          <li><span>WebView 载入 Vite 页面；<code>main.js</code> 把 <code>App.vue</code> 挂到 <code>#app</code>。</span></li>
+          <li><span><code>App.vue</code> 每 200ms 查询 runtime；只有状态为 <code>ready</code> 才显示业务页面。</span></li>
+          <li><span><code>PaperView</code> 调 <code>startup.load</code>，进入 Paper 或 Vault/migration gate。</span></li>
+        </ol>
+
+        <h3>文件地图</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>入口</th><th>当前责任</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="path">frontend/index.html</span></td><td>提供 <code>#app</code> 与 ES module 入口。</td></tr>
+              <tr><td><span class="path">frontend/src/main.js</span></td><td>挂载 App，载入全局 CSS。</td></tr>
+              <tr><td><span class="path">frontend/src/App.vue</span></td><td>runtime gate、页面切换、durable intent。</td></tr>
+              <tr><td><span class="path">frontend/src/bridge.js</span></td><td>所有 Vue→Tauri IPC helper。</td></tr>
+              <tr><td><span class="path">frontend/src-tauri/src/</span></td><td>Rust 入口、commands 与 Sidecar worker。</td></tr>
+              <tr><td><span class="path">src/keikeu_bridge/</span></td><td>Python DTO、service、protocol、stdin/stdout。</td></tr>
+              <tr><td><span class="path">src/keikeu_core/</span></td><td>模型、Markdown、Vault 与 Index。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout">
+          <span class="mini-label">两个常见误判</span>
+          <p>
+            <code>npm --prefix frontend run dev</code> 只证明 Vite 页面能启动；
+            <code>npm --prefix frontend run build</code> 只生成前端静态资产。两者都不证明
+            Rust、Sidecar、Vault 或真实桌面流程可用。断开 Vault 的开发样张只能在
+            DEV 模式用 <code>?prototype=1</code> 打开。
+          </p>
+        </div>
+      </article>
+
+      <article id="chapter-3" class="chapter">
+        <p class="chapter-number">Chapter 03</p>
+        <h2>Vue 的最小语法</h2>
+        <p class="claim">
+          当前界面靠单文件组件、响应式值和父子事件就够了。先读懂这些，不要先给项目安装一套新状态框架。
+        </p>
+
+        <h3>单文件组件有三块</h3>
+        <pre><code>&lt;script setup&gt;
+import { ref } from "vue";
+const count = ref(0);
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;button type="button" @click="count += 1"&gt;&lbrace;&lbrace; count &rbrace;&rbrace;&lt;/button&gt;
+&lt;/template&gt;
+
+&lt;style scoped&gt;
+button { font: inherit; }
+&lt;/style&gt;</code></pre>
+        <p>
+          <code>&lt;script setup&gt;</code> 中的顶层 import、变量和函数可直接用于 template。
+          <code>scoped</code> 让样式主要作用于当前组件；共享 token 与全局底色
+          <span class="keep">仍在 <span class="path">frontend/src/style.css</span>。</span>
+        </p>
+
+        <h3><code>ref</code>、<code>computed</code>、<code>watch</code></h3>
+        <dl>
+          <dt><code>ref(initial)</code></dt>
+          <dd>可变化的响应式盒子。脚本中用 <code>status.value</code>，模板中写 <code>status</code>。</dd>
+          <dt><code>computed(() =&gt; ...)</code></dt>
+          <dd>从其他状态推导只读结果。例如 active page、dirty、busy；getter 不做请求或写盘。</dd>
+          <dt><code>watch(source, callback)</code></dt>
+          <dd>在明确变化后同步状态或发事件。项目用它更新草稿 baseline、选择项和 dirty 通知。</dd>
+        </dl>
+
+        <h3>模板中最常见的符号</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>写法</th><th>白话</th><th>项目例子</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>&lbrace;&lbrace; value &rbrace;&rbrace;</code></td><td>把值显示成文字。</td><td>runtime 版本、Paper code、错误信息。</td></tr>
+              <tr><td><code>v-if / v-else-if</code></td><td>按状态选择一块界面。</td><td>App 的 runtime gate、Vault 的 picker/migration。</td></tr>
+              <tr><td><code>v-for="item in items"</code></td><td>为列表每项生成结构。</td><td>Paper 页码、Library 项目；同时给稳定 <code>:key</code>。</td></tr>
+              <tr><td><code>:disabled="busy"</code></td><td>把 JS 值绑定到 HTML 属性。</td><td>请求期间禁止重复点击。</td></tr>
+              <tr><td><code>@click="save"</code></td><td>监听浏览器事件。</td><td>保存、切页、打开 Vault。</td></tr>
+              <tr><td><code>v-model="draft.name"</code></td><td>输入值与响应式状态双向同步。</td><td>名称、正文、Tags、select、checkbox。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>props 向下，events 向上</h3>
+        <pre><code>// child
+const props = defineProps({ paper: { type: Object, required: true } });
+const emit = defineEmits(["save"]);
+emit("save", draft);
+
+&lt;!-- parent --&gt;
+&lt;PaperV4Workbench :paper="paper" @save="savePaper" /&gt;</code></pre>
+        <p>
+          props 是父组件给孩子的输入；孩子用 emit 告诉直接父组件发生了什么。
+          组件事件不像 DOM 点击那样自动向祖先冒泡，所以跨层动作必须显式接力。
+        </p>
+
+        <h3>生命周期与真实 DOM</h3>
+        <p>
+          <code>onMounted</code> 在组件进入页面后注册 listener 或读取启动状态；
+          <code>onUnmounted</code>/<code>onBeforeUnmount</code> 清 timer 和 listener；
+          <code>onActivated</code> 处理 KeepAlive 缓存组件再次出现。模板上的
+          <code>ref="contentInput"</code> 配合同名 <code>ref(null)</code> 取得真实元素，
+          <code>nextTick</code> 等 DOM 更新完再聚焦。
+        </p>
+      </article>
+
+      <article id="chapter-4" class="chapter">
+        <p class="chapter-number">Chapter 04</p>
+        <h2>组件、状态与手写导航</h2>
+        <p class="claim">
+          keikeu 只有三个生产页面，根组件的一个字符串已经能表达导航；Router 和全局 Store 现在只会增加新概念。
+        </p>
+
+        <pre><code>App.vue
+├─ PaperView.vue
+│  └─ PaperV4Workbench.vue
+├─ LibraryView.vue       &lt;KeepAlive&gt;
+│  └─ LibraryV4Projection.vue
+└─ VaultView.vue</code></pre>
+
+        <h3>根组件拥有跨页面状态</h3>
+        <p>
+          <code>destination</code> 只取 <code>paper</code>、<code>library</code>、
+          <code>vault</code>；template 用 <code>v-if</code> 显示对应页面。
+          <code>status</code> 控制启动/ready/blocked gate；<code>paperPath</code> 与 startup
+          DTO 负责页面交接；<code>pendingIntent</code> 保存可能已经写盘但结果未知的操作。
+        </p>
+
+        <h3>容器组件与展示组件</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>组件</th><th>可以做</th><th>不可以做</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>PaperView</code></td><td>加载、保存、删除、错误/修复状态。</td><td>直接写 Markdown。</td></tr>
+              <tr><td><code>LibraryView</code></td><td>查询、移动、Branch、Trash 与系统交接。</td><td>自己解析 Index 文件。</td></tr>
+              <tr><td><code>VaultView</code></td><td>目录意图、预览、迁移确认、重启读回。</td><td>把 picker 返回值当作已验证 Vault。</td></tr>
+              <tr><td><code>PaperV4Workbench</code></td><td>草稿、页切换、表单反馈、emit save。</td><td>import bridge 或持久化。</td></tr>
+              <tr><td><code>LibraryV4Projection</code></td><td>筛选和展示父组件给的 DTO。</td><td>读取作者文件。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>为什么 Library 使用 KeepAlive</h3>
+        <p>
+          离开 Library 时保留它的选择和筛选状态，再回来由 <code>onActivated</code>
+          刷新。切换 Vault 或 Sidecar 重启后，App 增加
+          <code>libraryContextGeneration</code>，用新的 key 丢弃旧缓存，避免显示另一个
+          Vault 的上下文。
+        </p>
+
+        <div class="callout">
+          <span class="mini-label">最危险的短路</span>
+          <p>
+            App 会把 <code>appRequest</code> 作为 <code>request</code> prop 传给页面。
+            durable 操作必须调用 <code>props.request</code>，不能在页面里直接调用
+            <code>bridgeRequest</code>；绕过根 wrapper 会让 <code>pendingIntent</code> 消失，
+            写入丢响应后便无法安全对账。测试可注入 fake request，production 仍走同一入口。
+          </p>
+        </div>
+      </article>
+
+      <article id="chapter-5" class="chapter">
+        <p class="chapter-number">Chapter 05</p>
+        <h2>Tauri/Rust 的五扇门</h2>
+        <p class="claim">
+          Vue 不直接拿系统权限。本项目只显式注册五个自有 Tauri command；业务 method 是下一层协议，不是更多后门。
+        </p>
+
+        <h3>从 JavaScript 调 Rust</h3>
+        <pre><code>import { invoke } from "@tauri-apps/api/core";
+
+const response = await invoke("bridge_request", {
+  method: "startup.load",
+  params: {},
+});</code></pre>
+        <p>
+          <code>invoke</code> 返回 Promise。Tauri 默认把 JavaScript 的 camelCase 参数名映射到
+          Rust snake_case，因此 <code>relativeTarget</code> 对应
+          <code>relative_target</code>。返回类型经 Serde 序列化为前端可读数据。
+        </p>
+
+        <h3>五个项目自有 command</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Tauri command</th><th>作用</th><th>是否进入 Python protocol</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>runtime_status</code></td><td>读取 Rust 持有的 starting/ready/blocked/stopped。</td><td>否。</td></tr>
+              <tr><td><code>bridge_request</code></td><td>承载批准的业务 method 与 params。</td><td>是。</td></tr>
+              <tr><td><code>restart_sidecar</code></td><td>杀死旧 child、建立新进程、新 session 与 hello。</td><td>只做内部 hello。</td></tr>
+              <tr><td><code>choose_vault_directory</code></td><td>打开原生文件夹 picker，返回选择意图。</td><td>否；Vue 随后必须调 <code>vault.inspect</code>。</td></tr>
+              <tr><td><code>open_system_target</code></td><td>让 Python 验证相对目标，再由 opener 打开或在 Finder 显示。</td><td>内部调用 <code>system.resolve_target</code>。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>command 与 protocol method 不是一回事</h3>
+        <p>
+          <code>paper.save</code>、<code>library.query</code>、<code>vault.inspect</code>
+          都是 <code>bridge_request</code> payload 内的 method。Rust 的
+          <code>public_policy</code> 先拒绝未知 method 并决定 read/mutation timeout；
+          Python dispatcher 再独立核对 method、params 与 session。
+          <code>system.hello</code> 和 <code>system.resolve_target</code> 是宿主内部方法，
+          不能借通用 bridge 从 Vue 直达。
+        </p>
+
+        <h3>配置、插件与权限</h3>
+        <dl>
+          <dt><span class="path">frontend/src-tauri/tauri.conf.json</span></dt>
+          <dd>关联 Vite dev URL、production dist、窗口尺寸、CSP、bundle 与 externalBin。</dd>
+          <dt><span class="path">frontend/src-tauri/src/lib.rs</span></dt>
+          <dd>初始化 shell/dialog/opener，manage BridgeHandle，并在同一个 <code>generate_handler!</code> 注册五个 command。</dd>
+          <dt><span class="path">frontend/src-tauri/capabilities/main.json</span></dt>
+          <dd>只给 main 窗口当前需要的 event、destroy 与 dialog 权限；不是业务 method allowlist 的替代品。</dd>
+          <dt><span class="path">frontend/src-tauri/Cargo.toml</span></dt>
+          <dd>固定 Rust edition、最低 Rust 与精确 Tauri/Serde/plugin 依赖。</dd>
+        </dl>
+
+        <div class="callout">
+          <span class="mini-label">新增插件不是一行 import</span>
+          <p>
+            一个 Tauri 插件通常同时牵涉 npm 包、Cargo crate、Rust 初始化、capability、
+            CSP、平台与打包。当前任务没有第二个真实需求时，不加插件、不造 abstraction。
+          </p>
+        </div>
+      </article>
+
+      <article id="chapter-6" class="chapter">
+        <p class="chapter-number">Chapter 06</p>
+        <h2>Sidecar 与 JSONL v2</h2>
+        <p class="claim">
+          Sidecar 是 Tauri 随 app 携带、由 Rust 启停的 Python 可执行文件；双方用标准输入输出交换一行一请求的 JSON，而不是开端口。
+        </p>
+
+        <h3>它怎样被打包和找到</h3>
+        <p>
+          <span class="path">scripts/build_sidecar.py</span> 读取 <code>rustc -Vv</code>
+          的 host triple，用 PyInstaller <code>--onefile</code> 生成类似
+          <code>keikeu-sidecar-aarch64-apple-darwin</code> 的文件。
+          <code>tauri.conf.json</code> 的 <code>externalBin</code> 只写基名
+          <code>binaries/keikeu-sidecar</code>；Tauri 按目标架构寻找带后缀的产物。
+        </p>
+
+        <h3>一次握手</h3>
+        <pre><code>{"v":2,"id":1,"method":"system.hello","params":{}}
+
+{"v":2,"id":1,"ok":true,"result":{
+  "protocol_version":2,
+  "session_id":"opaque-session",
+  "app_version":"0.1.0",
+  "core_version":"paper-v4/index-v4"
+}}</code></pre>
+        <p>
+          hello 没有 session。Python 每次 hello 清空旧 preview/edit/migration handle，
+          再签发新 session；后续每个请求都必须携带它。旧 token 因此不会跨进程重启继续生效。
+        </p>
+
+        <h3>为什么只有一个 worker</h3>
+        <p>
+          多个 Tauri command 可以同时到来，但 <code>BridgeHandle</code> 把
+          <code>WorkerJob</code> 放进同一个 Rust channel。worker 一次只写一个 JSONL
+          request，并等到匹配 id 的 response 后才处理下一个。这个简单顺序避免响应串线，
+          <span class="keep">也让 mutation 只执行一次。</span>
+        </p>
+
+        <h3>Python 的四层</h3>
+        <ol class="flow">
+          <li><span><code>sidecar.py</code> 只创建 service，并把 stdin/stdout 交给 <code>run_jsonl</code>。</span></li>
+          <li><span><code>protocol.py</code> 校验唯一 JSON key、版本、id、session、method 与 params。</span></li>
+          <li><span><code>service.py</code> 把 DTO 编排成 startup、Vault、Paper、Library 或 migration 工作流。</span></li>
+          <li><span><code>keikeu_core</code> 才解释模型、路径、Markdown、原子替换与 Index。</span></li>
+        </ol>
+
+        <div class="callout">
+          <span class="mini-label">stdout 是协议线</span>
+          <p>
+            Sidecar stdout 每个输入行必须恰好返回一个 JSON response 并 flush。
+            在 Python 路径里随手 <code>print()</code> 会让 Rust 把日志当协议响应，继而阻塞
+            runtime。即使用 stderr 诊断，也绝不能记录作者正文、Vault 私密路径或 token。
+          </p>
+        </div>
+      </article>
+
+      <article id="chapter-7" class="chapter">
+        <p class="chapter-number">Chapter 07</p>
+        <h2>走完一次 <code>paper.save</code></h2>
+        <p class="claim">
+          “点保存”不是一个函数。它是一条逐层收窄权限的链：组件保草稿，根组件保恢复意图，Rust 保请求顺序，<span class="keep">Python 保作者文件。</span>
+        </p>
+        <p>
+          先把两个词翻成白话：<code>baseline</code> 是最后一次可信的已保存快照；
+          <code>intent</code> 是“刚才想写什么”以及事后只读核对所需的数据，不是重试指令。
+        </p>
+
+        <ol class="flow">
+          <li><span><code>PaperV4Workbench.save()</code> 做即时表单检查，并 emit <code>save</code>；它仍然不碰 bridge。</span></li>
+          <li><span><code>PaperView.savePaper()</code> 从 Paper DTO 组装 <code>edit_token</code>、<code>vault_locator</code>、名称、Tags 与有序 pages。</span></li>
+          <li><span>PaperView 同时保存旧 baseline、submitted draft、target path 与 source digest，形成可只读对账的 intent。</span></li>
+          <li><span>页面调用父组件注入的 <code>props.request("paper.save", save, intent)</code>。</span></li>
+          <li><span><code>App.appRequest()</code> 先把 durable intent 放进根状态，再调用 <code>bridgeRequest</code>。</span></li>
+          <li><span><code>bridge.js</code> invoke 唯一 Tauri command <code>bridge_request</code>，Python 错误 envelope 会被转换为结构化 throw。</span></li>
+          <li><span>Rust policy 将 <code>paper.save</code> 分类为 mutation，附加 session 和递增 id，经单 worker 写入一行 JSON。</span></li>
+          <li><span>Python dispatcher 严格检查字段，构造 <code>PaperSaveDto</code>，<span class="keep">只调用 service 一次。</span></span></li>
+          <li><span>service 校验当前 Vault locator 与 edit token，把 DTO 转成 Paper 模型。</span></li>
+          <li><span>新 Paper 用无覆盖创建；既有 Paper 用 source bytes 做 compare-and-swap，外部修改会拒绝覆盖。</span></li>
+          <li><span>写后重新读取验证；Markdown 已成功而 Index 重建失败时，返回成功加 <code>index_degraded</code> warning。</span></li>
+          <li><span>响应沿 JSONL→Rust→Tauri IPC→Vue 返回；Vue 用返回 Paper 建立新 baseline，确认成功后 App 才清 intent。</span></li>
+        </ol>
+
+        <h3>为什么要同时传 token、locator 与 digest</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>值</th><th>防止什么</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>edit_token</code></td><td>把保存绑定到 Python 已经打开或创建的具体编辑快照。</td></tr>
+              <tr><td><code>vault_locator</code></td><td>Sidecar 重启或 Vault 切换后，不对错误 Vault 读取或写入。</td></tr>
+              <tr><td><code>source_digest / source bytes</code></td><td>外部编辑器改过文件时拒绝静默覆盖。</td></tr>
+              <tr><td><code>submitted + baseline</code></td><td>未知结果后区分 committed、not_committed、stale 与 repair_required。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout">
+          <span class="mini-label">Index 不是回滚理由</span>
+          <p>
+            Paper Markdown 已安全替换后，Index 更新失败不能把保存说成失败，也不能重发
+            <code>paper.save</code>。Vue 接受新的 Paper baseline，显示
+            <code>index_degraded</code>，只允许用户显式重建可丢弃的 Index。
+          </p>
+        </div>
+      </article>
+
+      <article id="chapter-8" class="chapter">
+        <p class="chapter-number">Chapter 08</p>
+        <h2>失败、恢复与安全改动</h2>
+        <p class="claim">
+          简单架构不等于忽略失败。写入是否发生过必须分清；不确定时宁可停住，也不能再按一次。
+        </p>
+
+        <h3>四个容易混淆的状态</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>状态</th><th>已知事实</th><th>下一步</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>stale_snapshot</code></td><td>保存前已证明磁盘内容变了，目标写入未执行。</td><td>保留草稿，重新打开并人工决定。</td></tr>
+              <tr><td><code>commit_unknown</code></td><td>mutation 发出后响应丢失，磁盘可能改过，也可能没改。</td><td>阻塞写入、重启、只读对账；禁止 replay。</td></tr>
+              <tr><td><code>repair_required</code></td><td>磁盘 Paper 结构损坏，不能安全作为可编辑 DTO 打开。</td><td>显示路径和结构原因，人工修复后重新检查。</td></tr>
+              <tr><td><code>index_degraded</code></td><td>作者 Markdown mutation 已知成功，辅助 Index 不可靠。</td><td>接受新 baseline，需要时显式重建 Index。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3><code>commit_unknown</code> 的恢复路线</h3>
+        <pre><code>paper.save 响应丢失
+  → Rust 杀死 Sidecar并把 runtime 设为 blocked
+  → App 根状态保留 pendingIntent
+  → 用户显式“重启本地 Core”
+  → 新 hello / 新 session
+  → PaperView 调 paper.reconcile_save（只读）
+  → 根据磁盘返回 committed / not_committed / stale / repair_required
+  → 只有 committed / not_committed 才清 intent</code></pre>
+
+        <h3>四层验证各管一段</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>层</th><th>当前验证</th><th>不能冒充</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Vue</td><td>可见必填、按钮 busy、DTO 基本形状、离开保护。</td><td>最终领域/路径权威。</td></tr>
+              <tr><td>Rust</td><td>五个 command、method allowlist、timeout、id/session/response envelope。</td><td>Paper 或 Markdown 规则。</td></tr>
+              <tr><td>Python protocol/service</td><td>严格 JSON 字段、DTO、locator、workflow 与稳定错误。</td><td>GUI 状态。</td></tr>
+              <tr><td>Python core</td><td>模型、Home containment、symlink、CAS、原子文件操作。</td><td>桌面窗口生命周期。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>第一次改动怎么选检查</h3>
+        <pre><code># Vue 组件与 bridge mock
+npm --prefix frontend run test
+npm --prefix frontend run build
+
+# Rust command / worker
+cargo test --manifest-path frontend/src-tauri/Cargo.toml
+
+# Python protocol / service / core
+.venv/bin/python -m pytest
+.venv/bin/python -m compileall -q src
+
+# 完整桌面链前重建 Sidecar
+.venv/bin/python scripts/build_sidecar.py
+npm --prefix frontend run tauri:dev</code></pre>
+        <p>
+          Vue 测试在 jsdom 中 mock Tauri IPC，适合证明组件和 envelope 行为；Vite build
+          证明前端可构建；Cargo test 证明 Rust worker 与失败分类；pytest 证明 Python
+          契约和文件逻辑。它们都不能单独冒充最终 Tauri 启动、真实平台流程或产品验收。
+        </p>
+
+        <h3>新人第一练习</h3>
+        <ol>
+          <li>从 <span class="path">frontend/src/main.js</span> 跟到 <code>App.vue</code>，解释为什么 starting 时看不到 PaperView。</li>
+          <li>从 <code>PaperV4Workbench</code> 的保存按钮跟到 Python <code>paper_save</code>，每层只写一句责任。</li>
+          <li>只修改一处不改变行为的 UI 文案，跑 focused Vitest 与 Vite build，检查 diff 后撤销练习。</li>
+        </ol>
+
+        <div class="callout">
+          <span class="mini-label">现在明确跳过</span>
+          <p>
+            不加 Router、Pinia、TypeScript、HTTP、Axios、WebSocket、UI kit、文件 watcher
+            或第二条 Sidecar 通道。等第二个真实需求证明现有 <code>ref + props + events</code>
+            或单队列不够，再做一次有证据的架构决定。
+          </p>
+        </div>
+      </article>
+
+      <section class="sources" aria-labelledby="sources-title">
+        <h2 id="sources-title">来源与继续阅读</h2>
+        <p>
+          本页于 2026-08-11 依据当前仓库源码审计。官方链接解释框架通用行为；
+          它们不能覆盖 keikeu 自己的职责边界。
+        </p>
+
+        <h3>项目事实</h3>
+        <ol>
+          <li><a href="../../../frontend/src/main.js"><span class="path">frontend/src/main.js</span></a>、<a href="../../../frontend/src/App.vue"><span class="path">App.vue</span></a>、<a href="../../../frontend/src/bridge.js"><span class="path">bridge.js</span></a></li>
+          <li><a href="../../../frontend/src/PaperView.vue"><span class="path">PaperView.vue</span></a>、<a href="../../../frontend/src/PaperV4Workbench.vue"><span class="path">PaperV4Workbench.vue</span></a>、<a href="../../../frontend/src/LibraryView.vue"><span class="path">LibraryView.vue</span></a>、<a href="../../../frontend/src/VaultView.vue"><span class="path">VaultView.vue</span></a></li>
+          <li><a href="../../../frontend/src-tauri/src/lib.rs"><span class="path">frontend/src-tauri/src/lib.rs</span></a>、<a href="../../../frontend/src-tauri/src/commands.rs"><span class="path">commands.rs</span></a>、<a href="../../../frontend/src-tauri/src/bridge.rs"><span class="path">bridge.rs</span></a>、<a href="../../../frontend/src-tauri/tauri.conf.json"><span class="path">tauri.conf.json</span></a>、<a href="../../../frontend/src-tauri/capabilities/main.json"><span class="path">capabilities/main.json</span></a></li>
+          <li><a href="../../../src/keikeu_bridge/protocol.py"><span class="path">src/keikeu_bridge/protocol.py</span></a>、<a href="../../../src/keikeu_bridge/service.py"><span class="path">service.py</span></a>、<a href="../../../src/keikeu_bridge/sidecar.py"><span class="path">sidecar.py</span></a></li>
+          <li><a href="../../SPEC.md">SPEC</a>、<a href="../../RULES.md">RULES</a>、<a href="../../PROJECT.md">PROJECT</a>、<a href="../../architecture/decisions/0004-vue-tauri-python-sidecar.md">ADR-0004</a></li>
+        </ol>
+
+        <h3>Vue 官方文档</h3>
+        <ol>
+          <li><a href="https://vuejs.org/guide/quick-start.html">Quick Start</a> 与 <a href="https://vuejs.org/api/sfc-script-setup.html"><code>&lt;script setup&gt;</code></a></li>
+          <li><a href="https://vuejs.org/guide/essentials/reactivity-fundamentals.html">Reactivity Fundamentals</a>、<a href="https://vuejs.org/guide/essentials/computed.html">Computed</a>、<a href="https://vuejs.org/guide/essentials/watchers.html">Watchers</a></li>
+          <li><a href="https://vuejs.org/guide/components/props.html">Props</a>、<a href="https://vuejs.org/guide/components/events.html">Component Events</a>、<a href="https://vuejs.org/guide/essentials/lifecycle.html">Lifecycle Hooks</a>、<a href="https://vuejs.org/guide/built-ins/keep-alive.html">KeepAlive</a></li>
+        </ol>
+
+        <h3>Tauri 官方文档</h3>
+        <ol>
+          <li><a href="https://v2.tauri.app/concept/process-model/">Process Model</a> 与 <a href="https://v2.tauri.app/start/project-structure/">Project Structure</a></li>
+          <li><a href="https://v2.tauri.app/develop/calling-rust/">Calling Rust from the Frontend</a> 与 <a href="https://v2.tauri.app/develop/sidecar/">Embedding External Binaries</a></li>
+          <li><a href="https://v2.tauri.app/start/frontend/vite/">Vite frontend</a>、<a href="https://v2.tauri.app/security/capabilities/">Capabilities</a>、<a href="https://v2.tauri.app/security/csp/">Content Security Policy</a></li>
+        </ol>
+
+        <aside class="truth-boundary">
+          <strong>最后核对：</strong>manual 是理解材料。产品范围看
+          <a href="../../SPEC.md">SPEC</a>；工程与数据纪律看
+          <a href="../../RULES.md">RULES</a>；当前阶段、版本与已运行证据看
+          <a href="../../PROJECT.md">PROJECT</a>。源码改变后，本页必须跟着校准。
+        </aside>
+      </section>
+
+      <nav class="manual-pager" aria-label="上一篇和下一篇">
+        <a href="npm-beginner-guide.html">
+          <span>上一篇</span>
+          给新人的 npm 手册
+        </a>
+        <a href="python-caveman-guide.html">
+          <span>下一篇</span>
+          Python 代码的 Caveman 诠释手册
+        </a>
+      </nav>
+    </main>
+  </div>
+</body>
+</html>

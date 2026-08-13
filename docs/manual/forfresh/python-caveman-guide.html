@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="用直白语言解释 keikeu Python 核心、Bridge、Markdown 与文件安全边界。">
+  <meta name="generator" content="Kami 1.12.0">
+  <title>Python 代码的 Caveman 诠释手册 · keikeu forfresh</title>
+  <link rel="stylesheet" href="kami-manual.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到正文</a>
+  <div class="manual-shell">
+    <aside class="manual-sidebar" aria-label="forfresh 手册导航">
+      <a class="series" href="../README.md">keikeu · forfresh</a>
+      <nav aria-label="同系列手册">
+        <a href="npm-beginner-guide.html">npm 新人手册</a>
+        <a href="tauri-vue-beginner-guide.html">Tauri + Vue 入门</a>
+        <a href="python-caveman-guide.html" aria-current="page">Python Caveman</a>
+        <a href="rust-beginner-guide.html">Rust 简易入门</a>
+        <a href="git-interactive.html">Git 状态地图</a>
+        <a href="macos-developer-beginner-guide.html">macOS 开发者入门</a>
+      </nav>
+      <p class="rail-note">人工解释，不是项目权威。若与 SPEC、RULES、PROJECT 或源码冲突，以权威与运行事实为准。</p>
+    </aside>
+
+    <main class="manual-document" id="main">
+      <header class="cover">
+        <p class="eyebrow">forfresh manual · 03 / 04</p>
+        <h1>给新人的 Python 代码<br>Caveman 诠释手册</h1>
+        <p class="subtitle">把对象、函数、Markdown、JSONL 与错误翻成白话。目标不是背语法，而是能沿一条真实数据流找到该改的那一处。</p>
+        <p class="meta">
+          <span>keikeu contributors</span>
+          <time datetime="2026-08-11">2026-08-11</time>
+          <span>适用：Python ≥3.11,&lt;3.14</span>
+          <a href="python-caveman-guide.pdf">下载 PDF</a>
+        </p>
+      </header>
+
+      <section class="summary" aria-labelledby="summary-title">
+        <h2 id="summary-title">先记住这一句</h2>
+        <p class="lead">Caveman engineering 不是“随便写”，而是让数据、函数、文件和错误都能被人一步一步追踪。keikeu 的 Python 层因此优先使用普通对象、普通函数、标准库和明确边界。</p>
+        <ol class="takeaways">
+          <li><span><span class="inline-code">keikeu_core</span> 管模型、Markdown、Vault 与 Index；<span class="inline-code">keikeu_bridge</span> 管 DTO、service、protocol 与 Sidecar。</span></li>
+          <li><span>Markdown 是持久权威，JSON Index 是可重建投影；界面和 Rust 都不能绕过 Python 直接写作者文件。</span></li>
+          <li><span>先用 <span class="inline-code">rg</span> 找调用者，再做最小修改并跑聚焦测试；真实 Vault 永远不是练习场。</span></li>
+        </ol>
+      </section>
+
+      <nav class="toc" aria-labelledby="toc-title">
+        <h2 id="toc-title">阅读路线</h2>
+        <ol>
+          <li><a href="#caveman">“原始人式”到底是什么</a></li>
+          <li><a href="#map">先看两层地图</a></li>
+          <li><a href="#sentences">看懂常见 Python 句子</a></li>
+          <li><a href="#models">对象：数据先有形状</a></li>
+          <li><a href="#files">文件：Markdown 才是权威</a></li>
+          <li><a href="#bridge">Bridge：一行 JSON 走完全程</a></li>
+          <li><a href="#trace">第一次安全追代码</a></li>
+          <li><a href="#traps">陷阱、检查与下一步</a></li>
+        </ol>
+      </nav>
+
+      <section class="chapter" id="caveman">
+        <p class="chapter-number">Chapter 01</p>
+        <h2>“原始人式”到底是什么</h2>
+        <p class="claim">尽量让一件事就是一个普通文件、一个普通对象或一个普通函数。复杂度只留在确实保护作者数据的地方，不为“以后也许会用”搭框架。</p>
+
+        <h3>一块石头只做一件事</h3>
+        <p>当前 <a href="../../../pyproject.toml"><code>pyproject.toml</code></a> 把 Python 限定在 <code>&gt;=3.11,&lt;3.14</code>，运行时依赖列表为空；开发依赖只有 pytest。换句话说：能由 <code>dataclasses</code>、<code>pathlib</code>、<code>json</code> 与普通函数完成的事情，就不先加数据库、ORM、依赖注入容器或 Web 框架。</p>
+        <p>这种简单不是“所有代码塞进一个文件”。真正的原则是：一个模块有一个可复述的责任，数据从入口到落盘没有暗门。新人能用 <code>rg</code> 找到名字，打开几个调用者，就应当能回答“谁验证、谁写盘、谁返回错误”。</p>
+
+        <div class="callout">
+          <span class="mini-label">Caveman 的边界</span>
+          <p><strong>可以朴素：</strong>普通函数、明确分支、重复两三行可读代码。<strong>不能省：</strong>信任边界校验、原子写入、并发保护、错误语义、作者内容保护。</p>
+        </div>
+
+        <h3>为什么文件安全代码看起来不“简单”</h3>
+        <p>作者内容不是缓存。路径 containment、禁止跟随不可信链接、严格 UTF-8、schema 校验、编辑令牌和原子替换，都是防止写错文件或覆盖并发编辑的保险。如果把这些删掉，代码行数会少，但系统会变得不可修复；那不是 caveman，只是失去护栏。</p>
+        <p>因此评审 Python 改动时先问两件事：它是否把产品规则放在唯一权威层？它是否保留了现有数据防护？如果答案是“是”，再讨论能否把控制流写得更直白。</p>
+      </section>
+
+      <section class="chapter" id="map">
+        <p class="chapter-number">Chapter 02</p>
+        <h2>先看两层地图</h2>
+        <p class="claim"><span class="inline-code">keikeu_core</span> 是本地产品与文件规则，<span class="inline-code">keikeu_bridge</span> 是桌面传输与编排。先选对层，往往就省掉一半调试。</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>位置</th><th>白话职责</th><th>不该做什么</th></tr></thead>
+            <tbody>
+              <tr><td><a href="../../../src/keikeu_core/models.py"><code>models.py</code></a></td><td>Paper/Card 的数据形状与值级验证</td><td>不碰 GUI、JSONL 或系统对话框</td></tr>
+              <tr><td><a href="../../../src/keikeu_core/markdown_io.py"><code>markdown_io.py</code></a></td><td>Markdown bytes、解析、渲染、CAS 与原子替换</td><td>不决定页面怎么提示用户</td></tr>
+              <tr><td><a href="../../../src/keikeu_core/vault.py"><code>vault.py</code></a></td><td>Vault 布局、路径包含性与安全文件操作</td><td>不信任界面传来的路径</td></tr>
+              <tr><td><a href="../../../src/keikeu_core/indexer.py"><code>indexer.py</code></a></td><td>从 Markdown 重建可丢弃的 JSON Index</td><td>不让 Index 反过来覆盖 Markdown</td></tr>
+              <tr><td><a href="../../../src/keikeu_bridge/service.py"><code>service.py</code></a></td><td>把一个用例编排成若干 core 调用</td><td>不复制 parser 或文件安全规则</td></tr>
+              <tr><td><a href="../../../src/keikeu_bridge/protocol.py"><code>protocol.py</code></a></td><td>校验 JSONL envelope、method、params，并映射稳定错误</td><td>不把 stdout 当日志</td></tr>
+              <tr><td><a href="../../../src/keikeu_bridge/sidecar.py"><code>sidecar.py</code></a></td><td>stdin 读一行，stdout 写一行</td><td>不持有产品状态</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>一条最短心智模型</h3>
+        <ol class="flow">
+          <li><span>协议把外部 JSON 变成可信 DTO，坏输入在边界被拒绝。</span></li>
+          <li><span>service 把“保存 Paper”翻成几个明确的 core 操作。</span></li>
+          <li><span>core 把对象渲染为 Markdown，并在安全路径上原子提交。</span></li>
+          <li><span>Index 从已提交的 Markdown 重建；响应再沿原路返回。</span></li>
+        </ol>
+
+        <p>如果你正在改按钮文案，Python 多半不是该去的地方；如果你正在改变 Paper 的合法形状或写盘规则，Vue 和 Rust 都不是权威。先决定“这是谁的责任”，再搜索名字。</p>
+      </section>
+
+      <section class="chapter" id="sentences">
+        <p class="chapter-number">Chapter 03</p>
+        <h2>看懂常见 Python 句子</h2>
+        <p class="claim">类型标注是路牌，dataclass 是带名字的数据盒，异常是明确拒绝。先读懂这些句型，就能覆盖项目大多数核心代码。</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>句型</th><th>原始人翻译</th></tr></thead>
+            <tbody>
+              <tr><td><code>paper_code: str</code></td><td>这个名字应当装字符串；这是说明和检查工具，不会自动清洗值。</td></tr>
+              <tr><td><code>title: str | None</code></td><td>这里可以有字符串，也可以明确没有。</td></tr>
+              <tr><td><code>cards: list[CardPageV4]</code></td><td>这是按顺序放 CardPageV4 的列表。</td></tr>
+              <tr><td><code>field(default_factory=list)</code></td><td>每个新对象拿自己的空列表，不能共享同一只篮子。</td></tr>
+              <tr><td><code>-&gt; PaperV4</code></td><td>函数承诺正常返回一个 PaperV4。</td></tr>
+              <tr><td><code>raise ValueError(...)</code></td><td>输入不合法，立刻停下并给调用者一个可解释的失败。</td></tr>
+              <tr><td><code>with path.open(...) as handle</code></td><td>进入块时打开文件，离开时一定关闭。</td></tr>
+              <tr><td><code>if value is None</code></td><td>检查“明确没有”，不要把空字符串、0 和 False 混成同一件事。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>读函数，先只读签名</h3>
+        <pre><code>def validate_paper_code(value: str) -&gt; str:
+    normalized = value.strip()
+    if not normalized:
+        raise ValueError("paper code is required")
+    return normalized</code></pre>
+        <p>先看输入和输出：拿一个字符串，正常时还一个字符串。再看三步：去掉两端空白；若为空就拒绝；否则返回。真实代码的规则可能更严格，但阅读方法不变：数据进来，守卫检查，结果出去。</p>
+
+        <h3><code>try/except</code> 不是橡皮擦</h3>
+        <p>只在这一层能做有用事情时捕获异常：补充路径上下文、把底层异常映射成稳定协议错误，或执行必要清理。<code>except Exception: pass</code> 会把损坏或数据丢失信号吞掉；宽捕获若没有明确恢复动作，通常是错误。</p>
+      </section>
+
+      <section class="chapter" id="models">
+        <p class="chapter-number">Chapter 04</p>
+        <h2>对象：数据先有形状</h2>
+        <p class="claim">模型让一篇 Paper 在进入文件层之前就有可检查的字段与不变量。它不是数据库模型，也不负责把自己保存到磁盘。</p>
+
+        <h3><code>@dataclass</code> 是什么</h3>
+        <p>在 <a href="../../../src/keikeu_core/models.py"><code>models.py</code></a> 里，<code>CardPageV4</code> 与 <code>PaperV4</code> 使用 dataclass。装饰器替我们生成初始化和比较等机械代码，字段本身仍是普通 Python 值。这比手写几十行赋值更短，也没有引入外部框架。</p>
+        <p><code>__post_init__</code> 在 dataclass 初始化完成后运行。项目用它执行字段规范化与值级验证，所以“对象已经创建”不代表输入可以任意；无效值会尽早失败，而不是等到写盘后才暴露。</p>
+
+        <div class="callout">
+          <span class="mini-label">重要区别</span>
+          <p>类型标注说“预期是什么”，运行时守卫说“实际允许什么”。二者缺一不可：<code>str</code> 不会自动阻止空字符串，<code>list[str]</code> 也不会替你检查业务顺序。</p>
+        </div>
+
+        <h3>不要给模型塞进不属于它的能力</h3>
+        <p>模型可以知道自己的字段是否合法，却不该弹原生对话框、打开 Finder、调用 Tauri 或写用户界面状态。文件位置和持久化条件交给 Vault/Markdown 层；用例顺序交给 service。这样一个模型可在纯单元测试里构造，不需要桌面环境。</p>
+        <p>增加字段前要同时检查 Markdown schema、解析/渲染、DTO、协议与测试，但不能为了“也许以后扩展”先做通用属性袋。未知 frontmatter 需要按规则保留时，采用已有机制，而不是把所有字段变成无法验证的字典。</p>
+      </section>
+
+      <section class="chapter" id="files">
+        <p class="chapter-number">Chapter 05</p>
+        <h2>文件：Markdown 才是权威</h2>
+        <p class="claim">作者可读的 Markdown 是持久真相，Index JSON 只是方便查询的投影。读写必须可验证、可恢复，并且<span class="keep">不能静默改变作者内容。</span></p>
+
+        <h3>读一份 Paper</h3>
+        <ol class="flow">
+          <li><span>从已验证的 Vault 相对路径取得文件，不接受任意绝对路径。</span></li>
+          <li><span>读取 bytes，严格按 UTF-8 解码；坏编码是错误，不用替换字符糊过去。</span></li>
+          <li><span>解析 frontmatter 和正文，检查 schema 与字段形状。</span></li>
+          <li><span>构造 <code>PaperV4</code>，让模型守卫再次检查值级不变量。</span></li>
+          <li><span>把内容与编辑令牌交给调用者；令牌用于防止盲目覆盖外部修改。</span></li>
+        </ol>
+
+        <h3>写一份 Paper</h3>
+        <p>写入不是“<code>path.write_text(...)</code> 就结束”。项目先渲染确定性的 Markdown bytes，再检查目标仍在 Vault 内、旧编辑令牌仍匹配，最后使用原子替换提交。这样进程中途失败时，不会把半份文件留在作者目录里。</p>
+        <p>若同一文件已被外部编辑器改动，CAS 检查应拒绝旧写入，而不是悄悄覆盖。刻意留空的可选字段也不能被“看起来更整洁”的规范化吞掉；未知 frontmatter 在可行时应保留。</p>
+
+        <h3>Index 是影子，不是身体</h3>
+        <p><a href="../../../src/keikeu_core/indexer.py"><code>indexer.py</code></a> 从 Markdown 扫描并生成 JSON Index。Index 损坏或丢失时，正确动作是重建；不能拿旧 Index 回写 Markdown。记住这条单向箭头：</p>
+        <pre><code>Markdown（权威、作者可读）
+    └── rebuild ──&gt; Index JSON（派生、可丢弃）</code></pre>
+
+        <div class="callout">
+          <span class="mini-label">练习安全</span>
+          <p>涉及迁移、删除、恢复或持久配置时，先在 fixture 或复制品上操作。不要用唯一真实 Vault 验证“应该没事”。</p>
+        </div>
+      </section>
+
+      <section class="chapter" id="bridge">
+        <p class="chapter-number">Chapter 06</p>
+        <h2>Bridge：一行 JSON 走完全程</h2>
+        <p class="claim">Sidecar 不是 HTTP 服务器。它从 stdin 接收一行 JSONL，经 protocol 与 service 进入 core，再从 stdout 返回恰好一行结构化响应。</p>
+
+        <h3>从 Tauri 到 Python</h3>
+        <ol class="flow">
+          <li><span>Rust 写入带 <code>v</code>、<code>id</code>、<code>session</code>、<code>method</code> 与 <code>params</code> 的一行 JSON。</span></li>
+          <li><span><a href="../../../src/keikeu_bridge/sidecar.py"><code>sidecar.py</code></a> 从 stdin 读取，不自行解释业务。</span></li>
+          <li><span><a href="../../../src/keikeu_bridge/protocol.py"><code>protocol.py</code></a> 严格检查重复字段、非有限数字、版本、会话、方法与参数。</span></li>
+          <li><span><a href="../../../src/keikeu_bridge/service.py"><code>service.py</code></a> 把 DTO 转成 core 操作。</span></li>
+          <li><span>protocol 形成 <code>ok/result/error</code> envelope，Sidecar flush 到 stdout。</span></li>
+        </ol>
+
+        <pre><code>{"v":2,"id":41,"session":"…","method":"library.query","params":{…}}
+{"v":2,"id":41,"ok":true,"result":{…}}</code></pre>
+
+        <h3>stdout 是协议线，不是留言板</h3>
+        <p>普通 <code>print()</code> 默认写 stdout。Sidecar 环境里，这会被 Rust 当成 JSONL 响应，导致协议不匹配并阻塞运行时。必要诊断只能写 stderr，而且不能泄漏作者正文、私有路径、token 或未发布草稿。</p>
+
+        <h3>为什么 service 仍然需要一层</h3>
+        <p>protocol 只懂“外部请求是否合法”，core 只懂“模型和文件规则是什么”；service 负责一个用例的步骤顺序。例如保存后重建 Index、把核心错误翻成 DTO。若把这一编排塞进 parser 或模型，传输与产品规则就会缠在一起。</p>
+      </section>
+
+      <section class="chapter" id="trace">
+        <p class="chapter-number">Chapter 07</p>
+        <h2>第一次安全追代码</h2>
+        <p class="claim">不要从“看起来相关”的文件开始改。先搜索入口和所有调用者，再沿真实流向缩小到唯一责任点。</p>
+
+        <h3>例：你要理解 <code>paper.save</code></h3>
+        <pre><code>rg -n 'paper\.save|save_paper' src tests frontend/src frontend/src-tauri/src
+rg -n 'def .*save|class .*Paper' src/keikeu_core src/keikeu_bridge
+rg -n 'save' tests/test_markdown_io.py tests/test_bridge_protocol.py</code></pre>
+        <p>第一条找跨语言名字，第二条找 Python 实现，第三条找现有证据。读 protocol 的 dispatcher、service 方法、core 写入函数和它们的测试；不要只读报错位置。一个共享函数若是根因，在那里修一次通常比给每个调用者打补丁更小。</p>
+
+        <h3>改动前写出三句话</h3>
+        <ul>
+          <li><strong>输入：</strong>谁把什么数据交给这层？哪些值还不可信？</li>
+          <li><strong>不变量：</strong>哪些规则若被破坏会覆盖内容、逃出 Vault 或丢失恢复语义？</li>
+          <li><strong>输出：</strong>正常结果和失败如何被上一层看见？</li>
+        </ul>
+
+        <h3>最小证据</h3>
+        <pre><code>.venv/bin/python -m pytest tests/test_models.py
+.venv/bin/python -m pytest tests/test_markdown_io.py
+.venv/bin/python -m pytest tests/test_bridge_protocol.py
+.venv/bin/python -m compileall -q src</code></pre>
+        <p>只改一个纯函数时先跑直接测试，再按风险扩到完整 pytest。<code>compileall</code> 只证明文件可编译，不证明业务正确；Sidecar 构建只证明可打包，不证明桌面产品已验收。证据名字要说准确。</p>
+      </section>
+
+      <section class="chapter" id="traps">
+        <p class="chapter-number">Chapter 08</p>
+        <h2>陷阱、检查与下一步</h2>
+        <p class="claim">最常见的问题不是 Python 语法，而是越层、吞错、绕过文件守卫或把派生数据当权威。守住边界后，改动通常很小。</p>
+
+        <h3>七条禁止条件反射</h3>
+        <ol>
+          <li>不要让 <code>keikeu_core</code> import Vue、Tauri、Flet 或任何 GUI/transport。</li>
+          <li>不要在 GUI 或 Rust 里直接写 Markdown、Index JSON 或迁移结果。</li>
+          <li>不要把 Index 当数据库，也不要用 Index 覆盖作者 Markdown。</li>
+          <li>不要对未知输入做宽泛 <code>except Exception</code> 后继续运行。</li>
+          <li>不要用 <code>Path.resolve()</code> 一句话取代项目已有的 no-follow 与 <span class="keep"><code>containment</code> 守卫。</span></li>
+          <li>不要静默修剪、重排或补写作者文字；规范化必须由产品规则明确授权。</li>
+          <li>不要在真实唯一 Vault 上练迁移、删除、恢复或并发冲突。</li>
+        </ol>
+
+        <h3>一次小改动的顺序</h3>
+        <ol class="flow">
+          <li><span>读 <a href="../../SPEC.md">SPEC</a>、<a href="../../RULES.md">RULES</a> 与相关源码，确认责任层。</span></li>
+          <li><span>运行 Git gate，声明要改与不改的文件，搜索所有调用者。</span></li>
+          <li><span>只改根因处，并补一个能在回归时失败的聚焦测试。</span></li>
+          <li><span>先跑直接 pytest，再按风险运行完整套件、Sidecar 构建或 Tauri smoke。</span></li>
+          <li><span>检查 diff 与工作树，准确报告已运行和未运行的证据。</span></li>
+        </ol>
+
+        <div class="truth-boundary">
+          <strong>权威边界：</strong>这本手册帮助读代码，不定义产品或工程规则。发生冲突时，以 <a href="../../SPEC.md">SPEC</a>、<a href="../../RULES.md">RULES</a>、<a href="../../PROJECT.md">PROJECT</a> 与当前 <code>src/</code>、<code>tests/</code> 运行事实为准；修手册，不复制一套新规则。
+        </div>
+      </section>
+
+      <section class="sources" aria-labelledby="sources-title">
+        <h2 id="sources-title">继续查证</h2>
+        <ol>
+          <li><a href="../../../pyproject.toml">本项目 Python 版本、依赖与 pytest 配置</a></li>
+          <li><a href="../../../src/keikeu_core/models.py">当前模型实现</a>、<a href="../../../src/keikeu_core/markdown_io.py">Markdown I/O</a>、<a href="../../../src/keikeu_core/vault.py">Vault 安全边界</a></li>
+          <li><a href="../../../src/keikeu_bridge/protocol.py">当前 JSONL protocol</a>、<a href="../../../src/keikeu_bridge/service.py">service 编排</a>、<a href="../../../src/keikeu_bridge/sidecar.py">Sidecar 入口</a></li>
+          <li><a href="https://docs.python.org/3.13/tutorial/">Python 官方教程</a> 与 <a href="https://docs.python.org/3.13/tutorial/errors.html">错误与异常</a></li>
+          <li><a href="https://docs.python.org/3.13/library/dataclasses.html">dataclasses 官方文档</a> 与 <a href="https://docs.python.org/3.13/library/pathlib.html">pathlib 官方文档</a></li>
+        </ol>
+      </section>
+
+      <nav class="manual-pager" aria-label="上一册与下一册">
+        <a href="tauri-vue-beginner-guide.html"><span>上一册</span>给新人的 Tauri + Vue 入门手册</a>
+        <a href="rust-beginner-guide.html"><span>下一册</span>Rust 简易入门手册</a>
+      </nav>
+    </main>
+  </div>
+</body>
+</html>
