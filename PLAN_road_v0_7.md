@@ -1,6 +1,6 @@
-# Road v0.7 实施计划（已批准；CP0 已通过）
+# Road v0.7 实施计划（已批准；CP1 已通过）
 
-> 状态：开发者于 2026-08-20 批准本计划与目标设计，并对 CP0–CP6 的开发者退出判断与本地 checkpoint commit 给出 advance YOLO。CP0 已在 `docs/cp0-v07-contract` 完成声明证据并通过，checkpoint commit 为该分支 HEAD。production 仍是 Road v0.6；真实 Vault、push、tag、closeout 与发布未获授权。
+> 状态：开发者于 2026-08-20 批准本计划与目标设计，并对 CP0–CP6 的开发者退出判断与本地 checkpoint commit 给出 advance YOLO。CP0 已提交为 `fb52b55`；CP1 development-only 灰阶原型已完成、通过并由 `ui/cp1-v07-grayscale` 的 HEAD 形成 checkpoint。production 仍是 Road v0.6；CP2 是下一 Gate。真实 Vault、push、tag、closeout 与发布未获授权。
 >
 > 目标设计：[`docs/design/road-v0-7-app-shell-design.md`](docs/design/road-v0-7-app-shell-design.md)
 >
@@ -116,6 +116,8 @@ Python/Rust 无改动不代表可以复制历史结果；CP0 与 CP5 各运行�
 **明确不做：** bridge 调用、真实文件、产品 DTO、视觉精修或 production route 切换。
 
 **退出 Gate：** 开发者明确批准导航层级、两种尺寸与 Paper 内容优先方向。
+
+**结果（已通过）：** 合成 Shell、Paper、Library、新 Paper、正常 Vault context 与阻塞恢复点击路径均已实现；两种目标尺寸、键盘 focus、完整 Vitest、fresh production build 与 prototype bundle 隔离通过。开发者 advance YOLO 覆盖退出判断；证据见 [`CP1 report`](docs/acceptance/road-v0-7/cp1-grayscale/report.md)。
 
 ## 7. CP2 — Production App Shell
 

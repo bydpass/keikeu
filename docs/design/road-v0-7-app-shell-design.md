@@ -1,6 +1,6 @@
 # Road v0.7：App Shell 与信息层级设计（已批准目标；尚未实现）
 
-> 状态：开发者于 2026-08-20 批准本目标设计与实施计划，并对 CP0–CP6 的开发者退出判断与本地 checkpoint commit 给出 advance YOLO。CP0 声明证据已完成并通过，checkpoint commit 为该分支 HEAD。不表示 production 已实现，也不授权真实 Vault、push、tag、closeout 或发布。
+> 状态：开发者于 2026-08-20 批准本目标设计与实施计划，并对 CP0–CP6 的开发者退出判断与本地 checkpoint commit 给出 advance YOLO。CP0 已提交为 `fb52b55`；CP1 development-only 灰阶原型已通过，checkpoint commit 为 `ui/cp1-v07-grayscale` 的 HEAD。production 尚未实现；CP2 是下一 Gate。真实 Vault、push、tag、closeout 与发布未获授权。
 >
 > 基线：Road v0.6 已完成并验收的 Paper v4 / Index v4 / protocol v2。
 >

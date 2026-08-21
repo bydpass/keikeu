@@ -19,7 +19,7 @@
 | 产品版本 | Road v0.6 已接受 runtime | Road v0.7 App Shell 与信息层级 |
 | 内容模型 | Paper v4：一份 Paper 由有序卡页组成 | 不改变 Paper v4 / Index v4 / protocol v2 |
 | 聚焦方式 | Paper 本身可编辑、可翻页并整体保存 | Paper / Library 是日常位置，Vault 是环境入口 |
-| 实现状态 | 已实现、验收并归档 | CP0 已通过并提交；production 尚未实现 |
+| 实现状态 | 已实现、验收并归档 | development-only CP1 已通过并提交；production 尚未实现 |
 
 判断“现在已经运行什么”时，以 `SPEC`、实际代码和测试为准；判断 Road v0.7 准备实现什么时，以已批准的 Road v0.7 设计为准。本文不覆盖其中任何一侧，也不授予实施或迁移权限。
 

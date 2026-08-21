@@ -126,7 +126,7 @@ describe("Road v0.6 desktop shell", () => {
     expect(wrapper.text()).toContain("Paper 工作台");
   });
 
-  it("keeps the CP3 synthetic prototype isolated from runtime calls", async () => {
+  it("keeps the Road v0.7 synthetic prototype isolated from runtime calls", async () => {
     const wrapper = mount(PrototypeView);
     mounted.push(wrapper);
 

@@ -8,7 +8,7 @@
 
 Road v0.6 已完成并归档：production 使用 Paper v4、Index v4 与 protocol v2，Paper 本身就是可编辑的有序卡页；旧正常运行链已删除，未知结果与人工修复 Gate、一号真实作者 Gate 均已通过，且无未解决 P0/P1。
 
-Road v0.7 的 App Shell 与信息层级目标已批准；CP0 合同、完整基线与 map QA 已通过并提交，下一步是 development-only CP1 灰阶原型。production 仍是 Road v0.6，v0.7 尚未实现或验收。
+Road v0.7 的 App Shell 与信息层级目标已批准；CP0 已提交为 `fb52b55`，development-only CP1 灰阶原型、两尺寸 QA 与 production bundle 隔离已通过并提交。下一步是 CP2 production App Shell；当前 production 仍是 Road v0.6，v0.7 尚未实现或验收。
 
 Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响应式界面、本机沙盒 Vault 与真机修复验证；它不是 macOS Road 的合入闸门。Road v0.3 的工程、macOS candidate smoke 与 CP6 真实作者验收均已完成；检索更快且清楚、外部编辑器 handoff 清楚，未报告未解决 P0/P1。其设计与验收文档已[只读归档](docs/archive/road-v0-3/README.md)，未创建 v0.3 tag。**Road v0.4 已彻底完成**：Gate A、Gate B、产品验收与 macOS 15.7+ 兼容性均已通过；当前唯一桌面运行时为 Vue/Tauri 与本地 Python sidecar，Flet 已在 CP14 退役。**Road v0.5 也已完成并归档**：Paper Desk、保存基线、离开保护、Flashcard/Library 连贯性、全应用 Quiet Desk 视觉与固定滚动语义均已验收。实时坐标见 [PROJECT](docs/PROJECT.md)。
 
@@ -115,7 +115,7 @@ Road v0.3   macOS Paper Library；CP6 product accepted，设计与验收文档�
 Road v0.4   Vue/Tauri 前端替换完成；CP14 已验收
 Road v0.5   Quiet Desk UI 与交互收口完成；CP7 已验收并归档
 Road v0.6   Paper v4 卡页重构；CP7 已验收并归档
-Road v0.7   App Shell 与信息层级收口；CP0 已通过并提交，CP1 待执行
+Road v0.7   App Shell 与信息层级收口；CP1 灰阶原型已通过并提交，CP2 待执行
 Pre-Advance 可选 Markdown Outline；Road v0.7 之外且未排期，不阻塞核心流程
 之后        iOS/iPadOS（2026-08 方向）、Android/HarmonyOS（2026 Q4）、Windows（2027）
 ```
