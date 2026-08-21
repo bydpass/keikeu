@@ -1486,7 +1486,7 @@
     <div class="book-main">
       <header class="book-header">
         <div class="status-line">
-          <span class="status-chip">APPROVED TARGET · CP1 PASSED</span>
+          <span class="status-chip">APPROVED TARGET · CP5 PASSED</span>
           <span class="status-chip">NON-AUTHORITATIVE</span>
           <span class="status-chip">2026-08-20</span>
         </div>
@@ -1532,7 +1532,7 @@
 
           <div class="evidence-boundary">
             <strong>证据边界</strong>
-            这份 HTML 只帮助审阅目标结构。它不等于 CP1 灰阶原型，不证明 production 实现、Tauri smoke、真实作者接受或 Road 完成。
+            这份 HTML 只帮助审阅目标结构；下列 Gate 状态来自各 checkpoint 报告。页面本身不证明 production 实现、Tauri smoke、真实作者接受或 Road 完成。
           </div>
         </section>
 
@@ -1787,27 +1787,27 @@
             <li class="checkpoint">
               <span class="cp-badge">CP2</span>
               <div><h3>Production App Shell</h3><p><code>ui/cp2-v07-shell</code></p></div>
-              <div class="exit-gate"><strong>退出 Gate</strong>取消离开不改 destination；确认只执行一次原 intent；新 Paper 在 guard 后换实例。</div>
+              <div class="exit-gate"><strong>当前状态 · 已通过</strong>取消离开不改 destination；确认只执行一次原 intent；新 Paper 在 guard 后换实例。</div>
             </li>
             <li class="checkpoint">
               <span class="cp-badge">CP3</span>
               <div><h3>Paper 工作面</h3><p><code>ui/cp3-v07-paper</code></p></div>
-              <div class="exit-gate"><strong>退出 Gate</strong>创建、编辑、分页、删除、保存、离开保护、中文输入与错误恢复无回归。</div>
+              <div class="exit-gate"><strong>当前状态 · 已通过</strong>创建、编辑、分页、删除、保存、离开保护、中文 composition 与错误恢复无回归。</div>
             </li>
             <li class="checkpoint">
               <span class="cp-badge">CP4</span>
               <div><h3>Library、Vault 与恢复</h3><p><code>ui/cp4-v07-library-vault</code></p></div>
-              <div class="exit-gate"><strong>退出 Gate</strong>两尺寸下 Library、Finder、Trash、恢复与阻塞安全语义完整。</div>
+              <div class="exit-gate"><strong>当前状态 · 已通过</strong>两尺寸下 Library、Finder、Trash、恢复与阻塞安全语义完整。</div>
             </li>
             <li class="checkpoint">
               <span class="cp-badge">CP5</span>
               <div><h3>集成与安全 Gate</h3><p><code>test/cp5-v07-integration</code></p></div>
-              <div class="exit-gate"><strong>退出 Gate</strong>Python、Vitest、Vite、Rust、docs 与 synthetic Vault / 完整副本 Tauri smoke；无 P0/P1。</div>
+              <div class="exit-gate"><strong>当前状态 · 已通过</strong>完整 Python/Vue/Rust gate、当前源码 synthetic Tauri 主链、原生 dirty 双分支、Index/repair、commit_unknown no-replay 与干净退出；无 P0/P1。</div>
             </li>
             <li class="checkpoint">
               <span class="cp-badge">CP6</span>
               <div><h3>一号作者 Gate</h3><p><code>test/cp6-v07-author-gate</code></p></div>
-              <div class="exit-gate"><strong>退出 Gate</strong>真实 Vault 另行授权；核心任务和层级理解通过；记录去标识化结果且无 P0/P1。</div>
+              <div class="exit-gate"><strong>当前状态 · 下一 Gate</strong>真实 Vault 仍需另行授权；核心任务和层级理解通过后，记录去标识化结果且无 P0/P1。</div>
             </li>
           </ol>
         </section>
@@ -1899,9 +1899,9 @@
               <tr><td>目标结构可审阅</td><td>两尺寸、四工作面、dirty guard 展示</td><td>已批准 · 2026-08-20</td></tr>
               <tr><td>CP0 合同与基线</td><td>SPEC / PROJECT / 三份 map 校准 + §3.2 完整基线</td><td>已通过 · 已提交</td></tr>
               <tr><td>CP1 灰阶原型通过</td><td>development-only Vue 原型、点击路径、bundle 隔离</td><td>已通过 · 已提交</td></tr>
-              <tr><td>Production 已实现</td><td>源码检查、聚焦 Vitest、完整 Vitest 与 Vite build</td><td>未开始</td></tr>
-              <tr><td>平台流程可用</td><td>当前源码的 synthetic Vault / 完整副本 Tauri smoke</td><td>未开始</td></tr>
-              <tr><td>产品接受</td><td>另行授权的一号作者真实日常 Gate</td><td>未开始</td></tr>
+              <tr><td>Production 已实现</td><td>源码检查、聚焦 Vitest、完整 Vitest 与 Vite build</td><td>已通过 · CP2–CP4</td></tr>
+              <tr><td>平台流程可用</td><td>当前源码的 synthetic Vault Tauri smoke</td><td>已通过 · CP5</td></tr>
+              <tr><td>产品接受</td><td>另行授权的一号作者真实日常 Gate</td><td>待执行 · CP6</td></tr>
             </tbody>
           </table>
 
@@ -1921,7 +1921,7 @@
               <p class="section-index">08 · Approval gate</p>
               <h2>两道书面 Gate 已通过</h2>
             </div>
-            <p data-pretext>开发者于 2026-08-20 批准目标设计与实施计划，并对 CP0–CP6 的退出判断与本地 checkpoint commit 给出 advance YOLO。CP0 与 development-only CP1 已完成并通过；production、真实 Vault 与 Git 远端动作仍须分别证明或授权。</p>
+            <p data-pretext>开发者于 2026-08-20 批准目标设计与实施计划，并对 CP0–CP6 的退出判断与本地 checkpoint commit 给出 advance YOLO。CP0–CP5 已完成并通过；CP6、真实 Vault 与 Git 远端动作仍须分别证明或授权。</p>
           </div>
 
           <div class="gate-grid">
@@ -1956,7 +1956,7 @@
       </main>
 
       <footer class="book-footer">
-        <p>Road v0.7 已批准伴随视图 · CP1 已通过并提交 · 本地单文件 · 无外部运行时资源 · 不代表 production 实现或发布</p>
+        <p>Road v0.7 已批准伴随视图 · CP5 已通过 · CP6 待执行 · 本地单文件 · 无外部运行时资源 · 本页不代表产品接受或发布</p>
       </footer>
     </div>
   </div>

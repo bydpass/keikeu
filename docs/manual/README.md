@@ -12,7 +12,7 @@ manual/
 
 ## 系统理解
 
-[keikeu-current-logic.html](keikeu-current-logic.html) 与两个分类文件夹并列，简明说明当前已接受的 Road v0.6 Paper v4 业务链路、数据权威、保存防护与 Vue/Tauri/JSONL v2/Python 分层，并标出已实现至 CP4、尚待 CP5 集成与 CP6 接受的 Road v0.7 Shell target。最终核对 [PROJECT](../PROJECT.md)、[SPEC](../SPEC.md)、[RULES](../RULES.md) 与 [architecture](../architecture/architecture.html)。
+[keikeu-current-logic.html](keikeu-current-logic.html) 与两个分类文件夹并列，简明说明当前已接受的 Road v0.6 Paper v4 业务链路、数据权威、保存防护与 Vue/Tauri/JSONL v2/Python 分层，并标出已集成至 CP5、尚待 CP6 产品接受的 Road v0.7 Shell candidate。最终核对 [PROJECT](../PROJECT.md)、[SPEC](../SPEC.md)、[RULES](../RULES.md) 与 [architecture](../architecture/architecture.html)。
 
 [paper-v4-repair.html](paper-v4-repair.html) 是面向普通纯文本编辑器用户的离线修复手册，包含完整 schema v4 示例、类型/空值、可逆转义、错误含义、Finder、未知保存、重新检查和 Index 重建；app 不会自动改写损坏文件。
 

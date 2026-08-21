@@ -1,4 +1,4 @@
-> **HUMAN MANUAL — NON-NORMATIVE.** 本文用人话解释当前已接受的 Road v0.6 Paper v4 产品模型。当前产品边界以 [`docs/SPEC.md`](../../SPEC.md) 为准，当前坐标以 [`docs/PROJECT.md`](../../PROJECT.md) 为准；已实现至 CP4、尚待集成与接受的 Road v0.7 App Shell 目标见 [Road v0.7 书面设计](../../design/road-v0-7-app-shell-design.md)。
+> **HUMAN MANUAL — NON-NORMATIVE.** 本文用人话解释当前已接受的 Road v0.6 Paper v4 产品模型。当前产品边界以 [`docs/SPEC.md`](../../SPEC.md) 为准，当前坐标以 [`docs/PROJECT.md`](../../PROJECT.md) 为准；已集成至 CP5、尚待 CP6 产品接受的 Road v0.7 App Shell candidate 见 [Road v0.7 书面设计](../../design/road-v0-7-app-shell-design.md)。
 
 # keikeu APPDESIGN.md
 
@@ -19,7 +19,7 @@
 | 产品版本 | Road v0.6 已接受 runtime | Road v0.7 App Shell 与信息层级 |
 | 内容模型 | Paper v4：一份 Paper 由有序卡页组成 | 不改变 Paper v4 / Index v4 / protocol v2 |
 | 聚焦方式 | Paper 本身可编辑、可翻页并整体保存 | Paper / Library 是日常位置，Vault 是环境入口 |
-| 实现状态 | 已实现、验收并归档 | production 已实现至 CP4；CP5 集成与 CP6 产品接受待完成 |
+| 实现状态 | 已实现、验收并归档 | production 已实现且 CP5 synthetic 集成已通过；CP6 产品接受待完成 |
 
 判断“现在已经运行什么”时，以 `SPEC`、实际代码和测试为准；判断 Road v0.7 尚待完成什么时，以已批准的 Road v0.7 设计与当前 `PROJECT` 为准。本文不覆盖其中任何一侧，也不授予实施或迁移权限。
 
@@ -366,6 +366,6 @@ Road v0.6 的 keikeu 仍然是一款本地优先的写前整理工具，但它�
 - 当前产品权威：[SPEC](../../SPEC.md)
 - 当前坐标：[PROJECT](../../PROJECT.md)
 - Road v0.6 已接受书面设计：[Paper v4 产品与架构设计](../../design/road-v0-6-paper-v4-design.md)
-- Road v0.7 已批准、尚未实现的目标：[App Shell 与信息层级设计](../../design/road-v0-7-app-shell-design.md)
+- Road v0.7 已实现并集成至 CP5、尚待 CP6 产品接受的 candidate：[App Shell 与信息层级设计](../../design/road-v0-7-app-shell-design.md)
 - 当前架构图：[architecture.html](../../architecture/architecture.html)
 - 当前交互图：[interaction.html](../../design/interaction.html)

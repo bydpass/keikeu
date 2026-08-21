@@ -1,10 +1,10 @@
-# Road v0.7：App Shell 与信息层级设计（已批准目标；CP4 工作面已实现）
+# Road v0.7：App Shell 与信息层级设计（已批准目标；CP5 集成已通过）
 
-> 状态：开发者于 2026-08-20 批准本目标设计与实施计划，并对 CP0–CP6 的开发者退出判断与本地 checkpoint commit 给出 advance YOLO。CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc`、CP3 `55b5313` 与 CP4 Library/Vault 工作面已通过；CP5 是下一 Gate。跨栈平台集成和产品接受尚未完成；真实 Vault、push、tag、closeout 与发布未获授权。
+> 状态：开发者于 2026-08-20 批准本目标设计与实施计划，并对 CP0–CP6 的开发者退出判断与本地 checkpoint commit 给出 advance YOLO。CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc`、CP3 `55b5313`、CP4 `6f69310` 与 CP5 集成 Gate 已通过；CP6 是下一 Gate。跨栈 synthetic 平台集成已完成，产品接受尚未发生；真实 Vault、push、tag、closeout 与发布未获授权。
 >
 > 基线：Road v0.6 已完成并验收的 Paper v4 / Index v4 / protocol v2。
 >
-> 权威边界：[`SPEC`](../SPEC.md) 定义 current v0.6 与 target v0.7 产品边界；本文是 Road v0.7 的已批准详细目标与唯一验收矩阵。`PROJECT`、源码与测试继续标明当前实现，不得把目标写成已实现。
+> 权威边界：[`SPEC`](../SPEC.md) 定义 current v0.6 与 target v0.7 产品边界；本文是 Road v0.7 的已批准详细目标与唯一验收矩阵。`PROJECT`、源码与测试继续标明当前实现；不得仅凭目标或 CP5 工程候选宣称产品已接受或 Road 已完成。
 >
 > 伴随评审物：[`Road v0.7 HTML 计划书`](road-v0-7-planbook.html)；它只展示本设计与实施计划，不新增第三份规范权威。
 
@@ -46,9 +46,9 @@ Vue → Tauri/Rust → JSONL protocol v2 → Python service/core
 - 不进入移动端、Intel Mac、Windows、签名、公证、DMG 或公开发布。
 - 不把视觉探索 [`boh_design.html`](boh_design.html) 直接变成生产规范。
 
-## 4. 当前事实与问题
+## 4. 批准时事实与问题
 
-### 4.1 当前事实
+### 4.1 批准时事实
 
 - Paper 与 Library 是日常工作位置。
 - Vault 负责环境选择、迁移、repair 与恢复，不是内容目的地。
@@ -56,7 +56,7 @@ Vue → Tauri/Rust → JSONL protocol v2 → Python service/core
 - 子页面通过现有事件切换，不需要 Router。
 - Road v0.6 已证明创建、分页、保存、退出重启和 Library 找回可以完成。
 
-### 4.2 当前问题
+### 4.2 批准时问题
 
 1. Paper、Library、Vault 都自行建立页面标题和导航，稳定位置不足。
 2. 页面 chrome 在小窗口占据过多高度，作者内容被向下推。
@@ -283,4 +283,4 @@ Road v0.7 只在以下场景通过时完成：
 - [x] `1220×780`、`920×680`、键盘与一号作者 Gate 足以判断完成。
 - [x] [`PLAN_road_v0_7.md`](../../PLAN_road_v0_7.md) 的 Checkpoint 顺序可以执行。
 
-该批准与 advance YOLO 已用于通过并提交 CP0，并覆盖 CP1–CP6 的开发者退出判断与本地 checkpoint commit；实际证据不得省略。真实 Vault、push、tag、closeout 与发布仍分别授权。
+该批准与 advance YOLO 已用于通过 CP0–CP5，并继续覆盖 CP6 的开发者退出判断与本地 checkpoint commit；实际证据不得省略。CP6、真实 Vault、push、tag、closeout 与发布仍未由较早 Gate 自动完成或授权。

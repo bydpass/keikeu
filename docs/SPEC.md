@@ -1,6 +1,6 @@
 # keikeu Product Boundary (current: Road v0.6; target: Road v0.7)
 
-> Authority: §§1–7 define the accepted Road v0.6 product, author-asset, and data-safety boundary; §8 defines shared exclusions and platform scope; §9 defines the approved but unimplemented Road v0.7 target. Detailed Paper v4 grammar, DTOs, migration, recovery, and protocol remain in the approved [Paper v4 design](design/road-v0-6-paper-v4-design.md); the Road v0.7 interface target and acceptance matrix live in the approved [App Shell design](design/road-v0-7-app-shell-design.md). Current checkpoint and runtime facts live in [PROJECT](PROJECT.md), source, and tests.
+> Authority: §§1–7 define the accepted Road v0.6 product, author-asset, and data-safety boundary; §8 defines shared exclusions and platform scope; §9 defines the approved Road v0.7 target, implemented and integrated through CP5 but not product-accepted. Detailed Paper v4 grammar, DTOs, migration, recovery, and protocol remain in the approved [Paper v4 design](design/road-v0-6-paper-v4-design.md); the Road v0.7 interface target and acceptance matrix live in the approved [App Shell design](design/road-v0-7-app-shell-design.md). Current checkpoint and runtime facts live in [PROJECT](PROJECT.md), source, and tests.
 
 ## 1. Definition
 
@@ -38,8 +38,9 @@ current accepted: page-level Paper / Library / Vault surfaces
 approved target:  compact App Shell → Paper / Library → Vault context / blocking recovery
 ```
 
-The target does not become current until its declared checkpoints produce implementation and
-evidence. `PROJECT.md`, source, and tests remain the authority for current implementation state.
+The production composition is now the current engineering candidate through CP5, while Road v0.6
+remains the accepted product baseline until CP6 first-author acceptance. `PROJECT.md`, source, and
+tests remain the authority for current implementation state.
 
 ## 4. Current Paper v4 behavior (unchanged by Road v0.7)
 
@@ -93,7 +94,7 @@ No AI generation, prose editor, sync, account, community, database, file watcher
 - Linux and watchOS have no planned support. The iOS-only second user does not enter v0.x acceptance and returns no earlier than a separately designed iOS+Android v1.0.
 - Developer ID distribution work is deferred to Road v0.8.
 
-## 9. Approved target: Road v0.7 App Shell (implemented through CP4; not accepted)
+## 9. Approved target: Road v0.7 App Shell (implemented and integrated through CP5; not accepted)
 
 Road v0.7 changes only Vue work-surface structure, information hierarchy, and responsive
 presentation. It does not change §§1–8, Paper v4, Index v4, Vault persistence, protocol v2,
@@ -116,9 +117,11 @@ Python, Rust, or author-control contracts.
 
 The detailed target criteria and evidence boundary are frozen in the
 [Road v0.7 acceptance matrix](design/road-v0-7-app-shell-design.md#141-road-v07-验收矩阵).
-CP2–CP4 provide current source, tests, and window evidence for this production UI structure.
-CP5 platform integration and the separate CP6 author Gate remain pending, so this section must not
-be cited as Road completion or product acceptance.
+CP2–CP4 provide current source, tests, and window evidence for this production UI structure. CP5
+provides the complete cross-stack baseline plus current-source synthetic Tauri evidence for the
+normal, native dirty-confirmation, Index, repair, `commit_unknown`, restart and no-replay paths. The
+separate CP6 author Gate remains pending, so this section must not be cited as Road completion or
+product acceptance.
 
 ## 10. Road v0.6 completed acceptance record
 

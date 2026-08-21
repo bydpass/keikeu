@@ -1,6 +1,6 @@
-# Road v0.7 实施计划（已批准；CP4 已通过）
+# Road v0.7 实施计划（已批准；CP5 已通过）
 
-> 状态：开发者于 2026-08-20 批准本计划与目标设计，并对 CP0–CP6 的开发者退出判断与本地 checkpoint commit 给出 advance YOLO。CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc`、CP3 `55b5313` 与 CP4 Library/Vault 工作面已通过并形成线性 checkpoint；CP5 是下一 Gate。Road v0.7 产品接受尚未发生；真实 Vault、push、tag、closeout 与发布未获授权。
+> 状态：开发者于 2026-08-20 批准本计划与目标设计，并对 CP0–CP6 的开发者退出判断与本地 checkpoint commit 给出 advance YOLO。CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc`、CP3 `55b5313`、CP4 `6f69310` 与 CP5 集成 Gate 已通过并形成线性 checkpoint；CP6 是下一 Gate。Road v0.7 产品接受尚未发生；真实 Vault、push、tag、closeout 与发布未获授权。
 >
 > 目标设计：[`docs/design/road-v0-7-app-shell-design.md`](docs/design/road-v0-7-app-shell-design.md)
 >
@@ -184,9 +184,11 @@ Python/Rust 无改动不代表可以复制历史结果；CP0 与 CP5 各运行�
 
 **退出 Gate：** 无未解决 P0/P1；自动检查、平台 smoke 和未执行项分别记录。
 
+**结果（已通过）：** Python `265`、Vitest `77`、Rust `12`、compileall、sidecar build、Vite build、Rust format、文档与 bundle 隔离均通过。隔离 fake Home 的当前源码 Tauri smoke 实际完成启动、两页保存、Library 找回、Vault 往返、原生 dirty 两分支、`920×680`、Index degraded/rebuild、repair/recheck、fault-injected `commit_unknown` 重启与 no-replay；正常 sidecar 按 SHA 恢复并复启，host/child/Vite 均无残留。无未解决 P0/P1、无 scope drift；证据见 [`CP5 report`](docs/acceptance/road-v0-7/cp5-integration/report.md)。
+
 ## 11. CP6 — 一号作者 Gate
 
-**进入条件：** CP5 checkpoint 已通过并提交；真实 Vault 使用另行明确授权。
+**进入条件：** CP5 checkpoint 工程 Gate 已通过并随本次 checkpoint 提交；真实 Vault 使用仍需另行明确授权。
 
 **场景：**
 
@@ -232,4 +234,4 @@ closeout、snapshot、tag、push、签名、打包与发布分别决定，不由
 - [x] CP5 使用 synthetic Vault / 完整副本，CP6 的真实 Vault 另行授权。
 - [x] CP0–CP6 开发者退出判断与本地 checkpoint commit 采用 advance YOLO；证据仍须实际运行且不得复制或虚构。
 
-本次批准与 advance YOLO 已用于通过 CP0–CP4；不表示 CP5–CP6 已完成、任何历史测试仍然有效，也不授权真实 Vault 或 Git 远端动作。
+本次批准与 advance YOLO 已用于通过 CP0–CP5；不表示 CP6 已完成、任何历史测试仍然有效，也不授权真实 Vault 或 Git 远端动作。
