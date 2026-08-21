@@ -1,10 +1,10 @@
 # Road v0.7：App Shell 与信息层级设计（已批准目标；尚未实现）
 
-> 状态：开发者于 2026-08-20 批准本目标设计与实施计划，并授权形成本地批准基线 commit；不表示任何 Checkpoint 已完成，也不授权真实 Vault、push、tag、closeout 或发布。
+> 状态：开发者于 2026-08-20 批准本目标设计与实施计划，并对 CP0–CP6 的开发者退出判断与本地 checkpoint commit 给出 advance YOLO。CP0 声明证据已完成并通过，checkpoint commit 为该分支 HEAD。不表示 production 已实现，也不授权真实 Vault、push、tag、closeout 或发布。
 >
 > 基线：Road v0.6 已完成并验收的 Paper v4 / Index v4 / protocol v2。
 >
-> 权威边界：当前已接受产品仍由 [`SPEC`](../SPEC.md) 定义；本文是 Road v0.7 的已批准目标设计，CP0 负责校准 current/target 文档，不得把目标写成已实现。
+> 权威边界：[`SPEC`](../SPEC.md) 定义 current v0.6 与 target v0.7 产品边界；本文是 Road v0.7 的已批准详细目标与唯一验收矩阵。`PROJECT`、源码与测试继续标明当前实现，不得把目标写成已实现。
 >
 > 伴随评审物：[`Road v0.7 HTML 计划书`](road-v0-7-planbook.html)；它只展示本设计与实施计划，不新增第三份规范权威。
 
@@ -232,6 +232,22 @@ App.vue
 
 ## 14. 接受场景
 
+### 14.1 Road v0.7 验收矩阵
+
+| 区域 | 必须成立 | 明确不得发生 | 最低证据 |
+| --- | --- | --- | --- |
+| App Shell | 使用紧凑顶栏；Paper 与 Library 是唯一同级日常位置；新 Paper 与 Vault 分别是动作和环境入口；当前位置同时由文字和语义表达。离开 dirty Paper 前调用 PaperView 的同一 guard：取消后 destination、draft、path 与焦点不变；确认后只执行一次原 intent；已保存 path 在 Vault 往返后保留。runtime blocked 可接管工作面。 | 永久侧 rail、Router、store、第二套 dirty 规则、常驻成功徽章或新 bridge endpoint。 | CP1 合成原型点击路径与两尺寸审阅；CP2 聚焦 App/PaperView Vitest；CP5 runtime blocked 与 dirty departure 合成 smoke。 |
+| Paper | 层级固定为 Shell → Paper context（名称、Tags、页码、必要状态）→ 当前卡页（标题、类型、正文）→ 保存/删除/加一页。重复 hero 和页面级导航退出；code/path/time 进入原生详情披露。创建、编辑、分页、删除、whole-Paper 保存、`Cmd+S`、错误恢复和离开保护保持 v0.6 行为。 | schema、DTO、逐页 mutation、自动保存、页重排、deep-link 或静默换稿。 | CP3 直接行为测试；`1220×780`、`920×680` 浏览器证据；键盘、焦点、中文 IME 与错误状态 smoke。 |
+| Library | `1220×780` 保留“范围—列表—详情/操作”三段；`920×680` 保留范围与列表，详情纵向排列在列表之后。搜索、打开、移动、分支、Finder、Trash、恢复和永久删除保持现有语义与确认边界。 | drawer 依赖、正文编辑、同步状态、自动修复、完整正文复制到 Vue 或危险动作只靠 hover。 | CP4 聚焦 Library 测试；两尺寸逐路径浏览器检查；Trash、恢复与系统 handoff 使用 synthetic Vault 或完整副本验证。 |
+| Vault 与阻塞恢复 | 正常 Shell 只显示可识别的 Vault 名称或通用标签，完整路径按需披露；选择与持久化规则不变。未选择/无效候选、migration、`repair_required`、`commit_unknown`、identity unknown 与 sidecar failure 可接管工作面，并说明发生了什么、未自动修改什么、允许的安全动作和返回路径。 | 把 Vault 提升为第三个日常位置、展示半解析作者正文、自动 repair、自动重发 mutation 或改变 selected-Vault 规则。 | CP4 Vault/恢复聚焦测试与两尺寸路径；CP5 synthetic Vault/完整副本 smoke；真实 Vault 仍另行授权。 |
+| 窗口 | Paper、Library、正常 Vault 与阻塞恢复均在 `1220×780`、`920×680` 检查。两尺寸无横向溢出；主要内容、保存动作、危险操作与恢复路径可见或可通过明确纵向滚动到达；小窗口只重排次要详情。 | 裁掉正文/保存/恢复动作、隐藏确认路径、仅凭截图推断可操作性或把窄窗口问题留到 CP5。 | CP1–CP4 每个相关 Checkpoint 的实际浏览器尺寸检查、overflow/scroll/console 记录；CP5 当前源码 Tauri smoke。 |
+| 可访问性 | 导航、表单和操作有语义名称与键盘路径；当前位置和状态不只靠颜色或动画；focus 可见。页面切换后焦点进入可预测标题或首要控件；确认取消后回到发起动作；危险动作说明后果；遵守 reduced-motion。 | 仅 hover 可达、仅颜色表达、焦点丢失、动画承载必要信息或自制不可访问确认系统。 | 聚焦 Vitest 覆盖名称、状态和确认分支；两尺寸键盘 walkthrough；CP3 中文输入 smoke；CP5 原生确认与 focus 恢复 smoke。 |
+
+CP1 只批准信息架构方向；CP2–CP4 分别证明 production 实现；CP5 证明集成与平台路径；
+CP6 才能证明一号作者接受。任一较早证据不得替代较晚 Gate。
+
+### 14.2 Road 完成场景
+
 Road v0.7 只在以下场景通过时完成：
 
 1. 作者从启动进入 Paper，能够立即识别当前工作位置和主要内容。
@@ -254,7 +270,7 @@ Road v0.7 只在以下场景通过时完成：
 | Vault 被降级后隐藏安全信息 | 只降级正常上下文；阻塞状态仍接管工作面 |
 | CSS 全局改动造成回归 | 先复用 token，按工作面分段提交，不整文件重写 |
 | 原型污染生产 bundle | 沿用现有 `?prototype=1` development-only 边界与 bundle 检查 |
-| 并行文档把 current/target 混写 | CP0 前不修改 SPEC；PROJECT 明确当前 v0.6、目标 v0.7 |
+| 并行文档把 current/target 混写 | SPEC 只写目标摘要；本文的验收矩阵拥有详细判据；PROJECT、源码与测试继续标明 current |
 
 ## 16. 书面审阅 Gate（已通过：2026-08-20）
 
@@ -267,4 +283,4 @@ Road v0.7 只在以下场景通过时完成：
 - [x] `1220×780`、`920×680`、键盘与一号作者 Gate 足以判断完成。
 - [x] [`PLAN_road_v0_7.md`](../../PLAN_road_v0_7.md) 的 Checkpoint 顺序可以执行。
 
-批准只允许从 CP0 开始；后续 Checkpoint commit、真实 Vault、push、tag、closeout 与发布仍分别授权。
+该批准与 advance YOLO 已用于通过并提交 CP0，并覆盖 CP1–CP6 的开发者退出判断与本地 checkpoint commit；实际证据不得省略。真实 Vault、push、tag、closeout 与发布仍分别授权。

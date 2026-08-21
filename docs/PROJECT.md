@@ -16,7 +16,7 @@ Updated: 2026-08-20
 | Road v0.4 | Complete; CP14 accepted | [CP14 evidence](acceptance/road_v0_4_cp14.md) records accepted Flet retirement, Python `234`, Vue `48`, Rust `10`, and the authorized final beta engineering build/launch/relaunch smoke. The one-time exception is consumed; compatibility remains CP13-only evidence. |
 | Road v0.5 | Complete; CP7 accepted and Road archived | CP0 `11c2149`, CP1 `a2ff5cb`, CP2 `30b54ac`, CP3 `c7b9caf`, CP4 `371f4e8`, CP5 `1e87ad4`, CP6 `4753d1d`, and CP7 `d900953` form the linear Road. The [CP6 report](acceptance/road-v0-5/cp6-dogfood/report.md) records product acceptance; the [CP7 report](acceptance/road-v0-5/cp7-fixed-sidebars/report.md) records the final UI gate. The [Road snapshot](archive/snapshots/road-v0-5.html) binds the final checkpoint and records scope, checks, QA, omissions, and risks. |
 | Road v0.6 | Complete; CP7 accepted and Road archived | Planning approval is `9bb722a`; CP0 `08626a9`, CP1 `cc41eff`, CP2 `8c9dae9`, CP3 `48f88a4`, CP4 `8c0ba33`, CP5 `30f2491`, CP6 `02d8ed5`, and CP7 `18a1024` form the linear Road. [CP7 evidence](acceptance/road-v0-6/cp7-author/report.md) records the de-identified real-author flow, one native-confirmation P1 and its fix/retest, and no remaining P0/P1. The [Road snapshot](archive/snapshots/road-v0-6.html) binds the CP7 checkpoint; tag, push and release remain separate, unperformed decisions. |
-| Road v0.7 | Target design and implementation plan approved; CP0 not started | The developer approved the [App Shell target design](design/road-v0-7-app-shell-design.md) and [CP0–CP6 plan](../PLAN_road_v0_7.md) on 2026-08-20. The approval authorizes starting CP0 only; no implementation, current product acceptance, real-Vault operation, later checkpoint commit, push, tag, closeout, or release is implied. |
+| Road v0.7 | CP0 passed and committed; CP1 next | The [CP0 report](acceptance/road-v0-7/cp0-contract/report.md) records the calibrated contract, complete baseline, pytest-collection fix, map QA, and advance-YOLO exit judgment on `docs/cp0-v07-contract`; its checkpoint commit is that branch's HEAD. Production and product acceptance remain Road v0.6; real-Vault work, push, tag, closeout, and release remain unauthorized. |
 Phase 8 product acceptance is complete. Road v0.2 is marked by local annotated tag `v0.2.0` at `d0feac0269a5619f5dbf27c04347ba69c5665b42`; archival remains a separate developer decision. Automated tests, platform smoke, and author acceptance remain distinct evidence.
 Road v0.3 product decisions, implementation, macOS candidate smoke, and product acceptance are complete. Its detailed SPEC, Planbook, maps, ADRs, and CP6 record are archived. Its accepted Python/Flet runtime served as the Road v0.4 parity baseline until all replacement gates passed; CP14 retires it without changing or migrating Vault data.
 
@@ -128,11 +128,12 @@ The narrow Road v0.6 macOS/Xcode beta policy is recorded in [ADR-0006](architect
 ## Current product flow
 
 ```text
-current: editable card-page Paper → saved and retrievable Paper; Road v0.6 remains the accepted runtime
-next:    Road v0.7 planning approved → CP0 contract/baseline calibration; tag, push and release remain unperformed
+current: Road v0.6 Paper v4 / Index v4 / protocol v2 is the accepted production runtime
+target:  Road v0.7 App Shell and information hierarchy are approved but not implemented
+next:    CP1 branches from the passed CP0 checkpoint and builds the development-only grayscale prototype
 ```
 
-See [SPEC](SPEC.md) and the [Paper v4 design](design/road-v0-6-paper-v4-design.md) for the active behavior, grammar, and protocol. Source and tests below are the current runtime fact.
+See [SPEC](SPEC.md) for the current/target product boundary, the [Paper v4 design](design/road-v0-6-paper-v4-design.md) for unchanged grammar and protocol, and the [App Shell design](design/road-v0-7-app-shell-design.md) for the approved v0.7 interface target. Source and tests below remain the current runtime fact.
 
 ## Current runtime map (Paper v4 + protocol v2)
 
@@ -165,10 +166,10 @@ README
        └─ CONTEXT ──── human manuals / ADRs / read-only archive
 ```
 
-- **Authority:** [SPEC](SPEC.md) owns the approved Road v0.6 product target; the [Paper v4 design](design/road-v0-6-paper-v4-design.md) owns detailed grammar/protocol and the Chinese [CP0–CP7 plan](../PLAN_road_v0_6.md) owns execution order. [RULES](RULES.md) owns implementation discipline; [AGENTS](../AGENTS.md) owns agent procedure. Runtime facts come from [`src/`](../src/) and [`tests/`](../tests/).
-- **Views:** [design](design/design.html), [interaction](design/interaction.html), and [architecture](architecture/architecture.html) show the active Paper v4/protocol v2 runtime and its completed CP6/CP7 safety and author Gates.
-- **Working material:** the Road v0.7 [App Shell target design](design/road-v0-7-app-shell-design.md) and [CP0–CP6 plan](../PLAN_road_v0_7.md) were approved on 2026-08-20; CP0 has not started. The [interactive planbook](design/road-v0-7-planbook.html) is a non-authoritative companion and not implementation or Gate evidence. Road v0.6 remains the accepted runtime until the declared checkpoints supply current evidence.
-- **Evidence:** [acceptance](acceptance/README.md) links the Road v0.6 [CP6 safety report](acceptance/road-v0-6/cp6-safety/report.md) and [CP7 first-author report](acceptance/road-v0-6/cp7-author/report.md), completed Road v0.2 evidence, the archived Road v0.3 CP6 record, and accepted Road v0.5 evidence. The frozen [2cc40ba status snapshot](archive/snapshots/feat-complete-road-v0-3-candidate.html) shows the earlier CP5 boundary. [generated](generated/README.md) remains rebuildable observation; the archived [cold-start audit](archive/road-v0-3/cold_start_report.md) is dated historical evidence, not a claim about the transition pages.
+- **Authority:** [SPEC](SPEC.md) owns the current v0.6 and target v0.7 product boundary. The [Paper v4 design](design/road-v0-6-paper-v4-design.md) owns unchanged grammar/protocol; the [App Shell design](design/road-v0-7-app-shell-design.md) owns the detailed v0.7 target and acceptance matrix; the Chinese [CP0–CP6 plan](../PLAN_road_v0_7.md) owns execution order and Gates. [RULES](RULES.md) owns implementation discipline; [AGENTS](../AGENTS.md) owns agent procedure. Runtime facts come from [`src/`](../src/) and [`tests/`](../tests/).
+- **Views:** [design](design/design.html), [interaction](design/interaction.html), and [architecture](architecture/architecture.html) show accepted v0.6 current state beside the approved, unimplemented v0.7 target. They do not prove production convergence.
+- **Companion:** the [interactive planbook](design/road-v0-7-planbook.html) presents the approved target and CP0–CP6 plan but remains non-authoritative and is not implementation or Gate evidence.
+- **Evidence:** [acceptance](acceptance/README.md) links the passed Road v0.7 [CP0 report](acceptance/road-v0-7/cp0-contract/report.md), Road v0.6 [CP6 safety report](acceptance/road-v0-6/cp6-safety/report.md) and [CP7 first-author report](acceptance/road-v0-6/cp7-author/report.md), completed Road v0.2 evidence, the archived Road v0.3 CP6 record, and accepted Road v0.5 evidence. The frozen [2cc40ba status snapshot](archive/snapshots/feat-complete-road-v0-3-candidate.html) shows the earlier CP5 boundary. [generated](generated/README.md) remains rebuildable observation; the archived [cold-start audit](archive/road-v0-3/cold_start_report.md) is dated historical evidence, not a claim about the transition pages.
 - **Context:** [ADR 0001](architecture/decisions/0001-document-authority.md) explains the authority split. Road v0.3 design history, Road v0.4 planning history, and the Road [v0.5](archive/snapshots/road-v0-5.html)/[v0.6](archive/snapshots/road-v0-6.html) construction snapshots are read-only records. [Manual](manual/README.md) teaches people; [archive](archive/README.md) preserves history. Neither overrides authority.
 
 ## Commands
@@ -188,7 +189,7 @@ Application tests must not be inferred from documentation checks. Platform smoke
 
 ## Post-Road decisions
 
-Road v0.4, Road v0.5, and Road v0.6 are complete. Road v0.6 CP7 first-author product acceptance passed after one native-confirmation P1 was fixed and retested; normal runtime remains exclusively Paper v4/Index v4/protocol v2. The authorized existing Vault was already v4, so no real-Vault migration occurred. The closeout snapshot binds CP7 checkpoint `18a1024`; tag, push, signing, packaging, release and broader compatibility remain unperformed and unclaimed.
+Road v0.4, Road v0.5, and Road v0.6 are complete. Road v0.7 CP0 passed under advance YOLO, is committed, and has not changed production; CP1 is next. Road v0.6 CP7 first-author product acceptance passed after one native-confirmation P1 was fixed and retested; normal runtime remains exclusively Paper v4/Index v4/protocol v2. The authorized existing Vault was already v4, so no real-Vault migration occurred. The closeout snapshot binds CP7 checkpoint `18a1024`; tag, push, signing, packaging, release and broader compatibility remain unperformed and unclaimed.
 
 ## History boundary
 

@@ -25,4 +25,4 @@ packages = ["src/keikeu_core", "src/keikeu_bridge"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
-addopts = "--basetemp=tests/test-vault/pytest"
+addopts = "--basetemp=tests/test-vault/pytest --ignore=tests/test-vault"

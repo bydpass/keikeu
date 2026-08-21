@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>keikeu Interaction — Road v0.6 Paper pages</title>
+  <title>keikeu Interaction — current v0.6 / approved target v0.7</title>
   <style>
     :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", sans-serif; color: #0f0f0e; background: #ece9de; }
     * { box-sizing: border-box; }
@@ -34,13 +34,14 @@
 <body>
   <main>
     <header>
-      <p class="eyebrow">Road v0.6 · accepted at CP7</p>
+      <p class="eyebrow">Current v0.6 accepted · target v0.7 approved</p>
       <h1>写一页，分一页，整体保存</h1>
-      <p class="status">未知提交、repair、安全恢复与一号作者真实工作流均已验证；无未解决 P0/P1。</p>
+      <p class="status">Current：v0.6 交互已验收。Target：v0.7 只重排导航与层级，CP0 已通过并提交，尚未实现。</p>
       <nav>
         <a href="../PROJECT.md">当前坐标</a>
         <a href="../SPEC.md">产品边界</a>
         <a href="road-v0-6-paper-v4-design.md">完整设计</a>
+        <a href="road-v0-7-app-shell-design.md">v0.7 目标设计</a>
         <a href="design.html">视觉 map</a>
         <a href="../architecture/architecture.html">架构 map</a>
       </nav>
@@ -48,7 +49,7 @@
     </header>
 
     <section>
-      <p class="label">Current author journey</p>
+      <p class="label">Current author journey · Road v0.6 accepted</p>
       <div class="journey">
         <div class="step"><strong>进入 Paper</strong><span>第一页就是可编辑的大卡页</span></div>
         <div class="step"><strong>命名与标记</strong><span>Paper 名、页标题始终可编辑；类型可空</span></div>
@@ -56,6 +57,16 @@
         <div class="step"><strong>整体保存</strong><span>一次 CAS 提交整份 pages[]</span></div>
         <div class="step"><strong>带着 Paper 离开</strong><span>Library 找回或进入外部正文编辑器</span></div>
       </div>
+    </section>
+
+    <section>
+      <p class="label">Approved target interaction · Road v0.7 · not implemented</p>
+      <table><tbody>
+        <tr><th>位置</th><td>Paper 与 Library 是同级日常位置；Vault 是环境入口。</td></tr>
+        <tr><th>离开保护</th><td>从 dirty Paper 去 Library、新 Paper 或 Vault 均复用 <code>PaperView.confirmDeparture()</code>；取消时 destination 不变。</td></tr>
+        <tr><th>新 Paper</th><td>只在 guard 通过后清空 path 并替换 PaperView；确认只执行一次原 intent。</td></tr>
+        <tr><th>Vault / 阻塞</th><td>Vault 往返保留已保存 Paper path；blocking recovery 不被 Shell 隐藏。</td></tr>
+      </tbody></table>
     </section>
 
     <section>
@@ -74,7 +85,7 @@
 
     <section class="two">
       <div>
-        <h2>状态</h2>
+        <h2>Current 已接受、v0.7 继续冻结的状态</h2>
         <ul>
           <li><code>clean / dirty / saving</code> 编辑态。</li>
           <li><code>stale / repair_required / commit_unknown</code> 阻塞态。</li>
@@ -83,7 +94,7 @@
         </ul>
       </div>
       <div>
-        <h2>键盘与窗口</h2>
+        <h2>Current 已接受、v0.7 继续冻结的键盘与窗口合同</h2>
         <ul>
           <li>Tab 顺序跟随 Paper 名、Tags、页码、页标题、类型、正文和三个底部动作。</li>
           <li>页码、确认框与原生 select 支持 Enter/Space/方向键；<code>Escape</code> 取消确认。</li>

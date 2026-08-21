@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>keikeu Design — Road v0.6 Paper workbench</title>
+  <title>keikeu Design — current v0.6 / approved target v0.7</title>
   <style>
     :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", sans-serif; color: #0f0f0e; background: #ece9de; }
     * { box-sizing: border-box; }
@@ -27,23 +27,28 @@
     .body { flex: 1; padding: 8px 0; }
     .actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; border-top: 1px solid #b8b2a6; padding-top: 14px; }
     .action { padding: 10px; border: 1px solid #1b365d; text-align: center; }
+    .target-shell { border: 1px solid #b8b2a6; background: #faf9f5; }
+    .shellbar { display: grid; grid-template-columns: auto auto auto 1fr auto auto; gap: 18px; align-items: center; min-height: 56px; padding: 0 18px; border-bottom: 1px solid #b8b2a6; }
+    .shellbar strong { font-family: "Songti SC", "STSong", Georgia, serif; }
+    .shell-work { min-height: 180px; padding: 28px; }
     .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     nav { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 18px; }
     a { color: #1b365d; }
     code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
     .tools { display: none; }
-    @media (max-width: 760px) { .layout { grid-template-columns: 56px 1fr; } .work { grid-column: 1 / -1; border-top: 1px solid #b8b2a6; } .two { grid-template-columns: 1fr; } }
+    @media (max-width: 760px) { .layout { grid-template-columns: 56px 1fr; } .work { grid-column: 1 / -1; border-top: 1px solid #b8b2a6; } .shellbar { grid-template-columns: auto auto auto; gap: 10px; padding: 10px 14px; } .shellbar span:nth-last-child(-n+2) { grid-column: span 1; } .two { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
   <main>
     <header>
-      <p class="eyebrow">Road v0.6 · accepted at CP7</p>
-      <h1>Paper 就是卡页，不再先编辑再渲染</h1>
-      <p class="status">Quiet Desk 视觉系统继续使用；Paper v4 工作台已通过安全 Gate 与一号作者验收。</p>
+      <p class="eyebrow">Current v0.6 accepted · target v0.7 approved</p>
+      <h1>当前 Paper v4；目标用紧凑 Shell 收口工作面</h1>
+      <p class="status">Current：Road v0.6 production 已验收。Target：Road v0.7 App Shell 已批准，CP0 已通过并提交，尚未实现。</p>
       <nav>
         <a href="../PROJECT.md">当前坐标</a>
         <a href="road-v0-6-paper-v4-design.md">完整设计</a>
+        <a href="road-v0-7-app-shell-design.md">v0.7 目标设计</a>
         <a href="interaction.html">交互 map</a>
         <a href="../architecture/architecture.html">架构 map</a>
       </nav>
@@ -51,7 +56,7 @@
     </header>
 
     <section>
-      <p class="label">Current workbench</p>
+      <p class="label">Current workbench · Road v0.6 accepted</p>
       <div class="layout" aria-label="Quiet Rail、Paper 上下文栏与中央卡页工作台">
         <div class="global">Quiet Rail</div>
         <div class="context"><strong>Paper</strong><p>稳定 Paper 名称</p><p>Tags（每行一项）</p><p>页码按钮</p><p><code>K-YYYYMMDD-NNN</code></p></div>
@@ -66,9 +71,17 @@
       </div>
     </section>
 
+    <section>
+      <p class="label">Approved target · Road v0.7 · not implemented</p>
+      <div class="target-shell" role="img" aria-label="Road v0.7 紧凑顶栏与内容优先工作面">
+        <div class="shellbar"><strong>keikeu</strong><span>Paper</span><span>Library</span><span></span><span>新 Paper</span><span>当前 Vault</span></div>
+        <div class="shell-work"><strong>Paper 内容优先</strong><p>Paper / Library 是日常位置；正常 Vault 是环境上下文；阻塞恢复接管完整工作面。当前 production 尚未切换到此结构。</p></div>
+      </div>
+    </section>
+
     <section class="two">
       <div>
-        <h2>视觉不变量</h2>
+        <h2>Current 与 target 共用的视觉不变量</h2>
         <ul>
           <li>保留 parchment、paper、ink blue、near-black、danger 与 success token。</li>
           <li>Serif 承担 Paper/页名称；sans 承担控件；monospace 只用于 code/path。</li>

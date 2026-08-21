@@ -1486,7 +1486,7 @@
     <div class="book-main">
       <header class="book-header">
         <div class="status-line">
-          <span class="status-chip">APPROVED · CP0 未开始</span>
+          <span class="status-chip">APPROVED TARGET · CP0 PASSED</span>
           <span class="status-chip">NON-AUTHORITATIVE</span>
           <span class="status-chip">2026-08-20</span>
         </div>
@@ -1496,7 +1496,7 @@
         <nav class="header-links" aria-label="权威文档">
           <a href="../../PLAN_road_v0_7.md">实施计划</a>
           <a href="road-v0-7-app-shell-design.md">目标设计</a>
-          <a href="../SPEC.md">当前接受基线</a>
+          <a href="../SPEC.md">产品合同（current / target）</a>
           <a href="../RULES.md">工程与证据规则</a>
         </nav>
       </header>
@@ -1770,14 +1770,14 @@
               <p class="section-index">04 · Checkpoints</p>
               <h2>CP0–CP6：先批准结构，再碰 production</h2>
             </div>
-            <p data-pretext>每个 Checkpoint 只从前一个已通过且已提交的 checkpoint commit 建分支。线性历史是 Road 完成条件；本次批准不自动授权后续 Checkpoint commit、push、tag 或发布。</p>
+            <p data-pretext>每个 Checkpoint 只从前一个已通过且已提交的 checkpoint commit 建分支。线性历史是 Road 完成条件；开发者已对 CP0–CP6 的退出判断与本地 checkpoint commit 给出 advance YOLO，实际证据仍不得省略。</p>
           </div>
 
           <ol class="timeline">
             <li class="checkpoint">
               <span class="cp-badge">CP0</span>
               <div><h3>合同与基线</h3><p><code>docs/cp0-v07-contract</code></p></div>
-              <div class="exit-gate"><strong>进入 Gate · 已满足</strong>设计与计划已书面批准。<strong>退出 Gate</strong>current/target 无双重权威；完整基线真实运行。</div>
+              <div class="exit-gate"><strong>当前状态 · 已通过</strong>文档与自动证据已完成；开发者 advance YOLO 覆盖退出判断与本地 checkpoint commit。</div>
             </li>
             <li class="checkpoint">
               <span class="cp-badge">CP1</span>
@@ -1897,6 +1897,7 @@
             </thead>
             <tbody>
               <tr><td>目标结构可审阅</td><td>两尺寸、四工作面、dirty guard 展示</td><td>已批准 · 2026-08-20</td></tr>
+              <tr><td>CP0 合同与基线</td><td>SPEC / PROJECT / 三份 map 校准 + §3.2 完整基线</td><td>已通过 · 已提交</td></tr>
               <tr><td>CP1 灰阶原型通过</td><td>development-only Vue 原型、点击路径、bundle 隔离</td><td>未开始</td></tr>
               <tr><td>Production 已实现</td><td>源码检查、聚焦 Vitest、完整 Vitest 与 Vite build</td><td>未开始</td></tr>
               <tr><td>平台流程可用</td><td>当前源码的 synthetic Vault / 完整副本 Tauri smoke</td><td>未开始</td></tr>
@@ -1910,7 +1911,7 @@
             <li>不要把 VibeHub 学习层、这份 planbook 或 <code>boh_design.html</code> 打进 production bundle。</li>
             <li>不要顺手加入 Outline、Flashcard、配方票、AI、自动保存、Router 或持久 last-location。</li>
             <li>不要把 HTML 截图、synthetic Vault smoke 或自动测试替代真实作者接受。</li>
-            <li><code>docs/PROJECT.md</code> 对 working materials 的历史措辞在 CP0 统一校准；本页不提前改 current 权威。</li>
+            <li>CP0 已统一校准 <code>docs/SPEC.md</code>、<code>docs/PROJECT.md</code> 与三份 current/target map；本页仍不替代 current/target 权威或退出判断。</li>
           </ul>
         </section>
 
@@ -1920,7 +1921,7 @@
               <p class="section-index">08 · Approval gate</p>
               <h2>两道书面 Gate 已通过</h2>
             </div>
-            <p data-pretext>开发者于 2026-08-20 批准目标设计与实施计划。批准只允许从 CP0 开始，不表示 CP0 或 production 已完成，也不自动授权后续 Checkpoint、真实 Vault 或 Git 远端动作。</p>
+            <p data-pretext>开发者于 2026-08-20 批准目标设计与实施计划，并对 CP0–CP6 的退出判断与本地 checkpoint commit 给出 advance YOLO。CP0 证据已完成并通过；production、真实 Vault 与 Git 远端动作仍须分别证明或授权。</p>
           </div>
 
           <div class="gate-grid">
@@ -1947,7 +1948,7 @@
           <div class="references" aria-label="参考文档">
             <a href="../../PLAN_road_v0_7.md">Road v0.7 实施计划</a>
             <a href="road-v0-7-app-shell-design.md">App Shell 目标设计</a>
-            <a href="design.html">当前 v0.6 视觉系统</a>
+            <a href="design.html">current / target 视觉 map</a>
             <a href="boh_design.html">非规范视觉探索</a>
             <a href="working-materials.md">Working materials 索引</a>
           </div>
@@ -1955,7 +1956,7 @@
       </main>
 
       <footer class="book-footer">
-        <p>Road v0.7 已批准伴随视图 · 本地单文件 · 无外部运行时资源 · 不代表 CP0、实现或发布</p>
+        <p>Road v0.7 已批准伴随视图 · CP0 已通过并提交 · 本地单文件 · 无外部运行时资源 · 不代表 production 实现或发布</p>
       </footer>
     </div>
   </div>

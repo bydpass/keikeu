@@ -19,6 +19,7 @@
 - [`road-v0-6/cp5-cleanup/report.md`](road-v0-6/cp5-cleanup/report.md) — Road v0.6 CP5 Flashcard/v3 normal-runtime deletion, zero-reference gate, retained legacy migration coverage, and isolated Tauri navigation evidence.
 - [`road-v0-6/cp6-safety/report.md`](road-v0-6/cp6-safety/report.md) — Road v0.6 CP6 unknown-result fault matrix, no-replay recovery, repair manual/rehearsal, and isolated Tauri safety-smoke evidence.
 - [`road-v0-6/cp7-author/report.md`](road-v0-6/cp7-author/report.md) — Road v0.6 CP7 de-identified first-author flow, real-v4-Vault boundary, native-confirmation P1 fix/retest, and product-acceptance evidence.
+- [`road-v0-7/cp0-contract/report.md`](road-v0-7/cp0-contract/report.md) — passed Road v0.7 CP0 current/target contract, acceptance matrix, baseline, pytest-collection fix, HTML-map evidence, and advance-YOLO exit judgment.
 - [`../archive/docs-archive-documentation-reform-report/`](../archive/docs-archive-documentation-reform-report/): read-only pre-completion record and the SOP used for the checks.
 
 Do not place prose, inspirations, names, relationships, Vault paths, device identifiers, or secrets here. Acceptance, archive, tag, commit, and push remain separate decisions.

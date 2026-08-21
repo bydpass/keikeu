@@ -65,7 +65,7 @@ During a staged Road, SPEC and the HTML maps may describe the approved target wh
 - Every core flow covers default, empty, error, disabled/in-progress, and recovery states where applicable.
 - The production route has no separate rendered-card path: the editable Paper itself is the ordered card-page artifact.
 - Use responsive layouts, safe areas, keyboard reachability, readable contrast, visible focus, and text wrapping.
-- Every drag operation has a keyboard-reachable menu equivalent. Road v0.6 adds no page reordering; existing v0.5 Highlight reordering remains current only until the CP4 cutover.
+- Every drag operation has a keyboard-reachable menu equivalent. Paper v4 has no page reordering; the v0.5 Highlight-reordering path retired at the completed Road v0.6 CP4 cutover.
 - Motion may clarify state but cannot be required to understand or complete a task.
 - System file services are ordinary paths. Do not pretend to manage provider sync, accounts, timing, or conflict merges.
 

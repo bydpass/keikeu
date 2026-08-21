@@ -1,6 +1,6 @@
-# keikeu Road v0.6 Product Boundary
+# keikeu Product Boundary (current: Road v0.6; target: Road v0.7)
 
-> Authority: approved Road v0.6 product scope and author-asset constraints. The detailed Paper v4 grammar, DTOs, migration, recovery, and protocol contract live in the approved [Paper v4 design](design/road-v0-6-paper-v4-design.md). Current runtime coordinates live in [PROJECT](PROJECT.md).
+> Authority: §§1–7 define the accepted Road v0.6 product, author-asset, and data-safety boundary; §8 defines shared exclusions and platform scope; §9 defines the approved but unimplemented Road v0.7 target. Detailed Paper v4 grammar, DTOs, migration, recovery, and protocol remain in the approved [Paper v4 design](design/road-v0-6-paper-v4-design.md); the Road v0.7 interface target and acceptance matrix live in the approved [App Shell design](design/road-v0-7-app-shell-design.md). Current checkpoint and runtime facts live in [PROJECT](PROJECT.md), source, and tests.
 
 ## 1. Definition
 
@@ -10,7 +10,7 @@ keikeu is a private, local-first pre-writing and writing-focus tool for a single
 existing inspiration → editable card-page Paper → saved Paper → external prose editor
 ```
 
-The author now leaves keikeu with the Paper itself. There is no separate Flashcard product step in the Road v0.6 target.
+The author leaves keikeu with the Paper itself. There is no separate Flashcard product step.
 
 ## 2. Author control
 
@@ -21,7 +21,7 @@ The author now leaves keikeu with the Paper itself. There is no separate Flashca
 - No account, cloud backend, telemetry, hidden remote service, or background sync is authorized.
 - Damaged Paper Markdown is reported, not silently repaired or partially opened as an editable Paper.
 
-## 3. Current runtime boundary
+## 3. Current runtime and approved target boundary
 
 CP4 has activated the Road v0.6 product/data contract without changing the process architecture:
 
@@ -30,12 +30,18 @@ Vue → Tauri/Rust → JSONL protocol v2 → Python service/core
     → Paper v4 Markdown / Index / Vault → Paper pages
 ```
 
-CP0–CP3 added the contracts, Core, migration/Index, and development-only UI. CP4
-performed the single vertical protocol-v2 switch. CP5 removed the unreachable legacy
-normal-runtime code without changing this product behavior. `PROJECT.md`, source, and tests
-remain the authority for the current checkpoint.
+Road v0.7 keeps that runtime and every durable data contract unchanged. Its approved target is
+limited to the Vue composition layer:
 
-## 4. Paper v4 target behavior
+```text
+current accepted: page-level Paper / Library / Vault surfaces
+approved target:  compact App Shell → Paper / Library → Vault context / blocking recovery
+```
+
+The target does not become current until its declared checkpoints produce implementation and
+evidence. `PROJECT.md`, source, and tests remain the authority for current implementation state.
+
+## 4. Current Paper v4 behavior (unchanged by Road v0.7)
 
 - A Paper has a stable optional display name, ordered Tags, and at least one ordered card page.
 - Every page has an always-editable optional title, author Markdown content, and optional type: `summary`, `snapshot`, `whisper`, or `null`.
@@ -48,7 +54,7 @@ remain the authority for the current checkpoint.
 
 The exact Markdown v4 shape, frontmatter scalar codec, page markers, reversible marker escaping, Tags grammar, and strict failure rules are defined only in [the approved design §8](design/road-v0-6-paper-v4-design.md#8-markdown-schema-v4).
 
-## 5. Accepted interaction target
+## 5. Accepted interaction baseline (unchanged by Road v0.7)
 
 - The default Paper editor is one large card page, not a Summary form followed by a render step.
 - The Paper display name and current page title remain editable in both basic and further modes.
@@ -80,14 +86,40 @@ The exact Markdown v4 shape, frontmatter scalar codec, page markers, reversible 
 
 ## 8. Explicit exclusions and platforms
 
-No AI generation, prose editor, sync, account, community, database, file watcher, Router, Pinia, TypeScript, UI kit, auto-save, page reorder, signing, notarization, staple, DMG, public distribution, mobile implementation, or cross-platform build enters Road v0.6.
+No AI generation, prose editor, sync, account, community, database, file watcher, Router, Pinia, TypeScript, UI kit, auto-save, page reorder, signing, notarization, staple, DMG, public distribution, mobile implementation, or cross-platform build enters Road v0.7.
 
-- macOS Apple Silicon is the only Road v0.6 engineering and first-author platform. Intel Mac is unsupported.
+- macOS Apple Silicon is the only Road v0.7 engineering and first-author platform. Intel Mac is unsupported.
 - iOS/iPadOS remain a separate 2026-08 direction; Android/HarmonyOS a separate 2026-Q4 direction; Windows a 2027 direction.
 - Linux and watchOS have no planned support. The iOS-only second user does not enter v0.x acceptance and returns no earlier than a separately designed iOS+Android v1.0.
 - Developer ID distribution work is deferred to Road v0.8.
 
-## 9. Acceptance gates
+## 9. Approved target: Road v0.7 App Shell (not implemented)
+
+Road v0.7 changes only Vue work-surface structure, information hierarchy, and responsive
+presentation. It does not change §§1–8, Paper v4, Index v4, Vault persistence, protocol v2,
+Python, Rust, or author-control contracts.
+
+- Paper and Library are the only peer daily locations.
+- Vault is a local-environment entry. Its normal state stays quiet; selection, migration,
+  `repair_required`, `commit_unknown`, and sidecar failure retain complete environment or
+  blocking surfaces.
+- A compact App Shell expresses product identity, current location, New Paper, and current
+  Vault without adding a permanent side rail, Router, or store.
+- Paper prioritizes author content. Library keeps scope–list–detail/actions at `1220×780` and
+  places detail below the list at `920×680`.
+- Leaving a dirty Paper for Library, New Paper, or Vault reuses the one departure guard owned by
+  PaperView; App coordinates the navigation intent without duplicating confirmation rules.
+- Both target window sizes keep content, save, dangerous actions, and recovery paths visible or
+  reachable by clear vertical scrolling, with no horizontal overflow.
+- Navigation and actions have semantic names, visible focus, keyboard paths, non-color-only state,
+  and reduced-motion behavior.
+
+The detailed target criteria and evidence boundary are frozen in the
+[Road v0.7 acceptance matrix](design/road-v0-7-app-shell-design.md#141-road-v07-验收矩阵).
+Until the relevant checkpoints produce source, tests, window checks, platform evidence, and the
+separate author Gate, this section must not be cited as implemented or accepted runtime behavior.
+
+## 10. Road v0.6 completed acceptance record
 
 1. **Checkpoint engineering:** CP0–CP6 each produce their declared implementation, checks, smoke, and evidence with no unresolved P0/P1. Their developer exit judgments are covered by advance YOLO; evidence may not be invented or copied forward.
 2. **Current/target integrity:** CP0–CP3 kept production v0.5/protocol v1; CP4 alone activated the complete v4/v2 vertical path; CP5 removed only code proven unreachable.

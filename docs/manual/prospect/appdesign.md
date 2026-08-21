@@ -1,10 +1,10 @@
-> **HUMAN MANUAL — NON-NORMATIVE.** 本文用人话解释 Road v0.6 的 Paper v4 目标设计。当前已接受的产品边界仍以 [`docs/SPEC.md`](../../SPEC.md) 为准，当前坐标以 [`docs/PROJECT.md`](../../PROJECT.md) 为准，获开发者批准的目标约束见 [Road v0.6 书面设计](../../design/road-v0-6-paper-v4-design.md)。
+> **HUMAN MANUAL — NON-NORMATIVE.** 本文用人话解释当前已接受的 Road v0.6 Paper v4 产品模型。当前产品边界以 [`docs/SPEC.md`](../../SPEC.md) 为准，当前坐标以 [`docs/PROJECT.md`](../../PROJECT.md) 为准；Road v0.7 已批准但尚未实现的 App Shell 目标见 [Road v0.7 书面设计](../../design/road-v0-7-app-shell-design.md)。
 
 # keikeu APPDESIGN.md
 
 > slogan：存住一瞬的灵光
 >
-> 记录范围：Road v0.6 · Paper v4 目标态
+> 记录范围：current Road v0.6 · Paper v4；不定义 Road v0.7 Shell
 >
 > 设计原则：本地优先、作者控制、直接编辑 Paper、无 AI 代写
 
@@ -12,18 +12,16 @@
 
 ## 0. 先分清 current 与 target
 
-本文不是当前功能说明，也不是已完成声明。
+本文解释当前已接受的 Paper v4 产品模型，但不替代规范或运行证据。Road v0.7 的目标只调整 App Shell、信息层级与响应式布局，不改变本文的数据与保存合同。
 
-| | 当前运行态 | Road v0.6 目标态 |
+| | 当前运行态 | Road v0.7 已批准目标 |
 | --- | --- | --- |
-| 产品版本 | Road v0.5 | Road v0.6 已批准目标设计 |
-| 内容模型 | Paper v3：初稿副本、Summary、Highlights、Tags | Paper v4：一份 Paper 由有序卡页组成 |
-| 聚焦方式 | 保存 Paper 后另开只读 Flashcard | Paper 本身就是可编辑、可翻页的卡片 |
-| 实现状态 | 已接受 | 尚未实现、迁移或验收 |
+| 产品版本 | Road v0.6 已接受 runtime | Road v0.7 App Shell 与信息层级 |
+| 内容模型 | Paper v4：一份 Paper 由有序卡页组成 | 不改变 Paper v4 / Index v4 / protocol v2 |
+| 聚焦方式 | Paper 本身可编辑、可翻页并整体保存 | Paper / Library 是日常位置，Vault 是环境入口 |
+| 实现状态 | 已实现、验收并归档 | CP0 已通过并提交；production 尚未实现 |
 
-判断“现在已经运行什么”时，以 `SPEC`、实际代码和测试为准；判断“Road v0.6
-准备实现什么”时，以已获开发者书面批准的 Road 设计为准。本文不覆盖其中任何一侧，
-也不授予实施或迁移权限。
+判断“现在已经运行什么”时，以 `SPEC`、实际代码和测试为准；判断 Road v0.7 准备实现什么时，以已批准的 Road v0.7 设计为准。本文不覆盖其中任何一侧，也不授予实施或迁移权限。
 
 ---
 
@@ -35,7 +33,7 @@ Road v0.5 的核心链路是：
 灵感 → 编辑并保存 Paper → 另行打开只读 Flashcard → 离开 keikeu
 ```
 
-Road v0.6 的目标链路是：
+Road v0.6 已接受的当前链路是：
 
 ```text
 灵感 → 直接编辑由卡页组成的 Paper → 保存 → 带着 Paper 离开
@@ -45,7 +43,7 @@ Road v0.6 的目标链路是：
 
 > 以前，用户带着灵感进入 keikeu，编辑 Paper，最终带着 Flashcard 离开；现在，用户带着灵感进入 keikeu，编辑 Paper，带着 Paper 离开。
 
-Flashcard 不再是单独视图、投影或资产。旧调用方清零后，它会从活动产品模型中退役。
+Flashcard 不再是单独视图、投影或资产；旧调用方已清零并从活动产品模型退役。
 
 这不是把 keikeu 扩张成正文编辑器。keikeu 仍负责把松散灵感整理成可继续写作的耐久 Paper；正式正文仍可在作者选择的外部编辑器中完成。
 
@@ -77,7 +75,7 @@ keikeu 不提供：
 
 ## 3. Paper v4：一个对象，两层命名，多张卡页
 
-目标数据模型：
+当前已接受的数据模型：
 
 ```text
 Paper
@@ -134,7 +132,7 @@ Paper
 
 ## 5. Paper 工作台
 
-目标界面保持一个视觉中心：中央的大卡页。新建 Paper 默认只有一张空白、未标记的页，
+当前已接受界面保持一个视觉中心：中央的大卡页。新建 Paper 默认只有一张空白、未标记的页，
 不会把第一页预设成“总结”。正文引导只推荐“写任何想写的文字”，不把总结变成默认值
 或必填项。
 
@@ -203,7 +201,7 @@ Save 是唯一持久化边界。标题、正文、类型、Tags、加页和删�
 
 每份 Paper 继续是一份普通 Markdown 文件，Index 只是可删除、可重建的辅助索引。
 
-目标形状示例：
+当前已接受形状示例：
 
 ```markdown
 ---
@@ -261,7 +259,7 @@ Index 失效不能让 Markdown 失去权威。Trash 搜索也不新建第二份�
 
 ## 8. v2 / v3 → v4：允许直接改写，但不允许静默改写
 
-当前只有两名对此不敏感的用户，因此产品选择直接把旧 Paper 改写为 v4，不长期维持双 schema 兼容层。简单不等于冒险：迁移必须是显式、一次性、可预检的操作，不能在普通打开或保存时偷偷发生。
+Road v0.6 选择直接把旧 Paper 改写为 v4，不长期维持双 schema 兼容层。简单不等于冒险：迁移必须是显式、一次性、可预检的操作，不能在普通打开或保存时偷偷发生。
 
 | 旧数据 | v4 结果 |
 | --- | --- |
@@ -336,9 +334,9 @@ Developer ID 签名、公证、staple、DMG 和人工分发延后至 Road v0.8�
 
 ---
 
-## 11. Road v0.6 的产品 Gate
+## 11. Road v0.6 已通过的产品 Gate
 
-工程完成不等于产品接受。最终 CP7 由一号真实作者完成一条真实但不泄露内容的链路：
+工程完成不等于产品接受。CP7 已由一号真实作者完成一条真实但不泄露内容的链路：
 
 ```text
 用真实灵感创建 Paper
@@ -351,7 +349,7 @@ Developer ID 签名、公证、staple、DMG 和人工分发延后至 Road v0.8�
 
 验收只记录完成情况、犹豫点、介入次数和脱敏原话，不记录作品正文或敏感路径。故意损坏与修复演练只能使用合成 Paper 或真实 Vault 的完整副本，不能拿唯一真实作品冒险。
 
-Road 只有在自动检查、平台 smoke、真实作者链路完成且没有未解决 P0/P1 后，才可以被称为接受。它不会因此自动产生签名包、远端 push、多用户 MVP 或移动端完成声明。
+Road v0.6 在自动检查、平台 smoke、真实作者链路完成且没有未解决 P0/P1 后获接受。它没有因此自动产生签名包、远端 push、多用户 MVP 或移动端完成声明。
 
 ---
 
@@ -367,6 +365,7 @@ Road v0.6 的 keikeu 仍然是一款本地优先的写前整理工具，但它�
 
 - 当前产品权威：[SPEC](../../SPEC.md)
 - 当前坐标：[PROJECT](../../PROJECT.md)
-- Road v0.6 已批准书面设计：[Paper v4 产品与架构设计](../../design/road-v0-6-paper-v4-design.md)
+- Road v0.6 已接受书面设计：[Paper v4 产品与架构设计](../../design/road-v0-6-paper-v4-design.md)
+- Road v0.7 已批准、尚未实现的目标：[App Shell 与信息层级设计](../../design/road-v0-7-app-shell-design.md)
 - 当前架构图：[architecture.html](../../architecture/architecture.html)
 - 当前交互图：[interaction.html](../../design/interaction.html)

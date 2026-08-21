@@ -1,6 +1,6 @@
-# Road v0.7 实施计划（已批准；CP0 未开始）
+# Road v0.7 实施计划（已批准；CP0 已通过）
 
-> 状态：开发者于 2026-08-20 批准本计划与目标设计，并授权形成本地批准基线 commit；当前只允许从 CP0 开始。该批准不表示任何 Checkpoint 已完成，也不授权真实 Vault、push、tag、closeout 或发布。
+> 状态：开发者于 2026-08-20 批准本计划与目标设计，并对 CP0–CP6 的开发者退出判断与本地 checkpoint commit 给出 advance YOLO。CP0 已在 `docs/cp0-v07-contract` 完成声明证据并通过，checkpoint commit 为该分支 HEAD。production 仍是 Road v0.6；真实 Vault、push、tag、closeout 与发布未获授权。
 >
 > 目标设计：[`docs/design/road-v0-7-app-shell-design.md`](docs/design/road-v0-7-app-shell-design.md)
 >
@@ -21,11 +21,11 @@ Road v0.7 将已接受的 Paper、Library 与 Vault 收口为一个稳定桌面�
 ## 1. 权威与执行纪律
 
 - 当前已接受产品由 [`docs/SPEC.md`](docs/SPEC.md) 定义。
-- Road v0.7 目标由已批准的[设计](docs/design/road-v0-7-app-shell-design.md)定义；CP0 校准前，SPEC 仍只描述当前已接受的 v0.6 产品。
+- Road v0.7 目标由已批准的[设计](docs/design/road-v0-7-app-shell-design.md)定义；CP0 已把 target 摘要写入 SPEC，同时不得把 target 冒充 current。
 - [`docs/RULES.md`](docs/RULES.md) 继续约束作者资产、Git、证据与安全边界。
 - [`docs/PROJECT.md`](docs/PROJECT.md)、源码和测试标明每个 Checkpoint 的当前事实。
-- CP0 完成 current/target 校准前不得把目标写成已实现；每个 CP 只从前一已通过 checkpoint commit 建分支。
-- 每个 CP 单独 commit；真实 Vault、push、tag、closeout 与发布始终另行授权。
+- 不得把未完成 target 写成已实现；每个 CP 只从前一已通过 checkpoint commit 建分支。
+- 每个 CP 单独 commit；CP0–CP6 的本地 checkpoint commit 已获 advance YOLO，真实 Vault、push、tag、closeout 与发布始终另行授权。
 
 ## 2. 全局范围
 
@@ -92,7 +92,7 @@ Python/Rust 无改动不代表可以复制历史结果；CP0 与 CP5 各运行�
 
 ## 5. CP0 — 合同与基线
 
-**进入条件（已满足）：** 开发者于 2026-08-20 书面批准 Road v0.7 设计与本计划；CP0 尚未开始。
+**进入条件（已满足）：** 开发者于 2026-08-20 书面批准 Road v0.7 设计与本计划，并以 advance YOLO 通过 CP0 开发者退出 Gate。
 
 **范围：**
 
@@ -222,6 +222,6 @@ closeout、snapshot、tag、push、签名、打包与发布分别决定，不由
 - [x] CP1 灰阶 Gate 先于 production UI 修改。
 - [x] 不新增依赖，不修改后端或持久数据合同。
 - [x] CP5 使用 synthetic Vault / 完整副本，CP6 的真实 Vault 另行授权。
-- [x] 后续 Checkpoint commit、push、tag、closeout 与发布不采用默认 YOLO。
+- [x] CP0–CP6 开发者退出判断与本地 checkpoint commit 采用 advance YOLO；证据仍须实际运行且不得复制或虚构。
 
-本次批准只授权从 CP0 开始；不表示任何 Checkpoint 已完成或任何历史测试仍然有效。
+本次批准与 advance YOLO 已用于通过并提交 CP0；不表示 CP1–CP6 已完成、任何历史测试仍然有效，也不授权真实 Vault 或 Git 远端动作。
