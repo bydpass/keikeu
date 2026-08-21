@@ -40,6 +40,9 @@ const currentFolder = computed(() =>
 const currentTrashFolder = computed(() =>
   scope.value.startsWith("trash-folder:") ? scope.value.slice(13) : null,
 );
+const interactionBlocked = computed(
+  () => busy.value || props.pendingIntent !== null,
+);
 
 function normalizeError(value) {
   return value && typeof value === "object"
@@ -155,11 +158,13 @@ async function mutate(method, params, label) {
 }
 
 function openSelected() {
-  if (selected.value && !selected.value.trashed) emit("open-paper", selected.value.path);
+  if (!interactionBlocked.value && selected.value && !selected.value.trashed) {
+    emit("open-paper", selected.value.path);
+  }
 }
 
 async function openExternally() {
-  if (!selected.value || selected.value.trashed) return;
+  if (interactionBlocked.value || !selected.value || selected.value.trashed) return;
   try {
     await openSystemTarget("open", selected.value.path);
   } catch (raw) {
@@ -168,6 +173,7 @@ async function openExternally() {
 }
 
 async function revealBrokenPaper(path) {
+  if (interactionBlocked.value) return;
   try {
     await openSystemTarget("reveal", path);
   } catch (raw) {
@@ -300,18 +306,12 @@ onActivated(() => { if (view.value) refresh(); });
 
 <template>
   <main class="library-view">
-    <header class="library-shell-header">
-      <div>
-        <p>KEIKEU · INDEX V4</p>
-        <h1>Library</h1>
-      </div>
-      <nav>
-        <button type="button" @click="emit('open-paper', null)">新 Paper</button>
-        <button type="button" @click="emit('open-vault')">Vault</button>
-      </nav>
-    </header>
-
-    <div v-if="view" class="library-shell">
+    <div
+      v-if="view"
+      class="library-shell"
+      :aria-busy="interactionBlocked"
+      :inert="interactionBlocked"
+    >
       <aside class="library-scopes" aria-label="Library 范围">
         <button :class="{ selected: scope === 'all' }" @click="setScope('all')">全部 Paper</button>
         <button :class="{ selected: scope === 'unfiled' }" @click="setScope('unfiled')">未归档</button>
@@ -411,11 +411,8 @@ onActivated(() => { if (view.value) refresh(); });
 </template>
 
 <style scoped>
-.library-view { min-height: 100vh; padding: 26px clamp(18px, 4vw, 54px) 48px; }
-.library-shell-header { display: flex; align-items: center; justify-content: space-between; max-width: 1180px; margin: 0 auto 20px; padding-bottom: 16px; border-bottom: 2px solid var(--ink); }
-.library-shell-header p { margin: 0; color: var(--signal); font: 700 .68rem var(--font-mono); letter-spacing: .12em; }
-.library-shell-header h1 { margin: 4px 0 0; font: 500 2.6rem var(--font-display); }
-.library-shell-header nav, .paper-operations, .folder-operations { display: flex; flex-wrap: wrap; gap: 8px; }
+.library-view { min-height: calc(100vh - 56px); padding: 26px clamp(18px, 4vw, 54px) 48px; }
+.paper-operations, .folder-operations { display: flex; flex-wrap: wrap; gap: 8px; }
 button, input, select { min-height: 38px; padding: 7px 10px; border: 1px solid var(--rule); color: var(--ink); background: var(--paper); font: inherit; }
 button { cursor: pointer; }
 button:disabled { opacity: .5; cursor: wait; }
@@ -432,5 +429,5 @@ label { display: grid; gap: 5px; color: var(--muted); font-size: .72rem; font-we
 .danger { border-color: var(--danger); color: var(--danger); }
 .library-loading { max-width: 720px; margin: 14vh auto; }
 @media (max-width: 820px) { .library-shell { grid-template-columns: 1fr; } .library-scopes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 620px) { .library-shell-header { align-items: flex-start; flex-direction: column; gap: 12px; } .library-scopes { grid-template-columns: 1fr; } }
+@media (max-width: 620px) { .library-scopes { grid-template-columns: 1fr; } }
 </style>

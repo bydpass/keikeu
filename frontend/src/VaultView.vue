@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref } from "vue";
 
 import { bridgeRequest, chooseVaultDirectory } from "./bridge.js";
 
@@ -28,8 +28,16 @@ const props = defineProps({
 
 const emit = defineEmits(["runtime-blocked", "ready", "cancel", "intent-settled"]);
 
-const mode = ref("picker");
+const mode = ref(
+  props.runtime.state === "ready" &&
+  props.canCancel &&
+  props.initialStartup === null &&
+  props.pendingIntent === null
+    ? "context"
+    : "picker",
+);
 const path = ref("");
+const pathInput = ref(null);
 const preview = ref(null);
 const relocationDestination = ref("");
 const relocationConfirmed = ref(false);
@@ -212,6 +220,12 @@ function returnToPicker() {
   migrationConfirmed.value = false;
   error.value = null;
   notice.value = "";
+}
+
+async function enterMaintenance() {
+  mode.value = "picker";
+  await nextTick();
+  pathInput.value?.focus();
 }
 
 async function inspectVault() {
@@ -413,15 +427,23 @@ onMounted(async () => {
   <main class="vault-gate">
     <section class="vault-panel" :aria-busy="busy">
       <header>
-        <p class="vault-eyebrow">Road v0.6 · Vault</p>
-        <h1>{{ mode.startsWith("migration") ? "迁移旧 Vault" : "打开或创建 Vault" }}</h1>
-        <p>Paper Markdown 保留在本地；Vue 只提交路径与确认令牌。</p>
+        <p class="vault-eyebrow">本地环境 · Vault</p>
+        <h1>{{ mode === "context" ? "当前 Vault" : mode.startsWith("migration") ? "迁移旧 Vault" : "打开或创建 Vault" }}</h1>
+        <p v-if="mode !== 'context'">Paper Markdown 保留在本地；Vue 只提交路径与确认令牌。</p>
       </header>
 
-      <template v-if="mode === 'picker'">
+      <section v-if="mode === 'context'" class="vault-context">
+        <p>Paper Markdown 保留在已选择的本地 Vault；这里不会自动检查、修改或切换路径。</p>
+        <button class="primary" type="button" @click="enterMaintenance">
+          选择或维护 Vault
+        </button>
+      </section>
+
+      <template v-else-if="mode === 'picker'">
         <label>
           <span>Vault 文件夹路径</span>
           <input
+            ref="pathInput"
             v-model="path"
             type="text"
             :disabled="busy"
@@ -565,7 +587,7 @@ onMounted(async () => {
 <style scoped>
 .vault-gate {
   display: grid;
-  min-height: 100vh;
+  min-height: calc(100vh - 56px);
   padding: clamp(18px, 5vw, 64px);
   place-items: center;
   color: var(--ink);
@@ -647,6 +669,13 @@ button.danger {
   display: flex;
   flex-wrap: wrap;
   gap: 9px;
+}
+
+.vault-context {
+  display: grid;
+  justify-items: start;
+  gap: 14px;
+  margin-top: 24px;
 }
 
 .vault-preview,

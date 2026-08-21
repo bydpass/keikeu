@@ -80,7 +80,15 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("Road v0.6 Library runtime", () => {
+describe("Road v0.7 Library runtime", () => {
+  it("leaves navigation and product identity to the App Shell", async () => {
+    const wrapper = await mountLibrary(vi.fn(async () => library()));
+
+    expect(wrapper.find(".library-shell-header").exists()).toBe(false);
+    expect(wrapper.findAll("button").some((button) => button.text() === "新 Paper")).toBe(false);
+    expect(wrapper.findAll("button").some((button) => button.text() === "Vault")).toBe(false);
+  });
+
   it("renders the accepted v4 projection", async () => {
     const request = vi.fn(async () => library());
     const wrapper = await mountLibrary(request);

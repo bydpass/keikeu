@@ -59,6 +59,14 @@ describe("LibraryV4Projection", () => {
     expect(wrapper.emitted("open")[0]).toEqual(["cache/K-20260802-002.md"]);
   });
 
+  it("keeps results before detail when the layout stacks", () => {
+    const wrapper = mount(LibraryV4Projection, { props: { entries } });
+    const children = wrapper.get(".library-v4-layout").element.children;
+
+    expect(children[0].getAttribute("aria-labelledby")).toBe("library-results-title");
+    expect(children[1].classList.contains("library-v4-detail")).toBe(true);
+  });
+
   it("keeps index degradation and repair rows explicit", async () => {
     const wrapper = mount(LibraryV4Projection, {
       props: {

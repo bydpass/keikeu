@@ -69,9 +69,32 @@ function preflight(overrides = {}) {
   };
 }
 
-describe("Road v0.6 Vault and migration gate", () => {
+describe("Road v0.7 Vault context and migration gate", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+  });
+
+  it("shows quiet current-Vault context before opening maintenance", async () => {
+    const wrapper = mount(VaultView, {
+      attachTo: document.body,
+      props: { runtime, canCancel: true },
+    });
+
+    await flushPromises();
+    expect(wrapper.get("h1").text()).toBe("当前 Vault");
+    expect(wrapper.text()).toContain("不会自动检查、修改或切换路径");
+    expect(wrapper.find('input[type="text"]').exists()).toBe(false);
+    expect(bridgeRequest).not.toHaveBeenCalled();
+    expect(chooseVaultDirectory).not.toHaveBeenCalled();
+
+    await wrapper.get(".vault-context .primary").trigger("click");
+    await flushPromises();
+    expect(wrapper.get('input[type="text"]').element).toBe(document.activeElement);
+    expect(bridgeRequest).not.toHaveBeenCalled();
+
+    await wrapper.get(".cancel").trigger("click");
+    expect(wrapper.emitted("cancel")).toHaveLength(1);
+    wrapper.unmount();
   });
 
   it("inspects a typed path before confirming a Vault switch", async () => {
@@ -197,6 +220,7 @@ describe("Road v0.6 Vault and migration gate", () => {
     });
     await flushPromises();
 
+    expect(wrapper.find(".vault-context").exists()).toBe(false);
     const run = wrapper.get(".migration-summary .danger");
     expect(run.attributes("disabled")).toBeDefined();
     await wrapper.get(".migration-summary input[type='checkbox']").setValue(true);
@@ -283,6 +307,7 @@ describe("Road v0.6 Vault and migration gate", () => {
     });
     await flushPromises();
 
+    expect(wrapper.find(".vault-context").exists()).toBe(false);
     expect(request).toHaveBeenCalledWith("startup.load", {});
     expect(request).toHaveBeenCalledWith("vault.inspect", {
       path: "/Users/creator/Vault",
@@ -309,6 +334,7 @@ describe("Road v0.6 Vault and migration gate", () => {
     });
     await flushPromises();
 
+    expect(wrapper.find(".vault-context").exists()).toBe(false);
     expect(request).toHaveBeenCalledWith("startup.load", {});
     expect(request.mock.calls.some(([method]) => method === "migration.run")).toBe(false);
     expect(wrapper.emitted("intent-settled")).toHaveLength(1);

@@ -141,6 +141,12 @@ describe("Road v0.7 desktop shell", () => {
     });
     const wrapper = await mountApp();
     expect(wrapper.text()).toContain("protocol_mismatch");
+    expect(wrapper.get("#runtime-blocked-title").text()).toBe(
+      "本地 Core 协议无法安全核对",
+    );
+    expect(wrapper.text()).toContain("没有修改 Markdown 或 index.json");
+    expect(wrapper.text()).toContain("不会自动重放任何持久操作");
+    expect(wrapper.text()).toContain("退出并重新打开同一版本的 app");
     expect(wrapper.find(".app-shell").exists()).toBe(false);
 
     await buttonByText(wrapper, "重启本地 Core").trigger("click");
@@ -149,6 +155,19 @@ describe("Road v0.7 desktop shell", () => {
     expect(restartSidecar).toHaveBeenCalledOnce();
     expect(wrapper.find(".paper-v4-workbench").exists()).toBe(true);
     expect(wrapper.find(".app-shell").exists()).toBe(true);
+  });
+
+  it("explains a stopped sidecar without offering an unsafe replay", async () => {
+    getRuntimeStatus.mockRejectedValue(new Error("sidecar stopped"));
+    const wrapper = await mountApp();
+
+    expect(wrapper.get("#runtime-blocked-title").text()).toBe(
+      "本地 Core 暂时不可用",
+    );
+    expect(wrapper.text()).toContain("Python Core 未启动、已退出");
+    expect(wrapper.text()).toContain("没有修改 Markdown 或 index.json");
+    expect(wrapper.text()).toContain("不会自动重放任何持久操作");
+    expect(buttonByText(wrapper, "重启本地 Core").exists()).toBe(true);
   });
 
   it("keeps a dirty Paper and focus when Shell departure is canceled", async () => {
@@ -268,6 +287,14 @@ describe("Road v0.7 desktop shell", () => {
 
     expect(wrapper.find(".app-shell").exists()).toBe(false);
     expect(wrapper.text()).toContain("commit_unknown");
+    expect(wrapper.get("#runtime-blocked-title").text()).toBe(
+      "写入结果暂时无法确认",
+    );
+    expect(wrapper.text()).toContain("磁盘可能已提交，也可能未提交");
+    expect(wrapper.text()).toContain("不会继续改写 Markdown 或 index.json");
+    expect(wrapper.text()).toContain("不会自动重放这次持久操作");
+    expect(wrapper.text()).toContain("从磁盘重新读取或核对结果");
+    expect(wrapper.text()).not.toContain("Pending mutation");
   });
 
   it("keeps the Road v0.7 synthetic prototype isolated from runtime calls", async () => {
@@ -323,7 +350,9 @@ describe("Road v0.7 desktop shell", () => {
     await wrapper.get(".page-content-field textarea").setValue("Changed");
     await buttonByText(wrapper, "保存").trigger("click");
     await flushPromises();
-    expect(wrapper.text()).toContain("无法安全连接 Python Core");
+    expect(wrapper.get("#runtime-blocked-title").text()).toBe(
+      "写入结果暂时无法确认",
+    );
 
     await buttonByText(wrapper, "重启本地 Core").trigger("click");
     await flushPromises();
@@ -365,7 +394,9 @@ describe("Road v0.7 desktop shell", () => {
     await flushPromises();
     await buttonByText(wrapper, "创建 Branch").trigger("click");
     await flushPromises();
-    expect(wrapper.text()).toContain("无法安全连接 Python Core");
+    expect(wrapper.get("#runtime-blocked-title").text()).toBe(
+      "写入结果暂时无法确认",
+    );
 
     await buttonByText(wrapper, "重启本地 Core").trigger("click");
     await flushPromises();
@@ -376,5 +407,37 @@ describe("Road v0.7 desktop shell", () => {
       method === "library.query" && params.verify_index === true
     )).toBe(true);
     expect(wrapper.text()).toContain("已在重启后重新读取 Vault");
+  });
+
+  it("keeps Library open paths inert while a durable mutation is pending", async () => {
+    let resolveBranch;
+    const branchPending = new Promise((resolve) => { resolveBranch = resolve; });
+    bridgeRequest.mockImplementation((method, params) => {
+      if (method === "library.query") {
+        return library({ entries: [libraryEntry], index_state: "current" });
+      }
+      if (method === "library.branch") return branchPending;
+      return defaultBridge(method, params);
+    });
+    const wrapper = await mountApp();
+    await buttonByText(wrapper, "Library").trigger("click");
+    await flushPromises();
+    await buttonByText(wrapper, "创建 Branch").trigger("click");
+    await flushPromises();
+
+    expect(wrapper.get(".library-shell").attributes("inert")).toBeDefined();
+    expect(shellButtonByText(wrapper, "Paper").attributes("disabled")).toBeDefined();
+    await buttonByText(wrapper, "打开整份 Paper").trigger("click");
+    await buttonByText(wrapper, "编辑整份 Paper").trigger("click");
+    await flushPromises();
+
+    expect(wrapper.get(".app-work-surface").attributes("aria-label")).toBe("Library 工作面");
+    expect(bridgeRequest.mock.calls.some(([method]) => method === "paper.open")).toBe(false);
+
+    resolveBranch({
+      reports: [{ source: libraryEntry.path, destination: null, error: null }],
+      warnings: [],
+    });
+    await flushPromises();
   });
 });

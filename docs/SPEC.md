@@ -93,7 +93,7 @@ No AI generation, prose editor, sync, account, community, database, file watcher
 - Linux and watchOS have no planned support. The iOS-only second user does not enter v0.x acceptance and returns no earlier than a separately designed iOS+Android v1.0.
 - Developer ID distribution work is deferred to Road v0.8.
 
-## 9. Approved target: Road v0.7 App Shell (not implemented)
+## 9. Approved target: Road v0.7 App Shell (implemented through CP4; not accepted)
 
 Road v0.7 changes only Vue work-surface structure, information hierarchy, and responsive
 presentation. It does not change §§1–8, Paper v4, Index v4, Vault persistence, protocol v2,
@@ -116,8 +116,9 @@ Python, Rust, or author-control contracts.
 
 The detailed target criteria and evidence boundary are frozen in the
 [Road v0.7 acceptance matrix](design/road-v0-7-app-shell-design.md#141-road-v07-验收矩阵).
-Until the relevant checkpoints produce source, tests, window checks, platform evidence, and the
-separate author Gate, this section must not be cited as implemented or accepted runtime behavior.
+CP2–CP4 provide current source, tests, and window evidence for this production UI structure.
+CP5 platform integration and the separate CP6 author Gate remain pending, so this section must not
+be cited as Road completion or product acceptance.
 
 ## 10. Road v0.6 completed acceptance record
 

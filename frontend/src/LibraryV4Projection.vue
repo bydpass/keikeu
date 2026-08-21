@@ -394,6 +394,12 @@ input {
   color: var(--meta);
 }
 
+@media (max-width: 1000px) {
+  .library-v4-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 760px) {
   .library-v4-header {
     align-items: stretch;
@@ -402,10 +408,6 @@ input {
 
   .library-v4-header label {
     width: 100%;
-  }
-
-  .library-v4-layout {
-    grid-template-columns: 1fr;
   }
 }
 </style>

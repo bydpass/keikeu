@@ -1,6 +1,6 @@
-# Road v0.7 实施计划（已批准；CP3 已通过）
+# Road v0.7 实施计划（已批准；CP4 已通过）
 
-> 状态：开发者于 2026-08-20 批准本计划与目标设计，并对 CP0–CP6 的开发者退出判断与本地 checkpoint commit 给出 advance YOLO。CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc` 与 CP3 Paper 工作面已通过并形成线性 checkpoint；CP4 是下一 Gate。Road v0.7 产品接受尚未发生；真实 Vault、push、tag、closeout 与发布未获授权。
+> 状态：开发者于 2026-08-20 批准本计划与目标设计，并对 CP0–CP6 的开发者退出判断与本地 checkpoint commit 给出 advance YOLO。CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc`、CP3 `55b5313` 与 CP4 Library/Vault 工作面已通过并形成线性 checkpoint；CP5 是下一 Gate。Road v0.7 产品接受尚未发生；真实 Vault、push、tag、closeout 与发布未获授权。
 >
 > 目标设计：[`docs/design/road-v0-7-app-shell-design.md`](docs/design/road-v0-7-app-shell-design.md)
 >
@@ -168,6 +168,8 @@ Python/Rust 无改动不代表可以复制历史结果；CP0 与 CP5 各运行�
 
 **退出 Gate：** 两尺寸下日常与阻塞路径完整；Finder/Trash/恢复没有语义退化。
 
+**结果（已通过）：** Library 重复页头与页面级导航退出，`1220×780` 保留范围—列表—详情三段，`920×680` 将详情与操作纵排在列表之后；正常 Vault 先显示零请求的本地环境 context，显式进入后才展开已有 picker。migration、`commit_unknown`、protocol mismatch、Trash/恢复、永久删除取消、Finder/default-editor handoff、pending mutation 全工作面锁、focus 与两尺寸 overflow 均有直接测试及 production-browser 证据。开发者 advance YOLO 覆盖退出判断；证据见 [`CP4 report`](docs/acceptance/road-v0-7/cp4-library-vault/report.md)。
+
 ## 10. CP5 — 集成与安全 Gate
 
 **范围：**
@@ -230,4 +232,4 @@ closeout、snapshot、tag、push、签名、打包与发布分别决定，不由
 - [x] CP5 使用 synthetic Vault / 完整副本，CP6 的真实 Vault 另行授权。
 - [x] CP0–CP6 开发者退出判断与本地 checkpoint commit 采用 advance YOLO；证据仍须实际运行且不得复制或虚构。
 
-本次批准与 advance YOLO 已用于通过 CP0–CP3；不表示 CP4–CP6 已完成、任何历史测试仍然有效，也不授权真实 Vault 或 Git 远端动作。
+本次批准与 advance YOLO 已用于通过 CP0–CP4；不表示 CP5–CP6 已完成、任何历史测试仍然有效，也不授权真实 Vault 或 Git 远端动作。

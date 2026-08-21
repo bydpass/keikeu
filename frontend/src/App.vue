@@ -34,6 +34,39 @@ const paperRenderGeneration = ref(0);
 const workSurface = ref(null);
 const shellNavigating = ref(false);
 const shellBlocked = computed(() => shellNavigating.value || pendingIntent.value !== null);
+const blockedCopy = computed(() => {
+  const code = status.value.error?.code;
+  if (code === "commit_unknown") {
+    return {
+      title: "写入结果暂时无法确认",
+      happened: "本地 Core 在持久操作返回前失去连接；磁盘可能已提交，也可能未提交。",
+      untouched: "阻塞页不会继续改写 Markdown 或 index.json，也不会自动重放这次持久操作。",
+      next: "重启本地 Core；重启后会返回对应工作面，从磁盘重新读取或核对结果。",
+    };
+  }
+  if (code === "protocol_mismatch") {
+    return {
+      title: "本地 Core 协议无法安全核对",
+      happened: "App 与 Python Core 的协议版本或响应结构不一致，连接已停止。",
+      untouched: "阻塞页没有修改 Markdown 或 index.json，也不会自动重放任何持久操作。",
+      next: "重启本地 Core；成功后回到安全工作面。若再次出现，请退出并重新打开同一版本的 app。",
+    };
+  }
+  if (code === "sidecar_unavailable") {
+    return {
+      title: "本地 Core 暂时不可用",
+      happened: "Python Core 未启动、已退出，或没有在时限内响应。",
+      untouched: "阻塞页没有修改 Markdown 或 index.json，也不会自动重放任何持久操作。",
+      next: "重启本地 Core；成功后回到安全工作面。若仍失败，请退出并重新打开 app。",
+    };
+  }
+  return {
+    title: "本地运行边界已阻塞",
+    happened: "keikeu 无法核对本地 Core 当前状态，因此停止进入工作面。",
+    untouched: "阻塞页没有修改 Markdown 或 index.json，也不会自动重放任何持久操作。",
+    next: "重启本地 Core；成功后回到安全工作面，再继续操作。",
+  };
+});
 let refreshTimer;
 
 const durableMethods = new Set([
@@ -136,6 +169,7 @@ function blockRuntime(error) {
 }
 
 function openPaper(path) {
+  if (shellBlocked.value) return;
   paperPath.value = path;
   paperRenderGeneration.value += 1;
   destination.value = "paper";
@@ -337,11 +371,29 @@ onUnmounted(() => window.clearTimeout(refreshTimer));
       <p>窗口会在握手完成后解除阻塞。</p>
     </section>
 
-    <section v-else class="runtime-panel runtime-error">
+    <section
+      v-else
+      class="runtime-panel runtime-error"
+      aria-labelledby="runtime-blocked-title"
+    >
       <p class="eyebrow">本地运行边界已阻塞</p>
-      <h1>无法安全连接 Python Core</h1>
+      <h1 id="runtime-blocked-title">{{ blockedCopy.title }}</h1>
       <p>{{ status.error?.message ?? "Sidecar 已停止。" }}</p>
-      <dl v-if="status.error">
+      <dl class="runtime-guidance">
+        <div>
+          <dt>发生了什么</dt>
+          <dd>{{ blockedCopy.happened }}</dd>
+        </div>
+        <div>
+          <dt>保持原样</dt>
+          <dd>{{ blockedCopy.untouched }}</dd>
+        </div>
+        <div>
+          <dt>安全下一步</dt>
+          <dd>{{ blockedCopy.next }}</dd>
+        </div>
+      </dl>
+      <dl v-if="status.error" class="runtime-technical">
         <div>
           <dt>错误码</dt>
           <dd>{{ status.error.code }}</dd>
@@ -421,6 +473,10 @@ onUnmounted(() => window.clearTimeout(refreshTimer));
 
 .app-work-surface {
   min-width: 0;
+}
+
+.runtime-guidance dd {
+  font-family: inherit;
 }
 
 @media (max-width: 760px) {
