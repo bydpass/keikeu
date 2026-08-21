@@ -39,6 +39,20 @@ const draft = {
   target_path: "cache/K-20260802-001.md",
   source_digest: null,
 };
+const libraryEntry = {
+  path: "cache/Ideas/K-20260820-002.md",
+  code: "K-20260820-002",
+  display_name: "Pending mutation",
+  folder: "Ideas",
+  tags: [],
+  preview: "Keep the component mounted until the result is known.",
+  page_count: 1,
+  page_names: [],
+  created: "2026-08-20T12:00:00",
+  updated: "2026-08-20T12:00:00",
+  trashed: false,
+  repair_reason: null,
+};
 
 function startup() {
   return {
@@ -76,6 +90,12 @@ function buttonByText(wrapper, text) {
   return button;
 }
 
+function shellButtonByText(wrapper, text) {
+  const button = wrapper.findAll(".app-shellbar button").find((item) => item.text() === text);
+  if (!button) throw new Error(`Shell button not found: ${text}`);
+  return button;
+}
+
 const mounted = [];
 async function mountApp() {
   const wrapper = mount(App, { attachTo: document.body });
@@ -98,12 +118,15 @@ afterEach(() => {
   while (mounted.length) mounted.pop().unmount();
 });
 
-describe("Road v0.6 desktop shell", () => {
-  it("unblocks into the Paper v4 workspace", async () => {
+describe("Road v0.7 desktop shell", () => {
+  it("unblocks into the Paper v4 workspace with semantic Shell navigation", async () => {
     const wrapper = await mountApp();
 
     expect(wrapper.text()).toContain("Paper 工作台");
     expect(wrapper.text()).toContain("paper-v4/index-v4");
+    expect(shellButtonByText(wrapper, "Paper").attributes("aria-current")).toBe("page");
+    expect(shellButtonByText(wrapper, "Library").attributes("aria-current")).toBeUndefined();
+    expect(shellButtonByText(wrapper, "Vault").exists()).toBe(true);
   });
 
   it("shows the host error and can restart into the same v2 runtime", async () => {
@@ -118,12 +141,133 @@ describe("Road v0.6 desktop shell", () => {
     });
     const wrapper = await mountApp();
     expect(wrapper.text()).toContain("protocol_mismatch");
+    expect(wrapper.find(".app-shell").exists()).toBe(false);
 
     await buttonByText(wrapper, "重启本地 Core").trigger("click");
     await flushPromises();
 
     expect(restartSidecar).toHaveBeenCalledOnce();
     expect(wrapper.text()).toContain("Paper 工作台");
+    expect(wrapper.find(".app-shell").exists()).toBe(true);
+  });
+
+  it("keeps a dirty Paper and focus when Shell departure is canceled", async () => {
+    const wrapper = await mountApp();
+    await wrapper.get(".page-content-field textarea").setValue("Unsaved shell draft");
+    const libraryButton = shellButtonByText(wrapper, "Library");
+    libraryButton.element.focus();
+    confirmDiscardChanges.mockResolvedValueOnce(false);
+
+    await libraryButton.trigger("click");
+    await flushPromises();
+
+    expect(confirmDiscardChanges).toHaveBeenCalledOnce();
+    expect(shellButtonByText(wrapper, "Paper").attributes("aria-current")).toBe("page");
+    expect(wrapper.get(".page-content-field textarea").element.value).toBe(
+      "Unsaved shell draft",
+    );
+    expect(document.activeElement).toBe(libraryButton.element);
+    expect(bridgeRequest.mock.calls.filter(([method]) => method === "library.query")).toHaveLength(0);
+
+    confirmDiscardChanges.mockResolvedValueOnce(true);
+    await libraryButton.trigger("click");
+    await flushPromises();
+
+    expect(shellButtonByText(wrapper, "Library").attributes("aria-current")).toBe("page");
+    expect(bridgeRequest.mock.calls.filter(([method]) => method === "library.query")).toHaveLength(1);
+    expect(document.activeElement).toBe(wrapper.get(".app-work-surface").element);
+  });
+
+  it("creates one fresh Paper instance only after the shared guard confirms", async () => {
+    const wrapper = await mountApp();
+    await wrapper.get(".page-content-field textarea").setValue("Keep this draft");
+    const newPaperButton = shellButtonByText(wrapper, "新 Paper");
+    confirmDiscardChanges.mockResolvedValueOnce(false);
+
+    await newPaperButton.trigger("click");
+    await flushPromises();
+    expect(bridgeRequest.mock.calls.filter(([method]) => method === "paper.create_draft")).toHaveLength(1);
+    expect(wrapper.get(".page-content-field textarea").element.value).toBe("Keep this draft");
+
+    confirmDiscardChanges.mockResolvedValueOnce(true);
+    await Promise.all([
+      newPaperButton.trigger("click"),
+      newPaperButton.trigger("click"),
+    ]);
+    await flushPromises();
+
+    expect(confirmDiscardChanges).toHaveBeenCalledTimes(2);
+    expect(bridgeRequest.mock.calls.filter(([method]) => method === "paper.create_draft")).toHaveLength(2);
+    expect(wrapper.get(".page-content-field textarea").element.value).toBe("Draft");
+    expect(shellButtonByText(wrapper, "Paper").attributes("aria-current")).toBe("page");
+  });
+
+  it("keeps the saved Paper path across a Vault visit and cancel", async () => {
+    const stored = {
+      ...draft,
+      path: draft.target_path,
+      edit_token: "edit-saved",
+      source_digest: "digest-saved",
+      pages: [{ name: null, content: "Saved", type: null }],
+    };
+    bridgeRequest.mockImplementation((method, params) => {
+      if (method === "paper.save") return { paper: stored, warnings: [] };
+      if (method === "paper.open") return {
+        state: "opened",
+        paper: { ...stored, path: params.path },
+      };
+      return defaultBridge(method);
+    });
+    const wrapper = await mountApp();
+    await wrapper.get(".page-content-field textarea").setValue("Saved");
+    await buttonByText(wrapper, "保存").trigger("click");
+    await flushPromises();
+
+    await shellButtonByText(wrapper, "Vault").trigger("click");
+    await flushPromises();
+    expect(shellButtonByText(wrapper, "Vault").attributes("aria-current")).toBe("page");
+    await buttonByText(wrapper, "取消并返回").trigger("click");
+    await flushPromises();
+
+    const openCalls = bridgeRequest.mock.calls.filter(([method]) => method === "paper.open");
+    expect(openCalls).toHaveLength(1);
+    expect(openCalls[0][1]).toEqual({ path: draft.target_path });
+    expect(shellButtonByText(wrapper, "Paper").attributes("aria-current")).toBe("page");
+  });
+
+  it("keeps the active surface mounted until a durable intent is resolved", async () => {
+    let rejectBranch;
+    const pendingBranch = new Promise((resolve, reject) => {
+      rejectBranch = reject;
+    });
+    bridgeRequest.mockImplementation((method) => {
+      if (method === "library.query") return library({ entries: [libraryEntry] });
+      if (method === "library.branch") return pendingBranch;
+      return defaultBridge(method);
+    });
+    const wrapper = await mountApp();
+    await shellButtonByText(wrapper, "Library").trigger("click");
+    await flushPromises();
+
+    await buttonByText(wrapper, "创建 Branch").trigger("click");
+    await flushPromises();
+    expect(wrapper.findAll(".app-shellbar button").every((button) => (
+      button.attributes("disabled") !== undefined
+    ))).toBe(true);
+
+    await shellButtonByText(wrapper, "Paper").trigger("click");
+    expect(shellButtonByText(wrapper, "Library").attributes("aria-current")).toBe("page");
+
+    rejectBranch({
+      code: "commit_unknown",
+      layer: "tauri_host",
+      message: "提交状态未知。",
+      recovery: "restart_sidecar",
+    });
+    await flushPromises();
+
+    expect(wrapper.find(".app-shell").exists()).toBe(false);
+    expect(wrapper.text()).toContain("commit_unknown");
   });
 
   it("keeps the Road v0.7 synthetic prototype isolated from runtime calls", async () => {

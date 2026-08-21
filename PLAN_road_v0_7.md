@@ -1,6 +1,6 @@
-# Road v0.7 实施计划（已批准；CP1 已通过）
+# Road v0.7 实施计划（已批准；CP2 已通过）
 
-> 状态：开发者于 2026-08-20 批准本计划与目标设计，并对 CP0–CP6 的开发者退出判断与本地 checkpoint commit 给出 advance YOLO。CP0 已提交为 `fb52b55`；CP1 development-only 灰阶原型已完成、通过并由 `ui/cp1-v07-grayscale` 的 HEAD 形成 checkpoint。production 仍是 Road v0.6；CP2 是下一 Gate。真实 Vault、push、tag、closeout 与发布未获授权。
+> 状态：开发者于 2026-08-20 批准本计划与目标设计，并对 CP0–CP6 的开发者退出判断与本地 checkpoint commit 给出 advance YOLO。CP0 `fb52b55`、CP1 `8019969` 与 CP2 production Shell 已通过并形成线性 checkpoint；CP3 是下一 Gate。Road v0.7 产品接受尚未发生；真实 Vault、push、tag、closeout 与发布未获授权。
 >
 > 目标设计：[`docs/design/road-v0-7-app-shell-design.md`](docs/design/road-v0-7-app-shell-design.md)
 >
@@ -136,6 +136,8 @@ Python/Rust 无改动不代表可以复制历史结果；CP0 与 CP5 各运行�
 
 **退出 Gate：** 导航稳定；取消不改变 destination；确认只执行一次原有 intent。
 
+**结果（已通过）：** production 紧凑 Shell、语义当前位置、单一 dirty guard、已保存 path 的 Vault 往返、新 Paper 实例替换、durable pending-intent 锁与 runtime blocker 接管均有直接测试和合成浏览器证据；两种目标尺寸无横向溢出，完整 Vitest、fresh build 与 prototype bundle 隔离通过。开发者 advance YOLO 覆盖退出判断；证据见 [`CP2 report`](docs/acceptance/road-v0-7/cp2-shell/report.md)。
+
 ## 8. CP3 — Paper 工作面
 
 **范围：**
@@ -226,4 +228,4 @@ closeout、snapshot、tag、push、签名、打包与发布分别决定，不由
 - [x] CP5 使用 synthetic Vault / 完整副本，CP6 的真实 Vault 另行授权。
 - [x] CP0–CP6 开发者退出判断与本地 checkpoint commit 采用 advance YOLO；证据仍须实际运行且不得复制或虚构。
 
-本次批准与 advance YOLO 已用于通过并提交 CP0；不表示 CP1–CP6 已完成、任何历史测试仍然有效，也不授权真实 Vault 或 Git 远端动作。
+本次批准与 advance YOLO 已用于通过 CP0–CP2；不表示 CP3–CP6 已完成、任何历史测试仍然有效，也不授权真实 Vault 或 Git 远端动作。

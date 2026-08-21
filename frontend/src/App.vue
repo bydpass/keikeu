@@ -1,5 +1,12 @@
 <script setup>
-import { defineAsyncComponent, onMounted, onUnmounted, ref } from "vue";
+import {
+  computed,
+  defineAsyncComponent,
+  nextTick,
+  onMounted,
+  onUnmounted,
+  ref,
+} from "vue";
 
 import { bridgeRequest, getRuntimeStatus, restartSidecar } from "./bridge.js";
 import LibraryView from "./LibraryView.vue";
@@ -22,6 +29,11 @@ const vaultReturnDestination = ref("paper");
 const vaultCanCancel = ref(false);
 const libraryContextGeneration = ref(0);
 const pendingIntent = ref(null);
+const paperView = ref(null);
+const paperRenderGeneration = ref(0);
+const workSurface = ref(null);
+const shellNavigating = ref(false);
+const shellBlocked = computed(() => shellNavigating.value || pendingIntent.value !== null);
 let refreshTimer;
 
 const durableMethods = new Set([
@@ -125,11 +137,14 @@ function blockRuntime(error) {
 
 function openPaper(path) {
   paperPath.value = path;
+  paperRenderGeneration.value += 1;
   destination.value = "paper";
+  void focusWorkSurface();
 }
 
 function openLibrary() {
   destination.value = "library";
+  void focusWorkSurface();
 }
 
 function openVault(startup = null, returnPaperPath = undefined) {
@@ -140,6 +155,7 @@ function openVault(startup = null, returnPaperPath = undefined) {
     paperPath.value = returnPaperPath;
   }
   destination.value = "vault";
+  void focusWorkSurface();
 }
 
 function finishVault(startup) {
@@ -151,16 +167,74 @@ function finishVault(startup) {
     pendingIntent.value?.family?.startsWith("library")
     || pendingIntent.value?.family === "index"
   ) ? "library" : "paper";
+  void focusWorkSurface();
 }
 
 function cancelVault() {
   if (vaultCanCancel.value) {
     destination.value = vaultReturnDestination.value;
+    void focusWorkSurface();
   }
 }
 
 function settleIntent() {
   pendingIntent.value = null;
+}
+
+function recordPaperPath(path) {
+  paperPath.value = path;
+}
+
+async function focusWorkSurface() {
+  await nextTick();
+  workSurface.value?.focus();
+}
+
+async function runShellIntent(action) {
+  if (shellBlocked.value) return false;
+  const trigger = document.activeElement;
+  shellNavigating.value = true;
+  try {
+    if (
+      destination.value === "paper"
+      && paperView.value
+      && !(await paperView.value.confirmDeparture())
+    ) {
+      shellNavigating.value = false;
+      await nextTick();
+      trigger?.focus?.();
+      return false;
+    }
+    await action();
+    await focusWorkSurface();
+    return true;
+  } finally {
+    shellNavigating.value = false;
+  }
+}
+
+function showPaper() {
+  if (destination.value === "paper") return;
+  return runShellIntent(() => { destination.value = "paper"; });
+}
+
+function showLibrary() {
+  if (destination.value === "library") return;
+  return runShellIntent(() => { destination.value = "library"; });
+}
+
+function startNewPaper() {
+  return runShellIntent(() => {
+    paperPath.value = null;
+    paperStartup.value = null;
+    paperRenderGeneration.value += 1;
+    destination.value = "paper";
+  });
+}
+
+function showVault() {
+  if (destination.value === "vault") return;
+  return runShellIntent(() => openVault(null, paperPath.value));
 }
 
 onMounted(() => {
@@ -174,47 +248,87 @@ onUnmounted(() => window.clearTimeout(refreshTimer));
 <template>
   <PrototypeView v-if="showPrototype" />
 
-  <template v-else-if="status.state === 'ready'">
-    <PaperView
-      v-if="destination === 'paper'"
-      :runtime="status"
-      :initial-path="paperPath"
-      :initial-startup="paperStartup"
-      :pending-intent="pendingIntent"
-      :request="appRequest"
-      @runtime-blocked="blockRuntime"
-      @open-library="openLibrary"
-      @open-vault="openVault"
-      @startup-consumed="paperStartup = null"
-      @intent-settled="settleIntent"
-    />
+  <div v-else-if="status.state === 'ready'" class="app-shell">
+    <header class="app-shellbar">
+      <strong class="app-shell-brand">keikeu</strong>
+      <nav class="app-shell-daily" aria-label="日常位置">
+        <button
+          type="button"
+          :aria-current="destination === 'paper' ? 'page' : undefined"
+          :disabled="shellBlocked"
+          @click="showPaper"
+        >Paper</button>
+        <button
+          type="button"
+          :aria-current="destination === 'library' ? 'page' : undefined"
+          :disabled="shellBlocked"
+          @click="showLibrary"
+        >Library</button>
+      </nav>
+      <div class="app-shell-actions" role="group" aria-label="工作区动作与环境">
+        <button type="button" :disabled="shellBlocked" @click="startNewPaper">
+          新 Paper
+        </button>
+        <button
+          type="button"
+          :aria-current="destination === 'vault' ? 'page' : undefined"
+          :disabled="shellBlocked"
+          @click="showVault"
+        >Vault</button>
+      </div>
+    </header>
 
-    <KeepAlive :key="libraryContextGeneration">
-      <LibraryView
-        v-if="destination === 'library'"
+    <div
+      ref="workSurface"
+      class="app-work-surface"
+      role="region"
+      :aria-label="`${destination === 'paper' ? 'Paper' : destination === 'library' ? 'Library' : 'Vault'} 工作面`"
+      tabindex="-1"
+    >
+      <PaperView
+        v-if="destination === 'paper'"
+        :key="paperRenderGeneration"
+        ref="paperView"
         :runtime="status"
+        :initial-path="paperPath"
+        :initial-startup="paperStartup"
         :pending-intent="pendingIntent"
         :request="appRequest"
         @runtime-blocked="blockRuntime"
-        @open-paper="openPaper"
+        @open-library="openLibrary"
         @open-vault="openVault"
+        @paper-path-change="recordPaperPath"
+        @startup-consumed="paperStartup = null"
         @intent-settled="settleIntent"
       />
-    </KeepAlive>
 
-    <VaultView
-      v-if="destination === 'vault'"
-      :runtime="status"
-      :initial-startup="vaultStartup"
-      :can-cancel="vaultCanCancel"
-      :pending-intent="pendingIntent"
-      :request="appRequest"
-      @runtime-blocked="blockRuntime"
-      @ready="finishVault"
-      @cancel="cancelVault"
-      @intent-settled="settleIntent"
-    />
-  </template>
+      <KeepAlive :key="libraryContextGeneration">
+        <LibraryView
+          v-if="destination === 'library'"
+          :runtime="status"
+          :pending-intent="pendingIntent"
+          :request="appRequest"
+          @runtime-blocked="blockRuntime"
+          @open-paper="openPaper"
+          @open-vault="openVault"
+          @intent-settled="settleIntent"
+        />
+      </KeepAlive>
+
+      <VaultView
+        v-if="destination === 'vault'"
+        :runtime="status"
+        :initial-startup="vaultStartup"
+        :can-cancel="vaultCanCancel"
+        :pending-intent="pendingIntent"
+        :request="appRequest"
+        @runtime-blocked="blockRuntime"
+        @ready="finishVault"
+        @cancel="cancelVault"
+        @intent-settled="settleIntent"
+      />
+    </div>
+  </div>
 
   <main v-else class="runtime-gate" aria-live="polite">
     <section v-if="status.state === 'starting'" class="runtime-panel">
@@ -247,3 +361,82 @@ onUnmounted(() => window.clearTimeout(refreshTimer));
     </section>
   </main>
 </template>
+
+<style scoped>
+.app-shell {
+  min-height: 100vh;
+  background: var(--canvas);
+}
+
+.app-shellbar {
+  position: sticky;
+  z-index: 20;
+  top: 0;
+  display: grid;
+  grid-template-columns: auto auto minmax(20px, 1fr) auto;
+  min-height: 56px;
+  align-items: stretch;
+  gap: 20px;
+  padding: 0 26px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper);
+}
+
+.app-shell-brand {
+  align-self: center;
+  font: 600 1.2rem var(--font-display);
+}
+
+.app-shell-daily,
+.app-shell-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.app-shell-actions {
+  grid-column: 4;
+}
+
+.app-shellbar button {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.app-shellbar button[aria-current="page"] {
+  border-bottom-color: var(--ink);
+  color: var(--ink);
+  font-weight: 750;
+}
+
+.app-shellbar button:disabled {
+  cursor: wait;
+  opacity: .55;
+}
+
+.app-work-surface {
+  min-width: 0;
+}
+
+@media (max-width: 760px) {
+  .app-shellbar {
+    grid-template-columns: auto 1fr;
+    gap: 0 12px;
+    padding: 8px 14px;
+  }
+
+  .app-shell-daily {
+    justify-self: end;
+  }
+
+  .app-shell-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+}
+</style>

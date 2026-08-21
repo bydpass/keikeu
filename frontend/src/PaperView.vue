@@ -20,6 +20,7 @@ const emit = defineEmits([
   "runtime-blocked",
   "open-library",
   "open-vault",
+  "paper-path-change",
   "startup-consumed",
   "intent-settled",
 ]);
@@ -80,6 +81,7 @@ function editable(value) {
 
 function applyPaper(value, { baseline, indexState = "current" } = {}) {
   paper.value = value;
+  emit("paper-path-change", value.path ?? null);
   baselineEditable.value = baseline;
   repair.value = null;
   workbenchState.value = indexState === "degraded" ? "index_degraded" : "ready";
@@ -113,6 +115,7 @@ async function reconcilePendingSave(intent) {
       : "已确认上次保存未落盘；草稿仍在，请检查后重新保存。";
   } else {
     paper.value = retainedDraft(intent);
+    emit("paper-path-change", paper.value.path ?? null);
     baselineEditable.value = intent.reconcile.baseline;
     repair.value = result.repair ?? null;
     workbenchState.value = result.state === "repair_required"
@@ -373,6 +376,12 @@ async function deletePaper() {
     }
   });
 }
+
+function confirmDeparture() {
+  return requestDeparture();
+}
+
+defineExpose({ confirmDeparture });
 
 onMounted(async () => {
   await loadStartup();

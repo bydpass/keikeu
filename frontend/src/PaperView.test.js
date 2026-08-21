@@ -96,6 +96,24 @@ describe("Road v0.6 Paper runtime", () => {
       "删除本页",
       "加一页",
     ]);
+    expect(wrapper.emitted("paper-path-change")[0]).toEqual([null]);
+  });
+
+  it("exposes the existing departure guard and reports an opened path", async () => {
+    const opened = paper({ path: "cache/opened.md", source_digest: "digest" });
+    const request = vi.fn(async (method) => {
+      if (method === "startup.load") return ready();
+      if (method === "paper.open") return { state: "opened", paper: opened };
+      throw new Error(method);
+    });
+    const wrapper = await mountPaper(request, { initialPath: opened.path });
+    expect(wrapper.emitted("paper-path-change").at(-1)).toEqual([opened.path]);
+
+    await wrapper.get(".page-content-field textarea").setValue("Unsaved");
+    confirmDiscardChanges.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    await expect(wrapper.vm.confirmDeparture()).resolves.toBe(false);
+    await expect(wrapper.vm.confirmDeparture()).resolves.toBe(true);
+    expect(confirmDiscardChanges).toHaveBeenCalledTimes(2);
   });
 
   it("sends one whole-page Save DTO plus the restart reconciliation intent", async () => {
@@ -136,6 +154,7 @@ describe("Road v0.6 Paper runtime", () => {
       submitted: { pages: saveCall[1].pages },
     });
     expect(wrapper.text()).toContain("Paper 已保存为卡页 Markdown");
+    expect(wrapper.emitted("paper-path-change").at(-1)).toEqual([stored.path]);
   });
 
   it("treats damaged open as tagged repair instead of a failed transport", async () => {
