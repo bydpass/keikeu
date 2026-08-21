@@ -22,6 +22,7 @@
 - [`road-v0-7/cp0-contract/report.md`](road-v0-7/cp0-contract/report.md) — passed Road v0.7 CP0 current/target contract, acceptance matrix, baseline, pytest-collection fix, HTML-map evidence, and advance-YOLO exit judgment.
 - [`road-v0-7/cp1-grayscale/report.md`](road-v0-7/cp1-grayscale/report.md) — passed Road v0.7 CP1 development-only compact Shell, synthetic interaction paths, two-size QA, full Vitest/build, bundle isolation, and advance-YOLO exit judgment.
 - [`road-v0-7/cp2-shell/report.md`](road-v0-7/cp2-shell/report.md) — passed Road v0.7 CP2 production compact Shell, shared dirty guard, saved-path Vault return, durable-intent lock, two-size browser QA, full Vitest/build, bundle isolation, and advance-YOLO exit judgment.
+- [`road-v0-7/cp3-paper/report.md`](road-v0-7/cp3-paper/report.md) — passed Road v0.7 CP3 content-first Paper work surface, save-time no-loss lock, two-size browser/keyboard/composition QA, full Vitest/build, bundle isolation, and advance-YOLO exit judgment.
 - [`../archive/docs-archive-documentation-reform-report/`](../archive/docs-archive-documentation-reform-report/): read-only pre-completion record and the SOP used for the checks.
 
 Do not place prose, inspirations, names, relationships, Vault paths, device identifiers, or secrets here. Acceptance, archive, tag, commit, and push remain separate decisions.

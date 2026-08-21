@@ -5,8 +5,10 @@ const props = defineProps({
   paper: { type: Object, required: true },
   baselineEditable: { type: Object, default: undefined },
   state: { type: String, default: "ready" },
+  saving: { type: Boolean, default: false },
+  canDeleteWholePaper: { type: Boolean, default: false },
 });
-const emit = defineEmits(["dirty-change", "save"]);
+const emit = defineEmits(["dirty-change", "save", "whole-delete"]);
 
 const typeLabels = { summary: "总结", snapshot: "高光", whisper: "碎碎念" };
 const stateMessages = {
@@ -85,7 +87,7 @@ const summaryIndex = computed(() =>
   draft.value.pages.findIndex((page) => page.type === "summary"),
 );
 const saveBlocked = computed(() =>
-  ["stale", "repair_required", "commit_unknown"].includes(props.state),
+  props.saving || ["stale", "repair_required", "commit_unknown"].includes(props.state),
 );
 
 watch(dirty, (value) => emit("dirty-change", value), { immediate: true });
@@ -233,14 +235,14 @@ onBeforeUnmount(() => window.removeEventListener("beforeunload", onBeforeUnload)
       {{ stateMessages[state] }}
     </p>
 
-    <header class="paper-meta-bar">
-      <div class="paper-code">
-        <span>Paper</span>
-        <strong>{{ draft.code }}</strong>
-      </div>
+    <header class="paper-meta-bar" aria-label="Paper context">
       <label>
         <span>Paper 名称</span>
-        <input v-model="draft.display_name" aria-describedby="paper-name-help">
+        <input
+          v-model="draft.display_name"
+          aria-describedby="paper-name-help"
+          :readonly="saving"
+        >
         <small id="paper-name-help">
           {{ codePointLength(draft.display_name.trim()) }} / 200
           <b v-if="fieldErrors.display_name">· {{ fieldErrors.display_name }}</b>
@@ -248,31 +250,64 @@ onBeforeUnmount(() => window.removeEventListener("beforeunload", onBeforeUnload)
       </label>
       <label>
         <span>Tags · 每行一个</span>
-        <textarea v-model="draft.tags_text" rows="2" placeholder="夜车&#10;重逢,旧友" />
+        <textarea
+          v-model="draft.tags_text"
+          rows="2"
+          placeholder="夜车&#10;重逢,旧友"
+          :readonly="saving"
+        />
         <small v-if="fieldErrors.tags">{{ fieldErrors.tags }}</small>
       </label>
+      <p class="paper-context-state" aria-live="polite">
+        <span>{{ draft.pages.length }} 页</span>
+        <strong v-if="saving">正在保存</strong>
+        <strong v-else-if="dirty">草稿有未保存修改</strong>
+      </p>
+      <details class="paper-details">
+        <summary>Paper 详情</summary>
+        <dl>
+          <div class="paper-code">
+            <dt>Code</dt>
+            <dd><strong>{{ draft.code }}</strong></dd>
+          </div>
+          <div>
+            <dt>路径</dt>
+            <dd><code>{{ paper.path || "尚未写盘" }}</code></dd>
+          </div>
+          <div>
+            <dt>创建时间</dt>
+            <dd><time :datetime="paper.created">{{ paper.created }}</time></dd>
+          </div>
+          <div>
+            <dt>更新时间</dt>
+            <dd><time :datetime="paper.updated">{{ paper.updated }}</time></dd>
+          </div>
+        </dl>
+        <button
+          v-if="canDeleteWholePaper"
+          type="button"
+          class="whole-delete danger-action"
+          :disabled="saving"
+          @click="emit('whole-delete')"
+        >
+          整份移入废纸篓
+        </button>
+      </details>
     </header>
 
-    <nav class="page-navigation" aria-label="Paper 页面">
+    <nav v-if="draft.pages.length > 1" class="page-navigation" aria-label="Paper 页面">
       <button
         v-for="(page, index) in draft.pages"
         :key="page.ui_key"
         type="button"
         :aria-current="index === activeIndex ? 'page' : undefined"
+        :disabled="saving"
         @click="selectPage(index)"
       >
         {{ index + 1 }}
         <span v-if="page.type">{{ typeLabels[page.type] }}</span>
       </button>
       <span>{{ activeIndex + 1 }} / {{ draft.pages.length }}</span>
-      <button
-        type="button"
-        class="mode-toggle"
-        :aria-expanded="advanced"
-        @click="advanced = !advanced"
-      >
-        {{ advanced ? "收起进一步" : "进一步" }}
-      </button>
     </nav>
 
     <article class="card-page">
@@ -283,6 +318,7 @@ onBeforeUnmount(() => window.removeEventListener("beforeunload", onBeforeUnload)
           ref="pageTitleInput"
           v-model="activePage.name"
           placeholder="给这一页一个名字（可空）"
+          :readonly="saving"
         >
         <small>
           {{ codePointLength((activePage.name ?? "").trim()) }} / 200
@@ -299,6 +335,7 @@ onBeforeUnmount(() => window.removeEventListener("beforeunload", onBeforeUnload)
           v-model="activePage.content"
           rows="14"
           placeholder="写下任何你想留下的文字……"
+          :readonly="saving"
           @focus="rememberCursor"
           @click="rememberCursor"
           @keyup="rememberCursor"
@@ -310,10 +347,22 @@ onBeforeUnmount(() => window.removeEventListener("beforeunload", onBeforeUnload)
         </small>
       </label>
 
+      <div class="advanced-controls">
+        <button
+          type="button"
+          class="mode-toggle"
+          :aria-expanded="advanced"
+          :disabled="saving"
+          @click="advanced = !advanced"
+        >
+          {{ advanced ? "收起进一步" : "进一步" }}
+        </button>
+      </div>
+
       <section v-if="advanced" class="advanced-panel" aria-label="进一步模式">
         <label>
           <span>页面类型</span>
-          <select v-model="activePage.type">
+          <select v-model="activePage.type" :disabled="saving">
             <option :value="null">不标记</option>
             <option
               value="summary"
@@ -333,22 +382,23 @@ onBeforeUnmount(() => window.removeEventListener("beforeunload", onBeforeUnload)
 
       <footer class="card-actions">
         <button type="button" :disabled="saveBlocked" @click="save">保存</button>
-        <button type="button" class="danger-action" @click="askDelete">删除本页</button>
-        <button type="button" @click="addPage">加一页</button>
+        <button type="button" class="danger-action" :disabled="saving" @click="askDelete">
+          删除本页
+        </button>
+        <button type="button" :disabled="saving" @click="addPage">加一页</button>
       </footer>
     </article>
-
-    <p class="draft-state" aria-live="polite">
-      {{ dirty ? "草稿有未保存修改" : "草稿与已保存基线一致" }}
-      <span v-if="state === 'index_degraded'">· 只允许显式重建 Index</span>
-    </p>
 
     <dialog ref="deleteDialog" class="delete-page-dialog" @cancel="closeDelete">
       <h2>删除当前页？</h2>
       <p>只有下一次整体保存成功后，这次删除才会写入 Paper。</p>
       <div>
-        <button ref="cancelDeleteButton" type="button" @click="closeDelete">取消</button>
-        <button type="button" class="danger-action" @click="deletePage">确认删除</button>
+        <button ref="cancelDeleteButton" type="button" :disabled="saving" @click="closeDelete">
+          取消
+        </button>
+        <button type="button" class="danger-action" :disabled="saving" @click="deletePage">
+          确认删除
+        </button>
       </div>
     </dialog>
   </section>
@@ -384,7 +434,7 @@ select {
 
 .paper-meta-bar {
   display: grid;
-  grid-template-columns: 150px minmax(220px, 1fr) minmax(220px, 0.8fr);
+  grid-template-columns: minmax(220px, 1fr) minmax(220px, 0.8fr) auto;
   gap: 18px;
   align-items: end;
   padding: 16px 20px;
@@ -419,7 +469,7 @@ select {
 .paper-meta-bar input,
 .page-title-field input,
 .advanced-panel select {
-  min-height: 42px;
+  min-height: 44px;
   padding: 8px 10px;
 }
 
@@ -442,22 +492,74 @@ select {
   color: var(--danger);
 }
 
-.paper-code {
+.paper-context-state {
+  display: grid;
+  gap: 5px;
+  margin: 0;
   align-self: center;
-}
-
-.paper-code span {
-  display: block;
   color: var(--meta);
-  font-size: 0.66rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: 0.72rem;
+  text-align: right;
 }
 
-.paper-code strong {
-  display: block;
-  margin-top: 5px;
-  font: 0.78rem var(--font-mono);
+.paper-context-state strong {
+  color: var(--signal);
+  font-weight: 700;
+}
+
+.paper-details {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--rule);
+  padding-top: 10px;
+  color: var(--meta);
+  font-size: 0.72rem;
+}
+
+.paper-details summary {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  width: fit-content;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.paper-details summary:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.paper-details dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 20px;
+  margin: 14px 0 0;
+}
+
+.paper-details dl > div {
+  min-width: 0;
+}
+
+.paper-details dt {
+  margin-bottom: 3px;
+}
+
+.paper-details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--ink);
+  font: 0.76rem var(--font-mono);
+}
+
+.whole-delete {
+  min-height: 44px;
+  margin-top: 14px;
+  padding: 7px 10px;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-xs);
+  color: var(--danger);
+  background: transparent;
+  cursor: pointer;
 }
 
 .page-navigation {
@@ -471,8 +573,8 @@ select {
 }
 
 .page-navigation button {
-  min-width: 38px;
-  min-height: 36px;
+  min-width: 44px;
+  min-height: 44px;
   padding: 5px 9px;
   border: 1px solid var(--rule);
   border-radius: 999px;
@@ -498,11 +600,6 @@ select {
   font: 0.68rem var(--font-mono);
 }
 
-.page-navigation .mode-toggle {
-  margin-left: auto;
-  border-radius: var(--radius-xs);
-}
-
 .card-page {
   position: relative;
   display: grid;
@@ -512,7 +609,6 @@ select {
   border: 1px solid var(--rule);
   border-top: 4px solid var(--signal);
   background: var(--paper);
-  box-shadow: 0 18px 45px color-mix(in srgb, var(--ink) 10%, transparent);
 }
 
 .type-badge {
@@ -544,6 +640,21 @@ select {
   padding: 18px;
   font: 1rem/1.75 var(--font-body);
   resize: vertical;
+}
+
+.advanced-controls {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.mode-toggle {
+  min-height: 44px;
+  padding: 7px 12px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-xs);
+  color: var(--ink);
+  background: transparent;
+  cursor: pointer;
 }
 
 .advanced-panel {
@@ -596,13 +707,6 @@ select {
   opacity: 0.45;
 }
 
-.draft-state {
-  margin: 12px 0 0;
-  color: var(--meta);
-  font: 0.7rem var(--font-mono);
-  text-align: right;
-}
-
 .delete-page-dialog {
   width: min(430px, calc(100% - 32px));
   padding: 26px;
@@ -636,8 +740,11 @@ select {
     grid-template-columns: 1fr 1fr;
   }
 
-  .paper-code {
+  .paper-context-state {
     grid-column: 1 / -1;
+    grid-auto-flow: column;
+    justify-content: space-between;
+    text-align: left;
   }
 
   .card-page {
@@ -650,8 +757,13 @@ select {
     grid-template-columns: 1fr;
   }
 
-  .paper-code {
+  .paper-context-state {
     grid-column: auto;
+    grid-auto-flow: row;
+  }
+
+  .paper-details dl {
+    grid-template-columns: 1fr;
   }
 
   .advanced-panel,
@@ -659,9 +771,5 @@ select {
     grid-template-columns: 1fr;
   }
 
-  .page-navigation .mode-toggle {
-    width: 100%;
-    margin-left: 0;
-  }
 }
 </style>

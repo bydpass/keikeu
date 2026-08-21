@@ -1,6 +1,6 @@
-# Road v0.7：App Shell 与信息层级设计（已批准目标；CP2 Shell 已实现）
+# Road v0.7：App Shell 与信息层级设计（已批准目标；CP3 Paper 已实现）
 
-> 状态：开发者于 2026-08-20 批准本目标设计与实施计划，并对 CP0–CP6 的开发者退出判断与本地 checkpoint commit 给出 advance YOLO。CP0 `fb52b55`、CP1 `8019969` 与 CP2 production Shell 已通过；CP3 是下一 Gate。Paper、Library、Vault 的后续信息层级和产品接受尚未完成；真实 Vault、push、tag、closeout 与发布未获授权。
+> 状态：开发者于 2026-08-20 批准本目标设计与实施计划，并对 CP0–CP6 的开发者退出判断与本地 checkpoint commit 给出 advance YOLO。CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc` 与 CP3 Paper 工作面已通过；CP4 是下一 Gate。Library、Vault、恢复层级和产品接受尚未完成；真实 Vault、push、tag、closeout 与发布未获授权。
 >
 > 基线：Road v0.6 已完成并验收的 Paper v4 / Index v4 / protocol v2。
 >

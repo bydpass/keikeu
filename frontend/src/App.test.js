@@ -122,8 +122,8 @@ describe("Road v0.7 desktop shell", () => {
   it("unblocks into the Paper v4 workspace with semantic Shell navigation", async () => {
     const wrapper = await mountApp();
 
-    expect(wrapper.text()).toContain("Paper 工作台");
-    expect(wrapper.text()).toContain("paper-v4/index-v4");
+    expect(wrapper.find(".paper-v4-workbench").exists()).toBe(true);
+    expect(wrapper.text()).not.toContain("paper-v4/index-v4");
     expect(shellButtonByText(wrapper, "Paper").attributes("aria-current")).toBe("page");
     expect(shellButtonByText(wrapper, "Library").attributes("aria-current")).toBeUndefined();
     expect(shellButtonByText(wrapper, "Vault").exists()).toBe(true);
@@ -147,7 +147,7 @@ describe("Road v0.7 desktop shell", () => {
     await flushPromises();
 
     expect(restartSidecar).toHaveBeenCalledOnce();
-    expect(wrapper.text()).toContain("Paper 工作台");
+    expect(wrapper.find(".paper-v4-workbench").exists()).toBe(true);
     expect(wrapper.find(".app-shell").exists()).toBe(true);
   });
 
@@ -295,7 +295,7 @@ describe("Road v0.7 desktop shell", () => {
     await buttonByText(wrapper, "新 Paper").trigger("click");
     await flushPromises();
 
-    expect(wrapper.text()).toContain("Paper 工作台");
+    expect(wrapper.find(".paper-v4-workbench").exists()).toBe(true);
   });
 
   it("retains a Save intent across host failure and reconciles instead of replaying", async () => {

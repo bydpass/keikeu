@@ -33,11 +33,13 @@ const baselineEditable = ref(undefined);
 const workbenchState = ref("ready");
 const dirty = ref(false);
 const busy = ref(false);
+const saving = ref(false);
 const notice = ref("");
 const error = ref(null);
 const deleteDialog = ref(null);
 let dailyTimer;
 let unlistenClose;
+let hasObservedDirty = false;
 
 const savedPath = computed(() => paper.value?.path ?? null);
 const hasPendingSave = computed(() => props.pendingIntent?.family === "paper_save");
@@ -167,7 +169,7 @@ async function enterWorkspace() {
     await openInitialPaper();
   } catch (raw) {
     screen.value = "error";
-    handleError(raw, "无法打开 Paper 工作台");
+    handleError(raw, "无法打开 Paper 工作面");
   } finally {
     busy.value = false;
   }
@@ -195,7 +197,7 @@ async function loadStartup() {
 }
 
 async function requestDeparture(action) {
-  if (busy.value) return false;
+  if (busy.value || saving.value) return false;
   if (dirty.value || hasPendingSave.value) {
     try {
       if (!(await confirmDiscardChanges())) return false;
@@ -213,22 +215,11 @@ function openLibrary() {
   requestDeparture(() => emit("open-library"));
 }
 
-function openVault() {
-  requestDeparture(() => emit("open-vault", null, savedPath.value));
-}
-
-function newPaper() {
-  requestDeparture(async () => {
-    busy.value = true;
-    try {
-      applyPaper(await props.request("paper.create_draft", {}));
-      notice.value = "已建立新的本地草稿；尚未写盘。";
-    } catch (raw) {
-      handleError(raw, "无法新建 Paper");
-    } finally {
-      busy.value = false;
-    }
-  });
+function updateDirty(value) {
+  const wasDirty = dirty.value;
+  dirty.value = value;
+  if (hasObservedDirty && value && !wasDirty) notice.value = "";
+  hasObservedDirty = true;
 }
 
 async function revealRepair() {
@@ -283,7 +274,7 @@ async function copyRetainedDraft() {
 }
 
 async function savePaper(submitted) {
-  if (busy.value || !paper.value) return;
+  if (busy.value || saving.value || !paper.value) return;
   const baseline = paper.value.source_digest === null ? null : editable(paper.value);
   const save = {
     edit_token: paper.value.edit_token,
@@ -312,7 +303,7 @@ async function savePaper(submitted) {
       },
     },
   };
-  busy.value = true;
+  saving.value = true;
   error.value = null;
   notice.value = "";
   try {
@@ -328,12 +319,12 @@ async function savePaper(submitted) {
     if (normalized.code === "stale_snapshot") workbenchState.value = "stale";
     if (normalized.code === "commit_unknown") workbenchState.value = "commit_unknown";
   } finally {
-    busy.value = false;
+    saving.value = false;
   }
 }
 
 function showDeleteDialog() {
-  if (!savedPath.value) return;
+  if (busy.value || saving.value || !savedPath.value) return;
   if (typeof deleteDialog.value?.showModal === "function") {
     deleteDialog.value.showModal();
   } else if (deleteDialog.value) {
@@ -395,18 +386,6 @@ onUnmounted(() => {
 
 <template>
   <main class="paper-view">
-    <header class="app-header">
-      <div>
-        <p>KEIKEU · PAPER V4</p>
-        <h1>Paper 工作台</h1>
-      </div>
-      <nav aria-label="主要导航">
-        <button type="button" :disabled="busy" @click="newPaper">新 Paper</button>
-        <button type="button" aria-label="打开 Library" :disabled="busy" @click="openLibrary">Library</button>
-        <button type="button" :disabled="busy" @click="openVault">Vault</button>
-      </nav>
-    </header>
-
     <section v-if="screen === 'daily'" class="paper-gate" aria-live="polite">
       <p>DAILY CARD</p>
       <h2>先留下一句，再决定它是什么。</h2>
@@ -437,21 +416,17 @@ onUnmounted(() => {
     </section>
 
     <template v-else-if="screen === 'editor' && paper">
-      <div class="paper-status-row">
-        <span>{{ runtime.core_version }}</span>
-        <span>{{ paper.path ? paper.path : "尚未写盘" }}</span>
-        <button v-if="paper.path" type="button" class="quiet-danger" @click="showDeleteDialog">
-          整份移入废纸篓
-        </button>
-      </div>
       <p v-if="notice" class="paper-notice" role="status">{{ notice }}</p>
       <p v-if="error" class="paper-error" role="alert">{{ error.message }}</p>
       <PaperV4Workbench
         :paper="paper"
         :baseline-editable="baselineEditable"
         :state="workbenchState"
-        @dirty-change="dirty = $event"
+        :saving="saving"
+        :can-delete-whole-paper="Boolean(paper.path)"
+        @dirty-change="updateDirty"
         @save="savePaper"
+        @whole-delete="showDeleteDialog"
       />
       <details v-if="repair" class="repair-detail">
         <summary>人工修复信息</summary>
@@ -481,15 +456,10 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.paper-view { min-height: 100vh; padding: 26px clamp(18px, 4vw, 54px) 48px; }
-.app-header, .paper-status-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
-.app-header { max-width: 1060px; margin: 0 auto 28px; padding-bottom: 16px; border-bottom: 2px solid var(--ink); }
-.app-header p, .paper-gate > p { margin: 0; color: var(--signal); font: 700 .68rem var(--font-mono); letter-spacing: .12em; }
-.app-header h1 { margin: 4px 0 0; font: 500 clamp(1.7rem, 4vw, 2.8rem) var(--font-display); }
-.app-header nav { display: flex; gap: 8px; }
+.paper-view { min-height: calc(100vh - 56px); padding: 26px clamp(18px, 4vw, 54px) 48px; }
+.paper-gate > p { margin: 0; color: var(--signal); font: 700 .68rem var(--font-mono); letter-spacing: .12em; }
 button { min-height: 40px; padding: 8px 13px; border: 1px solid var(--rule); color: var(--ink); background: var(--paper); font: inherit; cursor: pointer; }
 button:disabled { opacity: .55; cursor: wait; }
-.paper-status-row { width: min(920px, 100%); margin: 0 auto 10px; color: var(--meta); font: .68rem var(--font-mono); }
 .quiet-danger { border-color: var(--danger); color: var(--danger); }
 .paper-notice, .paper-error, .repair-detail { width: min(920px, 100%); margin: 0 auto 12px; padding: 10px 14px; border-left: 4px solid var(--signal); background: var(--paper); }
 .paper-error, .repair-detail { border-left-color: var(--danger); background: var(--danger-soft); }
@@ -500,5 +470,4 @@ button:disabled { opacity: .55; cursor: wait; }
 .delete-paper-dialog { width: min(430px, calc(100% - 32px)); padding: 24px; border: 1px solid var(--rule); color: var(--ink); background: var(--paper); }
 .delete-paper-dialog::backdrop { background: rgb(27 23 20 / .42); }
 .delete-paper-dialog div { display: flex; justify-content: flex-end; gap: 8px; }
-@media (max-width: 760px) { .app-header, .paper-status-row { align-items: flex-start; flex-direction: column; } .app-header nav { flex-wrap: wrap; } }
 </style>

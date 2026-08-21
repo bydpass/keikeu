@@ -79,8 +79,8 @@ afterEach(() => {
   while (mounted.length) mounted.pop().unmount();
 });
 
-describe("Road v0.6 Paper runtime", () => {
-  it("opens a blank v4 Paper directly into the accepted card workbench", async () => {
+describe("Road v0.7 Paper runtime", () => {
+  it("opens a blank v4 Paper without a duplicate page hero or navigation", async () => {
     const request = vi.fn(async (method) => {
       if (method === "startup.load") return ready();
       if (method === "paper.create_draft") return paper();
@@ -89,14 +89,65 @@ describe("Road v0.6 Paper runtime", () => {
 
     const wrapper = await mountPaper(request);
 
-    expect(wrapper.text()).toContain("Paper 工作台");
-    expect(wrapper.text()).toContain("paper-v4/index-v4");
+    expect(wrapper.find(".paper-v4-workbench").exists()).toBe(true);
+    expect(wrapper.find(".app-header").exists()).toBe(false);
+    expect(wrapper.find('nav[aria-label="主要导航"]').exists()).toBe(false);
+    expect(wrapper.find(".paper-status-row").exists()).toBe(false);
+    expect(wrapper.text()).not.toContain("paper-v4/index-v4");
     expect(wrapper.findAll(".card-actions > button").map((item) => item.text())).toEqual([
       "保存",
       "删除本页",
       "加一页",
     ]);
     expect(wrapper.emitted("paper-path-change")[0]).toEqual([null]);
+  });
+
+  it("shows one saving state, blocks duplicate Save, and clears success on editing", async () => {
+    let resolveSave;
+    const pendingSave = new Promise((resolve) => {
+      resolveSave = resolve;
+    });
+    const draft = paper({
+      path: "cache/K-20260802-001.md",
+      source_digest: "digest-old",
+    });
+    const stored = paper({
+      path: draft.target_path,
+      source_digest: "digest-saving",
+      pages: [{ name: null, content: "Changed once", type: null }],
+    });
+    const request = vi.fn((method) => {
+      if (method === "startup.load") return ready();
+      if (method === "paper.open") return { state: "opened", paper: draft };
+      if (method === "paper.save") return pendingSave;
+      throw new Error(method);
+    });
+    const wrapper = await mountPaper(request, { initialPath: draft.path });
+    const textarea = wrapper.get(".page-content-field textarea");
+    await textarea.setValue("Changed once");
+    textarea.element.focus();
+
+    const saveButton = buttonByText(wrapper, "保存");
+    await saveButton.trigger("click");
+    await saveButton.trigger("click");
+
+    expect(request.mock.calls.filter(([method]) => method === "paper.save")).toHaveLength(1);
+    expect(wrapper.text()).toContain("正在保存");
+    expect(buttonByText(wrapper, "保存").attributes("disabled")).toBeDefined();
+    expect(textarea.attributes("readonly")).toBeDefined();
+    expect(document.activeElement).toBe(textarea.element);
+    expect(buttonByText(wrapper, "删除本页").attributes("disabled")).toBeDefined();
+    expect(buttonByText(wrapper, "加一页").attributes("disabled")).toBeDefined();
+    expect(buttonByText(wrapper, "整份移入废纸篓").attributes("disabled")).toBeDefined();
+
+    resolveSave({ paper: stored, warnings: [] });
+    await flushPromises();
+    expect(wrapper.text()).toContain("Paper 已保存为卡页 Markdown");
+    expect(wrapper.get(".page-content-field textarea").attributes("readonly")).toBeUndefined();
+    expect(document.activeElement).toBe(wrapper.get(".page-content-field textarea").element);
+
+    await wrapper.get(".page-content-field textarea").setValue("Changed again");
+    expect(wrapper.text()).not.toContain("Paper 已保存为卡页 Markdown");
   });
 
   it("exposes the existing departure guard and reports an opened path", async () => {

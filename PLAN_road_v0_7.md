@@ -1,6 +1,6 @@
-# Road v0.7 实施计划（已批准；CP2 已通过）
+# Road v0.7 实施计划（已批准；CP3 已通过）
 
-> 状态：开发者于 2026-08-20 批准本计划与目标设计，并对 CP0–CP6 的开发者退出判断与本地 checkpoint commit 给出 advance YOLO。CP0 `fb52b55`、CP1 `8019969` 与 CP2 production Shell 已通过并形成线性 checkpoint；CP3 是下一 Gate。Road v0.7 产品接受尚未发生；真实 Vault、push、tag、closeout 与发布未获授权。
+> 状态：开发者于 2026-08-20 批准本计划与目标设计，并对 CP0–CP6 的开发者退出判断与本地 checkpoint commit 给出 advance YOLO。CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc` 与 CP3 Paper 工作面已通过并形成线性 checkpoint；CP4 是下一 Gate。Road v0.7 产品接受尚未发生；真实 Vault、push、tag、closeout 与发布未获授权。
 >
 > 目标设计：[`docs/design/road-v0-7-app-shell-design.md`](docs/design/road-v0-7-app-shell-design.md)
 >
@@ -152,6 +152,8 @@ Python/Rust 无改动不代表可以复制历史结果；CP0 与 CP5 各运行�
 
 **退出 Gate：** 创建、编辑、分页、删除、保存、离开保护和错误恢复无行为回归。
 
+**结果（已通过）：** 重复 hero、页面级导航与常驻 runtime/path 状态已退出；Paper 名、Tags、页数、dirty/saving/degraded 状态形成 Paper context，code/path/time 与整份删除进入原生详情，单页不显示冗余页码。保存 pending 时作者字段保持焦点但进入只读，分页、删除、类型与全局入口均锁定，避免保存返回后覆盖新输入。直接测试、两尺寸生产浏览器、中文 composition、`Cmd+S`、校验、Index degraded 与 dirty confirm 路径均通过。开发者 advance YOLO 覆盖退出判断；证据见 [`CP3 report`](docs/acceptance/road-v0-7/cp3-paper/report.md)。
+
 ## 9. CP4 — Library、Vault 与恢复
 
 **范围：**
@@ -228,4 +230,4 @@ closeout、snapshot、tag、push、签名、打包与发布分别决定，不由
 - [x] CP5 使用 synthetic Vault / 完整副本，CP6 的真实 Vault 另行授权。
 - [x] CP0–CP6 开发者退出判断与本地 checkpoint commit 采用 advance YOLO；证据仍须实际运行且不得复制或虚构。
 
-本次批准与 advance YOLO 已用于通过 CP0–CP2；不表示 CP3–CP6 已完成、任何历史测试仍然有效，也不授权真实 Vault 或 Git 远端动作。
+本次批准与 advance YOLO 已用于通过 CP0–CP3；不表示 CP4–CP6 已完成、任何历史测试仍然有效，也不授权真实 Vault 或 Git 远端动作。
