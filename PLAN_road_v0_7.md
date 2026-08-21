@@ -1,6 +1,6 @@
 # Road v0.7 实施计划（已批准；CP5 已通过）
 
-> 状态：开发者于 2026-08-20 批准本计划与目标设计，并对 CP0–CP6 的开发者退出判断与本地 checkpoint commit 给出 advance YOLO。CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc`、CP3 `55b5313`、CP4 `6f69310` 与 CP5 集成 Gate 已通过并形成线性 checkpoint；CP6 是下一 Gate。Road v0.7 产品接受尚未发生；真实 Vault、push、tag、closeout 与发布未获授权。
+> 状态：开发者于 2026-08-20 批准本计划与目标设计，并对 CP0–CP6 的开发者退出判断与本地 checkpoint commit 给出 advance YOLO。CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc`、CP3 `55b5313`、CP4 `6f69310` 与 CP5 `3259c42` 已通过并形成线性 checkpoint；CP6 是下一 Gate。Road v0.7 产品接受尚未发生；真实 Vault、push、tag、closeout 与发布未获授权。
 >
 > 目标设计：[`docs/design/road-v0-7-app-shell-design.md`](docs/design/road-v0-7-app-shell-design.md)
 >

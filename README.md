@@ -8,7 +8,7 @@
 
 Road v0.6 已完成并归档：production 使用 Paper v4、Index v4 与 protocol v2，Paper 本身就是可编辑的有序卡页；旧正常运行链已删除，未知结果与人工修复 Gate、一号真实作者 Gate 均已通过，且无未解决 P0/P1。
 
-Road v0.7 的 App Shell 与信息层级目标已批准；CP0 `fb52b55`、development-only CP1 `8019969`、production CP2 `55d45fc`、CP3 `55b5313`、CP4 `6f69310` 与 CP5 跨栈集成 Gate 均已通过并形成线性 checkpoint。下一步是 CP6 一号作者 Gate；Road v0.7 尚未完成产品验收，已接受的 production 基线仍是 Road v0.6，真实 Vault 仍需另行授权。
+Road v0.7 的 App Shell 与信息层级目标已批准；CP0 `fb52b55`、development-only CP1 `8019969`、production CP2 `55d45fc`、CP3 `55b5313`、CP4 `6f69310` 与 CP5 `3259c42` 均已通过并形成线性 checkpoint。下一步是 CP6 一号作者 Gate；Road v0.7 尚未完成产品验收，已接受的 production 基线仍是 Road v0.6，真实 Vault 仍需另行授权。
 
 Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响应式界面、本机沙盒 Vault 与真机修复验证；它不是 macOS Road 的合入闸门。Road v0.3 的工程、macOS candidate smoke 与 CP6 真实作者验收均已完成；检索更快且清楚、外部编辑器 handoff 清楚，未报告未解决 P0/P1。其设计与验收文档已[只读归档](docs/archive/road-v0-3/README.md)，未创建 v0.3 tag。**Road v0.4 已彻底完成**：Gate A、Gate B、产品验收与 macOS 15.7+ 兼容性均已通过；当前唯一桌面运行时为 Vue/Tauri 与本地 Python sidecar，Flet 已在 CP14 退役。**Road v0.5 也已完成并归档**：Paper Desk、保存基线、离开保护、Flashcard/Library 连贯性、全应用 Quiet Desk 视觉与固定滚动语义均已验收。实时坐标见 [PROJECT](docs/PROJECT.md)。
 

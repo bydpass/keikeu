@@ -1,6 +1,6 @@
 # Road v0.7 CP5：跨栈集成与安全 Gate 证据
 
-> 状态：CP5 全量自动检查、当前源码 Tauri 合成 Vault 主链与故障恢复证据已完成；开发者以 advance YOLO 通过退出 Gate 并授权本地 checkpoint commit。本报告将随该 commit 成为 `test/cp5-v07-integration` 的 HEAD。
+> 状态：CP5 全量自动检查、当前源码 Tauri 合成 Vault 主链与故障恢复证据已完成；开发者以 advance YOLO 通过退出 Gate。本报告已随 checkpoint commit `3259c42` 提交，该 commit 是 `test/cp5-v07-integration` 的 HEAD。
 
 ## 基线与边界
 
