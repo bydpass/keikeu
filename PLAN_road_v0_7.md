@@ -1,6 +1,6 @@
-# Road v0.7 实施计划（已批准；CP5 已通过）
+# Road v0.7 实施计划（CP6 已通过；续段待规划）
 
-> 状态：开发者于 2026-08-20 批准本计划与目标设计，并对 CP0–CP6 的开发者退出判断与本地 checkpoint commit 给出 advance YOLO。CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc`、CP3 `55b5313`、CP4 `6f69310` 与 CP5 `3259c42` 已通过并形成线性 checkpoint；CP6 是下一 Gate。Road v0.7 产品接受尚未发生；真实 Vault、push、tag、closeout 与发布未获授权。
+> 状态：开发者于 2026-08-20 批准本计划与目标设计，并对 CP0–CP6 的开发者退出判断与本地 checkpoint commit 给出 advance YOLO。CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc`、CP3 `55b5313`、CP4 `6f69310`、CP5 `3259c42` 与 CP6 一号作者 Gate 均已通过。开发者于 2026-08-21 决定 Road v0.7 不在 CP6 后收口，延顺步骤留到新的规划任务；当前不预设后续 CP 编号、范围或 Gate。CP6 真实 Vault 使用已按窄授权完成；未来真实 Vault 操作、push、tag、closeout 与发布未由此授权。
 >
 > 目标设计：[`docs/design/road-v0-7-app-shell-design.md`](docs/design/road-v0-7-app-shell-design.md)
 >
@@ -21,7 +21,7 @@ Road v0.7 将已接受的 Paper、Library 与 Vault 收口为一个稳定桌面�
 ## 1. 权威与执行纪律
 
 - 当前已接受产品由 [`docs/SPEC.md`](docs/SPEC.md) 定义。
-- Road v0.7 目标由已批准的[设计](docs/design/road-v0-7-app-shell-design.md)定义；CP0 已把 target 摘要写入 SPEC，同时不得把 target 冒充 current。
+- Road v0.7 App Shell 增量由已批准并在 CP6 接受的[设计](docs/design/road-v0-7-app-shell-design.md)定义；新的 Road 续段尚未规划，不得自行写入 current 或 target。
 - [`docs/RULES.md`](docs/RULES.md) 继续约束作者资产、Git、证据与安全边界。
 - [`docs/PROJECT.md`](docs/PROJECT.md)、源码和测试标明每个 Checkpoint 的当前事实。
 - 不得把未完成 target 写成已实现；每个 CP 只从前一已通过 checkpoint commit 建分支。
@@ -186,9 +186,10 @@ Python/Rust 无改动不代表可以复制历史结果；CP0 与 CP5 各运行�
 
 **结果（已通过）：** Python `265`、Vitest `77`、Rust `12`、compileall、sidecar build、Vite build、Rust format、文档与 bundle 隔离均通过。隔离 fake Home 的当前源码 Tauri smoke 实际完成启动、两页保存、Library 找回、Vault 往返、原生 dirty 两分支、`920×680`、Index degraded/rebuild、repair/recheck、fault-injected `commit_unknown` 重启与 no-replay；正常 sidecar 按 SHA 恢复并复启，host/child/Vite 均无残留。无未解决 P0/P1、无 scope drift；证据见 [`CP5 report`](docs/acceptance/road-v0-7/cp5-integration/report.md)。
 
-## 11. CP6 — 一号作者 Gate
+## 11. CP6 — 一号作者 Gate（已通过）
 
-**进入条件：** CP5 checkpoint 工程 Gate 已通过并随本次 checkpoint 提交；真实 Vault 使用仍需另行明确授权。
+**进入条件（已满足）：** CP5 checkpoint 工程 Gate 已通过；开发者在 CP6 前另行授予了
+本次真实 Vault 有界授权，该授权不延续至后续操作。
 
 **场景：**
 
@@ -204,10 +205,21 @@ Tags、路径或内容截图。
 
 **退出 Gate：** 核心任务完成；作者能解释 Paper/Library/Vault 层级；无未解决 P0/P1。
 
-## 12. Road 完成与 closeout
+**结果（已通过）：** 开发者于 2026-08-21 明确声明“CP6 通过”，整体确认六个场景、
+两种目标尺寸与层级理解满足退出 Gate，且无未解决 P0/P1。功能介入次数、分视口叙述与
+P2/P3 未单独报告，不虚构为 0。Gate 后去标识化检查确认所选 Home 内 Vault 仍为 v4、
+migration stage `ready`、Index `current`，候选应用与 Vite 正常退出且无残留；未记录正文、
+名称、Tags、路径、截图或原始日志。证据见 [`CP6 report`](docs/acceptance/road-v0-7/cp6-author/report.md)。
 
-Road v0.7 只有在 CP0–CP6 都有实际证据、通过开发者 Gate、形成线性 checkpoint commit、
-production runtime 不含 prototype、且一号作者接受无未解决 P0/P1 后，才可申请 closeout。
+## 12. Road 续段规划与 closeout
+
+原 CP0–CP6 实施段已有实际证据并通过开发者 Gate；production runtime 的 prototype 隔离
+已由 CP5 证明，一号作者在 CP6 接受且无未解决 P0/P1。开发者随后明确决定 Road v0.7
+仍需延顺若干步骤，因此 Road 保持开放，不在本 checkpoint 宣称完成或申请 closeout。
+
+续段的目标、范围、顺序、分支与退出 Gate 必须在新的规划任务中批准后再实施；在那之前
+不得自行创建 CP7、扩大产品范围或把未定事项写成既成计划。这是开发者主动延长 Road，
+不是 CP6 内的 scope drift。
 
 closeout、snapshot、tag、push、签名、打包与发布分别决定，不由 Road 完成自动授权。
 
@@ -234,4 +246,4 @@ closeout、snapshot、tag、push、签名、打包与发布分别决定，不由
 - [x] CP5 使用 synthetic Vault / 完整副本，CP6 的真实 Vault 另行授权。
 - [x] CP0–CP6 开发者退出判断与本地 checkpoint commit 采用 advance YOLO；证据仍须实际运行且不得复制或虚构。
 
-本次批准与 advance YOLO 已用于通过 CP0–CP5；不表示 CP6 已完成、任何历史测试仍然有效，也不授权真实 Vault 或 Git 远端动作。
+本次批准与 advance YOLO 已用于通过 CP0–CP6；历史测试仍不得复制为当前证据。CP6 的窄范围真实 Vault 授权已经使用完毕，不延伸到未来真实 Vault 操作或 Git 远端动作。

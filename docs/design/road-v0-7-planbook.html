@@ -1486,9 +1486,10 @@
     <div class="book-main">
       <header class="book-header">
         <div class="status-line">
-          <span class="status-chip">APPROVED TARGET · CP5 PASSED</span>
+          <span class="status-chip">APP SHELL ACCEPTED · CP6 PASSED</span>
+          <span class="status-chip">ROAD EXTENSION PENDING</span>
           <span class="status-chip">NON-AUTHORITATIVE</span>
-          <span class="status-chip">2026-08-20</span>
+          <span class="status-chip">2026-08-21</span>
         </div>
         <p class="eyebrow">Road v0.7 · App Shell 与信息层级收口</p>
         <h1>把功能页收成一个作者工作台</h1>
@@ -1496,7 +1497,7 @@
         <nav class="header-links" aria-label="权威文档">
           <a href="../../PLAN_road_v0_7.md">实施计划</a>
           <a href="road-v0-7-app-shell-design.md">目标设计</a>
-          <a href="../SPEC.md">产品合同（current / target）</a>
+          <a href="../SPEC.md">当前产品合同</a>
           <a href="../RULES.md">工程与证据规则</a>
         </nav>
       </header>
@@ -1768,9 +1769,9 @@
           <div class="section-heading">
             <div>
               <p class="section-index">04 · Checkpoints</p>
-              <h2>CP0–CP6：先批准结构，再碰 production</h2>
+              <h2>CP0–CP6：原实施段已全部通过</h2>
             </div>
-            <p data-pretext>每个 Checkpoint 只从前一个已通过且已提交的 checkpoint commit 建分支。线性历史是 Road 完成条件；开发者已对 CP0–CP6 的退出判断与本地 checkpoint commit 给出 advance YOLO，实际证据仍不得省略。</p>
+            <p data-pretext>每个 Checkpoint 只从前一个已通过且已提交的 checkpoint commit 建分支。原 CP0–CP6 保持线性并已有实际证据；开发者决定 Road 继续延顺，后续编号、范围与 Gate 留到新的规划任务，本页不预设。</p>
           </div>
 
           <ol class="timeline">
@@ -1807,7 +1808,7 @@
             <li class="checkpoint">
               <span class="cp-badge">CP6</span>
               <div><h3>一号作者 Gate</h3><p><code>test/cp6-v07-author-gate</code></p></div>
-              <div class="exit-gate"><strong>当前状态 · 下一 Gate</strong>真实 Vault 仍需另行授权；核心任务和层级理解通过后，记录去标识化结果且无 P0/P1。</div>
+              <div class="exit-gate"><strong>当前状态 · 已通过</strong>开发者明确通过真实作者 Gate；去标识化记录确认退出时无未解决 P0/P1。未单独报告的介入次数与分视口叙述不被补写。</div>
             </li>
           </ol>
         </section>
@@ -1901,7 +1902,7 @@
               <tr><td>CP1 灰阶原型通过</td><td>development-only Vue 原型、点击路径、bundle 隔离</td><td>已通过 · 已提交</td></tr>
               <tr><td>Production 已实现</td><td>源码检查、聚焦 Vitest、完整 Vitest 与 Vite build</td><td>已通过 · CP2–CP4</td></tr>
               <tr><td>平台流程可用</td><td>当前源码的 synthetic Vault Tauri smoke</td><td>已通过 · CP5</td></tr>
-              <tr><td>产品接受</td><td>另行授权的一号作者真实日常 Gate</td><td>待执行 · CP6</td></tr>
+              <tr><td>产品接受</td><td>另行授权的一号作者真实日常 Gate</td><td>已通过 · CP6</td></tr>
             </tbody>
           </table>
 
@@ -1911,7 +1912,7 @@
             <li>不要把 VibeHub 学习层、这份 planbook 或 <code>boh_design.html</code> 打进 production bundle。</li>
             <li>不要顺手加入 Outline、Flashcard、配方票、AI、自动保存、Router 或持久 last-location。</li>
             <li>不要把 HTML 截图、synthetic Vault smoke 或自动测试替代真实作者接受。</li>
-            <li>CP0 已统一校准 <code>docs/SPEC.md</code>、<code>docs/PROJECT.md</code> 与三份 current/target map；本页仍不替代 current/target 权威或退出判断。</li>
+            <li>CP6 后已统一校准 <code>docs/SPEC.md</code>、<code>docs/PROJECT.md</code> 与三份 active map；本页仍不替代当前权威、续段规划或退出判断。</li>
           </ul>
         </section>
 
@@ -1921,7 +1922,7 @@
               <p class="section-index">08 · Approval gate</p>
               <h2>两道书面 Gate 已通过</h2>
             </div>
-            <p data-pretext>开发者于 2026-08-20 批准目标设计与实施计划，并对 CP0–CP6 的退出判断与本地 checkpoint commit 给出 advance YOLO。CP0–CP5 已完成并通过；CP6、真实 Vault 与 Git 远端动作仍须分别证明或授权。</p>
+            <p data-pretext>开发者于 2026-08-20 批准目标设计与实施计划，并对 CP0–CP6 的退出判断与本地 checkpoint commit 给出 advance YOLO；CP0–CP6 现均已通过。CP6 的窄范围真实 Vault 授权不延伸到未来操作；Road 续段、closeout 与 Git 远端动作仍须分别规划或授权。</p>
           </div>
 
           <div class="gate-grid">
@@ -1956,7 +1957,7 @@
       </main>
 
       <footer class="book-footer">
-        <p>Road v0.7 已批准伴随视图 · CP5 已通过 · CP6 待执行 · 本地单文件 · 无外部运行时资源 · 本页不代表产品接受或发布</p>
+        <p>Road v0.7 伴随视图 · CP6 产品 Gate 已通过 · Road 续段待规划 · 本地单文件 · 无外部运行时资源 · 本页不代表 closeout 或发布</p>
       </footer>
     </div>
   </div>

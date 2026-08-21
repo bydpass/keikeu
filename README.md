@@ -8,7 +8,7 @@
 
 Road v0.6 已完成并归档：production 使用 Paper v4、Index v4 与 protocol v2，Paper 本身就是可编辑的有序卡页；旧正常运行链已删除，未知结果与人工修复 Gate、一号真实作者 Gate 均已通过，且无未解决 P0/P1。
 
-Road v0.7 的 App Shell 与信息层级目标已批准；CP0 `fb52b55`、development-only CP1 `8019969`、production CP2 `55d45fc`、CP3 `55b5313`、CP4 `6f69310` 与 CP5 `3259c42` 均已通过并形成线性 checkpoint。下一步是 CP6 一号作者 Gate；Road v0.7 尚未完成产品验收，已接受的 production 基线仍是 Road v0.6，真实 Vault 仍需另行授权。
+Road v0.7 的 App Shell 与信息层级已通过 CP0–CP5 工程 Gate 和 CP6 一号作者 Gate；该 composition 现已产品接受，且退出时无未解决 P0/P1。开发者决定 Road v0.7 仍需延顺若干步骤，因此 Road 保持开放，续段范围与 Gate 留到新的规划任务；当前不预设 CP7。CP6 的窄范围真实 Vault 授权已经使用完毕，push、tag、closeout 与发布均未执行。
 
 Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响应式界面、本机沙盒 Vault 与真机修复验证；它不是 macOS Road 的合入闸门。Road v0.3 的工程、macOS candidate smoke 与 CP6 真实作者验收均已完成；检索更快且清楚、外部编辑器 handoff 清楚，未报告未解决 P0/P1。其设计与验收文档已[只读归档](docs/archive/road-v0-3/README.md)，未创建 v0.3 tag。**Road v0.4 已彻底完成**：Gate A、Gate B、产品验收与 macOS 15.7+ 兼容性均已通过；当前唯一桌面运行时为 Vue/Tauri 与本地 Python sidecar，Flet 已在 CP14 退役。**Road v0.5 也已完成并归档**：Paper Desk、保存基线、离开保护、Flashcard/Library 连贯性、全应用 Quiet Desk 视觉与固定滚动语义均已验收。实时坐标见 [PROJECT](docs/PROJECT.md)。
 
@@ -23,7 +23,7 @@ Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响�
 - **Vault**：只选择当前用户 Home 内路径；切换前验证，unsafe 旧 Vault 先复制并核对；尚未启用 Apple App Sandbox。
 - **外部编辑器**：正式正文始终在 keikeu 之外完成。
 
-current v0.6、target v0.7、证据层级与下一 Gate 见 [PROJECT](docs/PROJECT.md)。
+当前已接受的 Road v0.7 CP6 composition、证据层级与续段规划边界见 [PROJECT](docs/PROJECT.md)。
 
 ## Road v0.3 归档
 
@@ -72,9 +72,9 @@ npm --prefix frontend run tauri:dev
 README.md                 外部入口与运行命令
 AGENTS.md                 Agent 操作纪律与读图顺序
 docs/PROJECT.md           当前坐标、模块入口、下一闸门
-docs/SPEC.md              current v0.6 / target v0.7 产品与作者控制边界
+docs/SPEC.md              current Road v0.7 CP6 产品与作者控制边界
 docs/RULES.md             工程、交互、数据与证据规则
-docs/design/              current v0.6 / target v0.7 视觉、交互 map 与详细设计
+docs/design/              current Road v0.7 CP6 视觉、交互 map 与详细设计
 docs/architecture/        current/target 架构 map 与 ADR
 docs/acceptance/          支持性验收记录；不独立定义状态
 docs/manual/              面向人的补充说明；不定义规范
@@ -115,7 +115,7 @@ Road v0.3   macOS Paper Library；CP6 product accepted，设计与验收文档�
 Road v0.4   Vue/Tauri 前端替换完成；CP14 已验收
 Road v0.5   Quiet Desk UI 与交互收口完成；CP7 已验收并归档
 Road v0.6   Paper v4 卡页重构；CP7 已验收并归档
-Road v0.7   App Shell 与信息层级收口；CP5 集成 Gate 已通过，CP6 一号作者 Gate 待执行
+Road v0.7   App Shell 与信息层级已通过 CP6 产品 Gate；Road 开放，续段待新任务规划
 Pre-Advance 可选 Markdown Outline；Road v0.7 之外且未排期，不阻塞核心流程
 之后        iOS/iPadOS（2026-08 方向）、Android/HarmonyOS（2026 Q4）、Windows（2027）
 ```

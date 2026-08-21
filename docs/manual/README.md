@@ -12,7 +12,7 @@ manual/
 
 ## 系统理解
 
-[keikeu-current-logic.html](keikeu-current-logic.html) 与两个分类文件夹并列，简明说明当前已接受的 Road v0.6 Paper v4 业务链路、数据权威、保存防护与 Vue/Tauri/JSONL v2/Python 分层，并标出已集成至 CP5、尚待 CP6 产品接受的 Road v0.7 Shell candidate。最终核对 [PROJECT](../PROJECT.md)、[SPEC](../SPEC.md)、[RULES](../RULES.md) 与 [architecture](../architecture/architecture.html)。
+[keikeu-current-logic.html](keikeu-current-logic.html) 与两个分类文件夹并列，简明说明当前已接受的 Road v0.7 App Shell、Road v0.6 延续的 Paper v4 业务链路、数据权威、保存防护与 Vue/Tauri/JSONL v2/Python 分层，并标出 CP6 已通过、Road 续段待新任务规划。最终核对 [PROJECT](../PROJECT.md)、[SPEC](../SPEC.md)、[RULES](../RULES.md) 与 [architecture](../architecture/architecture.html)。
 
 [paper-v4-repair.html](paper-v4-repair.html) 是面向普通纯文本编辑器用户的离线修复手册，包含完整 schema v4 示例、类型/空值、可逆转义、错误含义、Finder、未知保存、重新检查和 Index 重建；app 不会自动改写损坏文件。
 
@@ -33,7 +33,7 @@ manual/
 
 | 阅读路径 | 读到什么 | 最终核对 |
 | --- | --- | --- |
-| [产品设计](prospect/appdesign.md) | 当前已接受的 Road v0.6 Paper v4 产品模型；不定义 Road v0.7 Shell | [Road v0.6 已接受设计](../design/road-v0-6-paper-v4-design.md)、[Road v0.7 已批准目标](../design/road-v0-7-app-shell-design.md) |
+| [产品设计](prospect/appdesign.md) | Road v0.6 建立、Road v0.7 继续使用的 Paper v4 产品模型；不定义 Road 续段 | [Road v0.6 Paper v4 设计](../design/road-v0-6-paper-v4-design.md)、[Road v0.7 CP6 已接受 App Shell](../design/road-v0-7-app-shell-design.md) |
 | [技术伦理](prospect/ethics.md) | 作者控制、数据边界与功能评审方法 | [SPEC](../SPEC.md) 与 [RULES](../RULES.md) |
 
 若 manual 与 truth 冲突，manual 错；修 manual，不复制一份新规则。

@@ -8,7 +8,7 @@
 
 Road v0.6 is complete and archived: production uses Paper v4, Index v4, and protocol v2; the Paper itself is the ordered editable card-page artifact. The obsolete normal-runtime chain is gone, the unknown-result and manual-repair gate passed, and the first-author gate passed with no unresolved P0/P1.
 
-The Road v0.7 App Shell and information-hierarchy target is approved. CP0 `fb52b55`, development-only CP1 `8019969`, production CP2 `55d45fc`, CP3 `55b5313`, CP4 `6f69310`, and CP5 `3259c42` have passed. The CP6 first-author gate is next. Road v0.7 is implemented and integrated through CP5 but is not product-accepted; Road v0.6 remains the accepted production baseline, and real-Vault use still requires separate authorization.
+The Road v0.7 App Shell and information hierarchy passed the CP0–CP5 engineering gates and the CP6 first-author gate. This composition is product-accepted with no unresolved P0/P1 at exit. The developer has kept Road v0.7 open for several additional steps whose scope and gates will be planned in a new task; no CP7 is assumed here. The narrow CP6 real-Vault authorization has been consumed, and no push, tag, closeout, or release was performed.
 
 Phase 7.5 is an independent lightweight iOS build for rapid testing. Its responsive UI, app-sandbox Vault, and on-device fixes are complete on a separate branch; it is not a merge gate in the macOS Road. Road v0.3 engineering, macOS candidate smoke, and CP6 real-author acceptance are complete: retrieval was faster and clear, the external-editor handoff was clear, and no unresolved P0/P1 was reported. Its design and acceptance records are now [read-only history](docs/archive/road-v0-3/README.md); no v0.3 tag was created. Road v0.4 Gate A, Gate B, product acceptance, and macOS 15.7+ compatibility have passed. The only desktop runtime is now Vue/Tauri with a local Python sidecar; Flet was retired in CP14. Road v0.5 is also complete and archived: Paper Desk, save baselines, departure protection, Flashcard/Library continuity, the whole-app Quiet Desk visual system, and fixed scrolling behavior are accepted. See [PROJECT](docs/PROJECT.md) for live coordinates.
 
@@ -23,7 +23,7 @@ existing inspiration → edit and save a card-page Paper → external prose edit
 - **Vault:** selects paths only under the current user's Home, validates before switching, and byte-verifies copied unsafe legacy Vaults; Apple App Sandbox is not enabled yet.
 - **External editor:** prose always remains outside keikeu.
 
-See [PROJECT](docs/PROJECT.md) for current v0.6, target v0.7, evidence layers, and the next gate.
+See [PROJECT](docs/PROJECT.md) for the accepted Road v0.7 CP6 composition, evidence layers, and the boundary for extension planning.
 
 ## Road v0.3 archive
 
@@ -72,9 +72,9 @@ npm --prefix frontend run tauri:dev
 README.md                 public entry and real commands
 AGENTS.md                 agent operating discipline and read order
 docs/PROJECT.md           current coordinates, module entry points, next gate
-docs/SPEC.md              current v0.6 / target v0.7 product and author-control boundary
+docs/SPEC.md              current Road v0.7 CP6 product and author-control boundary
 docs/RULES.md             engineering, interaction, data, and evidence rules
-docs/design/              current v0.6 / target v0.7 visual and interaction maps and detailed design
+docs/design/              current Road v0.7 CP6 visual and interaction maps and detailed design
 docs/architecture/        current/target architecture map and ADRs
 docs/acceptance/          supporting evidence; not an independent status source
 docs/manual/              supplementary human guides; never normative
@@ -115,7 +115,7 @@ Road v0.3   macOS Paper Library; CP6 product accepted, design and acceptance rec
 Road v0.4   Vue/Tauri frontend replacement complete; CP14 accepted
 Road v0.5   Quiet Desk UI and interaction closeout complete; CP7 accepted and archived
 Road v0.6   Paper v4 card-page reconstruction; CP7 accepted and archived
-Road v0.7   App Shell and information-hierarchy consolidation; CP5 integration passed, CP6 first-author gate next
+Road v0.7   App Shell and information hierarchy passed CP6 product acceptance; Road open for separately planned extensions
 Pre-Advance optional Markdown Outline; outside Road v0.7 and unscheduled, never blocks the core flow
 later       iOS/iPadOS (2026-08 direction), Android/HarmonyOS (2026 Q4), Windows (2027)
 ```

@@ -1,10 +1,10 @@
-# Road v0.7：App Shell 与信息层级设计（已批准目标；CP5 集成已通过）
+# Road v0.7：App Shell 与信息层级设计（CP6 已接受；Road 续段待规划）
 
-> 状态：开发者于 2026-08-20 批准本目标设计与实施计划，并对 CP0–CP6 的开发者退出判断与本地 checkpoint commit 给出 advance YOLO。CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc`、CP3 `55b5313`、CP4 `6f69310` 与 CP5 `3259c42` 已通过；CP6 是下一 Gate。跨栈 synthetic 平台集成已完成，产品接受尚未发生；真实 Vault、push、tag、closeout 与发布未获授权。
+> 状态：开发者于 2026-08-20 批准本设计与实施计划；CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc`、CP3 `55b5313`、CP4 `6f69310`、CP5 `3259c42` 与 CP6 一号作者 Gate 均已通过。App Shell 增量已经产品接受且无未解决 P0/P1。开发者于 2026-08-21 决定 Road v0.7 保持开放，延顺步骤留到新的规划任务；本设计不预设其编号或范围。未来真实 Vault 操作、push、tag、closeout 与发布未由 CP6 自动授权。
 >
 > 基线：Road v0.6 已完成并验收的 Paper v4 / Index v4 / protocol v2。
 >
-> 权威边界：[`SPEC`](../SPEC.md) 定义 current v0.6 与 target v0.7 产品边界；本文是 Road v0.7 的已批准详细目标与唯一验收矩阵。`PROJECT`、源码与测试继续标明当前实现；不得仅凭目标或 CP5 工程候选宣称产品已接受或 Road 已完成。
+> 权威边界：[`SPEC`](../SPEC.md) 定义 CP6 已接受的 Road v0.7 产品边界；本文是 App Shell 增量的详细设计与唯一验收矩阵。`PROJECT`、源码与测试继续标明当前实现；CP6 产品接受不等于尚未规划的 Road 续段或 closeout 已完成。
 >
 > 伴随评审物：[`Road v0.7 HTML 计划书`](road-v0-7-planbook.html)；它只展示本设计与实施计划，不新增第三份规范权威。
 
@@ -239,16 +239,16 @@ App.vue
 | App Shell | 使用紧凑顶栏；Paper 与 Library 是唯一同级日常位置；新 Paper 与 Vault 分别是动作和环境入口；当前位置同时由文字和语义表达。离开 dirty Paper 前调用 PaperView 的同一 guard：取消后 destination、draft、path 与焦点不变；确认后只执行一次原 intent；已保存 path 在 Vault 往返后保留。runtime blocked 可接管工作面。 | 永久侧 rail、Router、store、第二套 dirty 规则、常驻成功徽章或新 bridge endpoint。 | CP1 合成原型点击路径与两尺寸审阅；CP2 聚焦 App/PaperView Vitest；CP5 runtime blocked 与 dirty departure 合成 smoke。 |
 | Paper | 层级固定为 Shell → Paper context（名称、Tags、页码、必要状态）→ 当前卡页（标题、类型、正文）→ 保存/删除/加一页。重复 hero 和页面级导航退出；code/path/time 进入原生详情披露。创建、编辑、分页、删除、whole-Paper 保存、`Cmd+S`、错误恢复和离开保护保持 v0.6 行为。 | schema、DTO、逐页 mutation、自动保存、页重排、deep-link 或静默换稿。 | CP3 直接行为测试；`1220×780`、`920×680` 浏览器证据；键盘、焦点、中文 IME 与错误状态 smoke。 |
 | Library | `1220×780` 保留“范围—列表—详情/操作”三段；`920×680` 保留范围与列表，详情纵向排列在列表之后。搜索、打开、移动、分支、Finder、Trash、恢复和永久删除保持现有语义与确认边界。 | drawer 依赖、正文编辑、同步状态、自动修复、完整正文复制到 Vue 或危险动作只靠 hover。 | CP4 聚焦 Library 测试；两尺寸逐路径浏览器检查；Trash、恢复与系统 handoff 使用 synthetic Vault 或完整副本验证。 |
-| Vault 与阻塞恢复 | 正常 Shell 只显示可识别的 Vault 名称或通用标签，完整路径按需披露；选择与持久化规则不变。未选择/无效候选、migration、`repair_required`、`commit_unknown`、identity unknown 与 sidecar failure 可接管工作面，并说明发生了什么、未自动修改什么、允许的安全动作和返回路径。 | 把 Vault 提升为第三个日常位置、展示半解析作者正文、自动 repair、自动重发 mutation 或改变 selected-Vault 规则。 | CP4 Vault/恢复聚焦测试与两尺寸路径；CP5 synthetic Vault/完整副本 smoke；真实 Vault 仍另行授权。 |
+| Vault 与阻塞恢复 | 正常 Shell 只显示可识别的 Vault 名称或通用标签，完整路径按需披露；选择与持久化规则不变。未选择/无效候选、migration、`repair_required`、`commit_unknown`、identity unknown 与 sidecar failure 可接管工作面，并说明发生了什么、未自动修改什么、允许的安全动作和返回路径。 | 把 Vault 提升为第三个日常位置、展示半解析作者正文、自动 repair、自动重发 mutation 或改变 selected-Vault 规则。 | CP4 Vault/恢复聚焦测试与两尺寸路径；CP5 synthetic Vault/完整副本 smoke；CP6 仅按窄授权使用既有真实 v4 Vault。未来任何真实 Vault 操作仍须按 RULES 另行明确授权，并同时受新任务范围限制。 |
 | 窗口 | Paper、Library、正常 Vault 与阻塞恢复均在 `1220×780`、`920×680` 检查。两尺寸无横向溢出；主要内容、保存动作、危险操作与恢复路径可见或可通过明确纵向滚动到达；小窗口只重排次要详情。 | 裁掉正文/保存/恢复动作、隐藏确认路径、仅凭截图推断可操作性或把窄窗口问题留到 CP5。 | CP1–CP4 每个相关 Checkpoint 的实际浏览器尺寸检查、overflow/scroll/console 记录；CP5 当前源码 Tauri smoke。 |
 | 可访问性 | 导航、表单和操作有语义名称与键盘路径；当前位置和状态不只靠颜色或动画；focus 可见。页面切换后焦点进入可预测标题或首要控件；确认取消后回到发起动作；危险动作说明后果；遵守 reduced-motion。 | 仅 hover 可达、仅颜色表达、焦点丢失、动画承载必要信息或自制不可访问确认系统。 | 聚焦 Vitest 覆盖名称、状态和确认分支；两尺寸键盘 walkthrough；CP3 中文输入 smoke；CP5 原生确认与 focus 恢复 smoke。 |
 
 CP1 只批准信息架构方向；CP2–CP4 分别证明 production 实现；CP5 证明集成与平台路径；
-CP6 才能证明一号作者接受。任一较早证据不得替代较晚 Gate。
+CP6 已证明一号作者接受。任一较早证据仍不得替代较晚 Gate。
 
-### 14.2 Road 完成场景
+### 14.2 原 CP0–CP6 接受场景（已通过）
 
-Road v0.7 只在以下场景通过时完成：
+App Shell 增量只在以下场景通过时接受；CP6 已给出整体通过判断：
 
 1. 作者从启动进入 Paper，能够立即识别当前工作位置和主要内容。
 2. 有未保存草稿时切换 Library、新 Paper 或 Vault，取消与确认两路都正确。
@@ -259,6 +259,8 @@ Road v0.7 只在以下场景通过时完成：
 7. 没有 Paper、Index、Vault、protocol、Python 或 Rust 行为变化。
 
 自动检查、合成 Vault smoke、平台 smoke 与一号作者接受仍是不同证据。
+
+这些场景证明原 CP0–CP6 增量已接受，不证明开发者后来提出的 Road 续段已经规划或完成。
 
 ## 15. 风险与控制
 
@@ -283,4 +285,4 @@ Road v0.7 只在以下场景通过时完成：
 - [x] `1220×780`、`920×680`、键盘与一号作者 Gate 足以判断完成。
 - [x] [`PLAN_road_v0_7.md`](../../PLAN_road_v0_7.md) 的 Checkpoint 顺序可以执行。
 
-该批准与 advance YOLO 已用于通过 CP0–CP5，并继续覆盖 CP6 的开发者退出判断与本地 checkpoint commit；实际证据不得省略。CP6、真实 Vault、push、tag、closeout 与发布仍未由较早 Gate 自动完成或授权。
+该批准与 advance YOLO 已用于通过 CP0–CP6；实际证据见各 checkpoint report。CP6 的窄范围真实 Vault 使用已经单独授权并完成，但不延伸到后续操作。Road 续段仍待新任务规划；push、tag、closeout 与发布未获授权。

@@ -1,6 +1,6 @@
-# keikeu Product Boundary (current: Road v0.6; target: Road v0.7)
+# keikeu Product Boundary (current: Road v0.7 CP6 accepted; Road extension pending)
 
-> Authority: §§1–7 define the accepted Road v0.6 product, author-asset, and data-safety boundary; §8 defines shared exclusions and platform scope; §9 defines the approved Road v0.7 target, implemented and integrated through CP5 but not product-accepted. Detailed Paper v4 grammar, DTOs, migration, recovery, and protocol remain in the approved [Paper v4 design](design/road-v0-6-paper-v4-design.md); the Road v0.7 interface target and acceptance matrix live in the approved [App Shell design](design/road-v0-7-app-shell-design.md). Current checkpoint and runtime facts live in [PROJECT](PROJECT.md), source, and tests.
+> Authority: §§1–7 define the accepted product, author-asset, and data-safety boundary inherited from Road v0.6; §8 defines shared exclusions and platform scope; §9 defines the Road v0.7 App Shell composition accepted at CP6. Detailed Paper v4 grammar, DTOs, migration, recovery, and protocol remain in the approved [Paper v4 design](design/road-v0-6-paper-v4-design.md); the accepted Road v0.7 interface and acceptance matrix live in the [App Shell design](design/road-v0-7-app-shell-design.md). The developer has kept Road v0.7 open for separately planned extensions, which do not enter this SPEC until approved. Current checkpoint and runtime facts live in [PROJECT](PROJECT.md), source, and tests.
 
 ## 1. Definition
 
@@ -21,7 +21,7 @@ The author leaves keikeu with the Paper itself. There is no separate Flashcard p
 - No account, cloud backend, telemetry, hidden remote service, or background sync is authorized.
 - Damaged Paper Markdown is reported, not silently repaired or partially opened as an editable Paper.
 
-## 3. Current runtime and approved target boundary
+## 3. Current runtime and accepted composition
 
 CP4 has activated the Road v0.6 product/data contract without changing the process architecture:
 
@@ -30,17 +30,19 @@ Vue → Tauri/Rust → JSONL protocol v2 → Python service/core
     → Paper v4 Markdown / Index / Vault → Paper pages
 ```
 
-Road v0.7 keeps that runtime and every durable data contract unchanged. Its approved target is
+Road v0.7 keeps that runtime and every durable data contract unchanged. Its CP6-accepted change is
 limited to the Vue composition layer:
 
 ```text
-current accepted: page-level Paper / Library / Vault surfaces
-approved target:  compact App Shell → Paper / Library → Vault context / blocking recovery
+previous accepted: page-level Paper / Library / Vault surfaces
+current accepted:  compact App Shell → Paper / Library → Vault context / blocking recovery
 ```
 
-The production composition is now the current engineering candidate through CP5, while Road v0.6
-remains the accepted product baseline until CP6 first-author acceptance. `PROJECT.md`, source, and
-tests remain the authority for current implementation state.
+The production composition passed CP5 engineering integration and CP6 first-author acceptance.
+Paper v4, Index v4, protocol v2, Python, Rust, and every author-control contract remain unchanged.
+The Road stays open only because the developer requested additional steps to be planned in a new
+task; no future checkpoint, capability, or acceptance rule is implied here. `PROJECT.md`, source,
+and tests remain the authority for current implementation state.
 
 ## 4. Current Paper v4 behavior (unchanged by Road v0.7)
 
@@ -94,7 +96,7 @@ No AI generation, prose editor, sync, account, community, database, file watcher
 - Linux and watchOS have no planned support. The iOS-only second user does not enter v0.x acceptance and returns no earlier than a separately designed iOS+Android v1.0.
 - Developer ID distribution work is deferred to Road v0.8.
 
-## 9. Approved target: Road v0.7 App Shell (implemented and integrated through CP5; not accepted)
+## 9. Accepted Road v0.7 App Shell (CP6 passed; Road extension pending)
 
 Road v0.7 changes only Vue work-surface structure, information hierarchy, and responsive
 presentation. It does not change §§1–8, Paper v4, Index v4, Vault persistence, protocol v2,
@@ -115,13 +117,16 @@ Python, Rust, or author-control contracts.
 - Navigation and actions have semantic names, visible focus, keyboard paths, non-color-only state,
   and reduced-motion behavior.
 
-The detailed target criteria and evidence boundary are frozen in the
+The accepted criteria and evidence boundary are frozen in the
 [Road v0.7 acceptance matrix](design/road-v0-7-app-shell-design.md#141-road-v07-验收矩阵).
 CP2–CP4 provide current source, tests, and window evidence for this production UI structure. CP5
 provides the complete cross-stack baseline plus current-source synthetic Tauri evidence for the
 normal, native dirty-confirmation, Index, repair, `commit_unknown`, restart and no-replay paths. The
-separate CP6 author Gate remains pending, so this section must not be cited as Road completion or
-product acceptance.
+separate [CP6 author Gate](acceptance/road-v0-7/cp6-author/report.md) passed by explicit developer
+judgment. This establishes product acceptance for the App Shell composition, but not Road
+completion: the developer has deferred additional Road steps to a new planning task. Until that
+plan is approved, this SPEC does not authorize or imply a CP7, scope expansion, real-Vault action,
+or closeout.
 
 ## 10. Road v0.6 completed acceptance record
 

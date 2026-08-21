@@ -1,27 +1,27 @@
-> **HUMAN MANUAL — NON-NORMATIVE.** 本文用人话解释当前已接受的 Road v0.6 Paper v4 产品模型。当前产品边界以 [`docs/SPEC.md`](../../SPEC.md) 为准，当前坐标以 [`docs/PROJECT.md`](../../PROJECT.md) 为准；已集成至 CP5、尚待 CP6 产品接受的 Road v0.7 App Shell candidate 见 [Road v0.7 书面设计](../../design/road-v0-7-app-shell-design.md)。
+> **HUMAN MANUAL — NON-NORMATIVE.** 本文用人话解释 Road v0.6 建立、Road v0.7 继续使用的 Paper v4 产品模型。当前产品边界以 [`docs/SPEC.md`](../../SPEC.md) 为准，当前坐标以 [`docs/PROJECT.md`](../../PROJECT.md) 为准；已通过 CP6 产品 Gate、Road 续段待规划的 App Shell 见 [Road v0.7 书面设计](../../design/road-v0-7-app-shell-design.md)。
 
 # keikeu APPDESIGN.md
 
 > slogan：存住一瞬的灵光
 >
-> 记录范围：current Road v0.6 · Paper v4；不定义 Road v0.7 Shell
+> 记录范围：current Road v0.7 · Paper v4；不定义尚未规划的 Road 续段
 >
 > 设计原则：本地优先、作者控制、直接编辑 Paper、无 AI 代写
 
 ---
 
-## 0. 先分清 current 与 target
+## 0. 先分清数据基线与当前组合层
 
-本文解释当前已接受的 Paper v4 产品模型，但不替代规范或运行证据。Road v0.7 的目标只调整 App Shell、信息层级与响应式布局，不改变本文的数据与保存合同。
+本文解释当前已接受的 Paper v4 产品模型，但不替代规范或运行证据。Road v0.7 已接受的 App Shell 只调整信息层级与响应式布局，不改变本文的数据与保存合同。
 
-| | 当前运行态 | Road v0.7 已批准目标 |
+| | 数据与运行合同 | 当前组合层 |
 | --- | --- | --- |
-| 产品版本 | Road v0.6 已接受 runtime | Road v0.7 App Shell 与信息层级 |
+| 产品版本 | Road v0.6 建立并归档的 runtime | Road v0.7 CP6 已接受的 App Shell 与信息层级 |
 | 内容模型 | Paper v4：一份 Paper 由有序卡页组成 | 不改变 Paper v4 / Index v4 / protocol v2 |
 | 聚焦方式 | Paper 本身可编辑、可翻页并整体保存 | Paper / Library 是日常位置，Vault 是环境入口 |
-| 实现状态 | 已实现、验收并归档 | production 已实现且 CP5 synthetic 集成已通过；CP6 产品接受待完成 |
+| 实现状态 | 已实现、验收并归档 | production、CP5 synthetic 集成与 CP6 产品接受均已通过；Road 续段待规划 |
 
-判断“现在已经运行什么”时，以 `SPEC`、实际代码和测试为准；判断 Road v0.7 尚待完成什么时，以已批准的 Road v0.7 设计与当前 `PROJECT` 为准。本文不覆盖其中任何一侧，也不授予实施或迁移权限。
+判断“现在已经运行什么”时，以 `SPEC`、实际代码和测试为准；判断 Road v0.7 尚待规划什么时，以新的规划任务和当前 `PROJECT` 为准。本文不覆盖其中任何一侧，也不授予实施或迁移权限。
 
 ---
 
@@ -366,6 +366,6 @@ Road v0.6 的 keikeu 仍然是一款本地优先的写前整理工具，但它�
 - 当前产品权威：[SPEC](../../SPEC.md)
 - 当前坐标：[PROJECT](../../PROJECT.md)
 - Road v0.6 已接受书面设计：[Paper v4 产品与架构设计](../../design/road-v0-6-paper-v4-design.md)
-- Road v0.7 已实现并集成至 CP5、尚待 CP6 产品接受的 candidate：[App Shell 与信息层级设计](../../design/road-v0-7-app-shell-design.md)
+- Road v0.7 已通过 CP6 产品 Gate、Road 续段待新任务规划：[App Shell 与信息层级设计](../../design/road-v0-7-app-shell-design.md)
 - 当前架构图：[architecture.html](../../architecture/architecture.html)
 - 当前交互图：[interaction.html](../../design/interaction.html)
