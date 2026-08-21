@@ -7,7 +7,9 @@ description: Enforce keikeu's project-local workflow for coding, debugging, refa
 
 Follow `AGENTS.md`, `docs/SPEC.md`, and `docs/RULES.md`; this skill compresses their workflow and does not override them.
 
-## Before editing
+## Start hook
+
+Run this gate immediately after the skill is selected and before the first repository edit.
 
 1. Read the relevant authority and every caller affected by a behavior change.
 2. Run:
@@ -57,7 +59,9 @@ Follow `AGENTS.md`, `docs/SPEC.md`, and `docs/RULES.md`; this skill compresses t
 - For product checkpoints, run the developer scenarios required by the Planbook or SPEC.
 - Do not mark a checkpoint passed unless the developer declared YOLO in advance or explicitly says "passed."
 
-## Handoff
+## Stop hook
+
+Run this gate immediately before the final response for every repository-changing task.
 
 1. Inspect the final diff and `git status --short --branch`; verify that only intended files changed.
 2. Summarize what changed and why.
