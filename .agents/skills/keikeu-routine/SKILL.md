@@ -59,14 +59,26 @@ Run this gate immediately after the skill is selected and before the first repos
 - For product checkpoints, run the developer scenarios required by the Planbook or SPEC.
 - Do not mark a checkpoint passed unless the developer declared YOLO in advance or explicitly says "passed."
 
+## Optional terminology hook
+
+Run this hook only when the developer explicitly invokes `$vibehub`, asks for a plain-language
+term explanation, or says they want to learn from the current change. Ordinary repository work
+must not trigger VibeHub or another external resolver.
+
+1. Select at most three terms that name changed UI elements, data or runtime elements, or workflow gates and materially help the developer review the change. Skip unchanged concepts and generic command names.
+2. Invoke `$vibehub` to explain each selected term in this change's context. Give its resolver only a de-identified term or behavior; never send source, author content, secrets, internal errors, URLs, emails, or local paths.
+3. Add a concise `术语诠释` section to the handoff: state what each term means here, why it appears, and one boundary it does not cover. Use only links returned by VibeHub for clear matches.
+4. If no term needs explanation or the resolver is unavailable, continue the handoff without inventing links or opening a lesson. This hook is explanatory only and does not authorize extra project edits, browser work, or scope.
+
 ## Stop hook
 
 Run this gate immediately before the final response for every repository-changing task.
 
 1. Inspect the final diff and `git status --short --branch`; verify that only intended files changed.
-2. Summarize what changed and why.
-3. Report implementation, automated evidence, and developer QA as separate states.
-4. Report data, provider, external-editor, platform, and acceptance risks plus staged, committed, and pushed state.
-5. If a commit was explicitly authorized, follow the exact-staging and `aic` procedure in `docs/RULES.md` §7, then inspect the resulting commit. DeepSeek `aic` has standing developer authorization for this repository after the staged diff is reviewed and found free of secrets and author content: name DeepSeek and report the staged boundary, but do not ask again for provider approval. Explicit commit authority is still required; another provider, a sensitive or unexpected diff, or revoked authorization requires a new decision. Treat the authorized invocation and the commit it creates as one transaction without a second authorization.
-6. After the final accepted Road checkpoint commit, follow `docs/RULES.md` §8 for the separate Road snapshot closeout.
-7. Give the safest next command.
+2. Run the optional Terminology hook only when its explicit user-intent condition is met.
+3. Summarize what changed and why.
+4. Report implementation, automated evidence, and developer QA as separate states.
+5. Report data, provider, external-editor, platform, and acceptance risks plus staged, committed, and pushed state.
+6. If a commit was explicitly authorized, follow the exact-staging and `aic` procedure in `docs/RULES.md` §7, then inspect the resulting commit. DeepSeek `aic` has standing developer authorization for this repository after the staged diff is reviewed and found free of secrets and author content: name DeepSeek and report the staged boundary, but do not ask again for provider approval. Explicit commit authority is still required; another provider, a sensitive or unexpected diff, or revoked authorization requires a new decision. Treat the authorized invocation and the commit it creates as one transaction without a second authorization.
+7. After the final accepted Road checkpoint commit, follow `docs/RULES.md` §8 for the separate Road snapshot closeout.
+8. Give the safest next command.
