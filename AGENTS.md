@@ -22,6 +22,14 @@ Protect author control, local durability, privacy, and beginner-maintainability.
 
 `src/` and `tests/` are runtime facts. `docs/generated/` is observation only. `docs/manual/` is non-normative human explanation, and `docs/archive/` is read-only history; neither drives an agent cold start.
 
+## Context routing
+
+Never bulk-load the working tree. Start from this read map, then use `rg --files` and `rg` to read the target, every affected caller, direct tests, and only the authority needed for that behavior.
+
+Treat `docs/acceptance/`, `docs/generated/`, `docs/manual/`, and `docs/archive/` as on-demand evidence or history, not default context. Build outputs, dependencies, caches, ignored Vaults, PDFs, and screenshots never enter a task context automatically.
+
+For a model without repository tools, generate a local reviewed task pack with `python scripts/build_context_pack.py --path <target>`. The pack contains current working-tree text from explicit repository paths, has a conservative size cap, stays under ignored `build/`, and is never uploaded automatically.
+
 ## Before editing
 
 Apply the Git gate in [`docs/RULES.md` §7](docs/RULES.md#7-git). At minimum, run:
