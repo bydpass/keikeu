@@ -1473,8 +1473,8 @@
       <nav class="toc">
         <a href="#judgment"><span class="toc-number">01</span><span>核心判断</span></a>
         <a href="#scope"><span class="toc-number">02</span><span>范围边界</span></a>
-        <a href="#prototype"><span class="toc-number">03</span><span>目标原型</span></a>
-        <a href="#checkpoints"><span class="toc-number">04</span><span>CP0–CP6</span></a>
+        <a href="#prototype"><span class="toc-number">03</span><span>CP6 历史原型</span></a>
+        <a href="#checkpoints"><span class="toc-number">04</span><span>CP0–CP7</span></a>
         <a href="#safety"><span class="toc-number">05</span><span>安全合同</span></a>
         <a href="#learning"><span class="toc-number">06</span><span>边看边学</span></a>
         <a href="#acceptance"><span class="toc-number">07</span><span>证据与漂移</span></a>
@@ -1486,14 +1486,14 @@
     <div class="book-main">
       <header class="book-header">
         <div class="status-line">
-          <span class="status-chip">APP SHELL ACCEPTED · CP6 PASSED</span>
-          <span class="status-chip">ROAD EXTENSION PENDING</span>
+          <span class="status-chip">CURRENT CP6 ACCEPTED</span>
+          <span class="status-chip">ACCEPTED CP7 · GATE D PASSED</span>
           <span class="status-chip">NON-AUTHORITATIVE</span>
-          <span class="status-chip">2026-08-21</span>
+          <span class="status-chip">2026-08-25</span>
         </div>
         <p class="eyebrow">Road v0.7 · App Shell 与信息层级收口</p>
         <h1>把功能页收成一个作者工作台</h1>
-        <p class="lede" data-pretext>Paper 和 Library 是两个日常位置；Vault 是本地环境入口；阻塞恢复是一条安全通道。Road v0.7 只把这层关系说清楚，不增加创作对象、数据合同或平台能力。</p>
+        <p class="lede" data-pretext>CP6 已把 Paper、Library、Vault 与阻塞恢复收成稳定工作台。CP7 继续把 Paper 收成连续编辑流；Gate D 后续整改另收口 Library 中文检索、top-layer 预览与完整文件夹 Trash 生命周期，不增加创作对象、数据 schema 或平台能力。</p>
         <nav class="header-links" aria-label="权威文档">
           <a href="../../PLAN_road_v0_7.md">实施计划</a>
           <a href="road-v0-7-app-shell-design.md">目标设计</a>
@@ -1573,13 +1573,13 @@
         <section class="book-section" id="prototype">
           <div class="section-heading">
             <div>
-              <p class="section-index">03 · Target prototype</p>
-              <h2>目标工作台，可切尺寸与状态</h2>
+              <p class="section-index">03 · CP6 accepted prototype</p>
+              <h2>CP6 历史工作台；不是最终 CP7 界面</h2>
             </div>
-            <p data-pretext>上方控制器属于评审页面，不是产品 UI。原型内部的顶栏、Paper、Library、Vault 和阻塞工作面才是 Road v0.7 的目标方向。</p>
+            <p data-pretext>本节保留 CP6 已接受的 1220×780 / 920×680 历史原型。它没有 CP7 的连续流、单行 CSV-style Tags、Popover、quiet focus 或 720×900 默认窗口；CP7 已通过 Gate D，当前 production 事实以源码与测试为准。</p>
           </div>
 
-          <div class="prototype-toolbar" aria-label="目标原型评审控制">
+          <div class="prototype-toolbar" aria-label="CP6 历史原型评审控制">
             <div class="control-group">
               <span class="control-label">验收视口</span>
               <div class="button-row">
@@ -1601,7 +1601,7 @@
           </div>
 
           <div class="prototype-stage" id="prototype-stage">
-            <div class="app-canvas" id="app-canvas" data-width="1220" data-height="780" aria-label="Road v0.7 目标应用原型">
+            <div class="app-canvas" id="app-canvas" data-width="1220" data-height="780" aria-label="Road v0.7 CP6 历史应用原型">
               <header class="app-shell-bar">
                 <span class="app-brand">keikeu</span>
                 <nav class="app-primary-nav" aria-label="应用主要位置">
@@ -1769,9 +1769,9 @@
           <div class="section-heading">
             <div>
               <p class="section-index">04 · Checkpoints</p>
-              <h2>CP0–CP6：原实施段已全部通过</h2>
+              <h2>CP0–CP7 已通过；CP7 checkpoint 收口中</h2>
             </div>
-            <p data-pretext>每个 Checkpoint 只从前一个已通过且已提交的 checkpoint commit 建分支。原 CP0–CP6 保持线性并已有实际证据；开发者决定 Road 继续延顺，后续编号、范围与 Gate 留到新的规划任务，本页不预设。</p>
+            <p data-pretext>原 CP0–CP6 保持线性并已有实际证据。开发者已批准 CP7 连续编辑流；它在同一 checkpoint 内依次经过合同、Figma、production 与开发者接受 Gate。</p>
           </div>
 
           <ol class="timeline">
@@ -1809,6 +1809,11 @@
               <span class="cp-badge">CP6</span>
               <div><h3>一号作者 Gate</h3><p><code>test/cp6-v07-author-gate</code></p></div>
               <div class="exit-gate"><strong>当前状态 · 已通过</strong>开发者明确通过真实作者 Gate；去标识化记录确认退出时无未解决 P0/P1。未单独报告的介入次数与分视口叙述不被补写。</div>
+            </li>
+            <li class="checkpoint">
+              <span class="cp-badge">CP7</span>
+              <div><h3>连续编辑流</h3><p><code>ui/cp7-v07-continuous-flow</code></p></div>
+              <div class="exit-gate"><strong>当前状态 · Gate D 已通过</strong>完整文件夹删除、Library 中文输入法与 inline Paper 预览的后续整改、全量复核、隔离 Tauri smoke 与同一 Figma Page 增量同步均已完成；开发者于 2026-08-25 明确接受 CP7。原生候选窗观察转入 CP8。</div>
             </li>
           </ol>
         </section>
@@ -1869,7 +1874,7 @@
             <article class="learning-item">
               <h3><a href="https://vibe-hub.org/responsive-design">响应式设计</a></h3>
               <div>
-                <p><strong>在原型里看：</strong>切到 <code>920×680</code> 后 Library 详情纵向重排，正文和关键动作仍可到达。</p>
+                <p><strong>在原型里看：</strong>切到 <code>920×680</code> 后 Library 列表仍在正文流内，Paper 预览进入 top layer，不把文件夹与 Paper 操作推到底部。</p>
                 <p><strong>边界：</strong>响应式不等于“加媒体查询”，判断标准是不同空间下阅读、点击和溢出是否仍可用。</p>
               </div>
             </article>
@@ -1903,6 +1908,7 @@
               <tr><td>Production 已实现</td><td>源码检查、聚焦 Vitest、完整 Vitest 与 Vite build</td><td>已通过 · CP2–CP4</td></tr>
               <tr><td>平台流程可用</td><td>当前源码的 synthetic Vault Tauri smoke</td><td>已通过 · CP5</td></tr>
               <tr><td>产品接受</td><td>另行授权的一号作者真实日常 Gate</td><td>已通过 · CP6</td></tr>
+              <tr><td>CP7 accepted</td><td>合同、Figma、production、开发者 UI 接受依次通过</td><td>Gate D 已通过；本地 checkpoint 获授权</td></tr>
             </tbody>
           </table>
 
@@ -1912,7 +1918,8 @@
             <li>不要把 VibeHub 学习层、这份 planbook 或 <code>boh_design.html</code> 打进 production bundle。</li>
             <li>不要顺手加入 Outline、Flashcard、配方票、AI、自动保存、Router 或持久 last-location。</li>
             <li>不要把 HTML 截图、synthetic Vault smoke 或自动测试替代真实作者接受。</li>
-            <li>CP6 后已统一校准 <code>docs/SPEC.md</code>、<code>docs/PROJECT.md</code> 与三份 active map；本页仍不替代当前权威、续段规划或退出判断。</li>
+              <li>CP7 已统一校准 <code>docs/SPEC.md</code>、<code>docs/PROJECT.md</code> 与三份 active map；本页仍不替代当前权威、Gate C 原始证据或 Gate D 退出判断。</li>
+              <li>完整文件夹 Trash 生命周期是开发者明确批准的窄 Core scope drift；只覆盖删除、恢复与永久删除，见 <code>ADR-0008</code>，不得扩到 merge/rename。</li>
           </ul>
         </section>
 
@@ -1920,9 +1927,9 @@
           <div class="section-heading">
             <div>
               <p class="section-index">08 · Approval gate</p>
-              <h2>两道书面 Gate 已通过</h2>
+              <h2>CP7 Gate D 已通过；原生候选窗转入 CP8</h2>
             </div>
-            <p data-pretext>开发者于 2026-08-20 批准目标设计与实施计划，并对 CP0–CP6 的退出判断与本地 checkpoint commit 给出 advance YOLO；CP0–CP6 现均已通过。CP6 的窄范围真实 Vault 授权不延伸到未来操作；Road 续段、closeout 与 Git 远端动作仍须分别规划或授权。</p>
+            <p data-pretext>开发者于 2026-08-25 退回 Gate D 首轮六项问题，并在首批整改后追加完整文件夹删除、Library 中文输入法与 Paper 预览三项。当前工作树完成后续实现、全量/隔离 Tauri UI 复核和同一 Figma Page 增量同步后，开发者明确通过 Gate D。自动化没有可靠触发 macOS 原生候选窗，因此该观察转入 CP8，不补写成 CP7 证据。本轮仅授权 CP7 本地 checkpoint，不授权真实 Vault、closeout 或 Git 远端动作。</p>
           </div>
 
           <div class="gate-grid">
@@ -1941,7 +1948,8 @@
                 <li>CP0–CP6 顺序与分支边界可执行。</li>
                 <li>CP1 灰阶批准先于 production UI 修改。</li>
                 <li>CP5 使用 synthetic Vault / 完整副本。</li>
-                <li>commit、push、tag、closeout 与发布逐项授权。</li>
+                <li>CP7 按合同 → Figma → production → 开发者接受推进。</li>
+                <li>push、tag、closeout 与发布逐项授权。</li>
               </ul>
             </div>
           </div>
@@ -1957,7 +1965,7 @@
       </main>
 
       <footer class="book-footer">
-        <p>Road v0.7 伴随视图 · CP6 产品 Gate 已通过 · Road 续段待规划 · 本地单文件 · 无外部运行时资源 · 本页不代表 closeout 或发布</p>
+        <p>Road v0.7 伴随视图 · current CP7 Gate D 已通过 · 本地 checkpoint 收口中 · 本地单文件 · 无外部运行时资源 · 本页不代表 closeout 或发布</p>
       </footer>
     </div>
   </div>

@@ -26,6 +26,7 @@
 - [`road-v0-7/cp4-library-vault/report.md`](road-v0-7/cp4-library-vault/report.md) — passed Road v0.7 CP4 Library three-section/stacked layouts, quiet Vault context, blocking-recovery copy, Trash/Finder paths, two-size production-browser QA, and advance-YOLO exit judgment.
 - [`road-v0-7/cp5-integration/report.md`](road-v0-7/cp5-integration/report.md) — passed Road v0.7 CP5 complete Python/Vue/Rust gate, isolated current-source Tauri normal and native-dirty paths, `920×680`, Index rebuild, repair/recheck, fault-injected `commit_unknown` restart/no-replay, normal-sidecar restoration, and clean lifecycle evidence.
 - [`road-v0-7/cp6-author/report.md`](road-v0-7/cp6-author/report.md) — developer-passed Road v0.7 CP6 de-identified first-author Gate, bounded real-v4-Vault postflight, clean lifecycle, and Road-extension planning hold.
+- [`road-v0-7/cp7-continuous-flow/report.md`](road-v0-7/cp7-continuous-flow/report.md) — developer-passed Road v0.7 CP7 continuous-flow Gate D, two remediation rounds, full engineering/Figma evidence, native-candidate-window deferral, and local-checkpoint boundary.
 - [`../archive/docs-archive-documentation-reform-report/`](../archive/docs-archive-documentation-reform-report/): read-only pre-completion record and the SOP used for the checks.
 
 Do not place prose, inspirations, names, relationships, Vault paths, device identifiers, or secrets here. Acceptance, archive, tag, commit, and push remain separate decisions.

@@ -53,7 +53,6 @@ const newPaperTemplate = {
 const destination = ref("paper");
 const selectedPath = ref(papers.value[0].path);
 const paperGeneration = ref(0);
-const dirty = ref(false);
 const toast = ref("");
 const selectedPaper = computed(
   () => papers.value.find((paper) => paper.path === selectedPath.value) ?? newPaperTemplate,
@@ -126,20 +125,19 @@ function startNewPaper() {
           Library
         </button>
       </nav>
-      <div class="prototype-v07-actions" role="group" aria-label="工作区动作与环境">
-        <button type="button" @click="startNewPaper">新 Paper</button>
-        <button
-          type="button"
-          :aria-current="destination === 'vault' ? 'page' : undefined"
-          @click="destination = 'vault'"
-        >
-          示例 Vault
-        </button>
-      </div>
+      <button
+        type="button"
+        class="prototype-v07-context-switch"
+        :aria-current="destination === 'vault' ? 'page' : undefined"
+        @click="destination = 'vault'"
+      >示例 Vault</button>
+      <button type="button" class="prototype-v07-new-paper" @click="startNewPaper">
+        新 Paper
+      </button>
     </header>
 
     <div class="prototype-v07-boundary">
-      <strong>ROAD V0.7 · CP1 · DEVELOPMENT ONLY</strong>
+      <strong>ROAD V0.7 · CP7 · DEVELOPMENT ONLY</strong>
       <span>合成样张 · 不连接 Vault · 无 bridge、文件 mutation 或持久配置</span>
     </div>
 
@@ -147,25 +145,13 @@ function startNewPaper() {
       <section
         v-if="destination === 'paper'"
         class="prototype-v07-stage"
-        aria-labelledby="prototype-paper-title"
+        aria-label="合成 Paper 工作面"
       >
-        <header class="prototype-v07-context">
-          <div>
-            <p>Paper</p>
-            <h1 id="prototype-paper-title">
-              {{ selectedPaper.display_name || "未命名 Paper" }}
-            </h1>
-          </div>
-          <div class="prototype-v07-paper-state">
-            <span>{{ dirty ? "草稿有未保存修改" : "草稿与合成基线一致" }}</span>
-            <span v-if="toast" role="status">{{ toast }}</span>
-          </div>
-        </header>
+        <p v-if="toast" class="prototype-v07-toast" role="status">{{ toast }}</p>
         <PaperV4Workbench
           :key="paperGeneration"
           :paper="selectedPaper"
           state="ready"
-          @dirty-change="dirty = $event"
           @save="savePaper"
         />
       </section>
@@ -224,7 +210,7 @@ function startNewPaper() {
       </section>
     </main>
 
-    <footer class="prototype-v07-footer">
+    <footer class="prototype-v07-meta">
       <span>{{ papers.length }} synthetic Papers</span>
       <span>Vue 内存 DTO · production bundle 必须排除本页</span>
     </footer>
@@ -233,11 +219,7 @@ function startNewPaper() {
 
 <style scoped>
 .prototype-v07-shell {
-  --signal: #343432;
-  --accent: #343432;
-  display: grid;
   min-height: 100vh;
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
   color: var(--ink);
   background: var(--canvas);
 }
@@ -248,30 +230,36 @@ summary {
 }
 
 .prototype-v07-topbar {
+  position: sticky;
+  z-index: 20;
+  top: 0;
   display: grid;
-  grid-template-columns: auto auto minmax(20px, 1fr) auto;
+  grid-template-columns: auto auto minmax(20px, 1fr) auto auto;
   min-height: 56px;
   align-items: stretch;
-  gap: 20px;
-  padding: 0 26px;
+  gap: 16px;
+  padding: 0 22px;
   border-bottom: 1px solid var(--rule);
   background: var(--paper);
 }
 
 .prototype-v07-brand {
   align-self: center;
-  font: 600 1.2rem var(--font-display);
+  font: 700 1.125rem/1.375rem var(--font-body);
 }
 
-.prototype-v07-daily,
-.prototype-v07-actions {
+.prototype-v07-daily {
   display: flex;
   align-items: stretch;
   gap: 4px;
 }
 
-.prototype-v07-actions {
+.prototype-v07-context-switch {
   grid-column: 4;
+}
+
+.prototype-v07-new-paper {
+  grid-column: 5;
 }
 
 .prototype-v07-topbar button {
@@ -285,26 +273,21 @@ summary {
 }
 
 .prototype-v07-daily button[aria-current="page"],
-.prototype-v07-actions button[aria-current="page"] {
+.prototype-v07-context-switch[aria-current="page"] {
   border-bottom-color: var(--ink);
   color: var(--ink);
   font-weight: 750;
 }
 
 .prototype-v07-boundary {
-  display: flex;
-  min-height: 34px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  padding: 7px 26px;
-  border-bottom: 1px solid var(--rule-soft);
-  color: var(--meta);
-  font: 0.66rem var(--font-mono);
-}
-
-.prototype-v07-boundary strong {
-  color: var(--ink);
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .prototype-v07-main {
@@ -312,20 +295,11 @@ summary {
 }
 
 .prototype-v07-stage {
+  min-height: calc(100vh - 56px);
   min-width: 0;
-  padding: 20px clamp(16px, 2.8vw, 34px) 36px;
+  padding: 16px 24px 24px;
 }
 
-.prototype-v07-context {
-  display: flex;
-  width: min(920px, 100%);
-  align-items: end;
-  justify-content: space-between;
-  gap: 24px;
-  margin: 0 auto 12px;
-}
-
-.prototype-v07-context p,
 .prototype-v07-eyebrow {
   margin: 0;
   color: var(--meta);
@@ -335,18 +309,18 @@ summary {
   text-transform: uppercase;
 }
 
-.prototype-v07-context h1,
 .prototype-v07-environment h1 {
   margin: 4px 0 0;
   font: 500 clamp(1.45rem, 2.6vw, 2.15rem) var(--font-display);
 }
 
-.prototype-v07-paper-state {
-  display: grid;
-  gap: 4px;
-  color: var(--meta);
-  font: 0.68rem var(--font-mono);
-  text-align: right;
+.prototype-v07-toast {
+  width: min(960px, 100%);
+  margin: 0 auto 12px;
+  padding: 10px 14px;
+  border-left: 4px solid var(--signal);
+  background: var(--paper);
+  font-size: 0.82rem;
 }
 
 .prototype-v07-stage--library :deep(.library-v4-header) {
@@ -431,52 +405,65 @@ summary {
   margin-top: 12px;
 }
 
-.prototype-v07-footer {
-  display: flex;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 9px 26px;
-  border-top: 1px solid var(--rule);
-  color: var(--meta);
-  font: 0.66rem var(--font-mono);
+.prototype-v07-meta {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
-@media (max-width: 1000px) {
-  .prototype-v07-stage--library :deep(.library-v4-layout) {
-    grid-template-columns: 1fr;
+@media (min-width: 800px) {
+  .prototype-v07-new-paper {
+    min-width: 110px;
+  }
+
+  .prototype-v07-stage {
+    min-height: calc(100vh - 56px);
+    padding-block: 20px 12px;
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 799px) {
   .prototype-v07-topbar {
-    grid-template-columns: auto 1fr;
-    gap: 0 12px;
-    padding: 8px 14px;
+    grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+    grid-template-rows: 56px;
+    gap: 0 4px;
+    min-height: 56px;
+    padding: 0 12px;
   }
 
   .prototype-v07-daily {
-    justify-self: end;
+    grid-column: 2;
+    grid-row: 1;
   }
 
-  .prototype-v07-actions {
-    grid-column: 1 / -1;
-    justify-content: flex-end;
+  .prototype-v07-context-switch {
+    grid-column: 4;
+    grid-row: 1;
   }
 
-  .prototype-v07-boundary,
-  .prototype-v07-context,
-  .prototype-v07-footer {
-    align-items: stretch;
-    flex-direction: column;
+  .prototype-v07-new-paper {
+    grid-column: 5;
+    grid-row: 1;
   }
 
-  .prototype-v07-paper-state {
-    text-align: left;
+  .prototype-v07-topbar button {
+    padding-inline: 6px;
   }
 
   .prototype-v07-environment dl div {
     grid-template-columns: 1fr;
     gap: 3px;
+  }
+}
+
+@media (max-width: 479px) {
+  .prototype-v07-stage {
+    padding: 16px 16px 20px;
   }
 }
 </style>

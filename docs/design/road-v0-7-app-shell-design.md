@@ -1,10 +1,10 @@
-# Road v0.7：App Shell 与信息层级设计（CP6 已接受；Road 续段待规划）
+# Road v0.7：App Shell 与连续编辑流设计（CP7 已接受）
 
-> 状态：开发者于 2026-08-20 批准本设计与实施计划；CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc`、CP3 `55b5313`、CP4 `6f69310`、CP5 `3259c42` 与 CP6 一号作者 Gate 均已通过。App Shell 增量已经产品接受且无未解决 P0/P1。开发者于 2026-08-21 决定 Road v0.7 保持开放，延顺步骤留到新的规划任务；本设计不预设其编号或范围。未来真实 Vault 操作、push、tag、closeout 与发布未由 CP6 自动授权。
+> 状态：开发者于 2026-08-20 批准原设计与实施计划；CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc`、CP3 `55b5313`、CP4 `6f69310`、CP5 `3259c42` 与 CP6 一号作者 Gate 均已通过。CP7 Gate A 于 2026-08-24 通过，Gate B 于 2026-08-25 经开发者明确判断通过，Gate C production candidate、两轮 Gate D 整改、完整工程复核、隔离 Tauri smoke 与同一 Figma Page 增量同步于 2026-08-25 完成；开发者随后明确通过 Gate D。自动化 composition 证据不冒充 macOS 原生候选窗观察，该人工项移至 CP8。本轮仅授权 CP7 本地 checkpoint；真实 Vault、push、tag、closeout 与发布未授权。
 >
 > 基线：Road v0.6 已完成并验收的 Paper v4 / Index v4 / protocol v2。
 >
-> 权威边界：[`SPEC`](../SPEC.md) 定义 CP6 已接受的 Road v0.7 产品边界；本文是 App Shell 增量的详细设计与唯一验收矩阵。`PROJECT`、源码与测试继续标明当前实现；CP6 产品接受不等于尚未规划的 Road 续段或 closeout 已完成。
+> 权威边界：[`SPEC`](../SPEC.md) 定义 CP7 已接受产品；本文保留 CP0–CP6 历史，并拥有 CP7 详细设计与验收矩阵。`PROJECT`、源码与测试继续标明当前实现；后续 target 不等于 production 或产品接受。
 >
 > 伴随评审物：[`Road v0.7 HTML 计划书`](road-v0-7-planbook.html)；它只展示本设计与实施计划，不新增第三份规范权威。
 
@@ -285,4 +285,93 @@ App Shell 增量只在以下场景通过时接受；CP6 已给出整体通过判
 - [x] `1220×780`、`920×680`、键盘与一号作者 Gate 足以判断完成。
 - [x] [`PLAN_road_v0_7.md`](../../PLAN_road_v0_7.md) 的 Checkpoint 顺序可以执行。
 
-该批准与 advance YOLO 已用于通过 CP0–CP6；实际证据见各 checkpoint report。CP6 的窄范围真实 Vault 使用已经单独授权并完成，但不延伸到后续操作。Road 续段仍待新任务规划；push、tag、closeout 与发布未获授权。
+该批准与 advance YOLO 已用于通过 CP0–CP6；实际证据见各 checkpoint report。CP6 的窄范围真实 Vault 使用已经单独授权并完成，但不延伸到后续操作。CP7 使用下节新增合同；push、tag、closeout 与发布未获授权。
+
+## 17. CP7 override：连续编辑流（accepted）
+
+CP7 不推翻 CP6 已接受的 Shell、Paper/Library 同级关系、Vault 环境入口或阻塞恢复。
+它主要替换 Paper 的视觉/文本适配与默认窗口几何；Gate D 后续整改另有两项窄 override：
+Library 的 IME-safe 搜索与 top-layer Paper 预览，以及三个既有文件夹 Trash 生命周期方法。
+未列出的 CP6 合同继续有效，Paper v4、Index v4、protocol v2、DTO、Rust 与 sidecar 不变。
+
+### 17.1 结构与风格
+
+```text
+Shell → Paper context → 页面导航 → 当前页标题/类型/Markdown → 删除/加一页/保存
+```
+
+- 默认窗口 `720×900`，满足 `width / height = 0.8`；Tauri 最小几何锁定为 `720×680`，横版仍由同一 DOM/CSS 重排。`375×812` 仅是浏览器响应式证据，不等于 Tauri 最小窗口或移动端交付。
+- 风格关键词固定为“冷编辑台 + Opus 标题 + 系统工具控件”。Opus serif 只用于 Paper 名与页标题；品牌、控件、正文和对话框使用系统 sans；code/path/页号使用 mono。Figma meta `#627078` 在 production 中因 WCAG 对比度校正为 `#5c6a71`。
+- Tags 是一个单行 comma-separated 输入；不使用 chips 或逐行 textarea。macOS 字段关闭自动更正与智能引号转换；原生实证确认 ASCII 直引号未被改成弯引号。
+- Paper 详情是小型原生 Popover，不进入 Paper grid；路径可换行，支持键盘开关、Escape、light-dismiss 和焦点返回。Library Paper 预览沿用同一 top-layer 组件规则，见 §17.3。
+- 输入编辑态只用轻微冷色底与细底线，不使用高存在感 focus 边框；按钮、导航和高对比模式仍保留清楚系统 outline。
+- 页面不显示常驻 dirty 文案。saving、validation、stale、`repair_required`、`commit_unknown` 与 `index_degraded` 仍按其既有责任出现。
+
+### 17.2 Tags 可逆适配
+
+Paper v4、DTO、JSONL 与 Markdown 继续传递有序 `string[]`；逗号仍可属于一个 Tag。Vue
+只在字段边界使用 CSV-style 表示：含逗号或双引号的值加双引号，内部双引号写作 `""`。
+解析保留顺序，沿用既有 trim、空项丢弃和首次去重语义；Vue 必须与 Core 使用同一
+外侧空白集合，不能单独依赖会额外删除 `U+FEFF` 的 JavaScript `.trim()`；未闭合引号阻止保存并保留输入。
+禁止 `join(", ")` 后 `split(",")`，也禁止迁移或静默规范化既有 Markdown。
+
+### 17.3 Library 与文件夹生命周期 override
+
+- Library 搜索框在 `compositionstart` 到提交事件之间只更新本地输入显示，不发出
+  `library.query`，也不以中间拼音重渲染候选窗；提交后发送最终中文值，同值的尾随
+  `input` 被父层去重。
+- 每个 Paper 结果后紧邻自己的 `popover="auto"` 预览，结果按钮使用 `show` 而非
+  `toggle`。Popover 进入浏览器 top layer，不参加列表高度计算，不把 Paper 或文件夹操作
+  推到底部；关闭、Escape、light-dismiss、Tab 顺序和“打开整份 Paper”均保持可达。
+- 当前文件夹与废纸篓文件夹操作紧贴范围控件，并在 DOM 中位于结果区之前；Paper 结果
+  数量不会把它们推到底部。所有原生 `select` / `input` / `button` 与 grid track 必须允许
+  收缩，最大合法 `200` 字符名称在四档不得扩大 document `scrollWidth`。
+- 经确认的 `soft_delete_folder` 把 `cache/<folder>` 完整目录树原子移入
+  `.trash/cache/<folder>`；`.DS_Store`、损坏 Markdown、嵌套目录与符号链接 entry 不再
+  成为人工清理阻断。`restore_folder` 整树回移，目标完全同名或 NFC+casefold 等价时
+  全有或全无地拒绝，不做部分合并。
+- `permanently_delete_folder` 仍需废纸篓中的不可撤销确认；Core 固定精确 inode，同父
+  随机隔离，并逐层使用 fd-relative、no-follow 后序删除。设备/挂载、identity 或并发名称
+  变化会停止删除并保留可识别路径；递归开始后的底层失败不能回滚已销毁 entry，剩余树
+  恢复为原废纸篓名称并明确报告失败。符号链接只删除链接本身。`merge_folders` 与重命名
+  不使用本 override，继续严格 Paper 预检。完整决策见
+  [ADR-0008](../architecture/decisions/0008-whole-folder-trash-lifecycle.md)。
+
+### 17.4 Figma 交付
+
+现有 keikeu UI 文件新建 `CP7 · 连续编辑流` Page，至少包含：母版、四尺寸/关键状态、
+tokens 与系统控件、`UI/UX 入门`、`行业模板`。后两区是非规范学习/复用材料，不建立
+production UI kit。HTML master 仍是 Gate B 对照物；节点审计和开发者最终视觉批准后才
+允许进入 Gate C。上述交付与节点审计已经完成，开发者于 2026-08-25 明确判断 Gate B
+通过；HTML master 继续只作对照，不构成 production 或 Gate D 证据。
+Gate D 后续整改已在同一 Page 的 `06 · Gate D Library 后续整改` Section（`152:138`）
+增量同步 Library Popover、composition-safe search、范围旁文件夹操作、长名称收缩与完整
+文件夹 Trash 文案/状态；Section 截图复核和递归节点边界审计均通过。该同步证明设计与
+候选实现对齐，不替代开发者 Gate D 判断。
+
+### 17.5 CP7 验收矩阵
+
+| 面 | 必须成立 | 不得发生 | 证据 |
+| --- | --- | --- | --- |
+| 连续流 | context、页、正文、动作按纵向顺序可扫描；底部动作可滚动到达 | sidebar、手机专属导航、横向滚动、整体缩小 | 四尺寸浏览器证据与开发者判断 |
+| Tags | 单行 CSV-style UI 对普通值、逗号、双引号、空项、外空白、重复、`U+FEFF` 与畸形引号可逆/可阻塞 | `split(",")`、JS `.trim()` 扩大规范化、DTO/Markdown/schema 变化、无关保存拆 Tag | Workbench + PaperView Vitest，保存 intent 断言 |
+| 详情/focus | Popover 不撑开布局，键盘关闭后焦点返回；文本 focus 安静但可辨认 | inline 大片详情、仅 hover、移除按钮 focus | 四尺寸、键盘与高对比检查 |
+| Library 搜索/预览 | composition 期间零查询，提交后一次最终词；每行相邻 native Popover 进入 top layer；文件夹操作紧贴范围且不因结果数/预览开合下沉；`200` 字符名称不扩张页面 | 拼音中间查询、重复提交、共享远端 Popover 导致长 Tab 路径、inline 预览下压操作、原生 option 撑宽 grid | Projection + LibraryView Vitest，真实 DOM composition、Tab/Escape、四尺寸几何与隔离 Tauri smoke |
+| 文件夹生命周期 | 软删除/恢复完整目录树原子移动；永久删除二次确认后按精确身份 no-follow 递归；外部链接目标不变 | 未知项要求人工清理、部分搬运、目标覆盖、跟随链接或跨挂载删除 | synthetic Vault 直接测试：unknown/nested/symlink、NFC 冲突、source/destination replacement、destructive-stage device race |
+| dirty/安全 | 无常驻 dirty 文案；离开、新 Paper、Vault、关闭仍复用唯一 guard | 自动保存、第二套确认、隐藏 saving/error/recovery | App/Paper 直接测试与 Tauri native smoke |
+| 窗口 | 实际 Tauri 默认 `720×900`；横版仍可用；`scrollWidth <= clientWidth` | 默认宽高比大于 1、裁掉保存/危险/恢复动作 | config 检查、四尺寸浏览器、实际 Tauri 启动 |
+| 范围 | 原 Vue/CSS/Tauri 几何加 §17.3 的窄 Library/Core 例外；协议/DTO/Paper/Index/Rust/sidecar 不变 | 把整树策略扩到 merge/rename、真实作者内容变化、依赖或命令扩张 | diff/ADR 审计、全量 Python/Vitest/Rust/build/docs |
+
+### 17.6 Gate 顺序
+
+Gate A 合同 → Gate B Figma 与最终视觉批准 → Gate C production/工程证据 → Gate D
+开发者 UI 接受。较早 Gate 不替代较晚 Gate；CP7 checkpoint 只有在 Gate D 无未解决 P0/P1
+时通过。snapshot、tag、push、签名、打包和发布继续独立决定。
+
+Gate A、Gate B、Gate C production candidate、原始工程证据与 Gate D 后续整改复核均已
+完成。Gate D 首轮开发者 UI 验收因六项 UI/功能问题未通过；首批整改后又退回完整文件夹
+删除、Library 中文 IME 与 Paper 预览三项。§17.3 后续整改已通过全量工程、真实浏览器
+四尺寸/DOM composition、隔离 Tauri 与同一 Figma Page 增量同步，独立终审为
+`0 P0 / 0 P1`；开发者于 2026-08-25 明确通过 Gate D。原生 macOS 候选窗未由自动化可靠
+触发，因此不回填为 CP7 证据并转入 CP8 人工复核。本轮另行授权 CP7 本地 checkpoint；
+既有首次冷 sidecar 启动超时仍只记为环境现象。

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>keikeu 当前逻辑 — Road v0.7 CP6 accepted</title>
+  <title>keikeu 当前逻辑 — Road v0.7 CP7 accepted</title>
   <style>
     :root {
       color-scheme: light dark;
@@ -59,7 +59,7 @@
       <h1>Paper 是作者直接编辑、整体保存的卡页资产。</h1>
       <div class="status-row">
         <span class="status">RUNTIME · Road v0.6 Paper v4 合同继续有效</span>
-        <span class="status target">CURRENT · Road v0.7 App Shell 已通过 CP6，续段待规划</span>
+        <span class="status target">ACCEPTED · Road v0.7 CP7 Gate D</span>
       </div>
       <p class="boundary"><strong>非规范说明：</strong>本页帮助理解当前代码，不定义产品或 Gate。最终核对
         <a href="../SPEC.md">SPEC</a>、<a href="../PROJECT.md">PROJECT</a>、
@@ -111,9 +111,9 @@
       <table>
         <tbody>
           <tr><th>Paper Markdown</th><td>作者内容的唯一主版本；普通文本工具可读、可修。GUI 不直接写文件。</td></tr>
-          <tr><th>Library</th><td>按 Paper 搜索、打开、移动、分支、Trash 和恢复；搜索覆盖所有页，结果打开整份 Paper。</td></tr>
+          <tr><th>Library</th><td>按 Paper 搜索、打开、移动、分支、Trash 和恢复；中文 composition 提交前不查询，每行 Paper 预览使用不占流的原生 Popover，结果打开整份 Paper。</td></tr>
           <tr><th>Index v4</th><td><code>keikeu_index.json</code> 是本地、可删除、可重建的辅助数据，不覆盖 Markdown 权威。</td></tr>
-          <tr><th>Vault</th><td>作者选择 Home 内的本地目录；迁移、删除和恢复先在 fixture、synthetic Vault 或完整副本上验证。</td></tr>
+          <tr><th>Vault</th><td>作者选择 Home 内的本地目录；文件夹软删除/恢复移动完整目录树，永久删除二次确认后 no-follow 销毁；迁移、删除和恢复先在 fixture、synthetic Vault 或完整副本上验证。</td></tr>
         </tbody>
       </table>
     </section>
@@ -141,12 +141,12 @@
 
     <section>
       <h2>6. Road v0.7 现在意味着什么</h2>
-      <p>CP0–CP6 已通过：CP2–CP4 完成 production 组合层，CP5 完成 synthetic 平台集成，CP6 完成一号作者产品接受。Paper v4、Index v4 与 protocol v2 合同不变；开发者决定 Road 继续延顺，但后续范围与 Gate 留到新的规划任务。</p>
+      <p>CP0–CP7 已通过：CP2–CP4 完成 production 组合层，CP5 完成 synthetic 平台集成，CP6 完成一号作者产品接受，CP7 在两轮 Gate D 整改、完整验证与 Figma 同步后由开发者明确通过。Paper v4、Index v4 与 protocol v2 合同不变；原生 macOS 候选窗没有被自动化证明，已转入 CP8 人工复核。</p>
       <ul>
         <li>当前 composition 中，Paper 与 Library 是两个同级日常位置。</li>
         <li>Vault 现作为环境入口；migration、repair 和未知结果仍可接管阻塞工作面。</li>
-        <li><code>1220×780</code> 与 <code>920×680</code> 已完成当前源码 smoke；键盘、focus 和 reduced-motion 合同保持不变。</li>
-        <li>本页本身不证明任何 Gate；CP5 与 CP6 证据见 acceptance reports，尚未规划的 Road 续段不在本页中。</li>
+        <li><code>375×812</code>、<code>720×900</code>、<code>920×680</code> 与 <code>1220×780</code> 已完成真实 Chromium 检查；默认 Tauri 为 <code>720×900</code>，最小 <code>720×680</code>，隔离 synthetic Vault smoke 已通过。</li>
+        <li>本页本身不证明任何 Gate；CP5、CP6 与 CP7 证据见 acceptance reports，后续 Gate 以当前计划和详细设计为准。</li>
       </ul>
     </section>
   </main>

@@ -299,17 +299,19 @@ onUnmounted(() => window.clearTimeout(refreshTimer));
           @click="showLibrary"
         >Library</button>
       </nav>
-      <div class="app-shell-actions" role="group" aria-label="工作区动作与环境">
-        <button type="button" :disabled="shellBlocked" @click="startNewPaper">
-          新 Paper
-        </button>
-        <button
-          type="button"
-          :aria-current="destination === 'vault' ? 'page' : undefined"
-          :disabled="shellBlocked"
-          @click="showVault"
-        >Vault</button>
-      </div>
+      <button
+        type="button"
+        class="app-shell-context"
+        :aria-current="destination === 'vault' ? 'page' : undefined"
+        :disabled="shellBlocked"
+        @click="showVault"
+      >Vault</button>
+      <button
+        type="button"
+        class="app-shell-new-paper"
+        :disabled="shellBlocked"
+        @click="startNewPaper"
+      >新 Paper</button>
     </header>
 
     <div
@@ -425,29 +427,32 @@ onUnmounted(() => window.clearTimeout(refreshTimer));
   z-index: 20;
   top: 0;
   display: grid;
-  grid-template-columns: auto auto minmax(20px, 1fr) auto;
+  grid-template-columns: auto auto minmax(20px, 1fr) auto auto;
   min-height: 56px;
   align-items: stretch;
-  gap: 20px;
-  padding: 0 26px;
+  gap: 16px;
+  padding: 0 22px;
   border-bottom: 1px solid var(--rule);
   background: var(--paper);
 }
 
 .app-shell-brand {
   align-self: center;
-  font: 600 1.2rem var(--font-display);
+  font: 700 1.125rem/1.375rem var(--font-body);
 }
 
-.app-shell-daily,
-.app-shell-actions {
+.app-shell-daily {
   display: flex;
   align-items: stretch;
   gap: 4px;
 }
 
-.app-shell-actions {
+.app-shell-context {
   grid-column: 4;
+}
+
+.app-shell-new-paper {
+  grid-column: 5;
 }
 
 .app-shellbar button {
@@ -479,20 +484,38 @@ onUnmounted(() => window.clearTimeout(refreshTimer));
   font-family: inherit;
 }
 
-@media (max-width: 760px) {
+@media (min-width: 800px) {
+  .app-shell-new-paper {
+    min-width: 110px;
+  }
+}
+
+@media (max-width: 799px) {
   .app-shellbar {
-    grid-template-columns: auto 1fr;
-    gap: 0 12px;
-    padding: 8px 14px;
+    grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+    grid-template-rows: 56px;
+    gap: 0 4px;
+    min-height: 56px;
+    padding: 0 12px;
   }
 
   .app-shell-daily {
-    justify-self: end;
+    grid-column: 2;
+    grid-row: 1;
   }
 
-  .app-shell-actions {
-    grid-column: 1 / -1;
-    justify-content: flex-end;
+  .app-shell-context {
+    grid-column: 4;
+    grid-row: 1;
+  }
+
+  .app-shell-new-paper {
+    grid-column: 5;
+    grid-row: 1;
+  }
+
+  .app-shellbar button {
+    padding-inline: 6px;
   }
 }
 </style>

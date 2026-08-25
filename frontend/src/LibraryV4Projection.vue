@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from "vue";
+import { computed, ref, useId, watch } from "vue";
 
 const props = defineProps({
   entries: { type: Array, required: true },
@@ -17,6 +17,7 @@ const emit = defineEmits([
 
 const query = ref(props.query);
 const selectedPath = ref(props.entries[0]?.path ?? null);
+const previewPopoverIdPrefix = `library-preview-popover-${useId()}`;
 const normalizedQuery = computed(() => query.value.trim().toLocaleLowerCase());
 const filteredEntries = computed(() => {
   if (!normalizedQuery.value) {
@@ -57,6 +58,15 @@ watch(selected, (value) => emit("select", value?.path ?? null), { immediate: tru
 function label(entry) {
   return entry.display_name || entry.code;
 }
+
+function handleSearchInput(event) {
+  if (event.isComposing || event.target.composing) return;
+  emit("search", event.target.value);
+}
+
+function previewPopoverId(entry) {
+  return `${previewPopoverIdPrefix}-${encodeURIComponent(entry.path)}`;
+}
 </script>
 
 <template>
@@ -72,7 +82,11 @@ function label(entry) {
           v-model="query"
           type="search"
           placeholder="搜索所有卡页"
-          @input="emit('search', query)"
+          autocomplete="off"
+          autocapitalize="none"
+          autocorrect="off"
+          spellcheck="false"
+          @input="handleSearchInput"
         >
       </label>
     </header>
@@ -92,7 +106,11 @@ function label(entry) {
           <li v-for="entry in filteredEntries" :key="entry.path">
             <button
               type="button"
+              class="library-paper-trigger"
               :class="{ selected: entry.path === selected?.path }"
+              :popovertarget="previewPopoverId(entry)"
+              popovertargetaction="show"
+              aria-haspopup="dialog"
               @click="selectedPath = entry.path"
             >
               <strong>{{ label(entry) }}</strong>
@@ -100,42 +118,63 @@ function label(entry) {
               <small>{{ entry.folder || "未归档" }}</small>
               <p>{{ entry.preview }}</p>
             </button>
+            <aside
+              :id="previewPopoverId(entry)"
+              class="library-preview-popover keikeu-detail-popover"
+              popover="auto"
+              role="dialog"
+              :aria-label="`${label(entry)} · Paper 预览`"
+            >
+              <header>
+                <div>
+                  <p>SELECTED PAPER</p>
+                  <h3>{{ label(entry) }}</h3>
+                  <code>{{ entry.code }}</code>
+                </div>
+                <button
+                  type="button"
+                  :popovertarget="previewPopoverId(entry)"
+                  popovertargetaction="hide"
+                  aria-label="关闭 Paper 预览"
+                >关闭</button>
+              </header>
+              <dl>
+                <div>
+                  <dt>文件夹</dt>
+                  <dd>{{ entry.folder || "未归档" }}</dd>
+                </div>
+                <div>
+                  <dt>页数</dt>
+                  <dd>{{ entry.page_count }}</dd>
+                </div>
+                <div>
+                  <dt>Tags</dt>
+                  <dd>{{ entry.tags.length ? entry.tags.join(" · ") : "无" }}</dd>
+                </div>
+                <div>
+                  <dt>页标题</dt>
+                  <dd>{{ entry.page_names.length ? entry.page_names.join(" · ") : "无" }}</dd>
+                </div>
+                <div>
+                  <dt>更新时间</dt>
+                  <dd>{{ entry.updated }}</dd>
+                </div>
+              </dl>
+              <button
+                type="button"
+                class="open-paper"
+                :popovertarget="previewPopoverId(entry)"
+                popovertargetaction="hide"
+                @click="emit('open', entry.path)"
+              >
+                打开整份 Paper
+              </button>
+              <small>始终从第一页打开；不 deep-link 到单页。</small>
+            </aside>
           </li>
         </ul>
         <p v-if="filteredEntries.length === 0" class="library-empty">没有匹配的 Paper。</p>
       </section>
-
-      <aside v-if="selected" class="library-v4-detail" aria-label="Paper 详情">
-        <p>SELECTED PAPER</p>
-        <h3>{{ label(selected) }}</h3>
-        <code>{{ selected.code }}</code>
-        <dl>
-          <div>
-            <dt>文件夹</dt>
-            <dd>{{ selected.folder || "未归档" }}</dd>
-          </div>
-          <div>
-            <dt>页数</dt>
-            <dd>{{ selected.page_count }}</dd>
-          </div>
-          <div>
-            <dt>Tags</dt>
-            <dd>{{ selected.tags.length ? selected.tags.join(" · ") : "无" }}</dd>
-          </div>
-          <div>
-            <dt>页标题</dt>
-            <dd>{{ selected.page_names.length ? selected.page_names.join(" · ") : "无" }}</dd>
-          </div>
-          <div>
-            <dt>更新时间</dt>
-            <dd>{{ selected.updated }}</dd>
-          </div>
-        </dl>
-        <button type="button" class="open-paper" @click="emit('open', selected.path)">
-          打开整份 Paper
-        </button>
-        <small>始终从第一页打开；不 deep-link 到单页。</small>
-      </aside>
     </div>
 
     <details v-if="errors.length" class="library-errors">
@@ -173,7 +212,7 @@ input {
 }
 
 .library-v4-header p,
-.library-v4-detail > p {
+.library-preview-popover header p {
   margin: 0;
   color: var(--signal);
   font-size: 0.66rem;
@@ -224,9 +263,6 @@ input {
 }
 
 .library-v4-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(240px, 310px);
-  gap: 34px;
   padding: 26px 0;
 }
 
@@ -258,7 +294,7 @@ input {
   list-style: none;
 }
 
-.library-v4-list button {
+.library-paper-trigger {
   display: grid;
   width: 100%;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -272,76 +308,83 @@ input {
   text-align: left;
 }
 
-.library-v4-list button:hover,
-.library-v4-list button.selected {
+.library-paper-trigger:hover,
+.library-paper-trigger.selected {
   border-color: var(--rule);
   border-left-color: var(--signal);
   background: var(--paper);
 }
 
-.library-v4-list strong {
+.library-paper-trigger strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-size: 0.95rem;
 }
 
-.library-v4-list span,
-.library-v4-list small {
+.library-paper-trigger span,
+.library-paper-trigger small {
+  min-width: 0;
+  overflow-wrap: anywhere;
   color: var(--meta);
   font: 0.68rem var(--font-mono);
 }
 
-.library-v4-list small {
+.library-paper-trigger small {
   grid-column: 1;
 }
 
-.library-v4-list p {
+.library-paper-trigger p {
   display: -webkit-box;
+  min-width: 0;
   grid-column: 1 / -1;
   margin: 7px 0 0;
   overflow: hidden;
+  overflow-wrap: anywhere;
   color: var(--muted);
   font-size: 0.8rem;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
 
-.library-v4-detail {
-  align-self: start;
-  padding: 20px;
-  border: 1px solid var(--rule);
-  border-top: 4px solid var(--signal);
-  background: var(--paper);
+.library-preview-popover header > div {
+  min-width: 0;
 }
 
-.library-v4-detail h3 {
-  margin: 8px 0 3px;
+.library-preview-popover h3 {
+  margin: 4px 0 2px;
+  min-width: 0;
+  overflow-wrap: anywhere;
   font: 500 1.5rem var(--font-display);
 }
 
-.library-v4-detail code {
+.library-preview-popover code {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
   color: var(--meta);
   font-size: 0.7rem;
 }
 
-.library-v4-detail dl {
-  display: grid;
-  gap: 8px;
-  margin: 22px 0;
+.library-preview-popover dl {
+  margin-bottom: 14px;
 }
 
-.library-v4-detail dl div {
-  display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
-  gap: 10px;
+.library-preview-popover dl div {
   padding-top: 8px;
   border-top: 1px solid var(--rule-soft);
 }
 
-.library-v4-detail dt {
+.library-preview-popover dl div:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.library-preview-popover dt {
   color: var(--meta);
   font-size: 0.7rem;
 }
 
-.library-v4-detail dd {
+.library-preview-popover dd {
   margin: 0;
   overflow-wrap: anywhere;
   font-size: 0.74rem;
@@ -356,7 +399,7 @@ input {
   cursor: pointer;
 }
 
-.library-v4-detail > small {
+.library-preview-popover > small {
   display: block;
   margin-top: 8px;
   color: var(--meta);
@@ -394,9 +437,9 @@ input {
   color: var(--meta);
 }
 
-@media (max-width: 1000px) {
-  .library-v4-layout {
-    grid-template-columns: 1fr;
+@media (min-width: 960px) {
+  .library-preview-popover {
+    inset-inline-end: max(24px, calc((100vw - 960px) / 2 + 24px));
   }
 }
 

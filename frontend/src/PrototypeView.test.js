@@ -12,10 +12,14 @@ function buttonByText(wrapper, text) {
 describe("Road v0.7 development-only prototype", () => {
   it("shows the compact Shell and marks the current daily location semantically", async () => {
     const wrapper = mount(PrototypeView);
-    expect(wrapper.text()).toContain("ROAD V0.7 · CP1 · DEVELOPMENT ONLY");
+    expect(wrapper.text()).toContain("ROAD V0.7 · CP7 · DEVELOPMENT ONLY");
     expect(wrapper.text()).toContain("合成样张 · 不连接 Vault");
     expect(wrapper.text()).toContain("3 synthetic Papers");
+    expect(wrapper.text()).not.toContain("草稿与合成基线一致");
+    expect(wrapper.text()).not.toContain("草稿有未保存修改");
     expect(buttonByText(wrapper, "Paper").attributes("aria-current")).toBe("page");
+    expect(wrapper.get(".prototype-v07-context-switch").text()).toBe("示例 Vault");
+    expect(wrapper.get(".prototype-v07-new-paper").text()).toBe("新 Paper");
 
     const libraryButton = buttonByText(wrapper, "Library");
     await libraryButton.trigger("click");
@@ -31,8 +35,9 @@ describe("Road v0.7 development-only prototype", () => {
     expect(wrapper.text()).toContain("合成保存完成");
 
     await buttonByText(wrapper, "Library").trigger("click");
-    await wrapper.findAll(".library-v4-list button")[1].trigger("click");
-    await wrapper.get(".open-paper").trigger("click");
+    const second = wrapper.findAll(".library-v4-list > li")[1];
+    await second.get(".library-paper-trigger").trigger("click");
+    await second.get(".open-paper").trigger("click");
     expect(wrapper.get(".paper-code strong").text()).toBe("K-20260801-004");
   });
 
@@ -40,7 +45,7 @@ describe("Road v0.7 development-only prototype", () => {
     const wrapper = mount(PrototypeView);
     await buttonByText(wrapper, "新 Paper").trigger("click");
     expect(wrapper.get(".paper-code strong").text()).toBe("K-SYNTHETIC-NEW");
-    expect(wrapper.get("#prototype-paper-title").text()).toBe("未命名 Paper");
+    expect(wrapper.get(".paper-name-input").element.value).toBe("");
 
     await wrapper.get(".page-title-field input").setValue("合成新页");
     await buttonByText(wrapper, "保存").trigger("click");

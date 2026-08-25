@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>keikeu Design — Road v0.7 CP6 accepted</title>
+  <title>keikeu Design — Road v0.7 CP7 accepted</title>
   <style>
     :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", sans-serif; color: #0f0f0e; background: #ece9de; }
     * { box-sizing: border-box; }
@@ -42,9 +42,9 @@
 <body>
   <main>
     <header>
-      <p class="eyebrow">Last closed Road v0.6 · Road v0.7 CP6 accepted · extension pending</p>
-      <h1>当前 Paper v4；目标用紧凑 Shell 收口工作面</h1>
-      <p class="status">Current accepted composition：Road v0.7。production Shell、Paper、Library、Vault 与恢复层级已在 CP2–CP4 实现，CP5 synthetic 平台集成与 CP6 一号作者 Gate 均已通过；Road 续段待新任务规划。</p>
+      <p class="eyebrow">Last closed Road v0.6 · current Road v0.7 CP7 accepted</p>
+      <h1>当前 CP7：冷编辑台连续编辑流</h1>
+      <p class="status">Accepted：CP7 Gate D 已通过。连续流、IME-safe Library 搜索、不占流的原生 Popover 与完整目录树 Trash 生命周期进入当前产品；工程、隔离 Tauri 与 Figma 增量证据均已完成。原生 macOS 候选窗观察转入 CP8。</p>
       <nav>
         <a href="../PROJECT.md">当前坐标</a>
         <a href="road-v0-6-paper-v4-design.md">完整设计</a>
@@ -56,10 +56,10 @@
     </header>
 
     <section>
-      <p class="label">Current workbench · Road v0.6 accepted</p>
+      <p class="label">Historical workbench · Road v0.6 accepted</p>
       <div class="layout" aria-label="Quiet Rail、Paper 上下文栏与中央卡页工作台">
         <div class="global">Quiet Rail</div>
-        <div class="context"><strong>Paper</strong><p>稳定 Paper 名称</p><p>Tags（每行一项）</p><p>页码按钮</p><p><code>K-YYYYMMDD-NNN</code></p></div>
+        <div class="context"><strong>Paper</strong><p>稳定 Paper 名称</p><p>Tags（每行一项；CP6 历史）</p><p>页码按钮</p><p><code>K-YYYYMMDD-NNN</code></p></div>
         <div class="work">
           <div class="card">
             <div class="field"><strong>页面标题</strong> · 基础模式也始终可编辑</div>
@@ -72,21 +72,21 @@
     </section>
 
     <section>
-      <p class="label">Road v0.7 production structure · integrated CP5 · author Gate passed CP6</p>
+      <p class="label">CP7 accepted · Gate D remediation and developer review complete</p>
       <div class="target-shell" role="img" aria-label="Road v0.7 紧凑顶栏与内容优先工作面">
-        <div class="shellbar"><strong>keikeu</strong><span>Paper</span><span>Library</span><span></span><span>新 Paper</span><span>当前 Vault</span></div>
-        <div class="shell-work"><strong>Paper 内容优先</strong><p>Paper / Library 是日常位置；正常 Vault 是环境上下文；阻塞恢复接管完整工作面。该 production 结构已通过 synthetic 平台集成与 CP6 一号作者接受；尚未规划的 Road 续段不在本图中。</p></div>
+        <div class="shellbar"><strong>keikeu</strong><span>Paper</span><span>Library</span><span></span><span>当前 Vault</span><span>新 Paper</span></div>
+        <div class="shell-work"><strong>连续编辑流</strong><p>Paper / Library 与 Vault 层级不变；Paper context → 页导航 → 正文 → 动作纵向连续。Library 只把列表留在文档流中：点 Paper 后预览进入与“详情”一致的 top layer；中文 composition 期间不触发检索；文件夹操作紧贴范围，合法长名称不会撑宽页面。文件夹软删除/恢复移动完整目录树，永久删除仍需二次确认。冷编辑台、Opus 标题、单行 comma/CSV UI 与 meta <code>#5c6a71</code> 保持不变。</p></div>
       </div>
     </section>
 
     <section class="two">
       <div>
-        <h2>Current 与 target 共用的视觉不变量</h2>
+        <h2>CP7 继续冻结的产品不变量</h2>
         <ul>
-          <li>保留 parchment、paper、ink blue、near-black、danger 与 success token。</li>
-          <li>Serif 承担 Paper/页名称；sans 承担控件；monospace 只用于 code/path。</li>
+          <li>保留 Paper/Library/Vault 层级、作者控制和所有安全状态。</li>
+          <li>Opus serif 只承担 Paper/页名称；sans 承担控件与正文；mono 只用于 code/path。</li>
           <li>可见 focus、可靠换行、语义控件与 reduced-motion。</li>
-          <li><code>1220×780</code> 与 <code>920×680</code> 不横向溢出或裁字。</li>
+          <li><code>375×812</code>、<code>720×900</code>、<code>920×680</code> 与 <code>1220×780</code> 不横向溢出或裁字。</li>
         </ul>
       </div>
       <div>

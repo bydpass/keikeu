@@ -14,9 +14,9 @@
       {
         "label": "main",
         "title": "keikeu",
-        "width": 1220,
-        "height": 780,
-        "minWidth": 920,
+        "width": 720,
+        "height": 900,
+        "minWidth": 720,
         "minHeight": 680,
         "resizable": true
       }

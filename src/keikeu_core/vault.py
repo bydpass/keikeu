@@ -74,6 +74,7 @@ _EMPTY_INDEX: dict[str, object] = {"version": 4, "papers": [], "errors": []}
 _ATOMIC_EXCHANGE_FLAG = 0x00000002
 _DARWIN_ATOMIC_NO_REPLACE_FLAG = 0x00000004
 _LINUX_ATOMIC_NO_REPLACE_FLAG = 0x00000001
+_INTERNAL_SIBLING_ATTEMPTS = 16
 _PAPER_CODE_FILENAME_RE = re.compile(r"^K-\d{8}-(\d{3})$")
 _RESERVED_FOLDER_NAMES = {
     unicodedata.normalize("NFC", name).casefold()
@@ -129,6 +130,11 @@ class VaultSelectionToken:
 
 def _current_home() -> Path:
     return Path.home()
+
+
+def _internal_sibling_name(suffix: str) -> str:
+    """Return one short random internal name independent of author filenames."""
+    return f".keikeu-{secrets.token_hex(16)}.{suffix}"
 
 
 def _native_exchange_operation():
@@ -1213,6 +1219,73 @@ def _copy_regular_file_at(
         os.close(source_fd)
 
 
+def _isolate_owned_entry_at(
+    parent_fd: int,
+    name: str,
+    identity: tuple[int, int],
+    *,
+    suffix: str,
+    directory: bool,
+) -> tuple[str, os.stat_result] | None:
+    """Move one exact entry to a random sibling name and verify its identity."""
+    try:
+        current = os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
+    except OSError:
+        return None
+    if stat.S_ISDIR(current.st_mode) != directory or (
+        current.st_dev,
+        current.st_ino,
+    ) != identity:
+        return None
+
+    for _attempt in range(_INTERNAL_SIBLING_ATTEMPTS):
+        isolated_name = _internal_sibling_name(suffix)
+        if isolated_name == name:
+            continue
+        try:
+            _atomic_rename_no_replace_at(
+                parent_fd,
+                name,
+                parent_fd,
+                isolated_name,
+            )
+        except FileExistsError:
+            continue
+        except FileNotFoundError:
+            return None
+        break
+    else:
+        raise FileExistsError(
+            errno.EEXIST,
+            f"could not allocate an internal sibling name for: {name}",
+        )
+
+    try:
+        isolated = os.stat(
+            isolated_name,
+            dir_fd=parent_fd,
+            follow_symlinks=False,
+        )
+    except OSError as exc:
+        raise OSError(
+            errno.EIO,
+            f"isolated entry could not be identified and was preserved: {isolated_name}",
+        ) from exc
+    isolated_identity = (isolated.st_dev, isolated.st_ino)
+    if (
+        stat.S_ISDIR(isolated.st_mode) != directory
+        or isolated_identity != identity
+    ):
+        _restore_isolated_entry_at(
+            parent_fd,
+            isolated_name,
+            name,
+            isolated_identity,
+        )
+        return None
+    return isolated_name, isolated
+
+
 def _unlink_owned_file_at(
     parent_fd: int,
     name: str,
@@ -1236,30 +1309,30 @@ def _unlink_owned_file_at(
     ) != identity:
         return False
 
-    quarantine_name = f".{name}.{secrets.token_hex(16)}.keikeu-unlink"
-    try:
-        _atomic_rename_no_replace_at(
-            parent_fd,
-            name,
-            parent_fd,
-            quarantine_name,
-        )
-    except FileNotFoundError:
+    isolated = _isolate_owned_entry_at(
+        parent_fd,
+        name,
+        identity,
+        suffix="keikeu-unlink",
+        directory=False,
+    )
+    if isolated is None:
         return False
+    quarantine_name, isolated_stat = isolated
+    isolated_identity = (isolated_stat.st_dev, isolated_stat.st_ino)
 
     try:
-        data, isolated_identity = _read_regular_bytes_at(
+        data, read_identity = _read_regular_bytes_at(
             parent_fd,
             quarantine_name,
             Path(quarantine_name),
         )
-        matches = isolated_identity == identity and (
+        matches = read_identity == identity and (
             expected_digest is None
             or hashlib.sha256(data).hexdigest() == expected_digest
         )
     except (OSError, ValueError):
         matches = False
-        isolated_identity = None
 
     if not matches:
         _restore_isolated_entry_at(
@@ -1364,19 +1437,19 @@ def _rmdir_owned_directory_at(
     ) != identity:
         return False
 
-    quarantine_name = f".{name}.{secrets.token_hex(16)}.keikeu-rmdir"
-    try:
-        _atomic_rename_no_replace_at(
-            parent_fd,
-            name,
-            parent_fd,
-            quarantine_name,
-        )
-    except FileNotFoundError:
+    isolated = _isolate_owned_entry_at(
+        parent_fd,
+        name,
+        identity,
+        suffix="keikeu-rmdir",
+        directory=True,
+    )
+    if isolated is None:
         return False
+    quarantine_name, isolated_stat = isolated
 
     isolated_fd: int | None = None
-    isolated_identity: tuple[int, int] | None = None
+    isolated_identity = (isolated_stat.st_dev, isolated_stat.st_ino)
     try:
         isolated_fd = _open_child_directory_no_follow(
             parent_fd,
@@ -1384,7 +1457,8 @@ def _rmdir_owned_directory_at(
             Path(quarantine_name),
         )
         opened = os.fstat(isolated_fd)
-        isolated_identity = (opened.st_dev, opened.st_ino)
+        if (opened.st_dev, opened.st_ino) != identity:
+            raise ValueError(f"isolated directory changed: {quarantine_name}")
         with os.scandir(isolated_fd) as entries:
             empty = next(entries, None) is None
     except (OSError, ValueError):
@@ -1412,6 +1486,266 @@ def _rmdir_owned_directory_at(
             isolated_identity,
         )
         raise
+    return True
+
+
+def _unlink_owned_entry_at(
+    parent_fd: int,
+    name: str,
+    identity: tuple[int, int],
+) -> bool:
+    """Isolate and unlink one exact non-directory entry without following it."""
+    try:
+        current = os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
+    except OSError:
+        return False
+    if stat.S_ISDIR(current.st_mode) or (
+        current.st_dev,
+        current.st_ino,
+    ) != identity:
+        return False
+
+    isolated = _isolate_owned_entry_at(
+        parent_fd,
+        name,
+        identity,
+        suffix="keikeu-unlink-entry",
+        directory=False,
+    )
+    if isolated is None:
+        return False
+    quarantine_name, isolated_stat = isolated
+    isolated_identity = (isolated_stat.st_dev, isolated_stat.st_ino)
+
+    try:
+        os.unlink(quarantine_name, dir_fd=parent_fd)
+    except Exception:
+        _restore_isolated_entry_at(
+            parent_fd,
+            quarantine_name,
+            name,
+            isolated_identity,
+        )
+        raise
+    return True
+
+
+def _require_directory_tree_on_device(
+    directory_fd: int,
+    display_path: Path,
+    device: int,
+) -> None:
+    """Reject mounted subtrees before recursive deletion; never follow symlinks."""
+    with os.scandir(directory_fd) as entries:
+        children = sorted(entries, key=lambda entry: entry.name)
+    for entry in children:
+        entry_stat = entry.stat(follow_symlinks=False)
+        if not stat.S_ISDIR(entry_stat.st_mode):
+            continue
+        child_path = display_path / entry.name
+        if entry_stat.st_dev != device:
+            raise ValueError(f"mounted subtree blocks permanent delete: {child_path}")
+        child_fd = _open_child_directory_no_follow(
+            directory_fd,
+            entry.name,
+            child_path,
+        )
+        try:
+            opened = os.fstat(child_fd)
+            if (opened.st_dev, opened.st_ino) != (
+                entry_stat.st_dev,
+                entry_stat.st_ino,
+            ):
+                raise ValueError(f"directory changed while inspecting: {child_path}")
+            _require_directory_tree_on_device(child_fd, child_path, device)
+        finally:
+            os.close(child_fd)
+
+
+def _delete_directory_contents_at(
+    directory_fd: int,
+    display_path: Path,
+    device: int,
+) -> None:
+    """Delete one directory snapshot through pinned descriptors only."""
+    with os.scandir(directory_fd) as entries:
+        names = sorted(entry.name for entry in entries)
+    for name in names:
+        child_path = display_path / name
+        try:
+            entry_stat = os.stat(
+                name,
+                dir_fd=directory_fd,
+                follow_symlinks=False,
+            )
+        except FileNotFoundError:
+            continue
+        identity = (entry_stat.st_dev, entry_stat.st_ino)
+        if not stat.S_ISDIR(entry_stat.st_mode):
+            if not _unlink_owned_entry_at(directory_fd, name, identity):
+                raise ValueError(f"entry changed during permanent delete: {child_path}")
+            continue
+        if entry_stat.st_dev != device:
+            raise ValueError(f"mounted subtree blocks permanent delete: {child_path}")
+        isolated = _isolate_owned_entry_at(
+            directory_fd,
+            name,
+            identity,
+            suffix="keikeu-rmtree-child",
+            directory=True,
+        )
+        if isolated is None:
+            raise ValueError(f"directory changed during permanent delete: {child_path}")
+        isolated_name, isolated_stat = isolated
+        isolated_identity = (isolated_stat.st_dev, isolated_stat.st_ino)
+        child_fd: int | None = None
+        try:
+            child_fd = _open_child_directory_no_follow(
+                directory_fd,
+                isolated_name,
+                child_path,
+            )
+            opened = os.fstat(child_fd)
+            if (opened.st_dev, opened.st_ino) != identity:
+                raise ValueError(f"directory changed during permanent delete: {child_path}")
+            if opened.st_dev != device:
+                raise ValueError(f"mounted subtree blocks permanent delete: {child_path}")
+            _delete_directory_contents_at(child_fd, child_path, device)
+        except Exception:
+            if child_fd is not None:
+                os.close(child_fd)
+            _restore_isolated_entry_at(
+                directory_fd,
+                isolated_name,
+                name,
+                isolated_identity,
+            )
+            raise
+        else:
+            assert child_fd is not None
+            os.close(child_fd)
+        if not _rmdir_owned_directory_at(directory_fd, isolated_name, identity):
+            _restore_isolated_entry_at(
+                directory_fd,
+                isolated_name,
+                name,
+                isolated_identity,
+            )
+            raise ValueError(f"directory changed during permanent delete: {child_path}")
+
+    with os.scandir(directory_fd) as entries:
+        remaining = sorted(entry.name for entry in entries)
+    if remaining:
+        raise ValueError(
+            f"directory changed during permanent delete: {display_path / remaining[0]}"
+        )
+
+
+def _rmtree_owned_directory_at(
+    parent_fd: int,
+    name: str,
+    identity: tuple[int, int],
+) -> bool:
+    """Remove one exact directory tree without following contained symlinks."""
+    try:
+        current = os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
+    except OSError:
+        return False
+    if not stat.S_ISDIR(current.st_mode) or (
+        current.st_dev,
+        current.st_ino,
+    ) != identity:
+        return False
+
+    parent_device = os.fstat(parent_fd).st_dev
+    if current.st_dev != parent_device:
+        raise ValueError(f"mounted subtree blocks permanent delete: {name}")
+    isolated = _isolate_owned_entry_at(
+        parent_fd,
+        name,
+        identity,
+        suffix="keikeu-rmtree",
+        directory=True,
+    )
+    if isolated is None:
+        return False
+    quarantine_name, isolated_stat = isolated
+
+    isolated_fd: int | None = None
+    isolated_identity = (isolated_stat.st_dev, isolated_stat.st_ino)
+    try:
+        isolated_fd = _open_child_directory_no_follow(
+            parent_fd,
+            quarantine_name,
+            Path(quarantine_name),
+        )
+        _require_directory_tree_on_device(
+            isolated_fd,
+            Path(name),
+            identity[0],
+        )
+    except Exception:
+        if isolated_fd is not None:
+            os.close(isolated_fd)
+        _restore_isolated_entry_at(
+            parent_fd,
+            quarantine_name,
+            name,
+            isolated_identity,
+        )
+        raise
+    else:
+        assert isolated_fd is not None
+        os.close(isolated_fd)
+
+    try:
+        os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
+    except FileNotFoundError:
+        pass
+    else:
+        raise OSError(
+            errno.EIO,
+            "folder name was recreated during permanent delete; both paths were preserved: "
+            f"{name}, {quarantine_name}",
+        )
+
+    isolated_fd = None
+    try:
+        isolated_fd = _open_child_directory_no_follow(
+            parent_fd,
+            quarantine_name,
+            Path(quarantine_name),
+        )
+        opened = os.fstat(isolated_fd)
+        if (opened.st_dev, opened.st_ino) != identity:
+            raise ValueError("Trash folder changed before permanent delete")
+        _delete_directory_contents_at(
+            isolated_fd,
+            Path(name),
+            identity[0],
+        )
+    except Exception:
+        if isolated_fd is not None:
+            os.close(isolated_fd)
+        _restore_isolated_entry_at(
+            parent_fd,
+            quarantine_name,
+            name,
+            isolated_identity,
+        )
+        raise
+    else:
+        assert isolated_fd is not None
+        os.close(isolated_fd)
+
+    if not _rmdir_owned_directory_at(parent_fd, quarantine_name, identity):
+        _restore_isolated_entry_at(
+            parent_fd,
+            quarantine_name,
+            name,
+            isolated_identity,
+        )
+        raise ValueError("Trash folder changed before permanent delete")
     return True
 
 
@@ -2355,6 +2689,282 @@ def _remove_empty_folder_at(
         os.close(parent_fd)
 
 
+def _move_owned_directory_at(
+    vault: Path,
+    root_fd: int,
+    source_parent_fd: int,
+    source_relative: Path,
+    destination_parent_fd: int,
+    destination_relative: Path,
+    *,
+    source_fd: int,
+) -> None:
+    """Exchange one pinned directory with an owned empty destination placeholder."""
+    opened = os.fstat(source_fd)
+    identity = (opened.st_dev, opened.st_ino)
+    _require_directory_path_identity(vault / source_relative, source_fd)
+    _require_directory_path_identity(vault / source_relative.parent, source_parent_fd)
+    _require_directory_path_identity(
+        vault / destination_relative.parent,
+        destination_parent_fd,
+    )
+    _require_directory_path_identity(vault, root_fd)
+    collision = _semantic_folder_collision_at(
+        destination_parent_fd,
+        destination_relative.name,
+    )
+    if collision is not None:
+        raise FileExistsError(f"folder name conflicts by NFC+casefold: {collision}")
+
+    placeholder_name = ""
+    placeholder_fd: int | None = None
+    placeholder_identity: tuple[int, int] | None = None
+    placeholder_location = ""
+    try:
+        for _attempt in range(_INTERNAL_SIBLING_ATTEMPTS):
+            placeholder_name = _internal_sibling_name("keikeu-move-placeholder")
+            try:
+                os.mkdir(
+                    placeholder_name,
+                    mode=0o700,
+                    dir_fd=destination_parent_fd,
+                )
+            except FileExistsError:
+                continue
+            break
+        else:
+            raise FileExistsError(
+                errno.EEXIST,
+                "could not allocate a folder move placeholder",
+            )
+        placeholder_location = placeholder_name
+        placeholder_fd = _open_child_directory_no_follow(
+            destination_parent_fd,
+            placeholder_name,
+            vault / destination_relative.parent / placeholder_name,
+        )
+        placeholder = os.fstat(placeholder_fd)
+        placeholder_identity = (placeholder.st_dev, placeholder.st_ino)
+        _require_directory_path_identity(
+            vault / destination_relative.parent / placeholder_name,
+            placeholder_fd,
+        )
+        _atomic_rename_no_replace_at(
+            destination_parent_fd,
+            placeholder_name,
+            destination_parent_fd,
+            destination_relative.name,
+        )
+        placeholder_location = destination_relative.name
+        _require_directory_path_identity(
+            vault / destination_relative,
+            placeholder_fd,
+        )
+    except Exception:
+        if placeholder_identity is not None:
+            _rmdir_owned_directory_at(
+                destination_parent_fd,
+                placeholder_location,
+                placeholder_identity,
+            )
+        raise
+    finally:
+        if placeholder_fd is not None:
+            os.close(placeholder_fd)
+
+    assert placeholder_identity is not None
+
+    try:
+        _require_directory_path_identity(vault / source_relative, source_fd)
+        _require_directory_path_identity(
+            vault / source_relative.parent,
+            source_parent_fd,
+        )
+        _require_directory_path_identity(
+            vault / destination_relative.parent,
+            destination_parent_fd,
+        )
+        collision = _semantic_folder_collision_at(
+            destination_parent_fd,
+            destination_relative.name,
+            excluding=destination_relative.name,
+        )
+        if collision is not None:
+            raise FileExistsError(
+                f"folder name conflicts by NFC+casefold: {collision}"
+            )
+        _require_directory_path_identity(vault, root_fd)
+        atomic_exchange_at_no_follow(
+            source_parent_fd,
+            source_relative.name,
+            destination_parent_fd,
+            destination_relative.name,
+        )
+    except Exception as exchange_error:
+        try:
+            source_now = os.stat(
+                source_relative.name,
+                dir_fd=source_parent_fd,
+                follow_symlinks=False,
+            )
+            destination_now = os.stat(
+                destination_relative.name,
+                dir_fd=destination_parent_fd,
+                follow_symlinks=False,
+            )
+            source_now_identity = (source_now.st_dev, source_now.st_ino)
+            destination_now_identity = (
+                destination_now.st_dev,
+                destination_now.st_ino,
+            )
+            if (
+                source_now_identity == placeholder_identity
+                and destination_now_identity == identity
+            ):
+                atomic_exchange_at_no_follow(
+                    source_parent_fd,
+                    source_relative.name,
+                    destination_parent_fd,
+                    destination_relative.name,
+                )
+                source_now_identity, destination_now_identity = (
+                    identity,
+                    placeholder_identity,
+                )
+            if (
+                source_now_identity != identity
+                or destination_now_identity != placeholder_identity
+            ):
+                raise OSError(
+                    errno.EIO,
+                    "folder move exchange failed with changed paths; current paths were "
+                    f"preserved at {vault / source_relative} and "
+                    f"{vault / destination_relative}",
+                )
+            if not _rmdir_owned_directory_at(
+                destination_parent_fd,
+                destination_relative.name,
+                placeholder_identity,
+            ):
+                raise OSError(
+                    errno.EIO,
+                    f"folder move placeholder could not be cleaned: {vault / destination_relative}",
+                )
+        except Exception as rollback_error:
+            if rollback_error is exchange_error:
+                raise
+            raise OSError(
+                errno.EIO,
+                "folder move exchange could not roll back safely; current paths were "
+                f"preserved at {vault / source_relative} and {vault / destination_relative}",
+            ) from rollback_error
+        raise
+
+    try:
+        source_placeholder = os.stat(
+            source_relative.name,
+            dir_fd=source_parent_fd,
+            follow_symlinks=False,
+        )
+        destination = os.stat(
+            destination_relative.name,
+            dir_fd=destination_parent_fd,
+            follow_symlinks=False,
+        )
+        if (
+            not stat.S_ISDIR(source_placeholder.st_mode)
+            or (source_placeholder.st_dev, source_placeholder.st_ino)
+            != placeholder_identity
+            or not stat.S_ISDIR(destination.st_mode)
+            or (destination.st_dev, destination.st_ino) != identity
+        ):
+            raise ValueError("folder paths changed during atomic exchange")
+        _require_directory_path_identity(vault / destination_relative, source_fd)
+        _require_directory_path_identity(
+            vault / source_relative.parent,
+            source_parent_fd,
+        )
+        _require_directory_path_identity(
+            vault / destination_relative.parent,
+            destination_parent_fd,
+        )
+        collision = _semantic_folder_collision_at(
+            destination_parent_fd,
+            destination_relative.name,
+            excluding=destination_relative.name,
+        )
+        if collision is not None:
+            raise FileExistsError(
+                f"folder name conflicts by NFC+casefold: {collision}"
+            )
+        _require_directory_path_identity(vault, root_fd)
+    except Exception as guard_error:
+        try:
+            source_now = os.stat(
+                source_relative.name,
+                dir_fd=source_parent_fd,
+                follow_symlinks=False,
+            )
+            destination_now = os.stat(
+                destination_relative.name,
+                dir_fd=destination_parent_fd,
+                follow_symlinks=False,
+            )
+            if (
+                (source_now.st_dev, source_now.st_ino) != placeholder_identity
+                or (destination_now.st_dev, destination_now.st_ino) != identity
+            ):
+                raise OSError(
+                    errno.EIO,
+                    "folder move paths changed externally; current paths were preserved at "
+                    f"{vault / source_relative} and {vault / destination_relative}",
+                )
+            atomic_exchange_at_no_follow(
+                source_parent_fd,
+                source_relative.name,
+                destination_parent_fd,
+                destination_relative.name,
+            )
+            _require_directory_path_identity(vault / source_relative, source_fd)
+            if not _rmdir_owned_directory_at(
+                destination_parent_fd,
+                destination_relative.name,
+                placeholder_identity,
+            ):
+                raise OSError(
+                    errno.EIO,
+                    f"folder move placeholder could not be cleaned: {vault / destination_relative}",
+                )
+        except Exception as rollback_error:
+            raise OSError(
+                errno.EIO,
+                "folder move could not roll back safely; current paths were preserved at "
+                f"{vault / source_relative} and {vault / destination_relative}",
+            ) from rollback_error
+        raise
+
+    if not _rmdir_owned_directory_at(
+        source_parent_fd,
+        source_relative.name,
+        placeholder_identity,
+    ):
+        raise OSError(
+            errno.EIO,
+            "folder move completed but its empty source placeholder changed; current paths "
+            f"were preserved at {vault / source_relative} and {vault / destination_relative}",
+        )
+    _require_directory_path_identity(vault / destination_relative, source_fd)
+    _require_directory_path_identity(
+        vault / source_relative.parent,
+        source_parent_fd,
+    )
+    _require_directory_path_identity(
+        vault / destination_relative.parent,
+        destination_parent_fd,
+    )
+    _require_directory_path_identity(vault, root_fd)
+
+
 def create_folder(vault: Path, name: str) -> Path:
     """Create one author folder directly under active ``cache``."""
     stored_name = validate_folder_name(name)
@@ -2814,37 +3424,23 @@ def soft_delete_folder(
     vault: Path,
     folder: str | Path,
 ) -> list[PathOperationResult]:
-    """Soft-delete supported Papers in one folder and preserve failed/unknown items."""
+    """Soft-delete one complete folder tree without inspecting its contents."""
     folder_name = _stored_folder_name(folder)
     vault, root_fd = _open_pinned_vault_root(vault)
-    target_record: _OwnedDirectory | None = None
-    keep_target = False
+    cache_fd: int | None = None
     source_fd: int | None = None
-    target_fd: int | None = None
+    trash_fd: int | None = None
     trash_records: list[_OwnedDirectory] = []
+    moved = False
+    source_relative = Path("cache") / folder_name
     try:
-        source_fd = _open_relative_directory_no_follow(
-            root_fd,
-            Path("cache") / folder_name,
-            vault,
-        )
-        papers, results = _folder_papers_and_errors_at(
-            vault,
-            root_fd,
-            Path("cache"),
+        cache_fd = _open_relative_directory_no_follow(root_fd, Path("cache"), vault)
+        source_fd = _open_child_directory_no_follow(
+            cache_fd,
             folder_name,
-            folder_fd=source_fd,
-            validate_papers=False,
-            preflight_filename_conflicts=True,
-        )
-        if results:
-            return results
-        _require_directory_path_identity(
-            vault / "cache" / folder_name,
-            source_fd,
+            vault / source_relative,
         )
         trash_fd, trash_records = _ensure_trash_cache_at(root_fd, vault)
-        os.close(trash_fd)
         target_name = _semantic_target_folder_name_at(
             root_fd,
             vault,
@@ -2852,62 +3448,34 @@ def soft_delete_folder(
             folder_name,
         )
         target_relative = Path(".trash/cache") / target_name
-        target_fd, target_record = _ensure_relative_directory_at(
-            root_fd,
-            vault,
-            target_relative,
-        )
-        owned_records = list(trash_records)
-        if target_record is not None:
-            owned_records.append(target_record)
-        if owned_records and not _owned_directories_still_named(owned_records):
+        if trash_records and not _owned_directories_still_named(trash_records):
             raise ValueError("Trash layout changed while creating")
-        for source_relative in papers:
-            result = _result_for_move(
-                vault,
-                root_fd,
-                source_relative,
-                target_relative / source_relative.name,
-                expected_source_parent_fd=source_fd,
-                expected_destination_parent_fd=target_fd,
+        _move_owned_directory_at(
+            vault,
+            root_fd,
+            cache_fd,
+            source_relative,
+            trash_fd,
+            target_relative,
+            source_fd=source_fd,
+        )
+        moved = True
+        return [
+            PathOperationResult(
+                source=source_relative,
+                destination=target_relative,
             )
-            keep_target = keep_target or result.succeeded
-            results.append(result)
-        source_relative = Path("cache") / folder_name
-        try:
-            removed = _remove_empty_folder_at(
-                vault,
-                root_fd,
-                source_relative,
-                expected_folder_fd=source_fd,
-            )
-        except (OSError, ValueError) as exc:
-            results.append(PathOperationResult(source=source_relative, error=str(exc)))
-            removed = False
-        if removed:
-            keep_target = True
-            if not papers and not results:
-                results.append(
-                    PathOperationResult(
-                        source=source_relative,
-                        destination=target_relative,
-                    )
-                )
-        elif not any(result.source == source_relative for result in results):
-            results.append(
-                PathOperationResult(
-                    source=source_relative,
-                    error="folder retained because unsupported or failed items remain",
-                )
-            )
-        return results
+        ]
+    except (OSError, ValueError) as exc:
+        return [PathOperationResult(source=source_relative, error=str(exc))]
     finally:
         if source_fd is not None:
             os.close(source_fd)
-        if target_fd is not None:
-            os.close(target_fd)
-        _release_or_cleanup_directory(target_record, keep=keep_target)
-        if keep_target:
+        if cache_fd is not None:
+            os.close(cache_fd)
+        if trash_fd is not None:
+            os.close(trash_fd)
+        if moved:
             _release_owned_directories(trash_records)
         else:
             _cleanup_owned_directories(trash_records)
@@ -3010,33 +3578,23 @@ def restore_folder(
     vault: Path,
     folder: str | Path,
 ) -> list[PathOperationResult]:
-    """Restore one Trash folder, merging only non-conflicting Papers."""
+    """Restore one complete Trash folder tree without inspecting its contents."""
     folder_name = _stored_folder_name(folder)
     vault, root_fd = _open_pinned_vault_root(vault)
-    target_record: _OwnedDirectory | None = None
-    keep_target = False
+    trash_fd: int | None = None
+    cache_fd: int | None = None
     source_fd: int | None = None
-    target_fd: int | None = None
+    source_relative = Path(".trash/cache") / folder_name
     try:
-        source_fd = _open_relative_directory_no_follow(
-            root_fd,
-            Path(".trash/cache") / folder_name,
-            vault,
+        trash_fd = _open_relative_directory_no_follow(
+            root_fd, Path(".trash/cache"), vault
         )
-        papers, results = _folder_papers_and_errors_at(
-            vault,
-            root_fd,
-            Path(".trash/cache"),
+        source_fd = _open_child_directory_no_follow(
+            trash_fd,
             folder_name,
-            folder_fd=source_fd,
-            validate_papers=False,
+            vault / source_relative,
         )
-        if results:
-            return results
-        _require_directory_path_identity(
-            vault / ".trash/cache" / folder_name,
-            source_fd,
-        )
+        cache_fd = _open_relative_directory_no_follow(root_fd, Path("cache"), vault)
         target_name = _semantic_target_folder_name_at(
             root_fd,
             vault,
@@ -3044,74 +3602,30 @@ def restore_folder(
             folder_name,
         )
         target_relative = Path("cache") / target_name
-        target_fd, target_record = _ensure_relative_directory_at(
-            root_fd,
+        _move_owned_directory_at(
             vault,
+            root_fd,
+            trash_fd,
+            source_relative,
+            cache_fd,
             target_relative,
+            source_fd=source_fd,
         )
-        for source_relative in papers:
-            from keikeu_core.markdown_io import paper_code_from_bytes
-
-            try:
-                data, _identity = _read_regular_bytes_at(
-                    source_fd,
-                    source_relative.name,
-                    vault / source_relative,
-                )
-                code = paper_code_from_bytes(data)
-                if source_relative.name != f"{code}.md":
-                    raise ValueError(
-                        "Paper filename and frontmatter code do not match"
-                    )
-                result = _result_for_move(
-                    vault,
-                    root_fd,
-                    source_relative,
-                    target_relative / f"{code}.md",
-                    expected_source_parent_fd=source_fd,
-                    expected_destination_parent_fd=target_fd,
-                )
-            except (OSError, ValueError, UnicodeError) as exc:
-                result = PathOperationResult(
-                    source=source_relative,
-                    error=str(exc),
-                )
-            keep_target = keep_target or result.succeeded
-            results.append(result)
-        source_relative = Path(".trash/cache") / folder_name
-        try:
-            removed = _remove_empty_folder_at(
-                vault,
-                root_fd,
-                source_relative,
-                expected_folder_fd=source_fd,
+        return [
+            PathOperationResult(
+                source=source_relative,
+                destination=target_relative,
             )
-        except (OSError, ValueError) as exc:
-            results.append(PathOperationResult(source=source_relative, error=str(exc)))
-            removed = False
-        if removed:
-            keep_target = True
-            if not papers and not results:
-                results.append(
-                    PathOperationResult(
-                        source=source_relative,
-                        destination=target_relative,
-                    )
-                )
-        elif not any(result.source == source_relative for result in results):
-            results.append(
-                PathOperationResult(
-                    source=source_relative,
-                    error="folder retained because unsupported or failed items remain",
-                )
-            )
-        return results
+        ]
+    except (OSError, RuntimeError, ValueError) as exc:
+        return [PathOperationResult(source=source_relative, error=str(exc))]
     finally:
         if source_fd is not None:
             os.close(source_fd)
-        if target_fd is not None:
-            os.close(target_fd)
-        _release_or_cleanup_directory(target_record, keep=keep_target)
+        if cache_fd is not None:
+            os.close(cache_fd)
+        if trash_fd is not None:
+            os.close(trash_fd)
         os.close(root_fd)
 
 
@@ -3215,41 +3729,53 @@ def permanently_delete_folder(
     vault: Path,
     folder: str | Path,
 ) -> PathOperationResult:
-    """Permanently remove one explicit, verified-empty Trash folder."""
+    """Permanently remove one explicit Trash folder tree without following links."""
     folder_name = _stored_folder_name(folder)
     vault, root_fd = _open_pinned_vault_root(vault)
+    trash_fd: int | None = None
     folder_fd: int | None = None
     relative = Path(".trash/cache") / folder_name
     try:
-        folder_fd = _open_relative_directory_no_follow(
-            root_fd,
-            relative,
-            vault,
+        trash_fd = _open_relative_directory_no_follow(
+            root_fd, Path(".trash/cache"), vault
         )
-        with os.scandir(folder_fd) as entries:
-            if next(entries, None) is not None:
-                return PathOperationResult(
-                    source=relative,
-                    error="Trash folder must be empty before permanent delete",
-                )
+        folder_fd = _open_child_directory_no_follow(
+            trash_fd,
+            folder_name,
+            vault / relative,
+        )
         _require_directory_path_identity(vault / relative, folder_fd)
-        removed = _remove_empty_folder_at(
-            vault,
-            root_fd,
-            relative,
-            expected_folder_fd=folder_fd,
+        _require_directory_path_identity(vault / relative.parent, trash_fd)
+        _require_directory_path_identity(vault, root_fd)
+        opened = os.fstat(folder_fd)
+        removed = _rmtree_owned_directory_at(
+            trash_fd,
+            folder_name,
+            (opened.st_dev, opened.st_ino),
         )
         if not removed:
             return PathOperationResult(
                 source=relative,
                 error="Trash folder changed before permanent delete",
             )
+        _require_directory_path_identity(vault / relative.parent, trash_fd)
+        _require_directory_path_identity(vault, root_fd)
+        try:
+            os.stat(folder_name, dir_fd=trash_fd, follow_symlinks=False)
+        except FileNotFoundError:
+            pass
+        else:
+            raise ValueError(
+                f"Trash folder name was recreated during permanent delete: {vault / relative}"
+            )
         return PathOperationResult(source=relative)
-    except (OSError, ValueError) as exc:
+    except (OSError, RuntimeError, ValueError) as exc:
         return PathOperationResult(source=relative, error=str(exc))
     finally:
         if folder_fd is not None:
             os.close(folder_fd)
+        if trash_fd is not None:
+            os.close(trash_fd)
         os.close(root_fd)
 
 
@@ -3293,18 +3819,29 @@ def set_vault(
             json.dumps({"vault": str(path)}, indent=2, ensure_ascii=False) + "\n"
         ).encode("utf-8")
         payload_digest = hashlib.sha256(payload).hexdigest()
-        temporary_name = f".{config_path.name}.{secrets.token_hex(8)}.tmp"
+        temporary_name = ""
         temporary_identity: tuple[int, int] | None = None
         try:
-            descriptor = os.open(
-                temporary_name,
-                os.O_WRONLY
-                | os.O_CREAT
-                | os.O_EXCL
-                | getattr(os, "O_NOFOLLOW", 0),
-                0o600,
-                dir_fd=directory_fd,
-            )
+            for _attempt in range(_INTERNAL_SIBLING_ATTEMPTS):
+                temporary_name = _internal_sibling_name("keikeu-config-tmp")
+                try:
+                    descriptor = os.open(
+                        temporary_name,
+                        os.O_WRONLY
+                        | os.O_CREAT
+                        | os.O_EXCL
+                        | getattr(os, "O_NOFOLLOW", 0),
+                        0o600,
+                        dir_fd=directory_fd,
+                    )
+                except FileExistsError:
+                    continue
+                break
+            else:
+                raise FileExistsError(
+                    errno.EEXIST,
+                    "could not allocate a config temporary file",
+                )
             temporary_stat = os.fstat(descriptor)
             temporary_identity = (temporary_stat.st_dev, temporary_stat.st_ino)
             with os.fdopen(descriptor, "wb") as handle:

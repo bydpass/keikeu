@@ -1,6 +1,6 @@
-# keikeu Product Boundary (current: Road v0.7 CP6 accepted; Road extension pending)
+# keikeu Product Boundary (current: Road v0.7 CP7 accepted)
 
-> Authority: §§1–7 define the accepted product, author-asset, and data-safety boundary inherited from Road v0.6; §8 defines shared exclusions and platform scope; §9 defines the Road v0.7 App Shell composition accepted at CP6. Detailed Paper v4 grammar, DTOs, migration, recovery, and protocol remain in the approved [Paper v4 design](design/road-v0-6-paper-v4-design.md); the accepted Road v0.7 interface and acceptance matrix live in the [App Shell design](design/road-v0-7-app-shell-design.md). The developer has kept Road v0.7 open for separately planned extensions, which do not enter this SPEC until approved. Current checkpoint and runtime facts live in [PROJECT](PROJECT.md), source, and tests.
+> Authority: §§1–7 define the accepted product, author-asset, and data-safety boundary inherited from Road v0.6; §8 defines shared exclusions and platform scope; §9 records the Road v0.7 App Shell composition accepted at CP6; §10 defines the CP7 continuous-flow override accepted by developer Gate D on 2026-08-25. Detailed Paper v4 grammar, DTOs, migration, recovery, and protocol remain in the approved [Paper v4 design](design/road-v0-6-paper-v4-design.md); the current interface and acceptance matrix live in the [App Shell design](design/road-v0-7-app-shell-design.md). Current checkpoint and runtime facts live in [PROJECT](PROJECT.md), source, and tests.
 
 ## 1. Definition
 
@@ -17,6 +17,7 @@ The author leaves keikeu with the Paper itself. There is no separate Flashcard p
 - Markdown remains the durable, readable, repairable author asset.
 - Rebuildable indexes and device state are auxiliary, never canonical creative content.
 - keikeu must not silently rewrite, normalize, delete, overwrite, upload, merge, score, or train on author text.
+- 完整文件夹树只有在界面明确说明“全部内容”并获得确认后才能移入废纸篓；不可恢复的整树销毁还需要废纸篓中的第二次明确确认。
 - The author chooses the Vault and external prose editor.
 - No account, cloud backend, telemetry, hidden remote service, or background sync is authorized.
 - Damaged Paper Markdown is reported, not silently repaired or partially opened as an editable Paper.
@@ -40,9 +41,13 @@ current accepted:  compact App Shell → Paper / Library → Vault context / blo
 
 The production composition passed CP5 engineering integration and CP6 first-author acceptance.
 Paper v4, Index v4, protocol v2, Python, Rust, and every author-control contract remain unchanged.
-The Road stays open only because the developer requested additional steps to be planned in a new
-task; no future checkpoint, capability, or acceptance rule is implied here. `PROJECT.md`, source,
-and tests remain the authority for current implementation state.
+The accepted runtime now includes the CP7 presentation and narrow folder-lifecycle override. CP7
+completed Gate C engineering verification, two Gate D remediation rounds, isolated Tauri smoke and
+same-page Figma synchronization before the developer explicitly passed Gate D on 2026-08-25. The
+folder-lifecycle exception is defined in §10 and
+[ADR-0008](architecture/decisions/0008-whole-folder-trash-lifecycle.md). Automated composition
+evidence is not a claim that the native macOS candidate window appeared; that physical-input check is
+deferred to CP8. `PROJECT.md`, source, and tests remain the authority for current implementation state.
 
 ## 4. Current Paper v4 behavior (unchanged by Road v0.7)
 
@@ -96,7 +101,7 @@ No AI generation, prose editor, sync, account, community, database, file watcher
 - Linux and watchOS have no planned support. The iOS-only second user does not enter v0.x acceptance and returns no earlier than a separately designed iOS+Android v1.0.
 - Developer ID distribution work is deferred to Road v0.8.
 
-## 9. Accepted Road v0.7 App Shell (CP6 passed; Road extension pending)
+## 9. Accepted Road v0.7 App Shell baseline (CP6 passed; CP7 override in §10)
 
 Road v0.7 changes only Vue work-surface structure, information hierarchy, and responsive
 presentation. It does not change §§1–8, Paper v4, Index v4, Vault persistence, protocol v2,
@@ -123,12 +128,35 @@ CP2–CP4 provide current source, tests, and window evidence for this production
 provides the complete cross-stack baseline plus current-source synthetic Tauri evidence for the
 normal, native dirty-confirmation, Index, repair, `commit_unknown`, restart and no-replay paths. The
 separate [CP6 author Gate](acceptance/road-v0-7/cp6-author/report.md) passed by explicit developer
-judgment. This establishes product acceptance for the App Shell composition, but not Road
-completion: the developer has deferred additional Road steps to a new planning task. Until that
-plan is approved, this SPEC does not authorize or imply a CP7, scope expansion, real-Vault action,
-or closeout.
+judgment. CP7 subsequently passed its own four Gates and now supplies the accepted presentation and
+folder-lifecycle override in §10. Neither acceptance authorizes real-Vault action, scope outside §10,
+Road closeout, or remote Git operations.
 
-## 10. Road v0.6 completed acceptance record
+## 10. Accepted Road v0.7 CP7 continuous-flow override
+
+CP7 removes visual and interaction friction from the accepted App Shell without changing Paper v4,
+Index v4, protocol v2, DTOs, author Markdown, or product capabilities. Its original scope was the Vue
+presentation layer and Tauri window geometry. Gate D follow-up remediation adds one explicitly
+approved Core exception: the complete-folder Trash lifecycle below. No new command, dependency,
+schema, index, service, or remote behavior is added.
+
+- The Paper surface becomes one continuous vertical flow: context → page navigation → current page → actions.
+- The default desktop window is `720×900` (`width / height = 0.8`), with `720×680` minimum desktop geometry, and remains resizable into the accepted landscape state. `375×812` is browser-responsive evidence, not a mobile implementation or Tauri minimum.
+- Tags use one single-line comma-separated field. The Vue adapter uses reversible CSV-style quotes so literal commas and quotes survive; DTOs and Markdown continue to carry the existing ordered Tag array and Paper v4 bullet grammar. Library search suppresses service queries during IME composition and sends the committed Chinese text exactly once.
+- Paper details and Library Paper preview open in compact native popovers outside document flow. A selected Library row never inserts a detail block below the result list or displaces Paper/folder operations.
+- The Paper surface has no persistent dirty label; existing departure, new-Paper, Vault and close guards remain authoritative.
+- Paper name and page title use the approved Opus serif role; controls and body text stay on the system sans stack. Text-field focus remains quiet while keyboard focus for buttons and navigation stays clearly visible. The Figma meta color `#627078` is corrected to `#5c6a71` in production for WCAG contrast.
+- Confirmed active-folder deletion atomically moves the exact complete directory tree, including unknown and nested entries, to `.trash/cache/`; restore moves the same tree back without partial merge. A conflicting exact/NFC+casefold target blocks the whole move. Confirmed permanent folder deletion uses identity-pinned, symlink-safe recursion and refuses unsafe platforms or mounted subtrees. Once irreversible recursion begins, a later filesystem failure cannot restore entries already destroyed; the remaining tree is restored to its visible Trash name and the operation reports failure. Single-Paper operations and folder merge/rename keep their existing strict validation. The full contract is [ADR-0008](architecture/decisions/0008-whole-folder-trash-lifecycle.md).
+- Paper v4, Index v4, protocol v2, DTOs, Rust commands, sidecar, recovery states, and the Library range/list/action capabilities remain unchanged. Python changes are confined to the three existing folder lifecycle methods; Library presentation changes are confined to IME-safe search and top-layer preview.
+
+CP7 followed four Gates: contract, Figma delivery, production verification, and explicit developer UI
+acceptance. Gates A–C and both remediation rounds completed on 2026-08-25; the developer then
+explicitly passed Gate D with no unresolved P0/P1. The CP7 acceptance record separates this product
+judgment from automated engineering evidence and from the native macOS candidate-window check moved
+to CP8. A local CP7 checkpoint commit is separately authorized for this round; closeout, push, tag,
+signing, packaging and release remain unperformed and unapproved.
+
+## 11. Road v0.6 completed acceptance record
 
 1. **Checkpoint engineering:** CP0–CP6 each produce their declared implementation, checks, smoke, and evidence with no unresolved P0/P1. Their developer exit judgments are covered by advance YOLO; evidence may not be invented or copied forward.
 2. **Current/target integrity:** CP0–CP3 kept production v0.5/protocol v1; CP4 alone activated the complete v4/v2 vertical path; CP5 removed only code proven unreachable.

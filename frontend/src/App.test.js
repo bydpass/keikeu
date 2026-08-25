@@ -1,6 +1,7 @@
 import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import tauriConfig from "../src-tauri/tauri.conf.json";
 import App from "./App.vue";
 import PrototypeView from "./PrototypeView.vue";
 import {
@@ -119,6 +120,17 @@ afterEach(() => {
 });
 
 describe("Road v0.7 desktop shell", () => {
+  it("keeps the default desktop window portrait-safe at 720 × 900", () => {
+    const mainWindow = tauriConfig.app.windows.find(({ label }) => label === "main");
+    expect(mainWindow).toMatchObject({
+      width: 720,
+      height: 900,
+      minWidth: 720,
+      minHeight: 680,
+    });
+    expect(mainWindow.width / mainWindow.height).toBeLessThanOrEqual(1);
+  });
+
   it("unblocks into the Paper v4 workspace with semantic Shell navigation", async () => {
     const wrapper = await mountApp();
 
@@ -185,6 +197,7 @@ describe("Road v0.7 desktop shell", () => {
     expect(wrapper.get(".page-content-field textarea").element.value).toBe(
       "Unsaved shell draft",
     );
+    expect(wrapper.text()).not.toContain("草稿有未保存修改");
     expect(document.activeElement).toBe(libraryButton.element);
     expect(bridgeRequest.mock.calls.filter(([method]) => method === "library.query")).toHaveLength(0);
 
@@ -195,6 +208,26 @@ describe("Road v0.7 desktop shell", () => {
     expect(shellButtonByText(wrapper, "Library").attributes("aria-current")).toBe("page");
     expect(bridgeRequest.mock.calls.filter(([method]) => method === "library.query")).toHaveLength(1);
     expect(document.activeElement).toBe(wrapper.get(".app-work-surface").element);
+  });
+
+  it("guards a dirty Paper before entering Vault", async () => {
+    const wrapper = await mountApp();
+    await wrapper.get(".page-content-field textarea").setValue("Keep before Vault");
+    const vaultButton = shellButtonByText(wrapper, "Vault");
+    vaultButton.element.focus();
+    confirmDiscardChanges.mockResolvedValueOnce(false);
+
+    await vaultButton.trigger("click");
+    await flushPromises();
+    expect(shellButtonByText(wrapper, "Paper").attributes("aria-current")).toBe("page");
+    expect(wrapper.get(".page-content-field textarea").element.value).toBe("Keep before Vault");
+    expect(document.activeElement).toBe(vaultButton.element);
+
+    confirmDiscardChanges.mockResolvedValueOnce(true);
+    await vaultButton.trigger("click");
+    await flushPromises();
+    expect(shellButtonByText(wrapper, "Vault").attributes("aria-current")).toBe("page");
+    expect(confirmDiscardChanges).toHaveBeenCalledTimes(2);
   });
 
   it("creates one fresh Paper instance only after the shared guard confirms", async () => {

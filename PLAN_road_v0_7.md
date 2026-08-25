@@ -1,6 +1,6 @@
-# Road v0.7 实施计划（CP6 已通过；续段待规划）
+# Road v0.7 实施计划（CP7 Gate D 已通过；checkpoint 收口）
 
-> 状态：开发者于 2026-08-20 批准本计划与目标设计，并对 CP0–CP6 的开发者退出判断与本地 checkpoint commit 给出 advance YOLO。CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc`、CP3 `55b5313`、CP4 `6f69310`、CP5 `3259c42` 与 CP6 一号作者 Gate 均已通过。开发者于 2026-08-21 决定 Road v0.7 不在 CP6 后收口，延顺步骤留到新的规划任务；当前不预设后续 CP 编号、范围或 Gate。CP6 真实 Vault 使用已按窄授权完成；未来真实 Vault 操作、push、tag、closeout 与发布未由此授权。
+> 状态：开发者于 2026-08-20 批准原 CP0–CP6 计划并给出相应 advance YOLO；CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc`、CP3 `55b5313`、CP4 `6f69310`、CP5 `3259c42` 与 CP6 一号作者 Gate 均已通过。CP7 Gate A 于 2026-08-24 通过，Gate B 于 2026-08-25 经开发者明确判断通过，Gate C production candidate 与两轮 Gate D 整改、完整工程复核、隔离 Tauri smoke、同一 Figma Page 增量同步均于 2026-08-25 完成；开发者随后明确通过 Gate D。自动化只证明 composition 期间零查询与最终中文一次提交，未观察到的 macOS 原生候选窗不补写为 CP7 证据，并移至 CP8 人工复核。CP6 checkpoint 是 `e22b691`；`206d03e` 与 `528124d` 是另行授权、已审阅的 preparation/hygiene，不冒充 CP6 证据；CP7 分支 `ui/cp7-v07-continuous-flow` 从该 clean preparation baseline 线性开始。本轮已授权 CP7 本地 checkpoint commit；真实 Vault、push、tag、closeout 与发布仍未授权。
 >
 > 目标设计：[`docs/design/road-v0-7-app-shell-design.md`](docs/design/road-v0-7-app-shell-design.md)
 >
@@ -21,11 +21,11 @@ Road v0.7 将已接受的 Paper、Library 与 Vault 收口为一个稳定桌面�
 ## 1. 权威与执行纪律
 
 - 当前已接受产品由 [`docs/SPEC.md`](docs/SPEC.md) 定义。
-- Road v0.7 App Shell 增量由已批准并在 CP6 接受的[设计](docs/design/road-v0-7-app-shell-design.md)定义；新的 Road 续段尚未规划，不得自行写入 current 或 target。
+- Road v0.7 App Shell 增量与 CP7 accepted override 由已批准的[设计](docs/design/road-v0-7-app-shell-design.md)定义；CP7 在 Gate D 前只写作 target，现已由开发者明确接受。
 - [`docs/RULES.md`](docs/RULES.md) 继续约束作者资产、Git、证据与安全边界。
 - [`docs/PROJECT.md`](docs/PROJECT.md)、源码和测试标明每个 Checkpoint 的当前事实。
 - 不得把未完成 target 写成已实现；每个 CP 只从前一已通过 checkpoint commit 建分支。
-- 每个 CP 单独 commit；CP0–CP6 的本地 checkpoint commit 已获 advance YOLO，真实 Vault、push、tag、closeout 与发布始终另行授权。
+- 每个 CP 单独 commit；CP0–CP6 的 advance YOLO 已用完。CP7 Gate D 与本地 checkpoint commit 已分别获得明确判断和授权；真实 Vault、push、tag、closeout 与发布始终另行授权。
 
 ## 2. 全局范围
 
@@ -89,6 +89,7 @@ Python/Rust 无改动不代表可以复制历史结果；CP0 与 CP5 各运行�
 | CP4 | `ui/cp4-v07-library-vault` | Library、Vault 与恢复层级 | 两尺寸路径完整 |
 | CP5 | `test/cp5-v07-integration` | 全量检查与 Tauri 合成 smoke | 无未解决 P0/P1 |
 | CP6 | `test/cp6-v07-author-gate` | 一号作者真实日常接受 | 产品 Gate 通过 |
+| CP7 | `ui/cp7-v07-continuous-flow` | 连续编辑流、默认窗口与 UI 去 slop | Gate A–D 顺序通过 |
 
 ## 5. CP0 — 合同与基线
 
@@ -211,17 +212,69 @@ P2/P3 未单独报告，不虚构为 0。Gate 后去标识化检查确认所选 
 migration stage `ready`、Index `current`，候选应用与 Vite 正常退出且无残留；未记录正文、
 名称、Tags、路径、截图或原始日志。证据见 [`CP6 report`](docs/acceptance/road-v0-7/cp6-author/report.md)。
 
-## 12. Road 续段规划与 closeout
+## 12. CP7 — 连续编辑流与默认窗口（Gate D 已通过）
 
-原 CP0–CP6 实施段已有实际证据并通过开发者 Gate；production runtime 的 prototype 隔离
-已由 CP5 证明，一号作者在 CP6 接受且无未解决 P0/P1。开发者随后明确决定 Road v0.7
-仍需延顺若干步骤，因此 Road 保持开放，不在本 checkpoint 宣称完成或申请 closeout。
+**进入条件（已满足）：** CP6 产品 Gate 已通过；开发者已选择“连续编辑流”，通过
+“冷编辑台 + Opus 标题 + 系统工具控件”，并于 2026-08-24 明确批准按推荐顺序开始。
 
-续段的目标、范围、顺序、分支与退出 Gate 必须在新的规划任务中批准后再实施；在那之前
-不得自行创建 CP7、扩大产品范围或把未定事项写成既成计划。这是开发者主动延长 Road，
-不是 CP6 内的 scope drift。
+**固定目标：**
 
-closeout、snapshot、tag、push、签名、打包与发布分别决定，不由 Road 完成自动授权。
+- Paper context、页导航、当前页与底部动作形成连续纵向编辑流；不增加 sidebar 或移动端专属导航。
+- 默认桌面窗口为 `720×900`，最小几何为 `720×680`，满足默认 `width / height <= 1` 且仍可调整为横版。`375×812` 只作浏览器响应式证据。
+- Tags 使用单行 comma-separated UI。Vue 使用可逆 CSV-style 引号适配，底层继续传递原有 `string[]`，不改变 Paper v4 Markdown；macOS Tags 字段关闭自动更正与智能引号转换，原生实证确认 ASCII 直引号未被改成弯引号。
+- Paper 详情与 Library Paper 预览均使用不占文档流的原生 Popover；Library 每个结果的预览与触发器相邻，不把详情块插到列表下方，不下压 Paper 或文件夹操作。
+- Library 搜索在中文输入法 composition 期间不请求服务；提交后只发送一次最终中文检索词。
+- 文件夹软删除与恢复原子移动完整目录树，不再要求作者清理 `.DS_Store`、嵌套目录或其他未知项；废纸篓中的永久删除经不可撤销确认后才使用 no-follow 递归销毁。
+- 删除常驻 dirty 文案，但保留离开、换稿、Vault 与关闭窗口的唯一 guard。
+- Opus serif 只用于 Paper 名与页标题；正文和系统控件使用 sans。文本输入 focus 保持安静，按钮与导航仍有清楚键盘 outline。Figma meta `#627078` 在 production 中因 WCAG 对比度校正为 `#5c6a71`。
+
+**明确不做：** 不改变 Paper v4、Index v4、protocol v2、DTO、Rust command、sidecar、
+恢复状态或 Library 的范围/列表/操作能力；不直接 `split(",")`；不增加依赖、Router、
+store、UI kit、自制弹窗框架、移动端构建、真实 Vault 操作、签名、tag、push 或 release。
+唯一 Core 例外是 `soft_delete_folder`、`restore_folder`、`permanently_delete_folder` 的完整目录树生命周期；
+`merge_folders` 与重命名仍保持严格 Paper 预检。Tauri 仅修改默认窗口几何；capability 与持久配置不变。
+
+### Gate A — 合同（已通过：2026-08-24）
+
+- 校准 SPEC、PROJECT、本文、详细设计、active maps、README 与伴随 Planbook 的 current/target。
+- 冻结 Tags 可逆规则、`720×900` 默认窗口、四尺寸证据与不做清单。
+- 退出条件：权威无冲突；文档检查与 `git diff --check` 通过；不声称 Figma 或 production 完成。
+
+**结果：** current/target、Tags 可逆规则、默认窗口、四尺寸证据与不做清单已冻结；该 Gate 只批准合同，不冒充后续视觉或工程证据。
+
+### Gate B — Figma 交付（已通过：2026-08-25）
+
+- 在现有 keikeu UI 文件新建 `CP7 · 连续编辑流` Page。
+- 建立母版、状态/响应式 frame、共享 token/控件、`UI/UX 入门` 与 `行业模板` Sections；教学区不进入 production bundle。
+- 对照 HTML master 检查 `375×812`、`720×900`、`920×680`、`1220×780`，完成节点审计与开发者最终视觉批准。
+- Gate B 通过前，不把临时风格令牌写入 production。
+
+**结果：** `CP7 · 连续编辑流` Page、母版、四尺寸/关键状态、tokens/系统控件及两个非 production 教学区已交付并完成节点审计；开发者明确声明“Gate B 通过”。Gate D 后续增量已经同步到同一 Page 的 `06 · Gate D Library 后续整改` Section（`152:138`），覆盖 IME 提交、top-layer 预览、范围旁文件夹操作、长名称收缩与 ADR-0008；截图复核与节点边界审计均通过。这不撤销或重写原 Gate B 历史判断。
+
+### Gate C — Production 与工程证据（原始证据及后续整改复核均完成）
+
+- 原始 Gate C 只改 Vue/CSS、直接测试与 Tauri 窗口几何；Tags 适配在 Vue 层完成。本轮经开发者明确授权增加三项窄整改：Library IME dispatch、Library top-layer preview 与 `vault.py` 完整文件夹生命周期。
+- Tags 覆盖普通值、字面逗号、双引号、空项、外侧空白、重复项、`U+FEFF` 与未闭合引号阻塞；Vue 不得用比 Core 更宽的 `.trim()` 静默改变合法 Tag，也不得因无关保存拆分既有值。
+- 四尺寸检查正文、保存、危险动作、恢复路径、滚动与 `scrollWidth <= clientWidth`；覆盖中文 composition、`Cmd+S`、saving lock、错误与安全状态。
+- 运行聚焦/完整 Vitest、Vite build、完整 Python/Rust 基线、文档 Gate，并用隔离 synthetic Vault 完成 Tauri smoke。
+
+**结果：** production candidate 已实现连续流、可逆 CSV-style Tags、Popover、quiet focus 与 `720×900` 默认窗口（最小 `720×680`）。真实 Chromium 已在 `375×812`、`720×900`、`920×680`、`1220×780` 检查无横向溢出，并验证 Popover 的 Escape、light-dismiss 与焦点返回；macOS 原生输入确认 Tags 中的 ASCII 直引号未被转换为弯引号。隔离假 Home 的 Tauri 在 `720×900` 启动，初始化 synthetic Vault，保存 Markdown/Index 并验证详情 Popover。首次冷 sidecar 启动发生一次超时；随后重启与完整 smoke 通过，记录为已知环境现象而非功能阻塞。Vitest `9` 个文件 / `88` 个测试、pytest `269`、Rust `12`、Python compileall、Cargo fmt、sidecar build、Vite build、文档 Gate 与 `git diff --check` 均通过；production bundle 未发现 prototype marker。不复制历史数字。
+
+**后续整改复核（2026-08-25）：** 真实浏览器用最大合法的 `200` 字符文件夹名与 `12` 份 Paper 重跑 `375×812`、`720×900`、`920×680`、`1220×780`；四档 document、Shell、结果、范围与操作控件均无横向溢出。真实 DOM composition 序列在 `b` / `ba` 阶段零查询，提交“暴食”后仅新增一次查询；原生候选窗本身未由桌面自动化可靠触发，因此不冒充人工候选窗证据。每行 native Popover 的 top layer、唯一 ID、Enter/Escape、焦点返回和开合前后几何均通过。最终 debug bundle 在隔离假 Home 的 `720×900` Tauri 中通过长名称、预览与中文最终值；去标识的 `fixture——folder` 连同 `.DS_Store`、嵌套文件和 symlink 完整移入废纸篓并整树恢复，Vault 外链接目标未改变。pytest `283`、Vitest `9` 个文件 / `99` 个测试、Rust `12`、Python compileall、Cargo fmt、sidecar build、Vite build、debug app bundle、文档 Gate、bundle marker scan 与 `git diff --check` 均通过；未触碰真实 Vault。
+
+桌面工具曾因同名应用解析误启动旧 release `.app`；约六分钟内没有点击或输入，也没有执行 mutation，但该实例可能读取过默认启动配置，因此不计入任何 smoke。误启实例已终止，后续只按 debug bundle 绝对路径运行。
+
+### Gate D — 开发者 UI 接受（已通过：2026-08-25）
+
+- 开发者判断连续编辑流、默认窗口、横版重排、Popover、quiet focus 与状态层级。
+- 无未解决 P0/P1 后才记录 CP7 通过并创建 checkpoint commit；P2/P3 不虚构为 0。
+- snapshot、tag、push、签名、打包、发布和真实 Vault 始终是 Gate D 之外的独立决定。
+
+**首轮结果（未通过：2026-08-25）：** 开发者报告六项阻塞：窄屏偶数文件夹与创建模块互相拉伸、一个已去标识文件夹删除失败且原因不可见、纵向文件夹范围压低 Paper、Tags 标签与占位文字错位、详情关闭按钮与重复分隔线不合格，以及 Vault / Library / Paper 未处于同一顶栏高度。
+
+**首批整改快照（已被后续退回覆盖）：** 窄屏范围改为原生紧凑下拉，偶数/奇数文件夹下范围区高度一致，Paper 保持首屏；folder mutation 的失败报告在刷新后保留，失败不再跳走，完整成功后才切回“全部”。Tags 改为 baseline 对齐；详情关闭按钮移除自动焦点并使用灰色边框，首项重复分隔线退出；窄屏 Shell 保持单行 `56px` 顶栏。该快照曾保留“未知项阻断”与 inline Library 预览，因此不再代表当前候选。
+
+**后续整改与最终判断：** 普通文件夹删除现在把完整目录树原子移入废纸篓，恢复整树回移；只有废纸篓中的不可撤销二次确认才执行 identity-pinned、fd-relative、symlink-safe 递归销毁。Library 搜索在 composition 期间不刷新，提交词同值去重；每个 Paper 结果使用与触发器相邻的原生 top-layer Popover，不再占据列表下方版面。文件夹操作紧贴范围控件，所有原生控件与 `200` 字符名称在四档均受容器约束。协议/DTO/Paper/Index 不变，决策见 [ADR-0008](docs/architecture/decisions/0008-whole-folder-trash-lifecycle.md)。源码、全量工程、真实浏览器四档、隔离 Tauri 与 Figma 增量证据已经完成，独立终审为 `0 P0 / 0 P1`；开发者于 2026-08-25 明确通过 Gate D。原生 macOS 候选窗未由自动化触发，不冒充 CP7 证据，转为 CP8 的独立人工复核项。
 
 ## 13. 已知风险
 
@@ -234,6 +287,12 @@ closeout、snapshot、tag、push、签名、打包与发布分别决定，不由
 | Vault 降级掩盖安全 Gate | 正常 context 与 blocking surface 明确分开 |
 | 原型进入生产 bundle | CP1、CP5 两次 bundle 检查 |
 | 并行文档产生双重权威 | CP0 在批准后一次校准 SPEC/PROJECT/maps |
+| comma-separated UI 拆坏含逗号 Tag | Vue 层使用可逆 CSV-style 适配并覆盖无损 round-trip |
+| 临时风格直接进入 production | Gate B 最终视觉批准先于 Gate C |
+| 默认竖向窗口退化横版 | 同源布局同时验证四尺寸，不建立第二套产品逻辑 |
+| 中文输入法组合态触发中间查询 | CP7 composition 期间不 dispatch、最终值同值去重；原生候选窗按 CP8 P1 Gate 使用实体键盘人工复核 |
+| Library 预览下压操作区或键盘顺序过长 | 每个结果旁使用 native top-layer Popover，覆盖 Tab、Escape 与 light-dismiss |
+| 完整文件夹永久删除越界或失败语义不清 | 软删除/恢复整树原子移动；永久删除二次确认、同父隔离、fd-relative no-follow、设备与 identity 竞态回归；递归失败保留剩余树并明确报告，已销毁 entry 不虚构为可回滚 |
 
 ## 14. 实施计划批准 Gate（已通过：2026-08-20）
 
@@ -247,3 +306,10 @@ closeout、snapshot、tag、push、签名、打包与发布分别决定，不由
 - [x] CP0–CP6 开发者退出判断与本地 checkpoint commit 采用 advance YOLO；证据仍须实际运行且不得复制或虚构。
 
 本次批准与 advance YOLO 已用于通过 CP0–CP6；历史测试仍不得复制为当前证据。CP6 的窄范围真实 Vault 授权已经使用完毕，不延伸到未来真实 Vault 操作或 Git 远端动作。
+
+## 15. CP7 启动批准 Gate（已通过：2026-08-24）
+
+开发者明确回复“照你说的办，开始”，批准了先清理 preparation、再建立 CP7 权威、进入
+Figma、确定 Tags 合同并在最终视觉批准后实施 production 的顺序。该批准允许创建当前
+分支并推进工作，不替代 checkpoint commit 授权、Gate B 最终视觉判断或 Gate D 产品接受，也不授权真实 Vault、
+push、tag、closeout、签名、打包或发布。

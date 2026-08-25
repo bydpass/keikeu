@@ -1,27 +1,30 @@
 :root {
   color-scheme: light;
-  --canvas: #ece9de;
-  --paper: #f6f4ed;
-  --field: #faf9f5;
-  --ink: #0f0f0e;
-  --ink-soft: #2e2e2b;
-  --muted: #43423d;
-  --meta: #5c5b56;
-  --accent: #1b365d;
-  --signal: #1b365d;
-  --rule: #b8b2a6;
-  --rule-soft: #d3cfc5;
-  --soft: #ece9de;
-  --warm: #dfdcd0;
+  --canvas: #e4e8ea;
+  --paper: #f2f4f4;
+  --field: #f7f8f8;
+  --ink: #13191c;
+  --ink-soft: #283137;
+  --muted: #404b51;
+  --meta: #5c6a71;
+  --accent: #173a5b;
+  --signal: #173a5b;
+  --focus: #2b638f;
+  --rule: #aeb9be;
+  --rule-soft: #ccd4d7;
+  --soft: #e4e8ea;
+  --warm: #dbe1e3;
   --rail: #22211f;
   --rail-active: #292f3a;
   --rail-muted: #b8b4aa;
-  --danger: #7a2e26;
-  --danger-soft: #f4e8e3;
-  --success: #3e5c2f;
+  --danger: #7b312d;
+  --danger-soft: #f1e5e4;
+  --success: #395943;
   --radius-xs: 2px;
   --radius-sm: 4px;
   --font-display: "Songti SC", "STSong", Georgia, serif;
+  --font-opus: "New York", "Iowan Old Style", "Noto Serif CJK SC",
+    "Songti SC", "STSong", serif;
   --font-body: -apple-system, BlinkMacSystemFont, "PingFang SC",
     "Hiragino Sans GB", "Segoe UI", sans-serif;
   --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
@@ -79,12 +82,68 @@ button:not(:disabled):hover {
 }
 
 button:focus-visible,
-input:focus-visible,
-textarea:focus-visible,
+input[type]:not([type="text"], [type="search"], [type="email"], [type="url"], [type="tel"], [type="password"], [type="number"]):focus-visible,
 select:focus-visible,
+summary:focus-visible,
 [tabindex]:focus-visible {
-  outline: 3px solid var(--accent);
+  outline: 3px solid var(--focus);
   outline-offset: 3px;
+}
+
+input:not([type]):focus-visible,
+input:is([type="text"], [type="search"], [type="email"], [type="url"], [type="tel"], [type="password"], [type="number"]):focus-visible,
+textarea:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 0;
+  background-color: color-mix(in srgb, var(--accent) 4%, var(--field));
+  caret-color: var(--accent);
+}
+
+.keikeu-detail-popover {
+  --details-top: 152px;
+  position: fixed;
+  inset: var(--details-top) 16px auto auto;
+  width: min(300px, calc(100vw - 32px));
+  max-height: calc(100vh - var(--details-top) - 16px);
+  margin: 0;
+  padding: 16px;
+  overflow: auto;
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  background: var(--field);
+  box-shadow: 0 14px 40px color-mix(in srgb, var(--ink) 18%, transparent);
+}
+
+.keikeu-detail-popover > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+.keikeu-detail-popover > header > button {
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-xs);
+  color: var(--muted);
+  background: var(--canvas);
+  cursor: pointer;
+}
+
+.keikeu-detail-popover dl {
+  display: grid;
+  gap: 12px;
+  margin: 14px 0 0;
+}
+
+.keikeu-detail-popover dl > div {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
 }
 
 ::selection {
@@ -186,5 +245,13 @@ dd {
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+@media (forced-colors: active) {
+  input:not([type]):focus-visible,
+  input:is([type="text"], [type="search"], [type="email"], [type="url"], [type="tel"], [type="password"], [type="number"]):focus-visible,
+  textarea:focus-visible {
+    outline-color: Highlight;
   }
 }

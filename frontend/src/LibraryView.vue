@@ -73,10 +73,14 @@ function validateView(value) {
   return value;
 }
 
-async function refresh({ verify = false, preserveNotice = false } = {}) {
+async function refresh({
+  verify = false,
+  preserveNotice = false,
+  preserveError = false,
+} = {}) {
   const requestGeneration = ++generation;
   busy.value = true;
-  error.value = null;
+  if (!preserveError) error.value = null;
   if (!preserveNotice) notice.value = "";
   try {
     const result = validateView(await props.request("library.query", {
@@ -103,6 +107,12 @@ async function refresh({ verify = false, preserveNotice = false } = {}) {
 function setScope(value) {
   scope.value = value;
   selectedPath.value = null;
+  refresh();
+}
+
+function handleSearch(value) {
+  if (value === search.value) return;
+  search.value = value;
   refresh();
 }
 
@@ -147,8 +157,12 @@ async function mutate(method, params, label) {
     if (result?.warnings?.includes("index_degraded")) {
       notice.value += " Index 需要显式重建。";
     }
-    await refresh({ verify: true, preserveNotice: true });
-    return result;
+    await refresh({
+      verify: true,
+      preserveNotice: true,
+      preserveError: failed.length > 0,
+    });
+    return failed.length ? null : result;
   } catch (raw) {
     handleError(raw, `无法${label}`);
     return null;
@@ -225,16 +239,19 @@ async function renameFolder() {
     { folder: currentFolder.value, new_name: renameValue.value.trim() },
     "重命名文件夹",
   );
-  if (result?.name) scope.value = `folder:${result.name}`;
+  if (!result?.name) return;
+  scope.value = `folder:${result.name}`;
+  await refresh({ verify: true, preserveNotice: true });
 }
 
 async function mergeFolder() {
   if (!currentFolder.value || !mergeDestination.value) return;
-  await mutate(
+  const result = await mutate(
     "library.merge_folders",
     { source: currentFolder.value, destination: mergeDestination.value },
     "合并文件夹",
   );
+  if (!result) return;
   scope.value = `folder:${mergeDestination.value}`;
   await refresh({ verify: true, preserveNotice: true });
 }
@@ -242,19 +259,29 @@ async function mergeFolder() {
 async function deleteFolder() {
   if (
     !currentFolder.value
-    || !(await confirmAction("将这个文件夹及其中 Paper 移入废纸篓？", {
+    || !(await confirmAction("将这个文件夹及其中全部内容移入废纸篓？", {
       okLabel: "移入废纸篓",
       cancelLabel: "取消",
     }))
   ) return;
-  await mutate("library.soft_delete_folder", { folder: currentFolder.value }, "删除文件夹");
+  const result = await mutate(
+    "library.soft_delete_folder",
+    { folder: currentFolder.value },
+    "删除文件夹",
+  );
+  if (!result) return;
   scope.value = "all";
   await refresh({ verify: true, preserveNotice: true });
 }
 
 async function restoreFolder() {
   if (!currentTrashFolder.value) return;
-  await mutate("library.restore_folder", { folder: currentTrashFolder.value }, "恢复文件夹");
+  const result = await mutate(
+    "library.restore_folder",
+    { folder: currentTrashFolder.value },
+    "恢复文件夹",
+  );
+  if (!result) return;
   scope.value = "all";
   await refresh({ verify: true, preserveNotice: true });
 }
@@ -262,12 +289,17 @@ async function restoreFolder() {
 async function permanentlyDeleteFolder() {
   if (
     !currentTrashFolder.value
-    || !(await confirmAction("永久删除这个废纸篓文件夹？此操作不可撤销。", {
+    || !(await confirmAction("永久删除这个废纸篓文件夹及其中全部内容？此操作不可撤销。", {
       okLabel: "永久删除",
       cancelLabel: "取消",
     }))
   ) return;
-  await mutate("library.permanently_delete_folder", { folder: currentTrashFolder.value }, "永久删除文件夹");
+  const result = await mutate(
+    "library.permanently_delete_folder",
+    { folder: currentTrashFolder.value },
+    "永久删除文件夹",
+  );
+  if (!result) return;
   scope.value = "trash";
   await refresh({ verify: true, preserveNotice: true });
 }
@@ -313,6 +345,23 @@ onActivated(() => { if (view.value) refresh(); });
       :inert="interactionBlocked"
     >
       <aside class="library-scopes" aria-label="Library 范围">
+        <label class="library-scope-select">范围
+          <select :value="scope" @change="setScope($event.target.value)">
+            <option value="all">全部 Paper</option>
+            <option value="unfiled">未归档</option>
+            <option
+              v-for="folder in view.folders"
+              :key="`compact-${folder}`"
+              :value="`folder:${folder}`"
+            >{{ folder }}</option>
+            <option value="trash">废纸篓 · {{ view.trash_count }}</option>
+            <option
+              v-for="folder in view.trash_folders"
+              :key="`compact-trash-${folder}`"
+              :value="`trash-folder:${folder}`"
+            >↳ {{ folder }}</option>
+          </select>
+        </label>
         <button :class="{ selected: scope === 'all' }" @click="setScope('all')">全部 Paper</button>
         <button :class="{ selected: scope === 'unfiled' }" @click="setScope('unfiled')">未归档</button>
         <button
@@ -334,6 +383,29 @@ onActivated(() => { if (view.value) refresh(); });
         <section class="folder-create">
           <label>新文件夹<input v-model="folderName" placeholder="Ideas"></label>
           <button type="button" :disabled="busy || !folderName.trim()" @click="createFolder">创建</button>
+        </section>
+
+        <section v-if="currentFolder" class="folder-operations" aria-label="当前文件夹操作">
+          <label>新名称<input v-model="renameValue" :placeholder="currentFolder"></label>
+          <button type="button" @click="renameFolder">重命名</button>
+          <label>合并至
+            <select v-model="mergeDestination">
+              <option value="">选择文件夹</option>
+              <option v-for="folder in view.folders.filter((item) => item !== currentFolder)" :key="folder" :value="folder">{{ folder }}</option>
+            </select>
+          </label>
+          <button type="button" @click="mergeFolder">合并</button>
+          <button type="button" class="danger" @click="deleteFolder">删除文件夹</button>
+        </section>
+
+        <section
+          v-if="currentTrashFolder"
+          class="folder-operations"
+          aria-label="废纸篓文件夹操作"
+        >
+          <strong>废纸篓文件夹：{{ currentTrashFolder }}</strong>
+          <button type="button" @click="restoreFolder">恢复文件夹</button>
+          <button type="button" class="danger" @click="permanentlyDeleteFolder">永久删除文件夹</button>
         </section>
       </aside>
 
@@ -358,7 +430,7 @@ onActivated(() => { if (view.value) refresh(); });
           :errors="view.errors"
           :index-state="view.index_state"
           :query="search"
-          @search="search = $event; refresh()"
+          @search="handleSearch"
           @select="selectedPath = $event"
           @open="emit('open-paper', $event)"
           @rebuild-index="rebuildIndex"
@@ -383,24 +455,6 @@ onActivated(() => { if (view.value) refresh(); });
           </template>
         </section>
 
-        <section v-if="currentFolder" class="folder-operations" aria-label="当前文件夹操作">
-          <label>新名称<input v-model="renameValue" :placeholder="currentFolder"></label>
-          <button type="button" @click="renameFolder">重命名</button>
-          <label>合并至
-            <select v-model="mergeDestination">
-              <option value="">选择文件夹</option>
-              <option v-for="folder in view.folders.filter((item) => item !== currentFolder)" :key="folder" :value="folder">{{ folder }}</option>
-            </select>
-          </label>
-          <button type="button" @click="mergeFolder">合并</button>
-          <button type="button" class="danger" @click="deleteFolder">删除文件夹</button>
-        </section>
-
-        <section v-if="currentTrashFolder" class="folder-operations">
-          <strong>废纸篓文件夹：{{ currentTrashFolder }}</strong>
-          <button type="button" @click="restoreFolder">恢复文件夹</button>
-          <button type="button" class="danger" @click="permanentlyDeleteFolder">永久删除文件夹</button>
-        </section>
       </section>
     </div>
 
@@ -413,12 +467,13 @@ onActivated(() => { if (view.value) refresh(); });
 <style scoped>
 .library-view { min-height: calc(100vh - 56px); padding: 26px clamp(18px, 4vw, 54px) 48px; }
 .paper-operations, .folder-operations { display: flex; flex-wrap: wrap; gap: 8px; }
-button, input, select { min-height: 38px; padding: 7px 10px; border: 1px solid var(--rule); color: var(--ink); background: var(--paper); font: inherit; }
+button, input, select { box-sizing: border-box; min-width: 0; max-width: 100%; min-height: 38px; padding: 7px 10px; border: 1px solid var(--rule); color: var(--ink); background: var(--paper); font: inherit; }
 button { cursor: pointer; }
 button:disabled { opacity: .5; cursor: wait; }
 .library-shell { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 34px; max-width: 1180px; margin: 0 auto; }
 .library-scopes { display: grid; align-content: start; gap: 5px; }
-.library-scopes > button { text-align: left; }
+.library-scope-select { display: none; }
+.library-scopes > button { min-width: 0; overflow-wrap: anywhere; text-align: left; }
 .library-scopes > button.selected { border-left: 4px solid var(--signal); background: var(--soft); }
 .folder-create { display: grid; gap: 7px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--rule); }
 label { display: grid; gap: 5px; color: var(--muted); font-size: .72rem; font-weight: 700; }
@@ -426,8 +481,18 @@ label { display: grid; gap: 5px; color: var(--muted); font-size: .72rem; font-we
 .library-notice, .library-error { padding: 10px 14px; border-left: 4px solid var(--signal); background: var(--paper); }
 .library-error { border-left-color: var(--danger); background: var(--danger-soft); }
 .paper-operations, .folder-operations { margin-top: 16px; padding: 14px; border: 1px solid var(--rule); background: var(--soft); }
+.library-scopes > .folder-operations { display: grid; min-width: 0; margin-top: 13px; padding: 12px; }
+.library-scopes > .folder-operations > * { min-width: 0; overflow-wrap: anywhere; }
 .danger { border-color: var(--danger); color: var(--danger); }
 .library-loading { max-width: 720px; margin: 14vh auto; }
-@media (max-width: 820px) { .library-shell { grid-template-columns: 1fr; } .library-scopes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 820px) {
+  .library-shell { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .library-scopes { grid-template-columns: minmax(160px, 1fr) minmax(260px, 1fr); gap: 10px; align-items: end; }
+  .library-scopes > button { display: none; }
+  .library-scope-select { display: grid; min-width: 0; }
+  .folder-create { grid-template-columns: minmax(0, 1fr) auto; align-items: end; min-width: 0; margin: 0; padding: 0; border-top: 0; }
+  .folder-create label, .folder-create input, .library-scope-select select { min-width: 0; width: 100%; }
+  .library-scopes > .folder-operations { grid-column: 1 / -1; margin-top: 0; }
+}
 @media (max-width: 620px) { .library-scopes { grid-template-columns: 1fr; } }
 </style>

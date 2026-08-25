@@ -36,6 +36,7 @@ During a staged Road, SPEC and the HTML maps may describe the approved target wh
 ## 3. Author text and privacy
 
 - Never silently delete, overwrite, normalize, auto-correct, summarize, rewrite, merge, score, train on, upload, or expose author text.
+- 文件夹树只有在界面明确说明“全部内容”并获得确认后才能移入 Trash；不可恢复的整树删除必须在 Trash 中再次明确确认。
 - Preserve Paper display names, ordered page titles/content/types, ordered Tags, intentionally blank optional fields, and feasible unknown frontmatter. During legacy migration preserve every mapped field; `initial_summary` is the only approved discard and remains in the verified backup.
 - Paper v4 save requires at least one page and, for every page, a non-empty title or content containing a non-whitespace character. It permits at most one `summary`; failure occurs before disk write.
 - Name validation trims only outer whitespace, rejects line breaks/control characters and overlength input, and stores the remaining author text unchanged. NFC+casefold is a comparison key, never a disk rewrite.
@@ -54,7 +55,9 @@ During a staged Road, SPEC and the HTML maps may describe the approved target wh
 - Classify an unsafe configured Vault read-only before copying. Copy only ordinary directories and regular files into a new Home-contained destination without following symlinks; any symlink or unsupported/special entry aborts with source and config untouched. Verify the regular-file manifest and bytes.
 - Parse Papers and rebuild/validate the index only for a v2/v3 safe copy before config switch. For v0.1, run the existing read-only preflight/manifest validation on the safe copy, switch config atomically to it, then enter the existing migration gate there; cancellation or failure leaves that unmodified safe copy selected. Never parse v0.1 as v2/v3 or write the unsafe source.
 - Preserve and report externally created duplicate codes; block mutations involving them rather than renaming either asset.
-- Active Trash and permanent delete operate on explicit validated Paper paths, use `unlink` per file, and only `rmdir` verified-empty directories. Recursive cleanup is allowed only for an isolated migration staging tree created by keikeu.
+- 单份 Paper 的活动区/Trash 操作只接受显式受验证路径，永久删除逐文件 `unlink`，并且只 `rmdir` 已验证为空的目录。
+- 经明确确认的顶层文件夹删除与恢复把精确命名的完整目录树在 `cache/` 与 `.trash/cache/` 之间原子移动；不解析、不重写、不跟随其中内容。目标存在完全同名或 NFC+casefold 等价名称时，整次操作在写入前拒绝，不做部分合并。
+- 废纸篓文件夹的永久删除需要单独的不可撤销确认。Core 必须固定精确目录身份、随机隔离、预检同设备目录树并使用 symlink-safe 递归删除；平台不支持安全递归或出现挂载子树时拒绝且恢复隔离目录。符号链接只删除链接本身，绝不跟随到 Vault 外部。详见 [ADR-0008](architecture/decisions/0008-whole-folder-trash-lifecycle.md)。
 - A destructive migration requires a full backup outside the active Vault but still under Home, staging validation, a readable report, and safe failure behavior.
 - Disclose changes to selected Vault, device state, persistent config, signing, or generated platform projects before execution and report the result.
 

@@ -1,5 +1,7 @@
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from "vue";
+
+import { formatTagsCsv, parseTagsCsv } from "./tagsCsv.js";
 
 const props = defineProps({
   paper: { type: Object, required: true },
@@ -28,25 +30,16 @@ const pageTitleInput = ref(null);
 const contentInput = ref(null);
 const deleteDialog = ref(null);
 const cancelDeleteButton = ref(null);
+const detailsOpen = ref(false);
+const detailsPopoverId = `paper-details-popover-${useId()}`;
 const cursorKnown = ref(false);
 const lastCursor = ref(0);
 let nextUiKey = 1;
 
-function normalizedTags(value) {
-  const tags = [];
-  for (const line of value.split("\n")) {
-    const tag = line.trim();
-    if (tag && !tags.includes(tag)) {
-      tags.push(tag);
-    }
-  }
-  return tags;
-}
-
-function editableProjection(value) {
+function editableProjection(value, tags = parseTagsCsv(value.tags_text).tags) {
   return {
     display_name: value.display_name?.trim() || null,
-    tags: normalizedTags(value.tags_text),
+    tags,
     pages: value.pages.map(({ name, content, type }) => ({
       name: name?.trim() || null,
       content,
@@ -60,7 +53,7 @@ function loadPaper() {
   draft.value = {
     code: paper.code,
     display_name: paper.display_name ?? "",
-    tags_text: (paper.tags ?? []).join("\n"),
+    tags_text: formatTagsCsv(paper.tags ?? []),
     pages: paper.pages.map((page) => ({ ...page, ui_key: nextUiKey++ })),
   };
   baseline.value = props.baselineEditable === undefined
@@ -80,14 +73,24 @@ watch(
 );
 
 const activePage = computed(() => draft.value.pages[activeIndex.value]);
-const dirty = computed(
-  () => JSON.stringify(editableProjection(draft.value)) !== baseline.value,
-);
+const parsedTags = computed(() => parseTagsCsv(draft.value.tags_text));
+const tagInputError = computed(() => {
+  if (!parsedTags.value.ok) return parsedTags.value.error;
+  return parsedTags.value.tags.some((tag) => invalidNameCharacter.test(tag))
+    ? "Tags 必须是单行文字。"
+    : null;
+});
+const dirty = computed(() => (
+  !parsedTags.value.ok
+  || JSON.stringify(editableProjection(draft.value, parsedTags.value.tags)) !== baseline.value
+));
 const summaryIndex = computed(() =>
   draft.value.pages.findIndex((page) => page.type === "summary"),
 );
 const saveBlocked = computed(() =>
-  props.saving || ["stale", "repair_required", "commit_unknown"].includes(props.state),
+  props.saving
+  || Boolean(tagInputError.value)
+  || ["stale", "repair_required", "commit_unknown"].includes(props.state),
 );
 
 watch(dirty, (value) => emit("dirty-change", value), { immediate: true });
@@ -113,11 +116,7 @@ function validate() {
   if (displayNameError) {
     errors.display_name = displayNameError;
   }
-  const tags = normalizedTags(draft.value.tags_text);
-  const invalidTag = tags.find((tag) => invalidNameCharacter.test(tag));
-  if (invalidTag) {
-    errors.tags = "Tags 必须是单行文字。";
-  }
+  if (tagInputError.value) errors.tags = tagInputError.value;
   let summaries = 0;
   draft.value.pages.forEach((page, index) => {
     const pageErrors = {};
@@ -146,11 +145,19 @@ function save() {
   if (saveBlocked.value || !validate()) {
     return;
   }
-  emit("save", { code: draft.value.code, ...editableProjection(draft.value) });
+  emit("save", {
+    code: draft.value.code,
+    ...editableProjection(draft.value, parsedTags.value.tags),
+  });
 }
 
 function handleShortcut(event) {
-  if (event.metaKey && event.key.toLowerCase() === "s") {
+  if (
+    !event.isComposing
+    && event.keyCode !== 229
+    && event.metaKey
+    && event.key.toLowerCase() === "s"
+  ) {
     event.preventDefault();
     save();
   }
@@ -218,6 +225,10 @@ function deletePage() {
   nextTick(() => pageTitleInput.value?.focus());
 }
 
+function handleDetailsToggle(event) {
+  detailsOpen.value = event.newState === "open";
+}
+
 function onBeforeUnload(event) {
   if (dirty.value) {
     event.preventDefault();
@@ -225,8 +236,12 @@ function onBeforeUnload(event) {
   }
 }
 
-onMounted(() => window.addEventListener("beforeunload", onBeforeUnload));
-onBeforeUnmount(() => window.removeEventListener("beforeunload", onBeforeUnload));
+onMounted(() => {
+  window.addEventListener("beforeunload", onBeforeUnload);
+});
+onBeforeUnmount(() => {
+  window.removeEventListener("beforeunload", onBeforeUnload);
+});
 </script>
 
 <template>
@@ -236,35 +251,83 @@ onBeforeUnmount(() => window.removeEventListener("beforeunload", onBeforeUnload)
     </p>
 
     <header class="paper-meta-bar" aria-label="Paper context">
-      <label>
-        <span>Paper 名称</span>
+      <div class="paper-name-row">
+        <label class="paper-name-field">
+          <span class="field-label">Paper 名称</span>
+          <input
+            v-model="draft.display_name"
+            class="paper-name-input"
+            aria-describedby="paper-name-help"
+            :aria-invalid="fieldErrors.display_name ? 'true' : undefined"
+            :readonly="saving"
+          >
+          <small
+            id="paper-name-help"
+            class="field-help"
+            :class="{ 'sr-only': !fieldErrors.display_name }"
+          >
+            <span class="sr-only">
+              {{ codePointLength(draft.display_name.trim()) }} / 200
+            </span>
+            <b v-if="fieldErrors.display_name" role="alert">{{ fieldErrors.display_name }}</b>
+          </small>
+        </label>
+
+        <div class="paper-context-tools" aria-live="polite">
+          <span>{{ draft.pages.length }} 页</span>
+          <strong v-if="saving">正在保存</strong>
+          <button
+            type="button"
+            class="paper-details-trigger"
+            :popovertarget="detailsPopoverId"
+            aria-haspopup="dialog"
+            :aria-expanded="detailsOpen"
+            :disabled="saving"
+          >
+            详情 <span aria-hidden="true">{{ detailsOpen ? "−" : "+" }}</span>
+          </button>
+        </div>
+      </div>
+
+      <label class="paper-tags-field">
+        <span class="field-label">Tags（逗号分隔）</span>
         <input
-          v-model="draft.display_name"
-          aria-describedby="paper-name-help"
-          :readonly="saving"
-        >
-        <small id="paper-name-help">
-          {{ codePointLength(draft.display_name.trim()) }} / 200
-          <b v-if="fieldErrors.display_name">· {{ fieldErrors.display_name }}</b>
-        </small>
-      </label>
-      <label>
-        <span>Tags · 每行一个</span>
-        <textarea
           v-model="draft.tags_text"
-          rows="2"
-          placeholder="夜车&#10;重逢,旧友"
+          class="paper-tags-input"
+          :aria-describedby="tagInputError ? 'paper-tags-error' : undefined"
+          :aria-invalid="tagInputError ? 'true' : undefined"
+          autocomplete="off"
+          autocapitalize="none"
+          autocorrect="off"
+          placeholder="夜车, 重逢, 旧友"
           :readonly="saving"
-        />
-        <small v-if="fieldErrors.tags">{{ fieldErrors.tags }}</small>
+          spellcheck="false"
+        >
+        <small
+          v-if="tagInputError"
+          id="paper-tags-error"
+          class="paper-tags-error"
+          role="alert"
+        >{{ tagInputError }}</small>
       </label>
-      <p class="paper-context-state" aria-live="polite">
-        <span>{{ draft.pages.length }} 页</span>
-        <strong v-if="saving">正在保存</strong>
-        <strong v-else-if="dirty">草稿有未保存修改</strong>
-      </p>
-      <details class="paper-details">
-        <summary>Paper 详情</summary>
+
+      <aside
+        :id="detailsPopoverId"
+        class="paper-details-popover keikeu-detail-popover"
+        popover="auto"
+        role="dialog"
+        aria-label="Paper 详情"
+        @toggle="handleDetailsToggle"
+      >
+        <header>
+          <strong>Paper 详情</strong>
+          <button
+            type="button"
+            :popovertarget="detailsPopoverId"
+            popovertargetaction="hide"
+            aria-label="关闭 Paper 详情"
+          >关闭</button>
+        </header>
         <dl>
           <div class="paper-code">
             <dt>Code</dt>
@@ -287,12 +350,14 @@ onBeforeUnmount(() => window.removeEventListener("beforeunload", onBeforeUnload)
           v-if="canDeleteWholePaper"
           type="button"
           class="whole-delete danger-action"
+          :popovertarget="detailsPopoverId"
+          popovertargetaction="hide"
           :disabled="saving"
           @click="emit('whole-delete')"
         >
           整份移入废纸篓
         </button>
-      </details>
+      </aside>
     </header>
 
     <nav v-if="draft.pages.length > 1" class="page-navigation" aria-label="Paper 页面">
@@ -301,53 +366,45 @@ onBeforeUnmount(() => window.removeEventListener("beforeunload", onBeforeUnload)
         :key="page.ui_key"
         type="button"
         :aria-current="index === activeIndex ? 'page' : undefined"
+        :aria-label="`第 ${index + 1} 页：${page.name || typeLabels[page.type] || '未命名'}`"
         :disabled="saving"
         @click="selectPage(index)"
       >
-        {{ index + 1 }}
-        <span v-if="page.type">{{ typeLabels[page.type] }}</span>
+        <span class="page-number">{{ String(index + 1).padStart(2, "0") }}</span>
+        <span class="page-tab-title">{{ page.name || typeLabels[page.type] || "未命名" }}</span>
       </button>
-      <span>{{ activeIndex + 1 }} / {{ draft.pages.length }}</span>
     </nav>
 
     <article class="card-page">
-      <span v-if="activePage.type" class="type-badge">{{ typeLabels[activePage.type] }}</span>
+      <p class="current-page-label">
+        当前页 · {{ typeLabels[activePage.type] || "未标记" }}
+      </p>
       <label class="page-title-field">
-        <span>页面标题</span>
+        <span class="sr-only">页面标题</span>
         <input
           ref="pageTitleInput"
           v-model="activePage.name"
+          aria-describedby="page-title-help"
+          :aria-invalid="fieldErrors.pages?.[activeIndex]?.name ? 'true' : undefined"
           placeholder="给这一页一个名字（可空）"
           :readonly="saving"
         >
-        <small>
-          {{ codePointLength((activePage.name ?? "").trim()) }} / 200
+        <small
+          id="page-title-help"
+          class="field-help"
+          :class="{ 'sr-only': !fieldErrors.pages?.[activeIndex]?.name }"
+        >
+          <span class="sr-only">
+            {{ codePointLength((activePage.name ?? "").trim()) }} / 200
+          </span>
           <b v-if="fieldErrors.pages?.[activeIndex]?.name">
-            · {{ fieldErrors.pages[activeIndex].name }}
+            {{ fieldErrors.pages[activeIndex].name }}
           </b>
         </small>
       </label>
 
-      <label class="page-content-field">
-        <span>正文</span>
-        <textarea
-          ref="contentInput"
-          v-model="activePage.content"
-          rows="14"
-          placeholder="写下任何你想留下的文字……"
-          :readonly="saving"
-          @focus="rememberCursor"
-          @click="rememberCursor"
-          @keyup="rememberCursor"
-          @select="rememberCursor"
-          @input="rememberCursor"
-        />
-        <small v-if="fieldErrors.pages?.[activeIndex]?.content">
-          {{ fieldErrors.pages[activeIndex].content }}
-        </small>
-      </label>
-
-      <div class="advanced-controls">
+      <div class="editor-body-header">
+        <span>正文 · Markdown</span>
         <button
           type="button"
           class="mode-toggle"
@@ -355,7 +412,7 @@ onBeforeUnmount(() => window.removeEventListener("beforeunload", onBeforeUnload)
           :disabled="saving"
           @click="advanced = !advanced"
         >
-          {{ advanced ? "收起进一步" : "进一步" }}
+          {{ advanced ? "收起" : "进一步" }} <span aria-hidden="true">{{ advanced ? "−" : "+" }}</span>
         </button>
       </div>
 
@@ -380,12 +437,33 @@ onBeforeUnmount(() => window.removeEventListener("beforeunload", onBeforeUnload)
         <p v-if="fieldErrors.summary">{{ fieldErrors.summary }}</p>
       </section>
 
+      <label class="page-content-field">
+        <span class="sr-only">正文 · Markdown</span>
+        <textarea
+          ref="contentInput"
+          v-model="activePage.content"
+          rows="10"
+          placeholder="写下任何你想留下的文字……"
+          :readonly="saving"
+          @focus="rememberCursor"
+          @click="rememberCursor"
+          @keyup="rememberCursor"
+          @select="rememberCursor"
+          @input="rememberCursor"
+        />
+        <small v-if="fieldErrors.pages?.[activeIndex]?.content">
+          {{ fieldErrors.pages[activeIndex].content }}
+        </small>
+      </label>
+
       <footer class="card-actions">
-        <button type="button" :disabled="saveBlocked" @click="save">保存</button>
         <button type="button" class="danger-action" :disabled="saving" @click="askDelete">
           删除本页
         </button>
         <button type="button" :disabled="saving" @click="addPage">加一页</button>
+        <button type="button" class="save-action" :disabled="saveBlocked" @click="save">
+          保存
+        </button>
       </footer>
     </article>
 
@@ -406,7 +484,7 @@ onBeforeUnmount(() => window.removeEventListener("beforeunload", onBeforeUnload)
 
 <style scoped>
 .paper-v4-workbench {
-  width: min(920px, 100%);
+  width: min(960px, 100%);
   margin: 0 auto;
 }
 
@@ -418,7 +496,7 @@ select {
 }
 
 .workbench-state {
-  margin: 0 0 16px;
+  margin: 0 0 12px;
   padding: 10px 14px;
   border-left: 4px solid var(--signal);
   background: var(--paper);
@@ -433,118 +511,151 @@ select {
 }
 
 .paper-meta-bar {
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) minmax(220px, 0.8fr) auto;
-  gap: 18px;
-  align-items: end;
-  padding: 16px 20px;
-  border: 1px solid var(--rule);
-  border-bottom: 0;
-  background: var(--soft);
+  gap: 12px;
 }
 
-.paper-meta-bar label,
-.page-title-field,
-.page-content-field,
-.advanced-panel label {
+.paper-name-row {
   display: grid;
-  gap: 6px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: end;
+}
+
+.paper-name-field,
+.page-title-field,
+.page-content-field {
+  display: block;
+  min-width: 0;
   color: var(--muted);
   font-size: 0.72rem;
   font-weight: 700;
 }
 
-.paper-meta-bar input,
-.paper-meta-bar textarea,
-.page-title-field input,
-.page-content-field textarea,
-.advanced-panel select {
-  width: 100%;
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-xs);
-  color: var(--ink);
-  background: var(--field);
+.advanced-panel label {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
 }
 
-.paper-meta-bar input,
-.page-title-field input,
-.advanced-panel select {
-  min-height: 44px;
-  padding: 8px 10px;
-}
-
-.paper-meta-bar textarea {
-  padding: 8px 10px;
-  resize: vertical;
-}
-
-.paper-meta-bar small,
-.page-title-field small,
-.page-content-field small {
-  min-height: 1.2em;
+.field-label,
+.editor-body-header,
+.current-page-label {
+  display: block;
   color: var(--meta);
+  font-size: 0.7rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+}
+
+.paper-name-input,
+.paper-tags-input,
+.page-title-field input,
+.page-content-field textarea {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  border-radius: 0;
+  color: var(--ink);
+  background: transparent;
+  caret-color: var(--accent);
+}
+
+.paper-name-input,
+.paper-tags-input,
+.page-title-field input {
+  min-height: 44px;
+  padding: 4px 0;
+}
+
+.paper-name-input {
+  padding-block-end: 6px;
+  font: 500 2rem/2.5rem var(--font-opus);
+  letter-spacing: -0.015em;
+}
+
+.paper-tags-field {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  min-height: 44px;
+  align-items: baseline;
+  column-gap: 12px;
+  border-bottom: 1px solid var(--rule);
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.paper-tags-input {
+  min-height: 43px;
+  padding-block: 8px;
+  border-bottom: 0;
+}
+
+.field-help,
+.paper-tags-error,
+.page-content-field small {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--meta);
+  font-size: 0.72rem;
   font-weight: 400;
 }
 
-.paper-meta-bar b,
-.page-title-field b,
+.field-help:empty {
+  display: none;
+}
+
+.field-help b,
+.paper-tags-error,
 .page-content-field small {
   color: var(--danger);
 }
 
-.paper-context-state {
-  display: grid;
-  gap: 5px;
-  margin: 0;
-  align-self: center;
-  color: var(--meta);
-  font-size: 0.72rem;
-  text-align: right;
-}
-
-.paper-context-state strong {
-  color: var(--signal);
-  font-weight: 700;
-}
-
-.paper-details {
-  grid-column: 1 / -1;
-  border-top: 1px solid var(--rule);
-  padding-top: 10px;
-  color: var(--meta);
-  font-size: 0.72rem;
-}
-
-.paper-details summary {
+.paper-context-tools {
   display: flex;
+  gap: 10px;
   min-height: 44px;
   align-items: center;
-  width: fit-content;
+  justify-content: flex-end;
+  color: var(--meta);
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.paper-context-tools strong {
+  color: var(--signal);
+}
+
+.paper-details-trigger,
+.mode-toggle {
+  min-height: 44px;
+  padding: 6px 8px;
+  border: 0;
+  color: var(--muted);
+  background: transparent;
   cursor: pointer;
-  font-weight: 700;
 }
 
-.paper-details summary:focus-visible {
-  outline: 3px solid var(--accent);
-  outline-offset: 3px;
+.paper-details-popover {
+  --details-top: 152px;
 }
 
-.paper-details dl {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px 20px;
-  margin: 14px 0 0;
+.paper-details-popover dl > div:first-child {
+  padding-top: 0;
+  border-top: 0;
 }
 
-.paper-details dl > div {
-  min-width: 0;
+.paper-details-popover dt {
+  color: var(--meta);
+  font-size: 0.68rem;
 }
 
-.paper-details dt {
-  margin-bottom: 3px;
-}
-
-.paper-details dd {
+.paper-details-popover dd {
   margin: 0;
   overflow-wrap: anywhere;
   color: var(--ink);
@@ -563,135 +674,162 @@ select {
 }
 
 .page-navigation {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 7px;
-  padding: 11px 18px;
-  border: 1px solid var(--rule);
-  background: var(--paper);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 16px;
+  border-bottom: 1px solid var(--rule);
 }
 
 .page-navigation button {
-  min-width: 44px;
-  min-height: 44px;
-  padding: 5px 9px;
-  border: 1px solid var(--rule);
-  border-radius: 999px;
-  color: var(--ink);
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
+  min-height: 52px;
+  align-items: center;
+  padding: 4px 12px 2px 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
   background: transparent;
   cursor: pointer;
+  text-align: left;
+}
+
+.page-navigation button + button {
+  margin-left: 16px;
 }
 
 .page-navigation button[aria-current="page"] {
-  border-color: var(--signal);
-  color: var(--paper);
-  background: var(--signal);
+  border-bottom-color: var(--accent);
+  color: var(--ink);
 }
 
-.page-navigation button span {
-  margin-left: 3px;
-  font-size: 0.62rem;
+.page-number {
+  color: var(--accent);
+  font: 700 0.66rem var(--font-mono);
 }
 
-.page-navigation > span {
-  margin-left: 4px;
-  color: var(--meta);
-  font: 0.68rem var(--font-mono);
+.page-tab-title {
+  overflow: hidden;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .card-page {
-  position: relative;
-  display: grid;
-  min-height: 570px;
-  gap: 22px;
-  padding: 42px 54px 28px;
-  border: 1px solid var(--rule);
-  border-top: 4px solid var(--signal);
-  background: var(--paper);
+  display: flex;
+  min-height: 548px;
+  flex-direction: column;
+  padding-top: 20px;
 }
 
-.type-badge {
-  position: absolute;
-  top: 17px;
-  right: 20px;
-  padding: 4px 9px;
-  border: 1px solid var(--signal);
-  color: var(--signal);
-  font-size: 0.68rem;
-  font-weight: 750;
-  letter-spacing: 0.08em;
+.current-page-label {
+  margin: 0 0 8px;
+  color: var(--accent);
 }
 
 .page-title-field input {
-  border-width: 0 0 1px;
-  border-radius: 0;
-  background: transparent;
-  font: 500 clamp(1.6rem, 3vw, 2.4rem) var(--font-display);
+  min-height: 48px;
+  padding-block-end: 8px;
+  font: 500 1.875rem/2.375rem var(--font-opus);
+  letter-spacing: -0.015em;
 }
 
-.page-content-field {
-  min-height: 0;
-}
-
-.page-content-field textarea {
-  min-height: 300px;
-  flex: 1;
-  padding: 18px;
-  font: 1rem/1.75 var(--font-body);
-  resize: vertical;
-}
-
-.advanced-controls {
+.editor-body-header {
   display: flex;
-  justify-content: flex-end;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
 }
 
 .mode-toggle {
-  min-height: 44px;
-  padding: 7px 12px;
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-xs);
-  color: var(--ink);
-  background: transparent;
-  cursor: pointer;
+  color: var(--meta);
+  font-size: 0.72rem;
 }
 
 .advanced-panel {
   display: grid;
-  grid-template-columns: minmax(180px, 260px) minmax(0, 1fr);
-  gap: 12px 20px;
-  padding: 16px;
-  border: 1px dashed var(--rule);
-  background: var(--soft);
+  grid-template-columns: minmax(150px, 220px) minmax(0, 1fr);
+  gap: 10px 16px;
+  padding: 12px;
+  border-left: 2px solid var(--rule);
+  background: var(--canvas);
+}
+
+.advanced-panel select {
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-xs);
+  color: var(--ink);
+  background: var(--field);
 }
 
 .advanced-panel p {
-  margin: 24px 0 0;
+  margin: 22px 0 0;
   color: var(--meta);
   font-size: 0.76rem;
 }
 
+.page-content-field {
+  display: flex;
+  min-height: 300px;
+  flex: 1;
+  flex-direction: column;
+}
+
+.page-content-field textarea {
+  width: min(72ch, 100%);
+  min-height: 300px;
+  height: 300px;
+  flex: 1;
+  padding: 12px 0 32px;
+  font: 1rem/1.75 var(--font-body);
+  resize: vertical;
+}
+
+.paper-name-field:focus-within .field-label,
+.paper-tags-field:focus-within .field-label,
+.editor-body-header:has(+ .advanced-panel) {
+  color: var(--accent);
+}
+
+.paper-name-input:focus-visible,
+.paper-tags-input:focus-visible,
+.page-title-field input:focus-visible,
+.page-content-field textarea:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: 0;
+  border-bottom-color: var(--rule);
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
+}
+
 .card-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 10px;
-  padding-top: 18px;
+  grid-template-columns: minmax(72px, auto) 104px 124px;
+  gap: 12px;
+  justify-content: end;
+  margin-top: auto;
+  padding-top: 16px;
   border-top: 1px solid var(--rule);
 }
 
 .card-actions button,
 .delete-page-dialog button {
-  min-height: 44px;
+  min-height: 48px;
   padding: 9px 14px;
   border: 1px solid var(--ink);
   border-radius: var(--radius-xs);
   color: var(--ink);
   background: transparent;
   cursor: pointer;
+  white-space: nowrap;
 }
 
-.card-actions button:first-child {
+.card-actions .save-action {
   color: var(--paper);
   background: var(--signal);
 }
@@ -709,7 +847,7 @@ select {
 
 .delete-page-dialog {
   width: min(430px, calc(100% - 32px));
-  padding: 26px;
+  padding: 24px;
   border: 1px solid var(--ink);
   color: var(--ink);
   background: var(--paper);
@@ -721,7 +859,7 @@ select {
 
 .delete-page-dialog h2 {
   margin: 0;
-  font: 500 1.5rem var(--font-display);
+  font: 650 1.5rem var(--font-body);
 }
 
 .delete-page-dialog p {
@@ -735,41 +873,80 @@ select {
   margin-top: 24px;
 }
 
-@media (max-width: 920px) {
+@media (min-width: 960px) {
   .paper-meta-bar {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1.4fr) minmax(320px, 1fr);
+    align-items: end;
   }
 
-  .paper-context-state {
-    grid-column: 1 / -1;
-    grid-auto-flow: column;
-    justify-content: space-between;
-    text-align: left;
+  .paper-details-popover {
+    inset-inline-end: max(24px, calc((100vw - 960px) / 2 + 24px));
   }
 
   .card-page {
-    padding-inline: 30px;
+    min-height: 500px;
   }
 }
 
-@media (max-width: 620px) {
-  .paper-meta-bar {
+@media (max-width: 479px) {
+  .paper-name-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .paper-details-popover {
+    --details-top: 196px;
+  }
+
+  .paper-context-tools {
+    justify-content: space-between;
+    padding: 0;
+  }
+
+  .page-navigation button {
+    grid-template-columns: 22px minmax(0, 1fr);
+    padding-right: 4px;
+  }
+
+  .page-navigation button + button {
+    margin-left: 8px;
+  }
+
+  .card-page {
+    min-height: 532px;
+  }
+
+  .advanced-panel {
     grid-template-columns: 1fr;
   }
 
-  .paper-context-state {
-    grid-column: auto;
-    grid-auto-flow: row;
-  }
-
-  .paper-details dl {
-    grid-template-columns: 1fr;
-  }
-
-  .advanced-panel,
   .card-actions {
-    grid-template-columns: 1fr;
+    grid-template-columns: 94px 104px minmax(0, 129px);
+    width: 100%;
   }
 
+  .card-actions button {
+    padding-inline: 8px;
+  }
+}
+
+@media (forced-colors: active) {
+  .paper-name-input:focus-visible,
+  .paper-tags-input:focus-visible,
+  .page-title-field input:focus-visible,
+  .page-content-field textarea:focus-visible {
+    outline-color: Highlight;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 </style>

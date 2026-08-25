@@ -456,12 +456,12 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.paper-view { min-height: calc(100vh - 56px); padding: 26px clamp(18px, 4vw, 54px) 48px; }
+.paper-view { min-height: calc(100vh - 56px); padding: 16px 24px 24px; }
 .paper-gate > p { margin: 0; color: var(--signal); font: 700 .68rem var(--font-mono); letter-spacing: .12em; }
 button { min-height: 40px; padding: 8px 13px; border: 1px solid var(--rule); color: var(--ink); background: var(--paper); font: inherit; cursor: pointer; }
 button:disabled { opacity: .55; cursor: wait; }
 .quiet-danger { border-color: var(--danger); color: var(--danger); }
-.paper-notice, .paper-error, .repair-detail { width: min(920px, 100%); margin: 0 auto 12px; padding: 10px 14px; border-left: 4px solid var(--signal); background: var(--paper); }
+.paper-notice, .paper-error, .repair-detail { width: min(960px, 100%); margin: 0 auto 12px; padding: 10px 14px; border-left: 4px solid var(--signal); background: var(--paper); }
 .paper-error, .repair-detail { border-left-color: var(--danger); background: var(--danger-soft); }
 .paper-gate { width: min(620px, 100%); margin: 14vh auto 0; padding: 30px; border: 1px solid var(--rule); border-top: 5px solid var(--signal); background: var(--paper); }
 .paper-gate h2 { font: 500 2rem var(--font-display); }
@@ -470,4 +470,6 @@ button:disabled { opacity: .55; cursor: wait; }
 .delete-paper-dialog { width: min(430px, calc(100% - 32px)); padding: 24px; border: 1px solid var(--rule); color: var(--ink); background: var(--paper); }
 .delete-paper-dialog::backdrop { background: rgb(27 23 20 / .42); }
 .delete-paper-dialog div { display: flex; justify-content: flex-end; gap: 8px; }
+@media (min-width: 800px) { .paper-view { min-height: calc(100vh - 56px); padding-block: 20px 12px; } }
+@media (max-width: 479px) { .paper-view { padding: 16px 16px 20px; } }
 </style>

@@ -48,7 +48,7 @@ function ready() {
 }
 
 function buttonByText(wrapper, text) {
-  const button = wrapper.findAll("button").find((item) => item.text() === text);
+  const button = wrapper.findAll("button").find((item) => item.text().startsWith(text));
   if (!button) throw new Error(`button not found: ${text}`);
   return button;
 }
@@ -95,9 +95,9 @@ describe("Road v0.7 Paper runtime", () => {
     expect(wrapper.find(".paper-status-row").exists()).toBe(false);
     expect(wrapper.text()).not.toContain("paper-v4/index-v4");
     expect(wrapper.findAll(".card-actions > button").map((item) => item.text())).toEqual([
-      "保存",
       "删除本页",
       "加一页",
+      "保存",
     ]);
     expect(wrapper.emitted("paper-path-change")[0]).toEqual([null]);
   });
@@ -140,14 +140,16 @@ describe("Road v0.7 Paper runtime", () => {
     expect(buttonByText(wrapper, "加一页").attributes("disabled")).toBeDefined();
     expect(buttonByText(wrapper, "整份移入废纸篓").attributes("disabled")).toBeDefined();
 
-    resolveSave({ paper: stored, warnings: [] });
+    resolveSave({ paper: stored, warnings: ["index_degraded"] });
     await flushPromises();
-    expect(wrapper.text()).toContain("Paper 已保存为卡页 Markdown");
+    expect(wrapper.text()).toContain("Paper 已保存；Index 需要显式重建");
+    expect(wrapper.get('.workbench-state[role="status"]').text()).toContain("Library");
     expect(wrapper.get(".page-content-field textarea").attributes("readonly")).toBeUndefined();
     expect(document.activeElement).toBe(wrapper.get(".page-content-field textarea").element);
 
     await wrapper.get(".page-content-field textarea").setValue("Changed again");
-    expect(wrapper.text()).not.toContain("Paper 已保存为卡页 Markdown");
+    expect(wrapper.text()).not.toContain("Paper 已保存；Index 需要显式重建");
+    expect(buttonByText(wrapper, "保存").attributes("disabled")).toBeUndefined();
   });
 
   it("exposes the existing departure guard and reports an opened path", async () => {
@@ -168,7 +170,7 @@ describe("Road v0.7 Paper runtime", () => {
   });
 
   it("sends one whole-page Save DTO plus the restart reconciliation intent", async () => {
-    const draft = paper();
+    const draft = paper({ tags: ["重逢,旧友", 'a"b'] });
     const stored = paper({
       path: draft.target_path,
       source_digest: "digest-new",
@@ -194,7 +196,7 @@ describe("Road v0.7 Paper runtime", () => {
       edit_token: "edit-1",
       vault_locator: "vault-v1:test",
       display_name: null,
-      tags: [],
+      tags: ["重逢,旧友", 'a"b'],
       pages: [{ name: "First", content: "Changed", type: "summary" }],
     });
     expect(saveCall[2].family).toBe("paper_save");
@@ -202,7 +204,7 @@ describe("Road v0.7 Paper runtime", () => {
       code: draft.code,
       source_digest: null,
       baseline: null,
-      submitted: { pages: saveCall[1].pages },
+      submitted: { tags: draft.tags, pages: saveCall[1].pages },
     });
     expect(wrapper.text()).toContain("Paper 已保存为卡页 Markdown");
     expect(wrapper.emitted("paper-path-change").at(-1)).toEqual([stored.path]);
@@ -281,7 +283,9 @@ describe("Road v0.7 Paper runtime", () => {
     expect(request.mock.calls.filter(([method]) => method === "paper.save")).toHaveLength(0);
     expect(request.mock.calls.filter(([method]) => method === "paper.reconcile_save")).toHaveLength(1);
     expect(wrapper.text()).toContain("草稿仍在，请检查后重新保存");
-    expect(wrapper.text()).toContain("草稿有未保存修改");
+    expect(wrapper.text()).not.toContain("草稿有未保存修改");
+    confirmDiscardChanges.mockResolvedValueOnce(false);
+    await expect(wrapper.vm.confirmDeparture()).resolves.toBe(false);
     expect(wrapper.emitted("intent-settled")).toHaveLength(1);
   });
 

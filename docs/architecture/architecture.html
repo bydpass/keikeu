@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>keikeu Architecture — Road v0.7 CP6 accepted</title>
+  <title>keikeu Architecture — Road v0.7 CP7 accepted</title>
   <style>
     :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #1e2523; background: #eceae4; }
     * { box-sizing: border-box; }
@@ -21,7 +21,7 @@
     .node { min-width: 0; padding: 16px; border-top: 3px solid #77736b; background: #f4f3ee; }
     .current .node { border-top-color: #2e5d57; }
     .target .node { border-top-color: #9a4e3f; background: #f4eee9; }
-    .target-flow { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .target-flow { grid-template-columns: repeat(5, minmax(0, 1fr)); }
     .node strong, .node span { display: block; }
     .node span { margin-top: 6px; color: #646b68; font-size: .88rem; overflow-wrap: anywhere; }
     .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -35,9 +35,9 @@
 <body>
   <main>
     <header>
-      <p class="eyebrow">Last closed Road v0.6 · Road v0.7 CP6 accepted · extension pending</p>
-      <h1>运行链不变；目标只收口 Vue 组合层</h1>
-      <p class="status">Current accepted composition：Road v0.7；唯一运行链仍是 Paper v4 / Index v4 / protocol v2。Vue 组合层已在 CP2–CP4 实现，CP5 synthetic 平台集成与 CP6 一号作者 Gate 均已通过；Road 续段待新任务规划。</p>
+      <p class="eyebrow">Last closed Road v0.6 · current Road v0.7 CP7 accepted</p>
+      <h1>运行链不变；CP7 连续流与窄 Library / Core override 已接受</h1>
+      <p class="status">Accepted：CP7 Gate D 已通过。连续流、Library IME-safe 搜索、top-layer 预览、范围旁操作与 <code>vault.py</code> 完整文件夹生命周期进入当前产品；Paper v4 / Index v4 / protocol v2、DTO 和唯一运行链不变。原生 macOS 候选窗观察转入 CP8。</p>
       <nav>
         <a href="../PROJECT.md">当前坐标</a>
         <a href="../SPEC.md">产品边界</a>
@@ -46,6 +46,7 @@
         <a href="decisions/0004-vue-tauri-python-sidecar.md">ADR 0004</a>
         <a href="decisions/0006-road-v0-6-beta-engineering-exception.md">ADR 0006</a>
         <a href="decisions/0007-paper-v4-schema-migration.md">ADR 0007</a>
+        <a href="decisions/0008-whole-folder-trash-lifecycle.md">ADR 0008</a>
       </nav>
       <div class="tools" aria-hidden="true"><input data-doc-search disabled><button data-theme-toggle disabled>Theme</button></div>
     </header>
@@ -75,12 +76,13 @@
     </section>
 
     <section>
-      <p class="label">Road v0.7 production composition · integrated CP5 · author Gate passed CP6</p>
+      <p class="label">CP7 accepted boundary · implementation and verification complete</p>
       <div class="flow target target-flow">
-        <div class="node"><strong>App.vue Shell</strong><span>Paper / Library、New Paper、Vault context 与 pending intent</span></div>
-        <div class="node"><strong>Narrow Paper contract</strong><span><code>confirmDeparture()</code>、已保存 path 回报、guard 后 remount</span></div>
-        <div class="node"><strong>Existing views</strong><span>PaperView / LibraryView / VaultView 的 DTO 与 mutation ownership 不变</span></div>
-        <div class="node"><strong>Unchanged runtime</strong><span>Tauri/Rust → JSONL v2 → Python service/core → Paper v4 / Index v4 / Vault</span></div>
+        <div class="node"><strong>App.vue Shell</strong><span>CP6 navigation 与 pending intent 不变；默认窗口改为竖向</span></div>
+        <div class="node"><strong>Paper presentation</strong><span>连续流、CSV-style Tags adapter、Popover 与 quiet focus</span></div>
+        <div class="node"><strong>Library presentation</strong><span>composition-safe query + 每行相邻 top-layer Paper 预览</span></div>
+        <div class="node"><strong>Python Core · vault.py</strong><span>整树 Trash/restore；确认后 fd-relative no-follow 永久删除</span></div>
+        <div class="node"><strong>Unchanged contracts</strong><span>Tauri/Rust → JSONL v2 → service → Paper v4 / Index v4；DTO 与 mutation ownership 不变</span></div>
       </div>
     </section>
 
