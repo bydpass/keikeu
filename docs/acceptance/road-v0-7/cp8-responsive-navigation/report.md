@@ -10,7 +10,7 @@
 
 **Road 结论：** CP8 完成后，开发者明确判定 Road v0.7 正式完工
 
-## 当前结论
+## Checkpoint 时点结论
 
 CP7 已由开发者接受并在 `1e17cea` 建立本地 checkpoint。CP8 Gate A–C 已完成：未提交的
 工作树重排单行 Shell，增加 all-page 横向页签滚轮、竖版 Paper 底部 Anchor，以及竖版
@@ -21,10 +21,10 @@ protocol v2、Core、bridge、DTO、Rust、Tauri 几何、依赖或作者资产�
 开发者随后在 fake Home 与 synthetic Vault 中，以实体键盘和 macOS 简体拼音完成原生
 候选窗复核，并明确反馈“全部通过，没有异常”。Gate D 的四类 P1 阻断均未出现，因此
 CP8 现为已接受的 presentation override。该产品判断与自动化工程证据、Figma 对齐及 Git
-checkpoint 彼此独立；当前 CP8 工作树仍未提交。
+checkpoint 彼此独立；在本报告随 checkpoint 提交前，CP8 工作树仍未提交。
 
-基于 CP8 通过，开发者进一步明确判定 Road v0.7 的产品与实施工作正式完工。该判断不等于
-Road 已归档：CP8 checkpoint、Road snapshot、tag、push、签名、打包与发布仍须分别处理。
+基于 CP8 通过，开发者进一步明确判定 Road v0.7 的产品与实施工作正式完工。在该判断与
+本报告进入 checkpoint 的时点，Road snapshot、tag、push、签名、打包与发布仍须分别处理。
 
 ## 实现边界
 
@@ -115,7 +115,7 @@ build/OS/input-source 与 artifact digest。
 
 - Gate D 四类 P1 阻断均未出现；本次人工复核不自动重判 Gate D 范围外的 P2/P3。
 - 未操作真实 Vault、provider 同步、作者内容或持久工作站配置。
-- CP8 checkpoint commit 未授权且未创建；当前变更保持未提交供开发者复核。
+- 本报告进入 checkpoint 前，CP8 commit 尚未创建；该 checkpoint-time 边界不回写成提前完成。
 - 未 push、tag、closeout、签名、公证、DMG、发布或扩大平台支持。
 
 ## 最终文档 Gate
@@ -123,3 +123,12 @@ build/OS/input-source 与 artifact digest。
 - `.venv/bin/python scripts/check_docs.py`：通过，`72 active / 15 required`，budget 与本地链接
   全部有效。
 - `git diff --check`：通过；新建的未跟踪报告另以行尾扫描确认无尾随空白。
+
+## 后续 Git closeout（2026-08-26）
+
+- 开发者随后明确授权“全部提交，并做 Road 快照”。
+- CP8 checkpoint 已创建为 `2f03aeecc1f287e5cdb4f9ddab462ae169af68c4`。
+- [Road v0.7 snapshot](../../../archive/snapshots/road-v0-7.html) 在该 checkpoint 后作为独立
+  docs-only closeout 加入；它不改写本报告的 checkpoint-time 证据。
+- Road v0.7 至此完成产品、实施、checkpoint 与文档归档。未创建 tag，亦未 push、签名、
+  公证、DMG、打包或发布；未操作真实 Vault、provider 或作者内容。

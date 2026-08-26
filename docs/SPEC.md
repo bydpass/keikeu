@@ -1,4 +1,4 @@
-# keikeu Product Boundary (Road v0.7 complete; CP8 checkpoint uncommitted)
+# keikeu Product Boundary (Road v0.7 complete and archived)
 
 > Authority: §§1–7 define the accepted product, author-asset, and data-safety boundary inherited from Road v0.6; §8 defines shared exclusions and platform scope; §9 records the Road v0.7 App Shell composition accepted at CP6; §10 defines the CP7 continuous-flow override accepted by developer Gate D on 2026-08-25; §11 defines the CP8 responsive-navigation override accepted by developer Gate D on 2026-08-26 and records the developer's Road v0.7 completion judgment. Detailed Paper v4 grammar, DTOs, migration, recovery, and protocol remain in the approved [Paper v4 design](design/road-v0-6-paper-v4-design.md); the current interface and acceptance matrix live in the [App Shell design](design/road-v0-7-app-shell-design.md). Current checkpoint and runtime facts live in [PROJECT](PROJECT.md), source, and tests.
 
@@ -156,20 +156,21 @@ CP7 followed four Gates: contract, Figma delivery, production verification, and 
 acceptance. Gates A–C and both remediation rounds completed on 2026-08-25; the developer then
 explicitly passed Gate D with no unresolved P0/P1. The CP7 acceptance record separates this product
 judgment from automated engineering evidence and from the native macOS candidate-window check moved
-to CP8. CP7 is committed locally at `1e17cea`; closeout, push, tag, signing, packaging and release
-remain unperformed and unapproved.
+to CP8. CP7 is committed locally at `1e17cea`; its acceptance did not itself authorize closeout.
+CP8 and the downstream snapshot later closed the Road, while push, tag, signing, packaging and release
+remain unperformed.
 
 ## 11. Accepted Road v0.7 CP8 responsive-navigation override
 
 CP8 is an accepted, presentation-only continuation of CP7. Gate A–C engineering/Figma evidence and
 the physical-keyboard macOS native-candidate-window Gate completed on 2026-08-26; the developer then
-explicitly passed Gate D with no reported anomaly. Acceptance does not imply a checkpoint commit,
-Road closeout, remote Git action, or release.
+explicitly passed Gate D with no reported anomaly. That acceptance did not itself imply a checkpoint
+commit, Road closeout, remote Git action, or release.
 
 Gate A–C engineering and Figma evidence completed on 2026-08-26. The source candidate, focused/full
 tests, five-viewport synthetic browser QA, debug app bundle, and in-place Figma Page `71:2` overwrite
 are recorded in the [CP8 engineering report](acceptance/road-v0-7/cp8-responsive-navigation/report.md).
-The same report separately records the developer's Gate D observation and uncommitted Git boundary.
+The same report separately records the developer's Gate D observation and subsequent Git boundary.
 
 - The one-row `56px` Shell presents `编辑 Paper → 新 Paper → Library … Vault`; it changes only label
   and placement and keeps the single existing dirty-departure guard.
@@ -198,10 +199,10 @@ The same report separately records the developer's Gate D observation and uncomm
   durable author assets, and product capabilities remain unchanged.
 
 CP8 implementation, Figma synchronization, automated evidence, native IME observation, and developer
-acceptance are complete Gate A–D conclusions. Checkpoint commit, push, tag, closeout, signing, and
-release remain separate and incomplete. No real Vault or author content was used for CP8 verification.
-The developer consequently declared Road v0.7 product and implementation work complete on 2026-08-26;
-this completion judgment does not claim that the uncommitted checkpoint or Road snapshot exists.
+acceptance are complete Gate A–D conclusions. Final checkpoint `2f03aee` and the independent
+[Road v0.7 snapshot](archive/snapshots/road-v0-7.html) complete the Road's documentation closeout.
+No real Vault or author content was used for CP8 verification. Push, tag, signing, packaging, and
+release remain separate and unperformed.
 
 ## 12. Road v0.6 completed acceptance record
 

@@ -1,6 +1,6 @@
-# Road v0.7 实施计划（正式完工；CP8 checkpoint 未提交）
+# Road v0.7 实施计划（正式完工并归档）
 
-> 状态：开发者于 2026-08-20 批准原 CP0–CP6 计划并给出相应 advance YOLO；CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc`、CP3 `55b5313`、CP4 `6f69310`、CP5 `3259c42` 与 CP6 一号作者 Gate 均已通过。CP7 于 2026-08-25 通过 Gate D，并在 `1e17cea` 收口。当前分支 `ui/cp8-v07-responsive-navigation` 已完成 CP8 Gate A–C 的 production、完整工程与 Figma 证据；开发者于 2026-08-26 以实体键盘完成原生 macOS 候选窗复核并明确通过 Gate D，随后明确判定 Road v0.7 正式完工。CP8 checkpoint commit 未授权且未创建；Road snapshot、真实 Vault、push、tag 与发布仍未授权。
+> 状态：开发者于 2026-08-20 批准原 CP0–CP6 计划并给出相应 advance YOLO；CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc`、CP3 `55b5313`、CP4 `6f69310`、CP5 `3259c42` 与 CP6 一号作者 Gate 均已通过。CP7 于 2026-08-25 通过 Gate D，并在 `1e17cea` 收口。CP8 完成 production、完整工程、Figma 与实体键盘 macOS IME Gate，开发者于 2026-08-26 明确通过 Gate D 并判定 Road v0.7 正式完工。最终 checkpoint 为 `2f03aeecc1f287e5cdb4f9ddab462ae169af68c4`；[Road snapshot](docs/archive/snapshots/road-v0-7.html) 已在其后独立归档。真实 Vault、push、tag、签名、打包与发布均未执行。
 >
 > 目标设计：[`docs/design/road-v0-7-app-shell-design.md`](docs/design/road-v0-7-app-shell-design.md)
 >
@@ -25,7 +25,7 @@ Road v0.7 将已接受的 Paper、Library 与 Vault 收口为一个稳定桌面�
 - [`docs/RULES.md`](docs/RULES.md) 继续约束作者资产、Git、证据与安全边界。
 - [`docs/PROJECT.md`](docs/PROJECT.md)、源码和测试标明每个 Checkpoint 的当前事实。
 - 不得把未完成 target 写成已实现；每个 CP 只从前一已通过 checkpoint commit 建分支。
-- 每个 CP 单独 commit；CP0–CP6 的 advance YOLO 已用完。CP7 Gate D 已通过且本地 checkpoint commit 为 `1e17cea`。CP8 Gate D 已由开发者另行判断通过；checkpoint commit、真实 Vault、push、tag、closeout 与发布仍须分别授权。
+- 每个 CP 单独 commit；CP0–CP6 的 advance YOLO 已用完。CP7 checkpoint 为 `1e17cea`，CP8 最终 checkpoint 为 `2f03aee`。Road snapshot 已作为 checkpoint 后的独立 closeout 变更创建；真实 Vault、push、tag、签名、打包与发布仍是独立决定。
 
 ## 2. 全局范围
 
@@ -90,7 +90,7 @@ Python/Rust 无改动不代表可以复制历史结果；CP0 与 CP5 各运行�
 | CP5 | `test/cp5-v07-integration` | 全量检查与 Tauri 合成 smoke | 无未解决 P0/P1 |
 | CP6 | `test/cp6-v07-author-gate` | 一号作者真实日常接受 | 产品 Gate 通过 |
 | CP7 | `ui/cp7-v07-continuous-flow` | 连续编辑流、默认窗口与 UI 去 slop | Gate A–D 顺序通过 |
-| CP8 | `ui/cp8-v07-responsive-navigation` | 响应式页签滚轮、竖版 Anchor、原生 IME 复核 | Gate A–D 已通过；checkpoint 未提交 |
+| CP8 | `ui/cp8-v07-responsive-navigation` | 响应式页签滚轮、竖版 Anchor、原生 IME 复核 | Gate A–D 已通过；`2f03aee` |
 
 ## 5. CP0 — 合同与基线
 
@@ -408,7 +408,7 @@ synthetic Vault 启动。开发者在 macOS `27.0`（`26A5421a`）、简体拼�
 选择“暴食”前没有中间查询，提交后只保留最终中文、只刷新一次且无残留 `ba`。
 开发者明确判断“全部通过，没有异常”；四类 P1 阻断均未出现。详细记录见
 [`CP8 report`](docs/acceptance/road-v0-7/cp8-responsive-navigation/report.md)。CP8 checkpoint
-commit、push、tag、真实 Vault、签名与发布继续不在当前授权内。
+随后以 `2f03aee` 创建；push、tag、真实 Vault、签名与发布均未执行。
 
 ## 17. CP8 已知风险
 
@@ -423,10 +423,10 @@ commit、push、tag、真实 Vault、签名与发布继续不在当前授权内�
 
 ## 18. Road 完工与 v0.8 交接
 
-开发者于 2026-08-26 明确判定：CP8 完成后，Road v0.7 的产品与实施工作正式完工。该结论
-不冒充 Git closeout：CP8 checkpoint commit 尚未创建，Road snapshot、tag、push、签名、
-打包与发布也尚未执行。
+开发者于 2026-08-26 明确判定：CP8 完成后，Road v0.7 的产品与实施工作正式完工。CP8
+checkpoint 已创建为 `2f03aee`；本 Road 的[只读施工 snapshot](docs/archive/snapshots/road-v0-7.html)
+在该 checkpoint 后独立加入，因此 Road v0.7 已完成 Git 文档收口。未创建 tag，亦未 push、
+签名、打包或发布。
 
-Road v0.8 的方向冻结为“打包 + Alpha 发布”，最早于 2026-08-28 开始。当前不提前创建
-v0.8 分支、计划、构建或发布资产；开始前先完成 CP8 checkpoint 与 Road v0.7 snapshot 的
-独立授权和线性 Git 边界。
+Road v0.8 的方向冻结为“打包 + Alpha 发布”，最早于 2026-08-28 开始。当前尚未创建
+v0.8 分支、计划、构建或发布资产；启动时须另行批准计划与发布边界。

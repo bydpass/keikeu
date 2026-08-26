@@ -1,10 +1,10 @@
-> **HUMAN MANUAL — NON-NORMATIVE.** 本文用人话解释 Road v0.6 建立、已完工 Road v0.7 继续使用的 Paper v4 产品模型。当前产品边界以 [`docs/SPEC.md`](../../SPEC.md) 为准，当前坐标以 [`docs/PROJECT.md`](../../PROJECT.md) 为准；Road v0.7 complete / Git closeout pending 见 [Road v0.7 书面设计](../../design/road-v0-7-app-shell-design.md)。
+> **HUMAN MANUAL — NON-NORMATIVE.** 本文用人话解释 Road v0.6 建立、已归档 Road v0.7 继续使用的 Paper v4 产品模型。当前产品边界以 [`docs/SPEC.md`](../../SPEC.md) 为准，当前坐标以 [`docs/PROJECT.md`](../../PROJECT.md) 为准；Road v0.7 accepted baseline 见 [Road v0.7 书面设计](../../design/road-v0-7-app-shell-design.md)。
 
 # keikeu APPDESIGN.md
 
 > slogan：存住一瞬的灵光
 >
-> 记录范围：Road v0.7 product complete / Git closeout pending · Paper v4；CP8 不改变数据合同
+> 记录范围：Road v0.7 complete and archived · Paper v4；CP8 不改变数据合同
 >
 > 设计原则：本地优先、作者控制、直接编辑 Paper、无 AI 代写
 
@@ -19,7 +19,7 @@
 | 产品版本 | Road v0.6 建立并归档的 runtime | 已完工 Road v0.7 的 CP8 响应式 App Shell |
 | 内容模型 | Paper v4：一份 Paper 由有序卡页组成 | 不改变 Paper v4 / Index v4 / protocol v2 |
 | 聚焦方式 | Paper 本身可编辑、可翻页并整体保存 | Paper / Library 是日常位置，Vault 是环境入口 |
-| 实现状态 | 已实现、验收并归档 | Road v0.7 产品与实施正式完工；HEAD 仍为 CP7 `1e17cea`，CP8 checkpoint / Road snapshot 尚未创建 |
+| 实现状态 | 已实现、验收并归档 | Road v0.7 产品与实施正式完工并归档；最终 checkpoint `2f03aee` |
 
 判断“现在已经运行什么”时，以 `SPEC`、实际代码和测试为准；判断后续 target 与 Gate 时，以当前计划和 `PROJECT` 为准。本文不覆盖其中任何一侧，也不授予实施或迁移权限。
 

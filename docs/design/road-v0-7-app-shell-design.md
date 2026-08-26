@@ -1,10 +1,10 @@
 # Road v0.7：App Shell、连续编辑流与响应式 Anchor 设计
 
-> 状态：开发者于 2026-08-20 批准原设计与实施计划；CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc`、CP3 `55b5313`、CP4 `6f69310`、CP5 `3259c42` 与 CP6 一号作者 Gate 均已通过。CP7 于 2026-08-25 通过 Gate D，并在 `1e17cea` 建立本地 checkpoint。当前分支 `ui/cp8-v07-responsive-navigation` 已完成 CP8 Gate A–C 的 source、完整工程、五档布局与 Figma 证据；开发者于 2026-08-26 以实体键盘完成原生 macOS 候选窗复核并明确通过 Gate D，随后判定 Road v0.7 产品与实施正式完工。CP8 checkpoint、Road snapshot、真实 Vault、push、tag 与发布未授权。
+> 状态：开发者于 2026-08-20 批准原设计与实施计划；CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc`、CP3 `55b5313`、CP4 `6f69310`、CP5 `3259c42` 与 CP6 一号作者 Gate 均已通过。CP7 于 2026-08-25 通过 Gate D，并在 `1e17cea` 建立本地 checkpoint。CP8 完成 source、完整工程、五档布局、Figma 与实体键盘 macOS IME Gate，开发者于 2026-08-26 明确通过 Gate D 并判定 Road v0.7 产品与实施正式完工。最终 checkpoint 为 `2f03aee`；[Road snapshot](../archive/snapshots/road-v0-7.html) 已在其后独立归档。真实 Vault、push、tag、签名、打包与发布均未执行。
 >
 > 基线：Road v0.6 已完成并验收的 Paper v4 / Index v4 / protocol v2。
 >
-> 权威边界：[`SPEC`](../SPEC.md) 定义 CP8 已接受产品边界；本文保留 CP0–CP6 历史，并拥有 CP7/CP8 详细设计与验收矩阵。`PROJECT`、源码与测试继续标明当前实现与未提交 checkpoint 边界；工程证据不等于开发者接受。
+> 权威边界：[`SPEC`](../SPEC.md) 定义 CP8 已接受产品边界；本文保留 CP0–CP6 历史，并拥有 CP7/CP8 详细设计与验收矩阵。`PROJECT`、源码与测试继续标明当前实现与 Road 收口边界；工程证据不等于开发者接受。
 >
 > 伴随评审物：[`Road v0.7 HTML 计划书`](road-v0-7-planbook.html)；它只展示本设计与实施计划，不新增第三份规范权威。
 
@@ -398,7 +398,7 @@ Paper context
   后清空 path 并替换 PaperView，不增加 Router、store 或第二套确认。
 - 所有页签按钮始终在 DOM 中。轨道每屏约显示三个等宽槽位，`1/3/4/6/7/12` 页都保持
   单行恒高；不换行、不循环、不加前后箭头。
-- 只有页签轨道恢复细横向滚动条，使用 `overflow-x: auto` 与 scroll-snap；document 自身
+- 只有页签轨道恢复细横向滚动条，使用 `overflow-x: scroll` 与 scroll-snap；document 自身
   仍满足 `scrollWidth <= clientWidth`。
 - 载入、直接点选、加页或删页后，当前按钮以 `inline: center`、`block: nearest` 自动进入
   可见中部。`aria-current`、键盘焦点、直接点选、跨边界加删页和 saving lock 不退化。
@@ -467,5 +467,5 @@ Tag“暴食”的 synthetic Vault，输入 `baoshi`，在提交前观察稳定�
 composition、截图、Figma、full gate 或 debug bundle 构建仍不能替代该人工证据；详细的
 synthetic、build/OS/input-source 记录见 CP8 acceptance report。
 
-CP8 Gate D 已通过；checkpoint commit、push、tag、真实 Vault、签名、打包和发布继续是独立
-决定，当前接受结论不自动授予其中任何一项。
+CP8 Gate D 已通过；最终 checkpoint 为 `2f03aee`，Road snapshot 已作为其后的独立文档
+closeout 创建。该 Git 收口不授权 push、tag、真实 Vault、签名、打包或发布；这些动作均未执行。

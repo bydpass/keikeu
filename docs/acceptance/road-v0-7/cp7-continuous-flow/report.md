@@ -73,3 +73,9 @@ marker scan 与 `git diff --check` 全部通过。应用 smoke 使用前述整�
   预检会阻断已知挂载/身份问题，运行中失败会恢复并报告剩余树，但已销毁 entry 不可回滚。
 - 未 push、tag、closeout、签名、公证、DMG 或发布。
 - CP7 checkpoint commit 是 `1e17cea`；CP8 checkpoint commit 仍需开发者另行判断。
+
+## 后续状态（2026-08-26）
+
+上列“仍需判断”是 CP7 checkpoint 时点事实。CP8 随后通过 Gate D 并提交为 `2f03aee`；
+Road v0.7 snapshot 已在其后独立归档。该后续 closeout 不回填 CP7 原生候选窗证据，也未执行
+真实 Vault、push、tag、签名、打包或发布。

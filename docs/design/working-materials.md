@@ -4,8 +4,8 @@
 
 ## Active approved authority
 
-- [Road v0.7 complete / Git closeout pending App Shell design](road-v0-7-app-shell-design.md)
-- [Road v0.7 implementation plan — product complete; CP8 checkpoint uncommitted](../../PLAN_road_v0_7.md)
+- [Road v0.7 complete and archived App Shell design](road-v0-7-app-shell-design.md)
+- [Road v0.7 implementation plan — CP8 accepted and archived](../../PLAN_road_v0_7.md)
 
 ## Non-authoritative companions and history
 
