@@ -428,5 +428,7 @@ checkpoint 已创建为 `2f03aee`；本 Road 的[只读施工 snapshot](docs/arc
 在该 checkpoint 后独立加入，因此 Road v0.7 已完成 Git 文档收口。未创建 tag，亦未 push、
 签名、打包或发布。
 
-Road v0.8 的方向冻结为“打包 + Alpha 发布”，最早于 2026-08-28 开始。当前尚未创建
-v0.8 分支、计划、构建或发布资产；启动时须另行批准计划与发布边界。
+Road v0.8 的方向冻结为“打包 + Alpha 发布”，最早于 2026-08-28 开始。截至 Road v0.7
+closeout 时尚未创建 v0.8 分支、计划、构建或发布资产。开发者随后于 2026-08-26 授权落地
+[v0.8 pre-start 计划草案](PLAN_road_v0_8.md)；该草案不代表 Road 启动，CP0 仍须另行批准
+计划、seed 与发布边界。

@@ -81,4 +81,11 @@ Run this gate immediately before the final response for every repository-changin
 5. Report data, provider, external-editor, platform, and acceptance risks plus staged, committed, and pushed state.
 6. If a commit was explicitly authorized, follow the exact-staging and `aic` procedure in `docs/RULES.md` §7, then inspect the resulting commit. DeepSeek `aic` has standing developer authorization for this repository after the staged diff is reviewed and found free of secrets and author content: name DeepSeek and report the staged boundary, but do not ask again for provider approval. Explicit commit authority is still required; another provider, a sensitive or unexpected diff, or revoked authorization requires a new decision. Treat the authorized invocation and the commit it creates as one transaction without a second authorization.
 7. After the final accepted Road checkpoint commit, follow `docs/RULES.md` §8 for the separate Road snapshot closeout.
-8. Give the safest next command.
+8. After the final worktree state, checks, and any authorized commit or Road snapshot are complete, refresh the ignored local context route at `build/context/keikeu-context.txt` with:
+
+   ```bash
+   .venv/bin/python scripts/build_context_pack.py
+   ```
+
+   Append repeated `--path path/to/file` arguments only for the smallest reviewed set of tracked files the next coding agent needs; the authority files are included automatically. Confirm that the header records the current branch, HEAD, selected-file status, selected/skipped counts, and current-local-tree source, then review the included-file boundaries. Never select author content, secrets, ignored data, private or external paths, or unrelated cold evidence. Never stage or upload the route or treat it as authority, test evidence, or acceptance: it is a disposable local handoff artifact. Atomic generation preserves the previous file on failure; report the exact error and that the route is stale instead of hand-editing it or claiming it was refreshed.
+9. Give the safest next command.
