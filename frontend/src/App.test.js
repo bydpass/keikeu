@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import tauriConfig from "../src-tauri/tauri.conf.json";
 import App from "./App.vue";
+import appSource from "./App.vue?raw";
 import PrototypeView from "./PrototypeView.vue";
 import {
   bridgeRequest,
@@ -136,9 +137,28 @@ describe("Road v0.7 desktop shell", () => {
 
     expect(wrapper.find(".paper-v4-workbench").exists()).toBe(true);
     expect(wrapper.text()).not.toContain("paper-v4/index-v4");
-    expect(shellButtonByText(wrapper, "Paper").attributes("aria-current")).toBe("page");
+    expect(wrapper.findAll(".app-shellbar button").map((button) => button.text())).toEqual([
+      "编辑 Paper",
+      "新 Paper",
+      "Library",
+      "Vault",
+    ]);
+    expect(shellButtonByText(wrapper, "编辑 Paper").attributes("aria-current")).toBe("page");
     expect(shellButtonByText(wrapper, "Library").attributes("aria-current")).toBeUndefined();
     expect(shellButtonByText(wrapper, "Vault").exists()).toBe(true);
+    expect(wrapper.get(".app-work-surface").attributes("aria-label")).toBe("编辑 Paper 工作面");
+  });
+
+  it("keeps the Shell on one fixed 56px row", () => {
+    const shellbarCss = appSource.match(/\.app-shellbar \{([\s\S]*?)\}/)?.[1];
+    const buttonCss = appSource.match(/\.app-shellbar button \{([\s\S]*?)\}/)?.[1];
+    expect(shellbarCss).toContain("grid-template-rows: 56px;");
+    expect(shellbarCss).toContain("height: 56px;");
+    expect(buttonCss).toContain("white-space: nowrap;");
+    expect(appSource).toMatch(/function startNewPaper\(\) \{\s*return runShellIntent\(/);
+    expect(appSource).toMatch(
+      /@media \(max-width: 479px\)[\s\S]*?\.app-shellbar \{[\s\S]*?gap: 0 2px;[\s\S]*?padding-inline: 8px;/,
+    );
   });
 
   it("shows the host error and can restart into the same v2 runtime", async () => {
@@ -193,7 +213,7 @@ describe("Road v0.7 desktop shell", () => {
     await flushPromises();
 
     expect(confirmDiscardChanges).toHaveBeenCalledOnce();
-    expect(shellButtonByText(wrapper, "Paper").attributes("aria-current")).toBe("page");
+    expect(shellButtonByText(wrapper, "编辑 Paper").attributes("aria-current")).toBe("page");
     expect(wrapper.get(".page-content-field textarea").element.value).toBe(
       "Unsaved shell draft",
     );
@@ -219,7 +239,7 @@ describe("Road v0.7 desktop shell", () => {
 
     await vaultButton.trigger("click");
     await flushPromises();
-    expect(shellButtonByText(wrapper, "Paper").attributes("aria-current")).toBe("page");
+    expect(shellButtonByText(wrapper, "编辑 Paper").attributes("aria-current")).toBe("page");
     expect(wrapper.get(".page-content-field textarea").element.value).toBe("Keep before Vault");
     expect(document.activeElement).toBe(vaultButton.element);
 
@@ -251,7 +271,7 @@ describe("Road v0.7 desktop shell", () => {
     expect(confirmDiscardChanges).toHaveBeenCalledTimes(2);
     expect(bridgeRequest.mock.calls.filter(([method]) => method === "paper.create_draft")).toHaveLength(2);
     expect(wrapper.get(".page-content-field textarea").element.value).toBe("Draft");
-    expect(shellButtonByText(wrapper, "Paper").attributes("aria-current")).toBe("page");
+    expect(shellButtonByText(wrapper, "编辑 Paper").attributes("aria-current")).toBe("page");
   });
 
   it("keeps the saved Paper path across a Vault visit and cancel", async () => {
@@ -284,7 +304,7 @@ describe("Road v0.7 desktop shell", () => {
     const openCalls = bridgeRequest.mock.calls.filter(([method]) => method === "paper.open");
     expect(openCalls).toHaveLength(1);
     expect(openCalls[0][1]).toEqual({ path: draft.target_path });
-    expect(shellButtonByText(wrapper, "Paper").attributes("aria-current")).toBe("page");
+    expect(shellButtonByText(wrapper, "编辑 Paper").attributes("aria-current")).toBe("page");
   });
 
   it("keeps the active surface mounted until a durable intent is resolved", async () => {
@@ -307,7 +327,7 @@ describe("Road v0.7 desktop shell", () => {
       button.attributes("disabled") !== undefined
     ))).toBe(true);
 
-    await shellButtonByText(wrapper, "Paper").trigger("click");
+    await shellButtonByText(wrapper, "编辑 Paper").trigger("click");
     expect(shellButtonByText(wrapper, "Library").attributes("aria-current")).toBe("page");
 
     rejectBranch({
@@ -459,7 +479,7 @@ describe("Road v0.7 desktop shell", () => {
     await flushPromises();
 
     expect(wrapper.get(".library-shell").attributes("inert")).toBeDefined();
-    expect(shellButtonByText(wrapper, "Paper").attributes("disabled")).toBeDefined();
+    expect(shellButtonByText(wrapper, "编辑 Paper").attributes("disabled")).toBeDefined();
     await buttonByText(wrapper, "打开整份 Paper").trigger("click");
     await buttonByText(wrapper, "编辑整份 Paper").trigger("click");
     await flushPromises();

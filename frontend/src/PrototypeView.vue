@@ -115,7 +115,10 @@ function startNewPaper() {
           :aria-current="destination === 'paper' ? 'page' : undefined"
           @click="destination = 'paper'"
         >
-          Paper
+          编辑 Paper
+        </button>
+        <button type="button" class="prototype-v07-new-paper" @click="startNewPaper">
+          新 Paper
         </button>
         <button
           type="button"
@@ -130,14 +133,11 @@ function startNewPaper() {
         class="prototype-v07-context-switch"
         :aria-current="destination === 'vault' ? 'page' : undefined"
         @click="destination = 'vault'"
-      >示例 Vault</button>
-      <button type="button" class="prototype-v07-new-paper" @click="startNewPaper">
-        新 Paper
-      </button>
+      >Vault</button>
     </header>
 
     <div class="prototype-v07-boundary">
-      <strong>ROAD V0.7 · CP7 · DEVELOPMENT ONLY</strong>
+      <strong>ROAD V0.7 · CP8 · DEVELOPMENT ONLY</strong>
       <span>合成样张 · 不连接 Vault · 无 bridge、文件 mutation 或持久配置</span>
     </div>
 
@@ -145,7 +145,7 @@ function startNewPaper() {
       <section
         v-if="destination === 'paper'"
         class="prototype-v07-stage"
-        aria-label="合成 Paper 工作面"
+        aria-label="合成编辑 Paper 工作面"
       >
         <p v-if="toast" class="prototype-v07-toast" role="status">{{ toast }}</p>
         <PaperV4Workbench
@@ -234,8 +234,9 @@ summary {
   z-index: 20;
   top: 0;
   display: grid;
-  grid-template-columns: auto auto minmax(20px, 1fr) auto auto;
-  min-height: 56px;
+  grid-template-columns: auto auto minmax(20px, 1fr) auto;
+  grid-template-rows: 56px;
+  height: 56px;
   align-items: stretch;
   gap: 16px;
   padding: 0 22px;
@@ -252,14 +253,11 @@ summary {
   display: flex;
   align-items: stretch;
   gap: 4px;
+  white-space: nowrap;
 }
 
 .prototype-v07-context-switch {
   grid-column: 4;
-}
-
-.prototype-v07-new-paper {
-  grid-column: 5;
 }
 
 .prototype-v07-topbar button {
@@ -270,6 +268,7 @@ summary {
   color: var(--muted);
   background: transparent;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .prototype-v07-daily button[aria-current="page"],
@@ -429,10 +428,8 @@ summary {
 
 @media (max-width: 799px) {
   .prototype-v07-topbar {
-    grid-template-columns: auto auto minmax(0, 1fr) auto auto;
-    grid-template-rows: 56px;
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
     gap: 0 4px;
-    min-height: 56px;
     padding: 0 12px;
   }
 
@@ -443,11 +440,6 @@ summary {
 
   .prototype-v07-context-switch {
     grid-column: 4;
-    grid-row: 1;
-  }
-
-  .prototype-v07-new-paper {
-    grid-column: 5;
     grid-row: 1;
   }
 
@@ -462,6 +454,19 @@ summary {
 }
 
 @media (max-width: 479px) {
+  .prototype-v07-topbar {
+    gap: 0 2px;
+    padding-inline: 8px;
+  }
+
+  .prototype-v07-daily {
+    gap: 2px;
+  }
+
+  .prototype-v07-topbar button {
+    padding-inline: 4px;
+  }
+
   .prototype-v07-stage {
     padding: 16px 16px 20px;
   }

@@ -1474,7 +1474,7 @@
         <a href="#judgment"><span class="toc-number">01</span><span>核心判断</span></a>
         <a href="#scope"><span class="toc-number">02</span><span>范围边界</span></a>
         <a href="#prototype"><span class="toc-number">03</span><span>CP6 历史原型</span></a>
-        <a href="#checkpoints"><span class="toc-number">04</span><span>CP0–CP7</span></a>
+        <a href="#checkpoints"><span class="toc-number">04</span><span>CP0–CP8</span></a>
         <a href="#safety"><span class="toc-number">05</span><span>安全合同</span></a>
         <a href="#learning"><span class="toc-number">06</span><span>边看边学</span></a>
         <a href="#acceptance"><span class="toc-number">07</span><span>证据与漂移</span></a>
@@ -1486,14 +1486,15 @@
     <div class="book-main">
       <header class="book-header">
         <div class="status-line">
-          <span class="status-chip">CURRENT CP6 ACCEPTED</span>
+          <span class="status-chip">ROAD V0.7 PRODUCT COMPLETE</span>
           <span class="status-chip">ACCEPTED CP7 · GATE D PASSED</span>
+          <span class="status-chip">CP8 GATE D PASSED</span>
           <span class="status-chip">NON-AUTHORITATIVE</span>
-          <span class="status-chip">2026-08-25</span>
+          <span class="status-chip">2026-08-26</span>
         </div>
         <p class="eyebrow">Road v0.7 · App Shell 与信息层级收口</p>
         <h1>把功能页收成一个作者工作台</h1>
-        <p class="lede" data-pretext>CP6 已把 Paper、Library、Vault 与阻塞恢复收成稳定工作台。CP7 继续把 Paper 收成连续编辑流；Gate D 后续整改另收口 Library 中文检索、top-layer 预览与完整文件夹 Trash 生命周期，不增加创作对象、数据 schema 或平台能力。</p>
+        <p class="lede" data-pretext>CP8 Gate A–D 已通过，开发者于 2026-08-26 判定 Road v0.7 产品与实施正式完工。数据合同与产品能力不变。Git closeout 独立：HEAD 仍为 CP7 checkpoint 1e17cea，CP8 checkpoint 与 Road snapshot 尚未创建。</p>
         <nav class="header-links" aria-label="权威文档">
           <a href="../../PLAN_road_v0_7.md">实施计划</a>
           <a href="road-v0-7-app-shell-design.md">目标设计</a>
@@ -1552,6 +1553,7 @@
               <ul class="clean-list">
                 <li><code>App.vue</code> 的紧凑 Shell 与现有页面切换整合。</li>
                 <li>Paper、Library、Vault 的信息层级和两种目标窗口布局。</li>
+                <li>CP8 的五档视口、all-page 横向滚轮、Paper / Library 竖版 Anchor 与 native Popover。</li>
                 <li>现有 dirty guard、focus、错误与恢复反馈的位置校准。</li>
                 <li>development-only 灰阶 prototype 与 production bundle 隔离检查。</li>
                 <li>Vitest、Vite、Tauri smoke 与一号作者结构接受。</li>
@@ -1769,9 +1771,9 @@
           <div class="section-heading">
             <div>
               <p class="section-index">04 · Checkpoints</p>
-              <h2>CP0–CP7 已通过；CP7 checkpoint 收口中</h2>
+              <h2>CP0–CP8 已通过；Road v0.7 正式完工</h2>
             </div>
-            <p data-pretext>原 CP0–CP6 保持线性并已有实际证据。开发者已批准 CP7 连续编辑流；它在同一 checkpoint 内依次经过合同、Figma、production 与开发者接受 Gate。</p>
+            <p data-pretext>CP0–CP7 保持线性并已有实际证据，CP7 checkpoint 为 1e17cea。当前 CP8 分支已完成响应式导航、Anchor、完整工程、Figma Page 71:2 与实体键盘原生 IME Gate D；开发者随后判定 Road v0.7 产品与实施正式完工。CP8 checkpoint 和 Road snapshot 仍是独立、未执行的 Git 结论。</p>
           </div>
 
           <ol class="timeline">
@@ -1813,7 +1815,12 @@
             <li class="checkpoint">
               <span class="cp-badge">CP7</span>
               <div><h3>连续编辑流</h3><p><code>ui/cp7-v07-continuous-flow</code></p></div>
-              <div class="exit-gate"><strong>当前状态 · Gate D 已通过</strong>完整文件夹删除、Library 中文输入法与 inline Paper 预览的后续整改、全量复核、隔离 Tauri smoke 与同一 Figma Page 增量同步均已完成；开发者于 2026-08-25 明确接受 CP7。原生候选窗观察转入 CP8。</div>
+              <div class="exit-gate"><strong>当前状态 · Gate D 已通过</strong>完整文件夹删除、Library 中文输入法与 top-layer Paper 预览的后续整改、全量复核、隔离 Tauri smoke 与同一 Figma Page 增量同步均已完成；开发者于 2026-08-25 明确接受 CP7，checkpoint 为 <code>1e17cea</code>。</div>
+            </li>
+            <li class="checkpoint">
+              <span class="cp-badge">CP8</span>
+              <div><h3>响应式导航与 Anchor</h3><p><code>ui/cp8-v07-responsive-navigation</code></p></div>
+              <div class="exit-gate"><strong>当前状态 · Gate A–D 已通过</strong>顶栏、all-page 滚轮、竖版 Anchor/Popover 已实现；focused <code>5/86</code>、full <code>9/118</code>、pytest <code>284</code>、Rust <code>12</code>、五档 QA、debug bundle 与 Figma Page <code>71:2</code> 均通过。实体键盘 macOS 候选窗稳定，四类 P1 阻断均未出现；checkpoint 尚未提交。</div>
             </li>
           </ol>
         </section>
@@ -1908,7 +1915,9 @@
               <tr><td>Production 已实现</td><td>源码检查、聚焦 Vitest、完整 Vitest 与 Vite build</td><td>已通过 · CP2–CP4</td></tr>
               <tr><td>平台流程可用</td><td>当前源码的 synthetic Vault Tauri smoke</td><td>已通过 · CP5</td></tr>
               <tr><td>产品接受</td><td>另行授权的一号作者真实日常 Gate</td><td>已通过 · CP6</td></tr>
-              <tr><td>CP7 accepted</td><td>合同、Figma、production、开发者 UI 接受依次通过</td><td>Gate D 已通过；本地 checkpoint 获授权</td></tr>
+              <tr><td>CP7 accepted</td><td>合同、Figma、production、开发者 UI 接受依次通过</td><td>Gate D 已通过；checkpoint <code>1e17cea</code></td></tr>
+              <tr><td>CP8 工程证据</td><td>五档布局、完整工程 Gate、Figma Page <code>71:2</code> 原位覆写</td><td>Gate A–C 已完成；与 Gate D 分开记录</td></tr>
+              <tr><td>CP8 产品接受</td><td>实体键盘 macOS 简体拼音候选窗稳定 + 开发者明确判断</td><td>Gate D 已通过 · 2026-08-26</td></tr>
             </tbody>
           </table>
 
@@ -1920,6 +1929,7 @@
             <li>不要把 HTML 截图、synthetic Vault smoke 或自动测试替代真实作者接受。</li>
               <li>CP7 已统一校准 <code>docs/SPEC.md</code>、<code>docs/PROJECT.md</code> 与三份 active map；本页仍不替代当前权威、Gate C 原始证据或 Gate D 退出判断。</li>
               <li>完整文件夹 Trash 生命周期是开发者明确批准的窄 Core scope drift；只覆盖删除、恢复与永久删除，见 <code>ADR-0008</code>，不得扩到 merge/rename。</li>
+              <li>CP8 只允许 Vue/CSS/直接测试、Figma 与 synthetic 验证；Core、bridge、DTO、protocol、Tauri 几何和依赖保持不变。</li>
           </ul>
         </section>
 
@@ -1927,9 +1937,9 @@
           <div class="section-heading">
             <div>
               <p class="section-index">08 · Approval gate</p>
-              <h2>CP7 Gate D 已通过；原生候选窗转入 CP8</h2>
+              <h2>Road v0.7 正式完工；Git closeout 仍待单独授权</h2>
             </div>
-            <p data-pretext>开发者于 2026-08-25 退回 Gate D 首轮六项问题，并在首批整改后追加完整文件夹删除、Library 中文输入法与 Paper 预览三项。当前工作树完成后续实现、全量/隔离 Tauri UI 复核和同一 Figma Page 增量同步后，开发者明确通过 Gate D。自动化没有可靠触发 macOS 原生候选窗，因此该观察转入 CP8，不补写成 CP7 证据。本轮仅授权 CP7 本地 checkpoint，不授权真实 Vault、closeout 或 Git 远端动作。</p>
+            <p data-pretext>开发者已在 2026-08-26 通过 CP8 Gate D，并判定 Road v0.7 产品与实施正式完工。自动化 composition 不替代实体键盘人工证据。当前不授权 CP8 commit、Road snapshot、真实 Vault、tag、发布或 Git 远端动作。Road v0.8 最早于 2026-08-28 开始，方向为打包 + Alpha 发布，尚未启动。</p>
           </div>
 
           <div class="gate-grid">
@@ -1949,6 +1959,7 @@
                 <li>CP1 灰阶批准先于 production UI 修改。</li>
                 <li>CP5 使用 synthetic Vault / 完整副本。</li>
                 <li>CP7 按合同 → Figma → production → 开发者接受推进。</li>
+                <li>CP8 按 source candidate → 五档/full gate → Figma 原位覆写 → 原生 IME → 开发者接受推进。</li>
                 <li>push、tag、closeout 与发布逐项授权。</li>
               </ul>
             </div>
@@ -1965,7 +1976,7 @@
       </main>
 
       <footer class="book-footer">
-        <p>Road v0.7 伴随视图 · current CP7 Gate D 已通过 · 本地 checkpoint 收口中 · 本地单文件 · 无外部运行时资源 · 本页不代表 closeout 或发布</p>
+        <p>Road v0.7 伴随视图 · 产品与实施正式完工 · HEAD 仍为 CP7 checkpoint 1e17cea · CP8 checkpoint / Road snapshot 未创建 · Road v0.8 尚未启动 · 本页不代表 Git closeout 或发布</p>
       </footer>
     </div>
   </div>

@@ -291,7 +291,13 @@ onUnmounted(() => window.clearTimeout(refreshTimer));
           :aria-current="destination === 'paper' ? 'page' : undefined"
           :disabled="shellBlocked"
           @click="showPaper"
-        >Paper</button>
+        >编辑 Paper</button>
+        <button
+          type="button"
+          class="app-shell-new-paper"
+          :disabled="shellBlocked"
+          @click="startNewPaper"
+        >新 Paper</button>
         <button
           type="button"
           :aria-current="destination === 'library' ? 'page' : undefined"
@@ -306,19 +312,13 @@ onUnmounted(() => window.clearTimeout(refreshTimer));
         :disabled="shellBlocked"
         @click="showVault"
       >Vault</button>
-      <button
-        type="button"
-        class="app-shell-new-paper"
-        :disabled="shellBlocked"
-        @click="startNewPaper"
-      >新 Paper</button>
     </header>
 
     <div
       ref="workSurface"
       class="app-work-surface"
       role="region"
-      :aria-label="`${destination === 'paper' ? 'Paper' : destination === 'library' ? 'Library' : 'Vault'} 工作面`"
+      :aria-label="`${destination === 'paper' ? '编辑 Paper' : destination === 'library' ? 'Library' : 'Vault'} 工作面`"
       tabindex="-1"
     >
       <PaperView
@@ -427,8 +427,9 @@ onUnmounted(() => window.clearTimeout(refreshTimer));
   z-index: 20;
   top: 0;
   display: grid;
-  grid-template-columns: auto auto minmax(20px, 1fr) auto auto;
-  min-height: 56px;
+  grid-template-columns: auto auto minmax(20px, 1fr) auto;
+  grid-template-rows: 56px;
+  height: 56px;
   align-items: stretch;
   gap: 16px;
   padding: 0 22px;
@@ -445,14 +446,11 @@ onUnmounted(() => window.clearTimeout(refreshTimer));
   display: flex;
   align-items: stretch;
   gap: 4px;
+  white-space: nowrap;
 }
 
 .app-shell-context {
   grid-column: 4;
-}
-
-.app-shell-new-paper {
-  grid-column: 5;
 }
 
 .app-shellbar button {
@@ -463,6 +461,7 @@ onUnmounted(() => window.clearTimeout(refreshTimer));
   color: var(--muted);
   background: transparent;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .app-shellbar button[aria-current="page"] {
@@ -492,10 +491,8 @@ onUnmounted(() => window.clearTimeout(refreshTimer));
 
 @media (max-width: 799px) {
   .app-shellbar {
-    grid-template-columns: auto auto minmax(0, 1fr) auto auto;
-    grid-template-rows: 56px;
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
     gap: 0 4px;
-    min-height: 56px;
     padding: 0 12px;
   }
 
@@ -509,13 +506,23 @@ onUnmounted(() => window.clearTimeout(refreshTimer));
     grid-row: 1;
   }
 
-  .app-shell-new-paper {
-    grid-column: 5;
-    grid-row: 1;
+  .app-shellbar button {
+    padding-inline: 6px;
+  }
+}
+
+@media (max-width: 479px) {
+  .app-shellbar {
+    gap: 0 2px;
+    padding-inline: 8px;
+  }
+
+  .app-shell-daily {
+    gap: 2px;
   }
 
   .app-shellbar button {
-    padding-inline: 6px;
+    padding-inline: 4px;
   }
 }
 </style>

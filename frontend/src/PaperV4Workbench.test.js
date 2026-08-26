@@ -1,5 +1,8 @@
+import { readFileSync } from "node:fs";
+
 import { mount } from "@vue/test-utils";
-import { afterEach, describe, expect, it } from "vitest";
+import { nextTick } from "vue";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import PaperV4Workbench from "./PaperV4Workbench.vue";
 
@@ -25,7 +28,29 @@ function buttonByText(wrapper, text) {
   return button;
 }
 
+function pages(count) {
+  return Array.from({ length: count }, (_, index) => ({
+    name: `第 ${index + 1} 页`,
+    content: `正文 ${index + 1}`,
+    type: index === 0 ? "summary" : null,
+  }));
+}
+
 const mounted = [];
+const originalScrollIntoView = Object.getOwnPropertyDescriptor(
+  HTMLElement.prototype,
+  "scrollIntoView",
+);
+let scrollIntoViewMock;
+
+beforeEach(() => {
+  scrollIntoViewMock = vi.fn();
+  Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+    configurable: true,
+    value: scrollIntoViewMock,
+  });
+});
+
 function mountWorkbench(options = {}) {
   const wrapper = mount(PaperV4Workbench, {
     attachTo: document.body,
@@ -37,6 +62,11 @@ function mountWorkbench(options = {}) {
 
 afterEach(() => {
   while (mounted.length) mounted.pop().unmount();
+  if (originalScrollIntoView) {
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", originalScrollIntoView);
+  } else {
+    delete HTMLElement.prototype.scrollIntoView;
+  }
 });
 
 describe("PaperV4Workbench", () => {
@@ -129,7 +159,7 @@ describe("PaperV4Workbench", () => {
     await buttonByText(wrapper, "删除本页").trigger("click");
     expect(wrapper.get(".delete-page-dialog").attributes("open")).toBeDefined();
     await buttonByText(wrapper, "确认删除").trigger("click");
-    expect(wrapper.find(".page-navigation").exists()).toBe(false);
+    expect(wrapper.findAll(".page-navigation > button")).toHaveLength(1);
     expect(wrapper.get(".paper-context-tools").text()).toContain("1 页");
     expect(document.activeElement).toBe(wrapper.get(".page-title-field input").element);
 
@@ -139,11 +169,12 @@ describe("PaperV4Workbench", () => {
     expect(wrapper.get(".page-content-field textarea").element.value).toBe("");
   });
 
-  it("hides single-page navigation and marks only the current multi-page button", async () => {
+  it("keeps every page in the one-row navigation and marks only the current button", async () => {
     const single = mountWorkbench({
       paper: paper({ pages: [{ name: "唯一页", content: "正文", type: null }] }),
     });
-    expect(single.find(".page-navigation").exists()).toBe(false);
+    expect(single.findAll(".page-navigation > button")).toHaveLength(1);
+    expect(single.get(".page-navigation > button").attributes("aria-current")).toBe("page");
 
     const multiple = mountWorkbench();
     const pageButtons = multiple.findAll(".page-navigation > button");
@@ -153,6 +184,84 @@ describe("PaperV4Workbench", () => {
     expect(pageButtons[0].attributes("aria-current")).toBeUndefined();
     expect(pageButtons[1].attributes("aria-current")).toBe("page");
   });
+
+  it.each([1, 3, 4, 6, 7, 12])("keeps all %i page tabs in the DOM", (count) => {
+    const wrapper = mountWorkbench({ paper: paper({ pages: pages(count) }) });
+
+    expect(wrapper.findAll(".page-navigation > button")).toHaveLength(count);
+  });
+
+  it("uses one fixed-height native roller and portrait-only editor anchors", () => {
+    const source = readFileSync("src/PaperV4Workbench.vue", "utf8");
+
+    expect(source).toContain("grid-auto-flow: column;");
+    expect(source).toContain("grid-auto-columns: calc((100% - 32px) / 3);");
+    expect(source).toContain("height: 60px;");
+    expect(source).toContain("overflow-x: scroll;");
+    expect(source).toContain("scrollbar-width: thin;");
+    expect(source).toContain("scroll-snap-type: x mandatory;");
+    expect(source).toContain("scroll-snap-align: center;");
+    expect(source).toMatch(/\.page-navigation::before,\s*\.page-navigation::after \{\s*content: "";/);
+    const viewport = 343;
+    const gap = 8;
+    const slot = (viewport - gap * 2) / 3;
+    expect(slot + gap + slot / 2).toBeCloseTo(viewport / 2);
+    expect(source).toContain("@media (orientation: portrait)");
+    expect(source).toContain("height: clamp(220px, 34dvh, 300px);");
+    expect(source).toMatch(/@media \(orientation: portrait\)[\s\S]*?resize: none;/);
+    expect(source).toMatch(/@media \(orientation: portrait\)[\s\S]*?\.card-actions \{[\s\S]*?position: sticky;/);
+    expect(source).toMatch(/\.page-content-field textarea \{[\s\S]*?resize: vertical;/);
+  });
+
+  it("centers the active tab after load and direct selection without stealing editor focus", async () => {
+    const wrapper = mountWorkbench({ paper: paper({ pages: pages(12) }) });
+    await nextTick();
+
+    let current = wrapper.get('.page-navigation > button[aria-current="page"]');
+    expect(scrollIntoViewMock).toHaveBeenLastCalledWith({
+      inline: "center",
+      block: "nearest",
+    });
+    expect(scrollIntoViewMock.mock.instances.at(-1)).toBe(current.element);
+
+    await wrapper.findAll(".page-navigation > button")[8].trigger("click");
+    await nextTick();
+    current = wrapper.get('.page-navigation > button[aria-current="page"]');
+    expect(current.attributes("aria-label")).toContain("第 9 页");
+    expect(scrollIntoViewMock.mock.instances.at(-1)).toBe(current.element);
+    expect(document.activeElement).toBe(wrapper.get(".page-title-field input").element);
+
+    await wrapper.setProps({ paper: paper({ code: "K-NEW", pages: pages(4) }) });
+    await nextTick();
+    current = wrapper.get('.page-navigation > button[aria-current="page"]');
+    expect(current.attributes("aria-label")).toContain("第 1 页");
+    expect(scrollIntoViewMock.mock.instances.at(-1)).toBe(current.element);
+  });
+
+  it.each([[3, 4], [6, 7]])(
+    "centers across the %i-to-%i add and delete boundary",
+    async (before, after) => {
+      const wrapper = mountWorkbench({ paper: paper({ pages: pages(before) }) });
+      await nextTick();
+      await wrapper.findAll(".page-navigation > button")[before - 1].trigger("click");
+      await buttonByText(wrapper, "加一页").trigger("click");
+      await nextTick();
+
+      expect(wrapper.findAll(".page-navigation > button")).toHaveLength(after);
+      let current = wrapper.get('.page-navigation > button[aria-current="page"]');
+      expect(current.attributes("aria-label")).toContain(`第 ${after} 页`);
+      expect(scrollIntoViewMock.mock.instances.at(-1)).toBe(current.element);
+
+      await buttonByText(wrapper, "删除本页").trigger("click");
+      await buttonByText(wrapper, "确认删除").trigger("click");
+      await nextTick();
+
+      expect(wrapper.findAll(".page-navigation > button")).toHaveLength(before);
+      current = wrapper.get('.page-navigation > button[aria-current="page"]');
+      expect(current.attributes("aria-label")).toContain(`第 ${before} 页`);
+      expect(scrollIntoViewMock.mock.instances.at(-1)).toBe(current.element);
+    },
+  );
 
   it("normalizes names and CSV Tags only in the emitted Save DTO", async () => {
     const wrapper = mountWorkbench();
@@ -244,6 +353,9 @@ describe("PaperV4Workbench", () => {
     ))).toBe(true);
     expect(wrapper.get(".advanced-panel select").attributes("disabled")).toBeDefined();
     expect(wrapper.get(".mode-toggle").attributes("disabled")).toBeDefined();
+    expect(wrapper.findAll(".page-navigation > button").every((button) => (
+      button.attributes("disabled") !== undefined
+    ))).toBe(true);
     expect(buttonByText(wrapper, "删除本页").attributes("disabled")).toBeDefined();
     expect(buttonByText(wrapper, "加一页").attributes("disabled")).toBeDefined();
     expect(buttonByText(wrapper, "整份移入废纸篓").attributes("disabled")).toBeDefined();

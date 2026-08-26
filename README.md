@@ -8,7 +8,7 @@
 
 Road v0.6 已完成并归档：production 使用 Paper v4、Index v4 与 protocol v2，Paper 本身就是可编辑的有序卡页；旧正常运行链已删除，未知结果与人工修复 Gate、一号真实作者 Gate 均已通过，且无未解决 P0/P1。
 
-Road v0.7 的 App Shell 与信息层级已通过 CP0–CP5 工程 Gate 和 CP6 一号作者 Gate。CP7“连续编辑流”完成 Gate A–C、两轮 Gate D 整改、完整工程复核、隔离 Tauri smoke 与 Figma 同步后，开发者于 2026-08-25 明确通过 Gate D；默认窗口为 `720×900`，底层 Paper v4 / Index v4 / protocol v2 不变。自动化只证明中文 composition 期间不查询、提交最终词一次，不冒充 macOS 原生候选窗证据；该人工观察延至 CP8。CP6 的窄范围真实 Vault 授权已经使用完毕；CP7 本地 checkpoint 获得本轮授权，push、tag、closeout 与发布均未执行。
+Road v0.7 的 App Shell 与信息层级已通过 CP0–CP8。开发者于 2026-08-26 通过 CP8 原生 IME Gate D，并明确判定整个 Road v0.7 的产品与实施工作正式完工；底层 Paper v4 / Index v4 / protocol v2 不变。Git closeout 尚未发生：HEAD 仍为 CP7 checkpoint `1e17cea`，CP8 checkpoint 与 Road snapshot 未创建，真实 Vault、push、tag 与发布均未授权。Road v0.8 最早于 2026-08-28 开始，方向为打包 + Alpha 发布。
 
 Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响应式界面、本机沙盒 Vault 与真机修复验证；它不是 macOS Road 的合入闸门。Road v0.3 的工程、macOS candidate smoke 与 CP6 真实作者验收均已完成；检索更快且清楚、外部编辑器 handoff 清楚，未报告未解决 P0/P1。其设计与验收文档已[只读归档](docs/archive/road-v0-3/README.md)，未创建 v0.3 tag。**Road v0.4 已彻底完成**：Gate A、Gate B、产品验收与 macOS 15.7+ 兼容性均已通过；当前唯一桌面运行时为 Vue/Tauri 与本地 Python sidecar，Flet 已在 CP14 退役。**Road v0.5 也已完成并归档**：Paper Desk、保存基线、离开保护、Flashcard/Library 连贯性、全应用 Quiet Desk 视觉与固定滚动语义均已验收。实时坐标见 [PROJECT](docs/PROJECT.md)。
 
@@ -23,7 +23,7 @@ Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响�
 - **Vault**：只选择当前用户 Home 内路径；切换前验证，unsafe 旧 Vault 先复制并核对；尚未启用 Apple App Sandbox。
 - **外部编辑器**：正式正文始终在 keikeu 之外完成。
 
-当前已接受的 Road v0.7 CP7 composition、证据层级与下一执行 Gate 见 [PROJECT](docs/PROJECT.md)。
+当前已接受的 CP8 composition、证据层级与未提交 checkpoint 边界见 [PROJECT](docs/PROJECT.md)。
 
 ## Road v0.3 归档
 
@@ -72,9 +72,9 @@ npm --prefix frontend run tauri:dev
 README.md                 外部入口与运行命令
 AGENTS.md                 Agent 操作纪律与读图顺序
 docs/PROJECT.md           当前坐标、模块入口、下一闸门
-docs/SPEC.md              current CP7 产品边界与后续 Road 边界
+docs/SPEC.md              accepted CP8 产品边界
 docs/RULES.md             工程、交互、数据与证据规则
-docs/design/              current CP7 视觉、交互 map 与详细设计
+docs/design/              CP8 accepted 视觉、交互 map 与详细设计
 docs/architecture/        current/target 架构 map 与 ADR
 docs/acceptance/          支持性验收记录；不独立定义状态
 docs/manual/              面向人的补充说明；不定义规范
@@ -115,7 +115,8 @@ Road v0.3   macOS Paper Library；CP6 product accepted，设计与验收文档�
 Road v0.4   Vue/Tauri 前端替换完成；CP14 已验收
 Road v0.5   Quiet Desk UI 与交互收口完成；CP7 已验收并归档
 Road v0.6   Paper v4 卡页重构；CP7 已验收并归档
-Road v0.7   CP7 Gate D 已通过；本地 checkpoint 收口中
+Road v0.7   产品与实施正式完工；CP8 checkpoint / Road snapshot 尚未创建
+Road v0.8   最早 2026-08-28；打包 + Alpha 发布，尚未启动
 Pre-Advance 可选 Markdown Outline；Road v0.7 之外且未排期，不阻塞核心流程
 之后        iOS/iPadOS（2026-08 方向）、Android/HarmonyOS（2026 Q4）、Windows（2027）
 ```

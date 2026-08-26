@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>keikeu Interaction — Road v0.7 CP7 accepted</title>
+  <title>keikeu Interaction — Road v0.7 complete / Git closeout pending</title>
   <style>
     :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", sans-serif; color: #0f0f0e; background: #ece9de; }
     * { box-sizing: border-box; }
@@ -34,9 +34,9 @@
 <body>
   <main>
     <header>
-      <p class="eyebrow">Last closed Road v0.6 · current Road v0.7 CP7 accepted</p>
+      <p class="eyebrow">Road v0.7 product complete · Git closeout pending</p>
       <h1>写一页，分一页，整体保存</h1>
-      <p class="status">Accepted：CP7 Gate D 已通过。保存/离开/恢复合同保持不变，IME-safe Library 搜索、top-layer Paper 预览、范围旁文件夹操作与完整文件夹 Trash 生命周期进入当前交互；原生 macOS 候选窗观察转入 CP8。</p>
+      <p class="status">Current：CP8 Gate A–D 已通过，开发者于 2026-08-26 判定 Road v0.7 产品与实施正式完工。已接受呈现保持全部保存/离开/恢复合同，只加入页签局部滚轮与竖版 Anchor/Popover。Git closeout 独立：HEAD 仍为 CP7 checkpoint <code>1e17cea</code>，CP8 checkpoint 与 Road snapshot 尚未创建。</p>
       <nav>
         <a href="../PROJECT.md">当前坐标</a>
         <a href="../SPEC.md">产品边界</a>
@@ -60,14 +60,16 @@
     </section>
 
     <section>
-      <p class="label">Current accepted CP7 interaction</p>
+      <p class="label">Road v0.7 complete · accepted CP8 presentation</p>
       <table><tbody>
-        <tr><th>位置</th><td>Paper 与 Library 是同级日常位置；Vault 是环境入口。</td></tr>
+        <tr><th>位置</th><td>Paper 与 Library 是同级日常位置；Vault 是环境入口。已接受顶栏保持单行 <code>56px</code>，顺序为“编辑 Paper → 新 Paper → Library … Vault”。</td></tr>
         <tr><th>离开保护</th><td>从 dirty Paper 去 Library、新 Paper 或 Vault 均复用 <code>PaperView.confirmDeparture()</code>；取消时 destination 不变。</td></tr>
         <tr><th>新 Paper</th><td>只在 guard 通过后清空 path 并替换 PaperView；确认只执行一次原 intent。</td></tr>
         <tr><th>Vault / 阻塞</th><td>Vault 往返保留已保存 Paper path；blocking recovery 不被 Shell 隐藏。</td></tr>
         <tr><th>CP7 Tags</th><td>一个单行 comma-separated 字段使用可逆 CSV-style 引号；底层仍传递原有有序 Tags 数组。macOS 字段关闭自动更正与智能引号转换；原生实证确认 ASCII 直引号未被改成弯引号。</td></tr>
         <tr><th>CP7 详情 / dirty</th><td>Paper 详情与 Library Paper 预览均为轻量原生 Popover，不参加页面高度计算；不显示常驻 dirty 文案，但离开、新 Paper、Vault 与关闭 guard 不变。</td></tr>
+        <tr><th>CP8 页签滚轮</th><td>全部页按钮留在 DOM 的单行局部滚轮中；约三槽、细滚动条、scroll-snap，无箭头/循环/换行。载入、选择、加页、删页后活动页自动居中。</td></tr>
+        <tr><th>CP8 竖版 Anchor</th><td><code>orientation: portrait</code> 下，Paper 正文在 <code>clamp(220px, 34dvh, 300px)</code> 内滚动，三动作固定在底部；Library 在 Shell 下方固定“范围 / 排序”和“新文件夹”，分别打开 native Popover。</td></tr>
       </tbody></table>
     </section>
 
@@ -100,9 +102,10 @@
         <h2>Current 已接受、v0.7 继续冻结的键盘与窗口合同</h2>
         <ul>
           <li>Tab 顺序跟随 Paper 名、Tags、页码、页标题、类型、正文和三个底部动作。</li>
-          <li>页码、确认框与原生 select 支持 Enter/Space/方向键；Paper 详情与 Library 预览支持触发器后的自然 Tab 顺序、<code>Escape</code>、light-dismiss 与焦点返回。</li>
-          <li><code>375×812</code>、<code>720×900</code>、<code>920×680</code> 与 <code>1220×780</code> 不横向溢出或裁字。</li>
+          <li>页签、确认框与原生 select 支持 Enter/Space/方向键；活动页自动居中。Paper 详情、Library 预览与两类竖版 Anchor Popover 支持自然 Tab 顺序、<code>Escape</code>、light-dismiss 与焦点返回。</li>
+          <li><code>375×812</code>、<code>720×900</code>、<code>720×680</code>、<code>920×680</code> 与 <code>1220×780</code> 不横向溢出或裁字。</li>
           <li>无页面拖放；所有流程不依赖动画、鼠标或隐藏手势。</li>
+          <li>原生 IME Gate 必须使用实体键盘；候选窗缺失/中断、中间拼音查询或最终值重复提交均为 P1。</li>
         </ul>
       </div>
     </section>

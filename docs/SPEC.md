@@ -1,6 +1,6 @@
-# keikeu Product Boundary (current: Road v0.7 CP7 accepted)
+# keikeu Product Boundary (Road v0.7 complete; CP8 checkpoint uncommitted)
 
-> Authority: §§1–7 define the accepted product, author-asset, and data-safety boundary inherited from Road v0.6; §8 defines shared exclusions and platform scope; §9 records the Road v0.7 App Shell composition accepted at CP6; §10 defines the CP7 continuous-flow override accepted by developer Gate D on 2026-08-25. Detailed Paper v4 grammar, DTOs, migration, recovery, and protocol remain in the approved [Paper v4 design](design/road-v0-6-paper-v4-design.md); the current interface and acceptance matrix live in the [App Shell design](design/road-v0-7-app-shell-design.md). Current checkpoint and runtime facts live in [PROJECT](PROJECT.md), source, and tests.
+> Authority: §§1–7 define the accepted product, author-asset, and data-safety boundary inherited from Road v0.6; §8 defines shared exclusions and platform scope; §9 records the Road v0.7 App Shell composition accepted at CP6; §10 defines the CP7 continuous-flow override accepted by developer Gate D on 2026-08-25; §11 defines the CP8 responsive-navigation override accepted by developer Gate D on 2026-08-26 and records the developer's Road v0.7 completion judgment. Detailed Paper v4 grammar, DTOs, migration, recovery, and protocol remain in the approved [Paper v4 design](design/road-v0-6-paper-v4-design.md); the current interface and acceptance matrix live in the [App Shell design](design/road-v0-7-app-shell-design.md). Current checkpoint and runtime facts live in [PROJECT](PROJECT.md), source, and tests.
 
 ## 1. Definition
 
@@ -41,13 +41,15 @@ current accepted:  compact App Shell → Paper / Library → Vault context / blo
 
 The production composition passed CP5 engineering integration and CP6 first-author acceptance.
 Paper v4, Index v4, protocol v2, Python, Rust, and every author-control contract remain unchanged.
-The accepted runtime now includes the CP7 presentation and narrow folder-lifecycle override. CP7
+The accepted runtime now includes the CP7 presentation and narrow folder-lifecycle override plus the
+CP8 responsive-navigation presentation override. CP7
 completed Gate C engineering verification, two Gate D remediation rounds, isolated Tauri smoke and
 same-page Figma synchronization before the developer explicitly passed Gate D on 2026-08-25. The
 folder-lifecycle exception is defined in §10 and
 [ADR-0008](architecture/decisions/0008-whole-folder-trash-lifecycle.md). Automated composition
-evidence is not a claim that the native macOS candidate window appeared; that physical-input check is
-deferred to CP8. `PROJECT.md`, source, and tests remain the authority for current implementation state.
+evidence did not prove that the native macOS candidate window appeared; CP8 separately passed that
+physical-input Gate on 2026-08-26. `PROJECT.md`, source, and tests remain the authority for current
+implementation and checkpoint state.
 
 ## 4. Current Paper v4 behavior (unchanged by Road v0.7)
 
@@ -99,7 +101,8 @@ No AI generation, prose editor, sync, account, community, database, file watcher
 - macOS Apple Silicon is the only Road v0.7 engineering and first-author platform. Intel Mac is unsupported.
 - iOS/iPadOS remain a separate 2026-08 direction; Android/HarmonyOS a separate 2026-Q4 direction; Windows a 2027 direction.
 - Linux and watchOS have no planned support. The iOS-only second user does not enter v0.x acceptance and returns no earlier than a separately designed iOS+Android v1.0.
-- Developer ID distribution work is deferred to Road v0.8.
+- Packaging, Developer ID distribution and Alpha release work are deferred to Road v0.8, which starts
+  no earlier than 2026-08-28 under a separate plan and Git boundary.
 
 ## 9. Accepted Road v0.7 App Shell baseline (CP6 passed; CP7 override in §10)
 
@@ -153,10 +156,54 @@ CP7 followed four Gates: contract, Figma delivery, production verification, and 
 acceptance. Gates A–C and both remediation rounds completed on 2026-08-25; the developer then
 explicitly passed Gate D with no unresolved P0/P1. The CP7 acceptance record separates this product
 judgment from automated engineering evidence and from the native macOS candidate-window check moved
-to CP8. A local CP7 checkpoint commit is separately authorized for this round; closeout, push, tag,
-signing, packaging and release remain unperformed and unapproved.
+to CP8. CP7 is committed locally at `1e17cea`; closeout, push, tag, signing, packaging and release
+remain unperformed and unapproved.
 
-## 11. Road v0.6 completed acceptance record
+## 11. Accepted Road v0.7 CP8 responsive-navigation override
+
+CP8 is an accepted, presentation-only continuation of CP7. Gate A–C engineering/Figma evidence and
+the physical-keyboard macOS native-candidate-window Gate completed on 2026-08-26; the developer then
+explicitly passed Gate D with no reported anomaly. Acceptance does not imply a checkpoint commit,
+Road closeout, remote Git action, or release.
+
+Gate A–C engineering and Figma evidence completed on 2026-08-26. The source candidate, focused/full
+tests, five-viewport synthetic browser QA, debug app bundle, and in-place Figma Page `71:2` overwrite
+are recorded in the [CP8 engineering report](acceptance/road-v0-7/cp8-responsive-navigation/report.md).
+The same report separately records the developer's Gate D observation and uncommitted Git boundary.
+
+- The one-row `56px` Shell presents `编辑 Paper → 新 Paper → Library … Vault`; it changes only label
+  and placement and keeps the single existing dirty-departure guard.
+- Every Paper page button stays in the DOM in a one-row, locally scrollable, scroll-snapping track with
+  about three visible slots. The track has a thin visible horizontal scrollbar, no arrows, wrapping, or
+  cycling; load, direct selection, add, and delete center the active tab while retaining `aria-current`,
+  focus, direct selection, and saving locks. The document itself must not scroll horizontally.
+- Portrait means `height >= width` through native `@media (orientation: portrait)`. The Markdown field
+  uses `clamp(220px, 34dvh, 300px)`, disables vertical resize, and scrolls long content internally;
+  landscape keeps vertical resize.
+- Portrait Paper actions are an opaque, safe-area-aware bottom sticky Anchor that does not cover the
+  final line, errors, or focus. Portrait Library exposes equal-height sticky Anchors for `范围 / 排序`
+  and `新文件夹`; their native popovers support keyboard activation, Escape, light-dismiss, focus
+  return, failure-preserved input, and success-close behavior. Landscape Library keeps its existing
+  sidebar, sort row, and inline folder creation.
+- Engineering layout evidence must cover `375×812`, `720×900`, `720×680`, `920×680`, and
+  `1220×780`, including `1/3/4/6/7/12` pages, 80 body lines, maximum legal names, local track/body
+  scrolling, Anchor clearance, and `document.scrollWidth <= clientWidth`.
+- The existing Figma Page `71:2` is versioned as
+  `CP7 Gate D accepted · before CP8 overwrite`, overwritten in place, and renamed
+  `CP8 · 响应式锚点与横向滚轮`; a second active master is not created.
+- The native IME Gate uses an absolute-path CP8 debug app, fake Home, synthetic data containing Tag
+  “暴食”, macOS Simplified Pinyin, and a physical keyboard. A missing or disrupted candidate window,
+  any intermediate-pinyin query, or duplicate final submission is P1 and blocks CP8 acceptance.
+- Core, bridge, DTOs, Paper v4, Index v4, protocol v2, Rust commands, Tauri geometry, dependencies,
+  durable author assets, and product capabilities remain unchanged.
+
+CP8 implementation, Figma synchronization, automated evidence, native IME observation, and developer
+acceptance are complete Gate A–D conclusions. Checkpoint commit, push, tag, closeout, signing, and
+release remain separate and incomplete. No real Vault or author content was used for CP8 verification.
+The developer consequently declared Road v0.7 product and implementation work complete on 2026-08-26;
+this completion judgment does not claim that the uncommitted checkpoint or Road snapshot exists.
+
+## 12. Road v0.6 completed acceptance record
 
 1. **Checkpoint engineering:** CP0–CP6 each produce their declared implementation, checks, smoke, and evidence with no unresolved P0/P1. Their developer exit judgments are covered by advance YOLO; evidence may not be invented or copied forward.
 2. **Current/target integrity:** CP0–CP3 kept production v0.5/protocol v1; CP4 alone activated the complete v4/v2 vertical path; CP5 removed only code proven unreachable.

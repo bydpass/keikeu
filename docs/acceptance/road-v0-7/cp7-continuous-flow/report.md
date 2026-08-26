@@ -6,7 +6,7 @@
 
 **进入基线：** preparation/hygiene `528124d`
 
-**Gate：** 开发者明确通过 CP7 Gate D；本报告随获授权的 CP7 本地 checkpoint commit 提交
+**Gate：** 开发者明确通过 CP7 Gate D；本报告已进入本地 checkpoint `1e17cea`
 
 ## 结论
 
@@ -15,8 +15,8 @@
 Library composition-safe 查询与 top-layer Paper 预览进入 Road v0.7 已接受产品边界；退出时
 没有未解决 P0/P1。
 
-本结论不把自动化 composition 序列冒充 macOS 原生候选窗观察。原生候选窗需使用实体
-键盘与系统简体拼音单独复核，已明确移入 CP8；它不是补写成已完成的 CP7 证据。
+本结论不把自动化 composition 序列冒充 macOS 原生候选窗观察。CP7 当时未完成该观察；
+实体键盘与系统简体拼音复核随后在 CP8 通过，但它仍不是补写成已完成的 CP7 证据。
 
 ## Gate 记录
 
@@ -61,15 +61,15 @@ marker scan 与 `git diff --check` 全部通过。应用 smoke 使用前述整�
 - Gate B 母版和 Gate D 后续整改位于同一 Figma Page `71:2`；后续 Section 为 `152:138`。
 - CP7 状态已同步到 SPEC、PLAN、PROJECT、详细设计、active maps、README、Planbook 与
   必要手册；过时的“实施中 / 等待复验”文案不再作为当前事实。
-- CP8 会先保存 `CP7 Gate D accepted · before CP8 overwrite` 版本历史，再原位覆写该 Page；
-  CP7 视觉历史由 Figma version history 保存，不建立第二套活动母版。
+- CP8 已先保存 `CP7 Gate D accepted · before CP8 overwrite` 版本历史，再原位覆写该 Page；
+  CP7 视觉历史由 Figma version history 保存，未建立第二套活动母版。
 
 ## 未执行与剩余风险
 
-- 未观察 macOS 原生候选窗；CP8 把候选窗缺失、选择前重渲染、出现中间拼音查询或最终值
-  重复提交均列为 P1 阻断。
+- CP7 当时未观察 macOS 原生候选窗；CP8 把候选窗缺失、选择前重渲染、出现中间拼音查询或
+  最终值重复提交列为 P1 阻断，并在后续实体键盘 Gate 中确认四类阻断均未出现。
 - 未操作真实 Vault、provider 同步或作者内容；未记录 Vault 路径、Paper 名称或正文。
 - 永久递归销毁经不可撤销确认后仍可能因权限、ACL 或并发文件系统变化而部分完成；
   预检会阻断已知挂载/身份问题，运行中失败会恢复并报告剩余树，但已销毁 entry 不可回滚。
 - 未 push、tag、closeout、签名、公证、DMG 或发布。
-- CP7 checkpoint commit 已获本轮授权；CP8 checkpoint commit 仍需开发者另行判断。
+- CP7 checkpoint commit 是 `1e17cea`；CP8 checkpoint commit 仍需开发者另行判断。

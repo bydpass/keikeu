@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onActivated, onMounted, ref } from "vue";
+import { computed, onActivated, onMounted, ref, useId } from "vue";
 
 import LibraryV4Projection from "./LibraryV4Projection.vue";
 import { bridgeRequest, confirmAction, openSystemTarget } from "./bridge.js";
@@ -28,6 +28,14 @@ const mergeDestination = ref("");
 const busy = ref(false);
 const notice = ref("");
 const error = ref(null);
+const rangeSortTrigger = ref(null);
+const rangeSortPopover = ref(null);
+const folderCreateTrigger = ref(null);
+const folderCreatePopover = ref(null);
+const rangeSortOpen = ref(false);
+const folderCreateOpen = ref(false);
+const rangeSortPopoverId = `library-range-sort-popover-${useId()}`;
+const folderCreatePopoverId = `library-folder-create-popover-${useId()}`;
 let generation = 0;
 
 const entries = computed(() => view.value?.entries ?? []);
@@ -108,6 +116,39 @@ function setScope(value) {
   scope.value = value;
   selectedPath.value = null;
   refresh();
+}
+
+function setSort(value) {
+  if (value === sort.value) return;
+  sort.value = value;
+  refresh();
+}
+
+function restorePopoverFocus(popover, trigger) {
+  const active = document.activeElement;
+  if (active === document.body || active === popover || popover?.contains(active)) {
+    trigger?.focus();
+  }
+}
+
+function handleRangeSortToggle(event) {
+  rangeSortOpen.value = event.newState === "open";
+  if (!rangeSortOpen.value) {
+    restorePopoverFocus(rangeSortPopover.value, rangeSortTrigger.value);
+  }
+}
+
+function handleFolderCreateToggle(event) {
+  folderCreateOpen.value = event.newState === "open";
+  if (!folderCreateOpen.value) {
+    restorePopoverFocus(folderCreatePopover.value, folderCreateTrigger.value);
+  }
+}
+
+function closeFolderCreatePopover() {
+  folderCreateOpen.value = false;
+  folderCreatePopover.value?.hidePopover?.();
+  folderCreateTrigger.value?.focus();
 }
 
 function handleSearch(value) {
@@ -229,7 +270,10 @@ async function permanentlyDeleteSelected() {
 async function createFolder() {
   const name = folderName.value.trim();
   if (!name) return;
-  if (await mutate("library.create_folder", { name }, "创建文件夹")) folderName.value = "";
+  if (await mutate("library.create_folder", { name }, "创建文件夹")) {
+    folderName.value = "";
+    if (folderCreateOpen.value) closeFolderCreatePopover();
+  }
 }
 
 async function renameFolder() {
@@ -344,6 +388,94 @@ onActivated(() => { if (view.value) refresh(); });
       :aria-busy="interactionBlocked"
       :inert="interactionBlocked"
     >
+      <nav class="library-portrait-anchors" aria-label="Library 快捷操作">
+        <button
+          ref="rangeSortTrigger"
+          type="button"
+          :popovertarget="rangeSortPopoverId"
+          popovertargetaction="toggle"
+          aria-haspopup="dialog"
+          :aria-expanded="rangeSortOpen"
+        >范围 / 排序</button>
+        <button
+          ref="folderCreateTrigger"
+          type="button"
+          :popovertarget="folderCreatePopoverId"
+          popovertargetaction="toggle"
+          aria-haspopup="dialog"
+          :aria-expanded="folderCreateOpen"
+        >新文件夹</button>
+      </nav>
+
+      <aside
+        :id="rangeSortPopoverId"
+        ref="rangeSortPopover"
+        class="library-portrait-popover keikeu-detail-popover"
+        popover="auto"
+        role="dialog"
+        aria-label="范围与排序"
+        @toggle="handleRangeSortToggle"
+      >
+        <header>
+          <strong>范围 / 排序</strong>
+          <button
+            type="button"
+            :popovertarget="rangeSortPopoverId"
+            popovertargetaction="hide"
+            aria-label="关闭范围与排序"
+          >关闭</button>
+        </header>
+        <label>范围
+          <select :value="scope" @change="setScope($event.target.value)">
+            <option value="all">全部 Paper</option>
+            <option value="unfiled">未归档</option>
+            <option
+              v-for="folder in view.folders"
+              :key="`portrait-${folder}`"
+              :value="`folder:${folder}`"
+            >{{ folder }}</option>
+            <option value="trash">废纸篓 · {{ view.trash_count }}</option>
+            <option
+              v-for="folder in view.trash_folders"
+              :key="`portrait-trash-${folder}`"
+              :value="`trash-folder:${folder}`"
+            >↳ {{ folder }}</option>
+          </select>
+        </label>
+        <label>排序
+          <select :value="sort" @change="setSort($event.target.value)">
+            <option value="updated_desc">最近更新</option>
+            <option value="name">名称</option>
+            <option value="created_desc">最新创建</option>
+            <option value="created_asc">最早创建</option>
+          </select>
+        </label>
+      </aside>
+
+      <aside
+        :id="folderCreatePopoverId"
+        ref="folderCreatePopover"
+        class="library-portrait-popover library-folder-create-popover keikeu-detail-popover"
+        popover="auto"
+        role="dialog"
+        aria-label="新文件夹"
+        @toggle="handleFolderCreateToggle"
+      >
+        <header>
+          <strong>新文件夹</strong>
+          <button
+            type="button"
+            :popovertarget="folderCreatePopoverId"
+            popovertargetaction="hide"
+            aria-label="关闭新文件夹"
+          >关闭</button>
+        </header>
+        <form @submit.prevent="createFolder">
+          <label>文件夹名称<input v-model="folderName" placeholder="Ideas"></label>
+          <button type="submit" :disabled="busy || !folderName.trim()">创建</button>
+        </form>
+      </aside>
+
       <aside class="library-scopes" aria-label="Library 范围">
         <label class="library-scope-select">范围
           <select :value="scope" @change="setScope($event.target.value)">
@@ -412,7 +544,7 @@ onActivated(() => { if (view.value) refresh(); });
       <section class="library-main">
         <div class="library-toolbar">
           <label>排序
-            <select v-model="sort" @change="refresh()">
+            <select :value="sort" @change="setSort($event.target.value)">
               <option value="updated_desc">最近更新</option>
               <option value="name">名称</option>
               <option value="created_desc">最新创建</option>
@@ -471,6 +603,10 @@ button, input, select { box-sizing: border-box; min-width: 0; max-width: 100%; m
 button { cursor: pointer; }
 button:disabled { opacity: .5; cursor: wait; }
 .library-shell { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 34px; max-width: 1180px; margin: 0 auto; }
+.library-portrait-anchors { display: none; }
+.library-portrait-popover { --details-top: 120px; }
+.library-portrait-popover label { margin-top: 14px; }
+.library-folder-create-popover form { display: grid; gap: 12px; margin-top: 14px; }
 .library-scopes { display: grid; align-content: start; gap: 5px; }
 .library-scope-select { display: none; }
 .library-scopes > button { min-width: 0; overflow-wrap: anywhere; text-align: left; }
@@ -495,4 +631,28 @@ label { display: grid; gap: 5px; color: var(--muted); font-size: .72rem; font-we
   .library-scopes > .folder-operations { grid-column: 1 / -1; margin-top: 0; }
 }
 @media (max-width: 620px) { .library-scopes { grid-template-columns: 1fr; } }
+@media (orientation: landscape) {
+  .library-portrait-popover { display: none; }
+}
+@media (orientation: portrait) {
+  .library-shell { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .library-portrait-anchors {
+    position: sticky;
+    top: 56px;
+    z-index: 3;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 8px 0;
+    background: var(--canvas);
+  }
+  .library-portrait-anchors > button { width: 100%; height: 44px; min-height: 44px; }
+  .library-scopes { display: block; }
+  .library-scopes > .library-scope-select,
+  .library-scopes > button,
+  .library-scopes > .folder-create { display: none; }
+  .library-scopes > .folder-operations { display: grid; margin-top: 0; }
+  .library-toolbar { justify-content: flex-end; }
+  .library-toolbar > label { display: none; }
+}
 </style>

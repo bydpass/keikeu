@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>keikeu 当前逻辑 — Road v0.7 CP7 accepted</title>
+  <title>keikeu 当前逻辑 — Road v0.7 complete / Git closeout pending</title>
   <style>
     :root {
       color-scheme: light dark;
@@ -59,7 +59,8 @@
       <h1>Paper 是作者直接编辑、整体保存的卡页资产。</h1>
       <div class="status-row">
         <span class="status">RUNTIME · Road v0.6 Paper v4 合同继续有效</span>
-        <span class="status target">ACCEPTED · Road v0.7 CP7 Gate D</span>
+        <span class="status target">COMPLETE · Road v0.7 PRODUCT + IMPLEMENTATION</span>
+        <span class="status target">GIT · CP8 CHECKPOINT / ROAD SNAPSHOT PENDING</span>
       </div>
       <p class="boundary"><strong>非规范说明：</strong>本页帮助理解当前代码，不定义产品或 Gate。最终核对
         <a href="../SPEC.md">SPEC</a>、<a href="../PROJECT.md">PROJECT</a>、
@@ -141,12 +142,13 @@
 
     <section>
       <h2>6. Road v0.7 现在意味着什么</h2>
-      <p>CP0–CP7 已通过：CP2–CP4 完成 production 组合层，CP5 完成 synthetic 平台集成，CP6 完成一号作者产品接受，CP7 在两轮 Gate D 整改、完整验证与 Figma 同步后由开发者明确通过。Paper v4、Index v4 与 protocol v2 合同不变；原生 macOS 候选窗没有被自动化证明，已转入 CP8 人工复核。</p>
+      <p>CP0–CP8 已通过；开发者于 2026-08-26 判定 Road v0.7 产品与实施正式完工。已接受的 CP8 只重排顶栏、Paper 页签滚轮与竖版 Paper/Library Anchor，不改变 Paper v4、Index v4、protocol v2 或运行分层。Git closeout 独立：HEAD 仍为 CP7 checkpoint <code>1e17cea</code>，CP8 checkpoint 与 Road snapshot 尚未创建。</p>
       <ul>
-        <li>当前 composition 中，Paper 与 Library 是两个同级日常位置。</li>
+        <li>当前已接受 composition 中，顶栏保持单行 <code>56px</code>：“编辑 Paper → 新 Paper → Library … Vault”；Paper 与 Library 仍是两个同级日常位置。</li>
         <li>Vault 现作为环境入口；migration、repair 和未知结果仍可接管阻塞工作面。</li>
-        <li><code>375×812</code>、<code>720×900</code>、<code>920×680</code> 与 <code>1220×780</code> 已完成真实 Chromium 检查；默认 Tauri 为 <code>720×900</code>，最小 <code>720×680</code>，隔离 synthetic Vault smoke 已通过。</li>
-        <li>本页本身不证明任何 Gate；CP5、CP6 与 CP7 证据见 acceptance reports，后续 Gate 以当前计划和详细设计为准。</li>
+        <li>CP8 已在 <code>375×812</code>、<code>720×900</code>、<code>720×680</code>、<code>920×680</code> 与 <code>1220×780</code> 复核 all-page 滚轮、正文内滚、Anchor 清空区与 document overflow，结果为 PASS。</li>
+        <li>Road v0.8 最早于 2026-08-28 开始，方向为打包 + Alpha 发布；当前尚未启动。</li>
+        <li>本页本身不证明任何 Gate；CP5–CP8 的工程与开发者证据见 acceptance reports，Git 边界以当前计划和 PROJECT 为准。</li>
       </ul>
     </section>
   </main>

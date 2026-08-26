@@ -1,6 +1,6 @@
-# Road v0.7 实施计划（CP7 Gate D 已通过；checkpoint 收口）
+# Road v0.7 实施计划（正式完工；CP8 checkpoint 未提交）
 
-> 状态：开发者于 2026-08-20 批准原 CP0–CP6 计划并给出相应 advance YOLO；CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc`、CP3 `55b5313`、CP4 `6f69310`、CP5 `3259c42` 与 CP6 一号作者 Gate 均已通过。CP7 Gate A 于 2026-08-24 通过，Gate B 于 2026-08-25 经开发者明确判断通过，Gate C production candidate 与两轮 Gate D 整改、完整工程复核、隔离 Tauri smoke、同一 Figma Page 增量同步均于 2026-08-25 完成；开发者随后明确通过 Gate D。自动化只证明 composition 期间零查询与最终中文一次提交，未观察到的 macOS 原生候选窗不补写为 CP7 证据，并移至 CP8 人工复核。CP6 checkpoint 是 `e22b691`；`206d03e` 与 `528124d` 是另行授权、已审阅的 preparation/hygiene，不冒充 CP6 证据；CP7 分支 `ui/cp7-v07-continuous-flow` 从该 clean preparation baseline 线性开始。本轮已授权 CP7 本地 checkpoint commit；真实 Vault、push、tag、closeout 与发布仍未授权。
+> 状态：开发者于 2026-08-20 批准原 CP0–CP6 计划并给出相应 advance YOLO；CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc`、CP3 `55b5313`、CP4 `6f69310`、CP5 `3259c42` 与 CP6 一号作者 Gate 均已通过。CP7 于 2026-08-25 通过 Gate D，并在 `1e17cea` 收口。当前分支 `ui/cp8-v07-responsive-navigation` 已完成 CP8 Gate A–C 的 production、完整工程与 Figma 证据；开发者于 2026-08-26 以实体键盘完成原生 macOS 候选窗复核并明确通过 Gate D，随后明确判定 Road v0.7 正式完工。CP8 checkpoint commit 未授权且未创建；Road snapshot、真实 Vault、push、tag 与发布仍未授权。
 >
 > 目标设计：[`docs/design/road-v0-7-app-shell-design.md`](docs/design/road-v0-7-app-shell-design.md)
 >
@@ -21,11 +21,11 @@ Road v0.7 将已接受的 Paper、Library 与 Vault 收口为一个稳定桌面�
 ## 1. 权威与执行纪律
 
 - 当前已接受产品由 [`docs/SPEC.md`](docs/SPEC.md) 定义。
-- Road v0.7 App Shell 增量与 CP7 accepted override 由已批准的[设计](docs/design/road-v0-7-app-shell-design.md)定义；CP7 在 Gate D 前只写作 target，现已由开发者明确接受。
+- Road v0.7 App Shell 增量、CP7 与 CP8 accepted override 由已批准的[设计](docs/design/road-v0-7-app-shell-design.md)定义。
 - [`docs/RULES.md`](docs/RULES.md) 继续约束作者资产、Git、证据与安全边界。
 - [`docs/PROJECT.md`](docs/PROJECT.md)、源码和测试标明每个 Checkpoint 的当前事实。
 - 不得把未完成 target 写成已实现；每个 CP 只从前一已通过 checkpoint commit 建分支。
-- 每个 CP 单独 commit；CP0–CP6 的 advance YOLO 已用完。CP7 Gate D 与本地 checkpoint commit 已分别获得明确判断和授权；真实 Vault、push、tag、closeout 与发布始终另行授权。
+- 每个 CP 单独 commit；CP0–CP6 的 advance YOLO 已用完。CP7 Gate D 已通过且本地 checkpoint commit 为 `1e17cea`。CP8 Gate D 已由开发者另行判断通过；checkpoint commit、真实 Vault、push、tag、closeout 与发布仍须分别授权。
 
 ## 2. 全局范围
 
@@ -90,6 +90,7 @@ Python/Rust 无改动不代表可以复制历史结果；CP0 与 CP5 各运行�
 | CP5 | `test/cp5-v07-integration` | 全量检查与 Tauri 合成 smoke | 无未解决 P0/P1 |
 | CP6 | `test/cp6-v07-author-gate` | 一号作者真实日常接受 | 产品 Gate 通过 |
 | CP7 | `ui/cp7-v07-continuous-flow` | 连续编辑流、默认窗口与 UI 去 slop | Gate A–D 顺序通过 |
+| CP8 | `ui/cp8-v07-responsive-navigation` | 响应式页签滚轮、竖版 Anchor、原生 IME 复核 | Gate A–D 已通过；checkpoint 未提交 |
 
 ## 5. CP0 — 合同与基线
 
@@ -313,3 +314,119 @@ store、UI kit、自制弹窗框架、移动端构建、真实 Vault 操作、�
 Figma、确定 Tags 合同并在最终视觉批准后实施 production 的顺序。该批准允许创建当前
 分支并推进工作，不替代 checkpoint commit 授权、Gate B 最终视觉判断或 Gate D 产品接受，也不授权真实 Vault、
 push、tag、closeout、签名、打包或发布。
+
+## 16. CP8 — 响应式导航、Anchor 与原生 IME 复核
+
+**进入条件（已满足）：** CP7 Gate D 已通过并在 `1e17cea` 建立本地 checkpoint；开发者于
+2026-08-26 明确批准本节计划并授权实现、Figma 原位覆写、synthetic 验证与 outdated 文档
+修正。该授权当时不包含 CP8 Gate D 判断、checkpoint commit、真实 Vault 或远端 Git 动作；
+开发者已于 2026-08-26 另行完成 Gate D 判断。
+
+**固定目标：**
+
+- 顶栏在所有模式保持单行 `56px`，可见顺序为“编辑 Paper → 新 Paper → Library … Vault”；
+  只改位置与文案，继续复用唯一 dirty-departure guard。
+- Paper 页签全部保留在 DOM 中，形成每屏约三个槽位的单行横向滚轮；不换行、不循环、
+  不加箭头。只有页签轨道显示细横向滚动条并使用 scroll-snap，document 不得横向滚动。
+  载入、直接点选、加页与删页后，当前页自动滚至轨道中部，同时保留 `aria-current`、
+  焦点、saving lock 与直接点选。
+- 竖版以原生 `@media (orientation: portrait)` 定义，即 `height >= width`。Markdown textarea
+  使用 `clamp(220px, 34dvh, 300px)` 固定可用高度、关闭纵向 resize 并在框内滚动；横版继续
+  允许纵向 resize。
+- 竖版 Paper 的“删除本页 / 加一页 / 保存”成为底部 sticky Anchor，使用不透明背景与
+  safe-area 留白，不遮挡正文末行、错误或焦点。
+- 竖版 Library 在 Shell 下方提供等高的“范围 / 排序”与“新文件夹”sticky Anchor。前者
+  在 native Popover 中放两个原生 select，后者复用既有名称输入与创建逻辑。Popover 支持
+  Enter/Space、Escape、light-dismiss 和关闭后焦点返回；创建失败保留输入与打开状态，成功
+  后关闭。横版继续使用既有 sidebar、排序栏与内联新文件夹。
+- Figma 文件先保存版本历史 `CP7 Gate D accepted · before CP8 overwrite`，再原位覆写
+  Page `71:2` 并重命名为 `CP8 · 响应式锚点与横向滚轮`；不保留第二套活动母版。五档
+  视口、`4/6/12` 页滚轮、长正文框内滚动、Paper 底部 Anchor、Library 顶部双 Anchor、
+  两个 Popover 与单层 Shell 都必须回读、截图并通过递归 bounds 审计。
+
+**明确不做：** 不改变 Core、bridge、DTO、Paper v4、Index v4、protocol v2、Rust command、
+sidecar、Tauri 几何、依赖或产品能力；不增加页重排、循环分页、箭头分页、移动端构建、
+自制 Popover、第二套 dirty guard、真实 Vault、签名、tag、push 或发布。
+
+### Gate A — 合同与 CP7 基线（已通过：2026-08-26）
+
+- CP7 Gate D 与 checkpoint `1e17cea` 分开记录；原生候选窗不补写为 CP7 证据。
+- 从 clean CP7 checkpoint 建立 `ui/cp8-v07-responsive-navigation`。
+- 冻结本节范围、五档视口、人工 IME 判据与不做清单。
+
+### Gate B — Production 候选（已完成：2026-08-26）
+
+- 只复用现有 Vue 状态、原生 Popover 与 CSS orientation/sticky/scroll-snap；不新增依赖或
+  全局状态。
+- Vitest 覆盖 `1/3/4/6/7/12` 页、单行恒高、自动居中、跨边界加删页、saving lock、顶栏
+  顺序、两类 Anchor 与 Popover 关闭/失败语义。
+- 该 Gate 证明源码候选与直接测试，不等于 Figma、平台 smoke、原生 IME 或产品接受。
+
+**结果：** 顶栏、页签滚轮、竖版 textarea/Paper Anchor 与 Library 双 Anchor/Popover 已进入
+source candidate；聚焦 Vitest `5` 个文件 / `86 passed`，覆盖 `1/3/4/6/7/12` 页、恒定
+单行、居中、跨边界加删页、saving lock、顶栏顺序、Popover 关闭/失败语义。Gate B 完成
+不代表原生 IME 或开发者接受。
+
+### Gate C — Figma 与完整工程证据（已完成：2026-08-26）
+
+- 真实布局覆盖 `375×812`、`720×900`、`720×680`、`920×680`、`1220×780`。
+- 使用 `80` 行正文与最大合法名称验证 textarea 可滚至末行、Anchor 不遮挡、页签轨道可
+  横滚，且 `document.scrollWidth <= document.documentElement.clientWidth`。
+- 重跑完整 Vitest、Vite build、pytest、compileall、sidecar build、Cargo fmt/test、debug
+  `.app` bundle、文档检查、bundle marker scan 与 `git diff --check`；记录本次实际数字，
+  不复制 CP7 计数。
+- Figma Page `71:2` 原位覆写后逐段回读节点、截图并运行递归 bounds 与字体审计。
+
+**结果：** 五档 synthetic 浏览器 QA 在 `build/cp8-gate-c-browser/` 记录 `PASS`：document
+无横向溢出，`12` 页保持 `60px` 单行轨道，活动页居中误差 `< 0.4px`，`80` 行正文均可
+滚至精确末端，Paper/Library Anchor 与 Popover 路径通过。完整 Vitest `9` 个文件 /
+`118 passed`、pytest `284 passed`、Rust `12 passed`；Vite build、compileall、sidecar build、
+Cargo fmt、debug `.app` bundle 与 marker scan 均通过。Figma file
+`Eubz4vHZ0YaCk0Mki12ljS` 已完成精确标题的 version-history 保存流程，Page `71:2` 原位
+重命名为 `CP8 · 响应式锚点与横向滚轮`，Sections `71:4` / `71:5` 及五档 bounds/font/CP7
+residue 递归审计 clean。connector 未暴露 version ID，因此不补写 ID。实际命令与布局证据
+见 [`CP8 report`](docs/acceptance/road-v0-7/cp8-responsive-navigation/report.md)。
+
+### Gate D — 原生 IME 与开发者接受（已通过：2026-08-26）
+
+1. 关闭同名旧应用，只按 CP8 debug `.app` 绝对路径启动；使用 fake Home 与含 Tag“暴食”的
+   synthetic Vault。
+2. 开发者手动切换 macOS 简体拼音，聚焦 Library 搜索框并用实体键盘输入 `baoshi`。
+3. 提交前确认候选窗真实出现且保持稳定，列表不因中间拼音刷新。
+4. 手动选择“暴食”，确认候选窗关闭、输入框只显示最终中文、结果只刷新一次且无残留
+   `ba`。
+5. 如保存截图，只能保留 synthetic 画面；另记录 build/OS/input-source，不记录真实作者内容或
+   路径。
+
+候选窗未出现、选择前被重渲染打断、出现中间拼音查询或最终值重复提交，任一项均为 P1，
+阻断 CP8 接受。Gate D 只有开发者能判断；自动化输入、Gate C 工程完成或 Figma 同步均不能
+代替。
+
+**结果：** 关闭同名旧应用后，CP8 debug bundle 使用 fake Home 与含 Tag“暴食”的
+synthetic Vault 启动。开发者在 macOS `27.0`（`26A5421a`）、简体拼音输入源
+`com.apple.inputmethod.SCIM.ITABC` 下用实体键盘输入 `baoshi`：候选窗出现且稳定，
+选择“暴食”前没有中间查询，提交后只保留最终中文、只刷新一次且无残留 `ba`。
+开发者明确判断“全部通过，没有异常”；四类 P1 阻断均未出现。详细记录见
+[`CP8 report`](docs/acceptance/road-v0-7/cp8-responsive-navigation/report.md)。CP8 checkpoint
+commit、push、tag、真实 Vault、签名与发布继续不在当前授权内。
+
+## 17. CP8 已知风险
+
+| 风险 | 控制 |
+| --- | --- |
+| 页数增加把编辑区推到屏幕下方 | 单行局部滚轮、恒定轨道高度、`1/3/4/6/7/12` 页直接测试 |
+| sticky Anchor 遮挡正文、错误或焦点 | 不透明背景、safe-area 与滚动留白；用 `80` 行正文在两种方向实测 |
+| native Popover 关闭后焦点丢失 | 使用 trigger-target 原生关系，并覆盖 Escape、light-dismiss、成功/失败 |
+| 响应式规则误按像素宽度分叉 | 竖版只由 `orientation: portrait` 定义；五档同时含竖版和横版 |
+| 自动化掩盖 macOS 候选窗故障 | Gate D 必须由实体键盘与系统简体拼音完成；四类失败一律 P1 |
+| CP8 偷改数据或运行链 | diff 审计确认 Core、bridge、DTO、protocol、Tauri 几何及依赖不变 |
+
+## 18. Road 完工与 v0.8 交接
+
+开发者于 2026-08-26 明确判定：CP8 完成后，Road v0.7 的产品与实施工作正式完工。该结论
+不冒充 Git closeout：CP8 checkpoint commit 尚未创建，Road snapshot、tag、push、签名、
+打包与发布也尚未执行。
+
+Road v0.8 的方向冻结为“打包 + Alpha 发布”，最早于 2026-08-28 开始。当前不提前创建
+v0.8 分支、计划、构建或发布资产；开始前先完成 CP8 checkpoint 与 Road v0.7 snapshot 的
+独立授权和线性 Git 边界。

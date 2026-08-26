@@ -1,10 +1,10 @@
-> **HUMAN MANUAL — NON-NORMATIVE.** 本文用人话解释 Road v0.6 建立、Road v0.7 继续使用的 Paper v4 产品模型。当前产品边界以 [`docs/SPEC.md`](../../SPEC.md) 为准，当前坐标以 [`docs/PROJECT.md`](../../PROJECT.md) 为准；CP7 continuous-flow accepted override 见 [Road v0.7 书面设计](../../design/road-v0-7-app-shell-design.md)。
+> **HUMAN MANUAL — NON-NORMATIVE.** 本文用人话解释 Road v0.6 建立、已完工 Road v0.7 继续使用的 Paper v4 产品模型。当前产品边界以 [`docs/SPEC.md`](../../SPEC.md) 为准，当前坐标以 [`docs/PROJECT.md`](../../PROJECT.md) 为准；Road v0.7 complete / Git closeout pending 见 [Road v0.7 书面设计](../../design/road-v0-7-app-shell-design.md)。
 
 # keikeu APPDESIGN.md
 
 > slogan：存住一瞬的灵光
 >
-> 记录范围：current Road v0.7 CP7 · Paper v4；CP7 不改变数据合同
+> 记录范围：Road v0.7 product complete / Git closeout pending · Paper v4；CP8 不改变数据合同
 >
 > 设计原则：本地优先、作者控制、直接编辑 Paper、无 AI 代写
 
@@ -16,10 +16,10 @@
 
 | | 数据与运行合同 | 当前组合层 |
 | --- | --- | --- |
-| 产品版本 | Road v0.6 建立并归档的 runtime | Road v0.7 CP6 已接受的 App Shell 与信息层级 |
+| 产品版本 | Road v0.6 建立并归档的 runtime | 已完工 Road v0.7 的 CP8 响应式 App Shell |
 | 内容模型 | Paper v4：一份 Paper 由有序卡页组成 | 不改变 Paper v4 / Index v4 / protocol v2 |
 | 聚焦方式 | Paper 本身可编辑、可翻页并整体保存 | Paper / Library 是日常位置，Vault 是环境入口 |
-| 实现状态 | 已实现、验收并归档 | CP7 Gate D 已通过；工程/Figma 证据完成，原生候选窗转入 CP8 复核 |
+| 实现状态 | 已实现、验收并归档 | Road v0.7 产品与实施正式完工；HEAD 仍为 CP7 `1e17cea`，CP8 checkpoint / Road snapshot 尚未创建 |
 
 判断“现在已经运行什么”时，以 `SPEC`、实际代码和测试为准；判断后续 target 与 Gate 时，以当前计划和 `PROJECT` 为准。本文不覆盖其中任何一侧，也不授予实施或迁移权限。
 
@@ -130,7 +130,7 @@ Paper
 
 ---
 
-## 5. Paper 工作台（CP6 已接受历史；CP7 展示 override）
+## 5. Paper 工作台（CP6 历史；CP7/CP8 accepted）
 
 下列图与“每行一个”描述保留 CP6 已接受历史。CP7 accepted override 已把展示替换为连续
 纵向编辑流和单行可逆 comma/CSV Tags 字段；底层有序 `string[]` 与 Paper v4 Markdown
@@ -162,6 +162,11 @@ Paper
 - CP6 历史 UI 的 Tags 使用原生多行输入框，每行一个 tag；逗号只是普通字符；
 - CP6 历史 UI 保存 Tags 时逐行修剪，移除空行，并按首次出现顺序去重；CP7 只在 Vue 字段边界改用可逆 CSV-style 表示；
 - `Cmd+S` 与“保存”调用同一个动作。
+
+CP8 不再让页数增长形成第二行：全部页按钮保留在约三槽宽的单行局部滚轮中，只有该轨道
+显示细横向滚动条，并在载入、点选、加页与删页后把活动页滚至中部。竖版 Markdown 在
+`clamp(220px, 34dvh, 300px)` 内部滚动，三项动作成为 safe-area-aware 底部 Anchor；横版
+继续允许 textarea 纵向 resize。这些都是呈现和可达性调整，不改变 pages[] 或保存合同。
 
 ### 5.1 加一页
 
@@ -254,6 +259,10 @@ Paper 变成多页后，Library 不会变成卡页数据库。
 搜索覆盖 Paper 名称、代号、Tags、所有页标题、正文和类型，但搜索派生文本只留在 Python/Index 一侧，不发送给 Vue。打开搜索结果时打开整份 Paper 的第一页；Road v0.6 不提供单页 deep-link。
 
 CP7 Gate D 后续整改在不改变 Index/DTO 的前提下增加两条展示约束：中文输入法 composition 期间不发查询，提交后只发送一次最终词；每行 Paper 使用与触发器相邻的 native top-layer Popover 预览，不把详情块插到列表下方或下压文件夹操作。文件夹软删除与恢复则原子移动完整目录树；不可恢复销毁只发生在废纸篓中的二次确认后，详见 ADR-0008。
+
+CP8 竖版 Library 进一步把“范围 / 排序”和“新文件夹”收成 Shell 下方两枚等高 sticky
+Anchor；它们分别打开 native Popover，复用既有 select、输入、校验与创建请求。失败保留
+输入并继续打开，成功后才关闭；横版 sidebar、排序栏与内联创建保持不变。
 
 Branch 复制已经保存的整份 Paper，包括页序、标题、正文、类型和 Tags，并生成新的代号、路径和时间。未保存草稿不参与 Branch。
 
@@ -370,6 +379,6 @@ Road v0.6 的 keikeu 仍然是一款本地优先的写前整理工具，但它�
 - 当前产品权威：[SPEC](../../SPEC.md)
 - 当前坐标：[PROJECT](../../PROJECT.md)
 - Road v0.6 已接受书面设计：[Paper v4 产品与架构设计](../../design/road-v0-6-paper-v4-design.md)
-- Road v0.7 CP7 已接受：[App Shell 与连续编辑流设计](../../design/road-v0-7-app-shell-design.md)
+- Road v0.7 CP8 accepted override：[App Shell、连续编辑流与响应式 Anchor 设计](../../design/road-v0-7-app-shell-design.md)
 - 当前架构图：[architecture.html](../../architecture/architecture.html)
 - 当前交互图：[interaction.html](../../design/interaction.html)

@@ -60,6 +60,12 @@ function inputByLabel(wrapper, text) {
   return label.get("input");
 }
 
+function dispatchToggle(wrapper, newState) {
+  const event = new Event("toggle");
+  Object.defineProperty(event, "newState", { value: newState });
+  wrapper.element.dispatchEvent(event);
+}
+
 const mounted = [];
 async function mountLibrary(request, extra = {}) {
   const wrapper = mount(LibraryView, {
@@ -88,6 +94,150 @@ describe("Road v0.7 Library runtime", () => {
     expect(wrapper.find(".library-shell-header").exists()).toBe(false);
     expect(wrapper.findAll("button").some((button) => button.text() === "新 Paper")).toBe(false);
     expect(wrapper.findAll("button").some((button) => button.text() === "Vault")).toBe(false);
+  });
+
+  it("puts two native portrait anchors before Library content with unique popover targets", async () => {
+    const request = vi.fn(async () => library());
+    const host = mount({
+      components: { LibraryView },
+      setup: () => ({ request, runtime }),
+      template: `<div>
+        <LibraryView :runtime="runtime" :request="request" />
+        <LibraryView :runtime="runtime" :request="request" />
+      </div>`,
+    }, { attachTo: document.body });
+    mounted.push(host);
+    await flushPromises();
+    const [first, second] = host.findAllComponents(LibraryView);
+    const anchors = first.get(".library-portrait-anchors");
+    const triggers = anchors.findAll("button");
+    const popovers = first.findAll(".library-portrait-popover");
+
+    expect(triggers.map((button) => button.text())).toEqual(["范围 / 排序", "新文件夹"]);
+    expect(first.get(".library-shell").element.firstElementChild).toBe(anchors.element);
+    expect(anchors.element.compareDocumentPosition(first.get(".library-main").element))
+      .toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(popovers).toHaveLength(2);
+    triggers.forEach((trigger, index) => {
+      expect(trigger.attributes()).toMatchObject({
+        type: "button",
+        popovertarget: popovers[index].attributes("id"),
+        popovertargetaction: "toggle",
+        "aria-haspopup": "dialog",
+        "aria-expanded": "false",
+      });
+      expect(popovers[index].attributes()).toMatchObject({
+        popover: "auto",
+        role: "dialog",
+      });
+    });
+
+    const ids = [...popovers, ...second.findAll(".library-portrait-popover")]
+      .map((popover) => popover.attributes("id"));
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("tracks native popover state and returns focus after close", async () => {
+    const wrapper = await mountLibrary(vi.fn(async () => library()));
+    const trigger = wrapper.get(".library-portrait-anchors button");
+    const popover = wrapper.get('[aria-label="范围与排序"]');
+    const close = popover.get('button[aria-label="关闭范围与排序"]');
+
+    dispatchToggle(popover, "open");
+    await flushPromises();
+    expect(trigger.attributes("aria-expanded")).toBe("true");
+
+    close.element.focus();
+    dispatchToggle(popover, "closed");
+    await flushPromises();
+    expect(trigger.attributes("aria-expanded")).toBe("false");
+    expect(document.activeElement).toBe(trigger.element);
+  });
+
+  it("queries exactly once for each portrait scope or sort change", async () => {
+    const request = vi.fn(async (_method, params) => library({ scope: params.scope }));
+    const wrapper = await mountLibrary(request);
+    const [scopeSelect, sortSelect] = wrapper.get('[aria-label="范围与排序"]')
+      .findAll("select");
+    const initialQueries = request.mock.calls.filter(([method]) => method === "library.query").length;
+
+    await scopeSelect.setValue("folder:Ideas");
+    await flushPromises();
+    const scopeQueries = request.mock.calls
+      .filter(([method]) => method === "library.query")
+      .slice(initialQueries);
+    expect(scopeQueries).toHaveLength(1);
+    expect(scopeQueries[0][1]).toMatchObject({ scope: "folder:Ideas", sort: "updated_desc" });
+
+    await sortSelect.setValue("name");
+    await flushPromises();
+    const sortQueries = request.mock.calls
+      .filter(([method]) => method === "library.query")
+      .slice(initialQueries + 1);
+    expect(sortQueries).toHaveLength(1);
+    expect(sortQueries[0][1]).toMatchObject({ scope: "folder:Ideas", sort: "name" });
+  });
+
+  it("closes and clears the portrait folder popover only after successful creation", async () => {
+    const request = vi.fn(async (method, params) => {
+      if (method === "library.query") return library({ scope: params.scope });
+      if (method === "library.create_folder") return { name: "New", warnings: [] };
+      throw new Error(method);
+    });
+    const wrapper = await mountLibrary(request);
+    const trigger = wrapper.findAll(".library-portrait-anchors button")[1];
+    const popover = wrapper.get(".library-folder-create-popover");
+    const hidePopover = vi.fn();
+    popover.element.hidePopover = hidePopover;
+    dispatchToggle(popover, "open");
+    await popover.get("input").setValue("New");
+
+    await popover.get("form").trigger("submit");
+    await flushPromises();
+
+    expect(request.mock.calls.filter(([method]) => method === "library.create_folder")).toHaveLength(1);
+    expect(hidePopover).toHaveBeenCalledOnce();
+    expect(popover.get("input").element.value).toBe("");
+    expect(trigger.attributes("aria-expanded")).toBe("false");
+    expect(document.activeElement).toBe(trigger.element);
+  });
+
+  it("keeps the portrait folder popover and input when creation fails", async () => {
+    const request = vi.fn(async (method, params) => {
+      if (method === "library.query") return library({ scope: params.scope });
+      if (method === "library.create_folder") throw new Error("disk denied");
+      throw new Error(method);
+    });
+    const wrapper = await mountLibrary(request);
+    const trigger = wrapper.findAll(".library-portrait-anchors button")[1];
+    const popover = wrapper.get(".library-folder-create-popover");
+    const hidePopover = vi.fn();
+    popover.element.hidePopover = hidePopover;
+    dispatchToggle(popover, "open");
+    await popover.get("input").setValue("Keep me");
+
+    await popover.get("form").trigger("submit");
+    await flushPromises();
+
+    expect(hidePopover).not.toHaveBeenCalled();
+    expect(popover.get("input").element.value).toBe("Keep me");
+    expect(trigger.attributes("aria-expanded")).toBe("true");
+    expect(wrapper.get(".library-error").text()).toContain("无法创建文件夹");
+  });
+
+  it("uses orientation media rules for equal sticky portrait anchors", () => {
+    expect(libraryViewSource).toMatch(
+      /@media \(orientation: portrait\)[\s\S]*?\.library-portrait-anchors \{[\s\S]*?position: sticky;[\s\S]*?top: 56px;[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\);/,
+    );
+    expect(libraryViewSource).toMatch(
+      /\.library-portrait-anchors > button \{[^}]*width: 100%;[^}]*height: 44px;[^}]*min-height: 44px;/,
+    );
+    expect(libraryViewSource).toMatch(
+      /@media \(orientation: landscape\) \{\s*\.library-portrait-popover \{ display: none; \}/,
+    );
+    expect(libraryViewSource).toMatch(
+      /@media \(orientation: portrait\)[\s\S]*?\.library-scopes > \.library-scope-select,[\s\S]*?\.library-scopes > \.folder-create \{ display: none; \}/,
+    );
   });
 
   it("renders the accepted v4 projection", async () => {
@@ -266,9 +416,12 @@ describe("Road v0.7 Library runtime", () => {
       throw new Error(method);
     });
     const wrapper = await mountLibrary(request);
-    await inputByLabel(wrapper, "新文件夹").setValue("New");
+    const inlineFolderInput = inputByLabel(wrapper, "新文件夹");
+    inlineFolderInput.element.focus();
+    await inlineFolderInput.setValue("New");
     await buttonByText(wrapper, "创建").trigger("click");
     await flushPromises();
+    expect(document.activeElement).toBe(inlineFolderInput.element);
     await buttonByText(wrapper, "Ideas").trigger("click");
     await flushPromises();
     await inputByLabel(wrapper, "新名称").setValue("Renamed");

@@ -28,6 +28,7 @@ const advanced = ref(false);
 const fieldErrors = ref({});
 const pageTitleInput = ref(null);
 const contentInput = ref(null);
+const pageNavigation = ref(null);
 const deleteDialog = ref(null);
 const cancelDeleteButton = ref(null);
 const detailsOpen = ref(false);
@@ -64,6 +65,7 @@ function loadPaper() {
   activeIndex.value = 0;
   cursorKnown.value = false;
   fieldErrors.value = {};
+  centerActivePage();
 }
 
 watch(
@@ -163,9 +165,19 @@ function handleShortcut(event) {
   }
 }
 
+function centerActivePage() {
+  nextTick(() => {
+    const activeButton = pageNavigation.value?.querySelector('[aria-current="page"]');
+    if (typeof activeButton?.scrollIntoView === "function") {
+      activeButton.scrollIntoView({ inline: "center", block: "nearest" });
+    }
+  });
+}
+
 function selectPage(index) {
   activeIndex.value = index;
   cursorKnown.value = false;
+  centerActivePage();
   nextTick(() => pageTitleInput.value?.focus());
 }
 
@@ -192,6 +204,7 @@ function addPage() {
   });
   activeIndex.value += 1;
   cursorKnown.value = false;
+  centerActivePage();
   nextTick(() => pageTitleInput.value?.focus());
 }
 
@@ -222,6 +235,7 @@ function deletePage() {
   }
   cursorKnown.value = false;
   closeDelete();
+  centerActivePage();
   nextTick(() => pageTitleInput.value?.focus());
 }
 
@@ -360,7 +374,7 @@ onBeforeUnmount(() => {
       </aside>
     </header>
 
-    <nav v-if="draft.pages.length > 1" class="page-navigation" aria-label="Paper 页面">
+    <nav ref="pageNavigation" class="page-navigation" aria-label="Paper 页面">
       <button
         v-for="(page, index) in draft.pages"
         :key="page.ui_key"
@@ -675,9 +689,40 @@ select {
 
 .page-navigation {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-columns: calc((100% - 32px) / 3);
+  grid-auto-flow: column;
+  column-gap: 16px;
+  width: 100%;
+  min-width: 0;
+  height: 60px;
   margin-top: 16px;
+  overflow-x: scroll;
+  overflow-y: hidden;
   border-bottom: 1px solid var(--rule);
+  overscroll-behavior-inline: contain;
+  scrollbar-color: var(--rule) transparent;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scroll-snap-type: x mandatory;
+}
+
+.page-navigation::-webkit-scrollbar {
+  display: block;
+  height: 6px;
+}
+
+.page-navigation::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.page-navigation::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--rule);
+}
+
+.page-navigation::before,
+.page-navigation::after {
+  content: "";
 }
 
 .page-navigation button {
@@ -693,11 +738,8 @@ select {
   color: var(--muted);
   background: transparent;
   cursor: pointer;
+  scroll-snap-align: center;
   text-align: left;
-}
-
-.page-navigation button + button {
-  margin-left: 16px;
 }
 
 .page-navigation button[aria-current="page"] {
@@ -908,8 +950,9 @@ select {
     padding-right: 4px;
   }
 
-  .page-navigation button + button {
-    margin-left: 8px;
+  .page-navigation {
+    grid-auto-columns: calc((100% - 16px) / 3);
+    column-gap: 8px;
   }
 
   .card-page {
@@ -927,6 +970,42 @@ select {
 
   .card-actions button {
     padding-inline: 8px;
+  }
+}
+
+@media (orientation: portrait) {
+  .card-page {
+    min-height: 0;
+  }
+
+  .page-content-field {
+    min-height: 0;
+    flex: none;
+  }
+
+  .page-content-field textarea {
+    min-height: 0;
+    height: clamp(220px, 34dvh, 300px);
+    flex: none;
+    overflow-y: auto;
+    resize: none;
+  }
+
+  .page-title-field input,
+  .mode-toggle,
+  .advanced-panel select,
+  .page-content-field textarea {
+    scroll-margin-bottom: calc(88px + env(safe-area-inset-bottom));
+  }
+
+  .card-actions {
+    position: sticky;
+    z-index: 2;
+    bottom: 0;
+    margin-top: 16px;
+    padding-top: 12px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    background: var(--canvas);
   }
 }
 
