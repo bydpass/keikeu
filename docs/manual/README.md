@@ -12,7 +12,7 @@ manual/
 
 ## 系统理解
 
-[keikeu-current-logic.html](keikeu-current-logic.html) 与两个分类文件夹并列，简明说明已完成并归档的 Road v0.7、已接受的 CP8 响应式导航/Anchor composition、Road v0.6 延续的 Paper v4 业务链路、数据权威、保存防护与 Vue/Tauri/JSONL v2/Python 分层；最终 checkpoint 为 `2f03aee`。最终核对 [PROJECT](../PROJECT.md)、[SPEC](../SPEC.md)、[RULES](../RULES.md) 与 [architecture](../architecture/architecture.html)。
+[keikeu-current-logic.html](keikeu-current-logic.html) 与两个分类文件夹并列，简明说明已完成并归档的 Road v0.7、已接受的 CP8 响应式导航/Anchor composition、Road v0.6 延续的 Paper v4 业务链路、数据权威、保存防护与 Vue/Tauri/JSONL v2/Python 分层；最终 checkpoint 为 `2f03aee`。2026-08-26 同步还记录了 App-root pending intent 与 PaperView-scoped close guard 的实现偏差。最终核对 [PROJECT](../PROJECT.md)、[SPEC](../SPEC.md)、[RULES](../RULES.md) 与 [architecture](../architecture/architecture.html)。
 
 [paper-v4-repair.html](paper-v4-repair.html) 是面向普通纯文本编辑器用户的离线修复手册，包含完整 schema v4 示例、类型/空值、可逆转义、错误含义、Finder、未知保存、重新检查和 Index 重建；app 不会自动改写损坏文件。
 
@@ -27,7 +27,7 @@ manual/
 | [Python Caveman 诠释](forfresh/python-caveman-guide.html)（[PDF](forfresh/python-caveman-guide.pdf)） | Python 对象、core/bridge 分层、Markdown 权威与安全追代码 | [SPEC](../SPEC.md)、[RULES](../RULES.md) 与当前 `src/` / `tests/` |
 | [Rust 简易入门](forfresh/rust-beginner-guide.html)（[PDF](forfresh/rust-beginner-guide.pdf)） | Tauri 宿主、Option/Result、所有权、单 worker 与 Sidecar 生命周期 | [architecture](../architecture/architecture.html)、[RULES](../RULES.md) 与当前 `frontend/src-tauri/` |
 | [Git 状态地图](forfresh/git-interactive.html) → [Git 手册](forfresh/gitspec.md) | 工作区、暂存区、本地历史、远端与最短安全路径 | [RULES §7](../RULES.md#7-git) |
-| [macOS 开发者入门](forfresh/macos-developer-beginner-guide.html) → [Developer ID 发布手册](forfresh/macos-developer-id-release.md) | 签名、公证、staple、Gatekeeper 与延期至 Road v0.8 的发布骨架 | [PROJECT](../PROJECT.md)、[SPEC](../SPEC.md) 与 [RULES](../RULES.md) |
+| [macOS 开发者入门](forfresh/macos-developer-beginner-guide.html) → [Developer ID 发布手册](forfresh/macos-developer-id-release.md) | 签名、公证、staple、Gatekeeper 与 Road v0.8 预启动草案下仍受阻塞的发布骨架 | [Road v0.8 草案](../../PLAN_road_v0_8.md)、[PROJECT](../PROJECT.md) 与 [RULES](../RULES.md) |
 
 ## `prospect/`：产品与价值
 

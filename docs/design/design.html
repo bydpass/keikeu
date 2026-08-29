@@ -3,20 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>keikeu Design — Road v0.7 archived baseline</title>
+  <title>keikeu Design — Road v0.7 accepted baseline</title>
   <style>
-    :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", sans-serif; color: #0f0f0e; background: #ece9de; }
+    :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", sans-serif; color: #13191c; background: #e4e8ea; }
     * { box-sizing: border-box; }
     body { margin: 0; }
     main { width: min(1120px, calc(100% - 32px)); margin: 32px auto 64px; }
-    header, section { border: 1px solid #b8b2a6; background: #f6f4ed; padding: 28px; }
+    header, section { border: 1px solid #aeb9be; background: #f2f4f4; padding: 28px; }
     section { margin-top: 16px; }
-    h1, h2 { font-family: "Songti SC", "STSong", Georgia, serif; }
+    h1, h2 { font-family: "New York", "Iowan Old Style", "Noto Serif CJK SC", "Songti SC", "STSong", serif; }
     h1 { max-width: 820px; margin: 8px 0 12px; font-size: clamp(2rem, 5vw, 3.6rem); line-height: .98; }
     h2 { margin-top: 0; }
     p, li { line-height: 1.6; }
-    .eyebrow, .label { color: #1b365d; font-size: .75rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
-    .status { display: inline-block; padding: 5px 9px; border-left: 3px solid #1b365d; background: #dfdcd0; }
+    .eyebrow, .label { color: #173a5b; font-size: .75rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    .status { display: inline-block; padding: 5px 9px; border-left: 3px solid #173a5b; background: #dbe1e3; }
     .layout { display: grid; grid-template-columns: 72px 250px 1fr; min-height: 360px; border: 1px solid #b8b2a6; }
     .layout > div { padding: 14px; border-right: 1px solid #b8b2a6; }
     .layout > div:last-child { border: 0; }
@@ -27,28 +27,28 @@
     .body { flex: 1; padding: 8px 0; }
     .actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; border-top: 1px solid #b8b2a6; padding-top: 14px; }
     .action { padding: 10px; border: 1px solid #1b365d; text-align: center; }
-    .target-shell { border: 1px solid #b8b2a6; background: #faf9f5; }
-    .shellbar { display: grid; grid-template-columns: auto auto auto 1fr auto auto; gap: 18px; align-items: center; min-height: 56px; padding: 0 18px; border-bottom: 1px solid #b8b2a6; }
-    .shellbar strong { font-family: "Songti SC", "STSong", Georgia, serif; }
-    .shell-work { min-height: 180px; padding: 28px; }
+    .target-shell { border: 1px solid #aeb9be; background: #f2f4f4; }
+    .shellbar { display: grid; grid-template-columns: auto auto auto auto minmax(20px, 1fr) auto; gap: 12px; align-items: center; height: 56px; min-height: 56px; padding: 0 18px; border-bottom: 1px solid #aeb9be; white-space: nowrap; }
+    .shellbar strong { font-family: inherit; }
+    .shell-work { min-height: 180px; padding: 28px; background: #e4e8ea; }
     .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     nav { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 18px; }
-    a { color: #1b365d; }
+    a { color: #173a5b; }
     code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
     .tools { display: none; }
-    @media (max-width: 760px) { .layout { grid-template-columns: 56px 1fr; } .work { grid-column: 1 / -1; border-top: 1px solid #b8b2a6; } .shellbar { grid-template-columns: auto auto auto; gap: 10px; padding: 10px 14px; } .shellbar span:nth-last-child(-n+2) { grid-column: span 1; } .two { grid-template-columns: 1fr; } }
+    @media (max-width: 760px) { .layout { grid-template-columns: 56px 1fr; } .work { grid-column: 1 / -1; border-top: 1px solid #b8b2a6; } .shellbar { grid-template-columns: auto auto auto auto minmax(2px, 1fr) auto; gap: 4px; height: 56px; padding: 0 8px; font-size: .75rem; } .two { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
   <main>
     <header>
-      <p class="eyebrow">Road v0.7 complete and archived · current accepted baseline</p>
+      <p class="eyebrow">Road v0.7 complete and archived · current accepted baseline · synced 2026-08-26</p>
       <h1>当前接受：冷编辑台连续流 + 响应式 Anchor</h1>
-      <p class="status">Current：CP8 Gate A–D 已通过，开发者于 2026-08-26 判定 Road v0.7 产品与实施正式完工。已接受呈现保持“冷编辑台 + Opus 标题 + 系统工具控件”，只校准单行顶栏、all-page 横向滚轮、竖版正文内滚与 Anchor。最终 checkpoint 为 <code>2f03aee</code>；Road snapshot 已独立归档。未 tag、push、签名、打包或发布。</p>
+      <p class="status">Current：CP8 Gate A–D 已通过，开发者于 2026-08-26 判定 Road v0.7 产品与实施正式完工。本文于同日按 production source 复核：单行顶栏、all-page 横向滚轮、竖版正文内滚、Anchor 与冷灰蓝 token 均以当前源码为准。最终 checkpoint 为 <code>2f03aee</code>；Road snapshot 已独立归档。未 tag、push、签名、打包或发布。</p>
       <nav>
         <a href="../PROJECT.md">当前坐标</a>
-        <a href="road-v0-6-paper-v4-design.md">完整设计</a>
-        <a href="road-v0-7-app-shell-design.md">v0.7 目标设计</a>
+        <a href="road-v0-6-paper-v4-design.md">Paper v4 grammar / protocol 基线</a>
+        <a href="road-v0-7-app-shell-design.md">v0.7 已接受详细设计</a>
         <a href="interaction.html">交互 map</a>
         <a href="../architecture/architecture.html">架构 map</a>
       </nav>
@@ -56,7 +56,7 @@
     </header>
 
     <section>
-      <p class="label">Historical workbench · Road v0.6 accepted</p>
+      <p class="label">Historical workbench · superseded Road v0.6 / early v0.7 presentation</p>
       <div class="layout" aria-label="Quiet Rail、Paper 上下文栏与中央卡页工作台">
         <div class="global">Quiet Rail</div>
         <div class="context"><strong>Paper</strong><p>稳定 Paper 名称</p><p>Tags（每行一项；CP6 历史）</p><p>页码按钮</p><p><code>K-YYYYMMDD-NNN</code></p></div>
@@ -72,10 +72,10 @@
     </section>
 
     <section>
-      <p class="label">Road v0.7 archived · CP8 final checkpoint 2f03aee</p>
+      <p class="label">Road v0.7 accepted current presentation · CP8 checkpoint 2f03aee</p>
       <div class="target-shell" role="img" aria-label="Road v0.7 紧凑顶栏与内容优先工作面">
         <div class="shellbar"><strong>keikeu</strong><span>编辑 Paper</span><span>新 Paper</span><span>Library</span><span></span><span>Vault</span></div>
-        <div class="shell-work"><strong>连续编辑流</strong><p>Paper context → 单行页签滚轮 → 正文 → 动作仍按纵向连续。所有页按钮保留在局部横滚、scroll-snap 轨道；竖版正文在固定可用高度内滚动，底部动作成为 safe-area-aware Anchor。竖版 Library 在 Shell 下方只显示“范围 / 排序”和“新文件夹”双 Anchor，详情与创建继续使用 native top-layer Popover；横版保持既有 sidebar 与内联控件。冷编辑台、Opus 标题、单行 comma/CSV UI 与 meta <code>#5c6a71</code> 不变。</p></div>
+        <div class="shell-work"><strong>连续编辑流</strong><p>Paper context → 单行页签滚轮 → 正文 → 动作仍按纵向连续。所有页按钮保留在局部横滚、scroll-snap 轨道；竖版正文在固定可用高度内滚动，底部动作成为 safe-area-aware Anchor。竖版 Library 在 Shell 下方只显示“范围 / 排序”和“新文件夹”双 Anchor，详情与创建继续使用 native top-layer Popover；横版保持既有 sidebar 与内联控件。production 主 token 为 canvas <code>#e4e8ea</code>、paper <code>#f2f4f4</code>、rule <code>#aeb9be</code>、accent <code>#173a5b</code>、meta <code>#5c6a71</code>；Opus 只用于 Paper/页名称，品牌与控件使用系统 sans。</p></div>
       </div>
     </section>
 

@@ -7,6 +7,9 @@
 > 记录范围：Road v0.7 complete and archived · Paper v4；CP8 不改变数据合同
 >
 > 设计原则：本地优先、作者控制、直接编辑 Paper、无 AI 代写
+>
+> 文档同步：2026-08-26 按 Road v0.7 production source 复核。当前 close-guard 实现偏差
+> 记录在 [`PROJECT`](../../PROJECT.md)，不改写本文的已接受产品合同。
 
 ---
 
@@ -313,7 +316,7 @@ Markdown（权威资产） + Index（可重建缓存） + Vault（用户目录�
 职责保持简单：
 
 - Vue 3 管界面、草稿、活动页和离开保护；
-- Tauri/Rust 管进程、请求边界和“结果可能已经落盘”的传输语义；
+- Tauri/Rust 管进程、原生选择/确认、请求边界和“结果可能已经落盘”的传输语义；
 - Python 管校验、整体保存、迁移、Library 和文件安全；
 - GUI 不直接写 Markdown，Core 不依赖 GUI 或 transport。
 
@@ -327,6 +330,10 @@ Markdown（权威资产） + Index（可重建缓存） + Vault（用户目录�
 | `index_degraded` | Markdown 已保存，但索引可能过期 | 以保存成功的 Paper 建立基线，单独重建 Index |
 
 `commit_unknown` 不是普通重试错误。重新发送同一次修改可能覆盖已经成功的保存，因此 App 必须在根状态保留提交草稿，只做只读对账。
+
+2026-08-26 代码复核确认 pending intent 已在 App root，但 Tauri 正常关闭 guard 仍挂在
+`PaperView`，blocked screen 与 Library/Vault durable intent 没有等价 root guard。它是
+待修复实现偏差，不是降低本节保护合同的理由；修复归属和聚焦重证必须先于 Road v0.8 CP0。
 
 ---
 
@@ -343,7 +350,7 @@ Markdown（权威资产） + Index（可重建缓存） + Vault（用户目录�
 
 Python sidecar 是桌面子进程；Tauri 能面向移动端，并不意味着当前 runtime 可以自动搬到手机上。
 
-Developer ID 签名、公证、staple、DMG 和人工分发延后至 Road v0.8。Road v0.6 不执行打包发布，也不恢复已经停用的公证凭据。
+Developer ID 签名、公证、staple、DMG 和人工分发延后至 Road v0.8。预启动计划草案已记录，但 CP0 尚未批准；Road v0.6/v0.7 均未执行打包发布，也未恢复已经停用的公证凭据。
 
 ---
 

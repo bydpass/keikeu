@@ -26,6 +26,10 @@ Road v0.8 把已接受的 Apple Silicon 桌面应用交付为一个可验证、�
 
 - 本草案提交只供批准；CP0 开始后才成为实施计划。
 - CP0 最早于 2026-08-28 创建，并从开发者明确接受的本计划提交开始。
+- 2026-08-26 文档/源码复核发现 App-root pending durable intent 的窗口关闭保护仍由
+  `PaperView` 注册；runtime blocked 卸载该组件后，以及 Library/Vault durable intent
+  存在时，没有等价的 App-root guard。该实现偏差不改写已接受合同；开发者必须先决定
+  由独立 Road 前修复还是修改本计划纳入窄修复，并以聚焦测试重证，之后才能批准 CP0 seed。
 - 每个 CP 只从前一个已通过 checkpoint commit 建立一条 focused branch。
 - 本 Road 不使用 advance YOLO。每个 checkpoint、Keychain 修改、Apple 上传、外部传输、
   tag、push 与 release 都保留独立授权。

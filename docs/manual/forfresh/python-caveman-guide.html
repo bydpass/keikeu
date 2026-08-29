@@ -31,7 +31,7 @@
         <p class="subtitle">把对象、函数、Markdown、JSONL 与错误翻成白话。目标不是背语法，而是能沿一条真实数据流找到该改的那一处。</p>
         <p class="meta">
           <span>keikeu contributors</span>
-          <time datetime="2026-08-11">2026-08-11</time>
+          <time datetime="2026-08-26">2026-08-26 · Road v0.7 同步</time>
           <span>适用：Python ≥3.11,&lt;3.14</span>
           <a href="python-caveman-guide.pdf">下载 PDF</a>
         </p>
@@ -89,7 +89,7 @@
           <table>
             <thead><tr><th>位置</th><th>白话职责</th><th>不该做什么</th></tr></thead>
             <tbody>
-              <tr><td><a href="../../../src/keikeu_core/models.py"><code>models.py</code></a></td><td>Paper/Card 的数据形状与值级验证</td><td>不碰 GUI、JSONL 或系统对话框</td></tr>
+              <tr><td><a href="../../../src/keikeu_core/models.py"><code>models.py</code></a></td><td>PaperV4/CardPageV4 的数据形状与值级验证</td><td>不碰 GUI、JSONL 或系统对话框</td></tr>
               <tr><td><a href="../../../src/keikeu_core/markdown_io.py"><code>markdown_io.py</code></a></td><td>Markdown bytes、解析、渲染、CAS 与原子替换</td><td>不决定页面怎么提示用户</td></tr>
               <tr><td><a href="../../../src/keikeu_core/vault.py"><code>vault.py</code></a></td><td>Vault 布局、路径包含性与安全文件操作</td><td>不信任界面传来的路径</td></tr>
               <tr><td><a href="../../../src/keikeu_core/indexer.py"><code>indexer.py</code></a></td><td>从 Markdown 重建可丢弃的 JSON Index</td><td>不让 Index 反过来覆盖 Markdown</td></tr>
@@ -120,9 +120,9 @@
           <table>
             <thead><tr><th>句型</th><th>原始人翻译</th></tr></thead>
             <tbody>
-              <tr><td><code>paper_code: str</code></td><td>这个名字应当装字符串；这是说明和检查工具，不会自动清洗值。</td></tr>
-              <tr><td><code>title: str | None</code></td><td>这里可以有字符串，也可以明确没有。</td></tr>
-              <tr><td><code>cards: list[CardPageV4]</code></td><td>这是按顺序放 CardPageV4 的列表。</td></tr>
+              <tr><td><code>code: str</code></td><td>Paper 代号应当是字符串；类型标注不会自动清洗值。</td></tr>
+              <tr><td><code>display_name: str | None</code></td><td>整份 Paper 的名称可以是字符串，也可以明确没有。</td></tr>
+              <tr><td><code>pages: list[CardPageV4]</code></td><td>这是按顺序放 CardPageV4 的列表，也是当前持久字段名。</td></tr>
               <tr><td><code>field(default_factory=list)</code></td><td>每个新对象拿自己的空列表，不能共享同一只篮子。</td></tr>
               <tr><td><code>-&gt; PaperV4</code></td><td>函数承诺正常返回一个 PaperV4。</td></tr>
               <tr><td><code>raise ValueError(...)</code></td><td>输入不合法，立刻停下并给调用者一个可解释的失败。</td></tr>
@@ -133,12 +133,20 @@
         </div>
 
         <h3>读函数，先只读签名</h3>
-        <pre><code>def validate_paper_code(value: str) -&gt; str:
-    normalized = value.strip()
-    if not normalized:
-        raise ValueError("paper code is required")
-    return normalized</code></pre>
-        <p>先看输入和输出：拿一个字符串，正常时还一个字符串。再看三步：去掉两端空白；若为空就拒绝；否则返回。真实代码的规则可能更严格，但阅读方法不变：数据进来，守卫检查，结果出去。</p>
+        <pre><code>def validate_paper_code(code: str) -&gt; str:
+    if not isinstance(code, str):
+        raise ValueError("code must use the K-YYYYMMDD-NNN format")
+    match = _PAPER_CODE_RE.fullmatch(code)
+    if match is None:
+        raise ValueError("code must use the K-YYYYMMDD-NNN format")
+    try:
+        datetime.strptime(match.group(1), "%Y%m%d")
+    except ValueError:
+        raise ValueError("code must contain a valid calendar date") from None
+    if not 1 &lt;= int(match.group(2)) &lt;= 999:
+        raise ValueError("code sequence must be between 001 and 999")
+    return code</code></pre>
+        <p>先看输入和输出：拿一个字符串，正常时原样还回 canonical code。真实函数不做 <code>strip()</code>，而是要求精确的 <code>K-YYYYMMDD-NNN</code>、合法日历日期和 <code>001–999</code> 序号；调用者不能靠它静默修剪输入。</p>
 
         <h3><code>try/except</code> 不是橡皮擦</h3>
         <p>只在这一层能做有用事情时捕获异常：补充路径上下文、把底层异常映射成稳定协议错误，或执行必要清理。<code>except Exception: pass</code> 会把损坏或数据丢失信号吞掉；宽捕获若没有明确恢复动作，通常是错误。</p>

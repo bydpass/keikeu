@@ -8,7 +8,9 @@
 
 Road v0.6 is complete and archived: production uses Paper v4, Index v4, and protocol v2; the Paper itself is the ordered editable card-page artifact. The obsolete normal-runtime chain is gone, the unknown-result and manual-repair gate passed, and the first-author gate passed with no unresolved P0/P1.
 
-Road v0.7 passed CP0–CP8. On 2026-08-26 the developer completed the physical-keyboard macOS native-candidate-window check, passed CP8 Gate D, and explicitly declared Road v0.7 product and implementation work complete. Paper v4, Index v4, and protocol v2 remain unchanged. Final checkpoint `2f03aee` is bound by the independent [Road snapshot](docs/archive/snapshots/road-v0-7.html). No real Vault operation, push, tag, signing, packaging, or release was performed. Road v0.8 may start no earlier than 2026-08-28, with packaging plus Alpha release as its direction.
+Road v0.7 passed CP0–CP8. On 2026-08-26 the developer completed the physical-keyboard macOS native-candidate-window check, passed CP8 Gate D, and explicitly declared Road v0.7 product and implementation work complete. Paper v4, Index v4, and protocol v2 remain unchanged. Final checkpoint `2f03aee` is bound by the independent [Road snapshot](docs/archive/snapshots/road-v0-7.html). No real Vault operation, push, tag, signing, packaging, or release was performed. A Road v0.8 [pre-start plan draft](PLAN_road_v0_8.md) is recorded; CP0 remains no earlier than 2026-08-28 and does not yet have seed approval.
+
+The documentation and source were rechecked against the completed Road v0.7 baseline on 2026-08-26. That audit found that normal-close protection for the App-root pending intent is still scoped to `PaperView`; this is an implementation deviation, not a change to the accepted design contract, and [PROJECT](docs/PROJECT.md) records it as a blocker before Road v0.8 CP0.
 
 Phase 7.5 is an independent lightweight iOS build for rapid testing. Its responsive UI, app-sandbox Vault, and on-device fixes are complete on a separate branch; it is not a merge gate in the macOS Road. Road v0.3 engineering, macOS candidate smoke, and CP6 real-author acceptance are complete: retrieval was faster and clear, the external-editor handoff was clear, and no unresolved P0/P1 was reported. Its design and acceptance records are now [read-only history](docs/archive/road-v0-3/README.md); no v0.3 tag was created. Road v0.4 Gate A, Gate B, product acceptance, and macOS 15.7+ compatibility have passed. The only desktop runtime is now Vue/Tauri with a local Python sidecar; Flet was retired in CP14. Road v0.5 is also complete and archived: Paper Desk, save baselines, departure protection, Flashcard/Library continuity, the whole-app Quiet Desk visual system, and fixed scrolling behavior are accepted. See [PROJECT](docs/PROJECT.md) for live coordinates.
 
@@ -19,7 +21,7 @@ existing inspiration → edit and save a card-page Paper → external prose edit
 ```
 
 - **Paper:** at least one ordered card page; the page title is always editable, content is author Markdown, and type is Summary/Snapshot/Whisper or empty; save commits the whole Paper once.
-- **Library:** searches the whole Paper and sorts by all/unfiled/one-level-folder scope, with drag/menu/batch moves, branching, Trash, and restore.
+- **Library:** searches the whole Paper and sorts by all/unfiled/one-level-folder scope, with single-Paper move, branching, Trash, and restore; drag, multi-select, and batch move are not implemented.
 - **Vault:** selects paths only under the current user's Home, validates before switching, and byte-verifies copied unsafe legacy Vaults; Apple App Sandbox is not enabled yet.
 - **External editor:** prose always remains outside keikeu.
 
@@ -102,8 +104,8 @@ layer owns Markdown I/O.
 | Current state and next gate | [PROJECT](docs/PROJECT.md) |
 | Rules a change must obey | [RULES](docs/RULES.md) |
 | Current architecture | [Architecture map](docs/architecture/architecture.html) |
-| Current Paper v4 visual specification | [Design map](docs/design/design.html) |
-| Current Paper v4 interaction specification | [Interaction map](docs/design/interaction.html) |
+| Current Road v0.7 interface visual specification | [Design map](docs/design/design.html) |
+| Current Road v0.7 interface interaction specification | [Interaction map](docs/design/interaction.html) |
 | How agents work | [AGENTS](AGENTS.md) |
 | Human-facing design, Git, and ethics guides | [Human manuals](docs/manual/README.md) |
 | Historical rationale and snapshots | [Archive](docs/archive/README.md) |
@@ -112,7 +114,7 @@ layer owns Markdown I/O.
 
 ```text
 v0.1        archived macOS Cache / Outline pre-alpha
-v0.2        macOS Paper / Flashcard Core; product acceptance complete, Road closeout pending
+v0.2        macOS Paper / Flashcard Core; product accepted, local annotated tag v0.2.0, archive separate
 Phase 7.5   independent lightweight iOS rapid-test build
 Phase 8.5   Road v0.3 preparation; precursor to the next Mac version
 Road v0.3   macOS Paper Library; CP6 product accepted, design and acceptance records archived
@@ -120,7 +122,7 @@ Road v0.4   Vue/Tauri frontend replacement complete; CP14 accepted
 Road v0.5   Quiet Desk UI and interaction closeout complete; CP7 accepted and archived
 Road v0.6   Paper v4 card-page reconstruction; CP7 accepted and archived
 Road v0.7   CP8 accepted and archived; final checkpoint 2f03aee
-Road v0.8   no earlier than 2026-08-28; packaging + Alpha release, not started
+Road v0.8   pre-start plan draft recorded; CP0 no earlier than 2026-08-28 and still awaiting seed approval
 Pre-Advance optional Markdown Outline; outside Road v0.7 and unscheduled, never blocks the core flow
 later       iOS/iPadOS (2026-08 direction), Android/HarmonyOS (2026 Q4), Windows (2027)
 ```

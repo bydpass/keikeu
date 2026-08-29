@@ -89,9 +89,9 @@ The exact Markdown v4 shape, frontmatter scalar codec, page markers, reversible 
 ## 7. Architecture boundaries
 
 - Vue owns visible state, draft/baseline, active page, and App-root pending intent; it never reads or writes author files.
-- Rust owns desktop lifecycle, one Python sidecar, the JSONL queue, native directory selection, and validated system actions; it never parses Markdown or implements product rules.
+- Rust owns desktop lifecycle, one Python sidecar, the JSONL queue, native directory selection/confirmation, and validated system actions; it never parses Markdown or implements product rules.
 - The transport-agnostic Python service owns orchestration and strict DTOs. `keikeu_core` owns domain validation and file rules without GUI or transport imports.
-- `markdown_io.py` exclusively owns Paper Markdown. `vault.py` owns containment and destructive filesystem rules. Index data is local and rebuildable.
+- `markdown_io.py` exclusively owns Paper Markdown. `vault.py` owns Home containment, supported Paper paths, active/Trash enumeration, code allocation, and destructive moves on those paths; migration modules separately own gated backup/staging/replacement. Index data is local and rebuildable.
 - No localhost, HTTP, WebSocket, account, telemetry, upload, hidden service, or automatic mutation replay is authorized.
 
 ## 8. Explicit exclusions and platforms
@@ -116,8 +116,10 @@ Python, Rust, or author-control contracts.
   blocking surfaces.
 - A compact App Shell expresses product identity, current location, New Paper, and current
   Vault without adding a permanent side rail, Router, or store.
-- Paper prioritizes author content. Library keeps scope–list–detail/actions at `1220×780` and
-  places detail below the list at `920×680`.
+- Paper prioritizes author content. The CP6 baseline used scope–list–detail/actions at `1220×780`
+  and placed detail below the list at `920×680`; the accepted CP7/CP8 presentation in §§10–11
+  instead keeps scope/sidebar plus the main result/action stream and moves Paper preview into a
+  top-layer Popover.
 - Leaving a dirty Paper for Library, New Paper, or Vault reuses the one departure guard owned by
   PaperView; App coordinates the navigation intent without duplicating confirmation rules.
 - Both target window sizes keep content, save, dangerous actions, and recovery paths visible or

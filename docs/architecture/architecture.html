@@ -35,9 +35,9 @@
 <body>
   <main>
     <header>
-      <p class="eyebrow">Road v0.7 complete and archived · current accepted baseline</p>
+      <p class="eyebrow">Road v0.7 complete and archived · current accepted baseline · synced 2026-08-26</p>
       <h1>运行链不变；CP8 只重排 Vue 响应式呈现</h1>
-      <p class="status">Current：CP8 Gate A–D 已通过，开发者于 2026-08-26 判定 Road v0.7 产品与实施正式完工。已接受呈现只增加单行页签滚轮、竖版 Paper/Library Anchor 与 native Popover；Paper v4 / Index v4 / protocol v2、Core、bridge、DTO、Rust、Tauri 几何和唯一运行链不变。最终 checkpoint 为 <code>2f03aee</code>；Road snapshot 已独立归档。未 tag、push、签名、打包或发布。</p>
+      <p class="status">Current：CP8 Gate A–D 已通过，开发者于 2026-08-26 判定 Road v0.7 产品与实施正式完工。本文于同日按当前模块与运行链复核。已接受呈现只增加单行页签滚轮、竖版 Paper/Library Anchor 与 native Popover；Paper v4 / Index v4 / protocol v2 和唯一运行链不变。当前源码仍有一项已记录偏差：pending intent 在 App root，而 Tauri close guard 仍由 PaperView 注册；见 PROJECT。</p>
       <nav>
         <a href="../PROJECT.md">当前坐标</a>
         <a href="../SPEC.md">产品边界</a>
@@ -52,19 +52,19 @@
     </header>
 
     <section>
-      <p class="label">Current runtime · Road v0.6 completed · protocol v2</p>
+      <p class="label">Current runtime · Road v0.7 accepted baseline · protocol v2</p>
       <div class="flow current">
-        <div class="node"><strong>Vue 3</strong><span>pages[] draft/baseline + App-root pending intent</span></div>
-        <div class="node"><strong>Tauri / Rust</strong><span>窗口、sidecar、单队列、窄系统动作</span></div>
-        <div class="node"><strong>JSONL v2</strong><span>strict DTO、locator、tagged repair</span></div>
-        <div class="node"><strong>Python service</strong><span>整体 CAS、对账、迁移与 Library 编排</span></div>
-        <div class="node"><strong>Python Core</strong><span>Paper v4、strict codec、Index v4</span></div>
+        <div class="node"><strong>Vue 3</strong><span>App.vue + Paper/Library/Vault；pages[] draft/baseline 与 App-root pending intent</span></div>
+        <div class="node"><strong>Tauri / Rust</strong><span>lib.rs + commands.rs + bridge.rs；窗口、native confirm/picker、sidecar 与单队列</span></div>
+        <div class="node"><strong>JSONL v2</strong><span>protocol.py + dto.py + sidecar.py；27 个 Python methods、strict DTO 与 session</span></div>
+        <div class="node"><strong>Python service</strong><span>service.py + local_state.py；整体 CAS、对账、迁移与 Library 编排</span></div>
+        <div class="node"><strong>Python Core</strong><span>models/markdown/indexer/vault/migration；Paper v4、Index v4 与文件安全</span></div>
         <div class="node"><strong>Author assets</strong><span>card-page Markdown + disposable Index</span></div>
       </div>
     </section>
 
     <section>
-      <p class="label">Current evidence · completed CP6–CP7 safety and author Gates</p>
+      <p class="label">Current evidence · Road v0.7 CP5–CP8 completed Gates</p>
       <div class="flow current">
         <div class="node"><strong>Vue 3</strong><span>unknown-result 与两类 repair UI 已验证</span></div>
         <div class="node"><strong>Tauri / Rust</strong><span>response-loss ownership 与原生确认已验证</span></div>
@@ -93,7 +93,7 @@
           <li>Vue 不读写作者文件，不解析 locator 或猜测路径。</li>
           <li>Rust 不解析 Markdown，不实现 Paper、搜索、Trash 或迁移规则。</li>
           <li>Python service 是唯一编排/mutation 入口；Core 不依赖 GUI/transport。</li>
-          <li><code>markdown_io.py</code> 独占 Markdown；<code>vault.py</code> 独占路径与 destructive rules。</li>
+          <li><code>markdown_io.py</code> 独占 Markdown；<code>vault.py</code> 独占 Home containment、受支持 Paper 路径和这些路径上的 destructive moves；迁移模块在独立 Gate 下拥有 backup/staging/replacement。</li>
           <li>无 localhost、网络服务、遥测或 mutation 自动 replay。</li>
         </ul>
       </div>

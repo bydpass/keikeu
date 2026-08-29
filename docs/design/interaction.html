@@ -34,14 +34,14 @@
 <body>
   <main>
     <header>
-      <p class="eyebrow">Road v0.7 complete and archived · current accepted baseline</p>
+      <p class="eyebrow">Road v0.7 complete and archived · current accepted baseline · synced 2026-08-26</p>
       <h1>写一页，分一页，整体保存</h1>
-      <p class="status">Current：CP8 Gate A–D 已通过，开发者于 2026-08-26 判定 Road v0.7 产品与实施正式完工。已接受呈现保持全部保存/离开/恢复合同，只加入页签局部滚轮与竖版 Anchor/Popover。最终 checkpoint 为 <code>2f03aee</code>；Road snapshot 已独立归档。未 tag、push、签名、打包或发布。</p>
+      <p class="status">Current：CP8 Gate A–D 已通过，开发者于 2026-08-26 判定 Road v0.7 产品与实施正式完工。本文于同日按当前 Vue DOM 与状态流复核。已接受合同不变；源码中 App-root pending intent 的 Tauri 正常关闭保护仍错误地由 PaperView 独占，当前偏差与 CP0 前置阻塞见 PROJECT。</p>
       <nav>
         <a href="../PROJECT.md">当前坐标</a>
         <a href="../SPEC.md">产品边界</a>
-        <a href="road-v0-6-paper-v4-design.md">完整设计</a>
-        <a href="road-v0-7-app-shell-design.md">v0.7 目标设计</a>
+        <a href="road-v0-6-paper-v4-design.md">Paper v4 grammar / protocol 基线</a>
+        <a href="road-v0-7-app-shell-design.md">v0.7 已接受详细设计</a>
         <a href="design.html">视觉 map</a>
         <a href="../architecture/architecture.html">架构 map</a>
       </nav>
@@ -49,7 +49,7 @@
     </header>
 
     <section>
-      <p class="label">Current author journey · Road v0.6 accepted</p>
+      <p class="label">Current author journey · Road v0.7 accepted on Paper v4</p>
       <div class="journey">
         <div class="step"><strong>进入 Paper</strong><span>第一页就是可编辑的大卡页</span></div>
         <div class="step"><strong>命名与标记</strong><span>Paper 名、页标题始终可编辑；类型可空</span></div>
@@ -90,7 +90,7 @@
 
     <section class="two">
       <div>
-        <h2>Current 已接受、v0.7 继续冻结的状态</h2>
+        <h2>Road v0.7 当前已接受的状态</h2>
         <ul>
           <li><code>clean / dirty / saving</code> 编辑态。</li>
           <li><code>stale / repair_required / commit_unknown</code> 阻塞态。</li>
@@ -99,9 +99,9 @@
         </ul>
       </div>
       <div>
-        <h2>Current 已接受、v0.7 继续冻结的键盘与窗口合同</h2>
+        <h2>Road v0.7 当前已接受的键盘与窗口合同</h2>
         <ul>
-          <li>Tab 顺序跟随 Paper 名、Tags、页码、页标题、类型、正文和三个底部动作。</li>
+          <li>Tab 顺序跟随 Paper 名 → 详情 → Tags → 页签 → 页标题 → 进一步；展开后进入类型，再到正文与三个底部动作。</li>
           <li>页签、确认框与原生 select 支持 Enter/Space/方向键；活动页自动居中。Paper 详情、Library 预览与两类竖版 Anchor Popover 支持自然 Tab 顺序、<code>Escape</code>、light-dismiss 与焦点返回。</li>
           <li><code>375×812</code>、<code>720×900</code>、<code>720×680</code>、<code>920×680</code> 与 <code>1220×780</code> 不横向溢出或裁字。</li>
           <li>无页面拖放；所有流程不依赖动画、鼠标或隐藏手势。</li>

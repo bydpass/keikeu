@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>keikeu 当前逻辑 — Road v0.7 archived baseline</title>
+  <title>keikeu 当前逻辑 — Road v0.7 accepted baseline</title>
   <style>
     :root {
       color-scheme: light dark;
@@ -55,7 +55,7 @@
 <body>
   <main>
     <header>
-      <p class="eyebrow">Current accepted runtime and composition</p>
+      <p class="eyebrow">Current accepted runtime and composition · synced 2026-08-26</p>
       <h1>Paper 是作者直接编辑、整体保存的卡页资产。</h1>
       <div class="status-row">
         <span class="status">RUNTIME · Road v0.6 Paper v4 合同继续有效</span>
@@ -133,7 +133,7 @@
       <h2>5. 当前运行分层</h2>
       <div class="layers">
         <div class="layer"><strong>Vue</strong><span>可见状态、Paper draft/baseline、活动页、导航与 pending intent；不读写 Markdown。</span></div>
-        <div class="layer"><strong>Tauri / Rust</strong><span>窗口、唯一 sidecar、串行 JSONL 队列、原生目录选择与已验证的系统动作。</span></div>
+        <div class="layer"><strong>Tauri / Rust</strong><span>窗口、唯一 sidecar、串行 JSONL 队列、原生目录选择/确认与已验证的系统动作。</span></div>
         <div class="layer"><strong>JSONL protocol v2</strong><span>strict DTO、请求分类、locator 与一次 mutation；不是 localhost 或网络 API。</span></div>
         <div class="layer"><strong>Python service / Core</strong><span>业务编排、校验、Paper v4 codec、Vault 文件安全、Index v4、迁移与恢复。</span></div>
         <div class="layer"><strong>本地磁盘</strong><span>Markdown 是作者资产；Index 和设备状态是辅助数据。无账号、遥测、隐藏上传或后台同步。</span></div>
@@ -147,7 +147,8 @@
         <li>当前已接受 composition 中，顶栏保持单行 <code>56px</code>：“编辑 Paper → 新 Paper → Library … Vault”；Paper 与 Library 仍是两个同级日常位置。</li>
         <li>Vault 现作为环境入口；migration、repair 和未知结果仍可接管阻塞工作面。</li>
         <li>CP8 已在 <code>375×812</code>、<code>720×900</code>、<code>720×680</code>、<code>920×680</code> 与 <code>1220×780</code> 复核 all-page 滚轮、正文内滚、Anchor 清空区与 document overflow，结果为 PASS。</li>
-        <li>Road v0.8 最早于 2026-08-28 开始，方向为打包 + Alpha 发布；当前尚未启动。</li>
+        <li>Road v0.8 预启动计划草案已记录；CP0 最早仍为 2026-08-28，且尚未获 seed 批准。</li>
+        <li>2026-08-26 同步发现：pending durable intent 虽在 App root，但 Tauri close guard 仍由 PaperView 注册；runtime blocked 卸载它后，以及 Library/Vault intent 存在时，没有等价 root guard。已接受合同不变，修复归属与重证是 CP0 前置阻塞。</li>
         <li>本页本身不证明任何 Gate；CP5–CP8 的工程与开发者证据见 acceptance reports，Git 边界以当前计划和 PROJECT 为准。</li>
       </ul>
     </section>

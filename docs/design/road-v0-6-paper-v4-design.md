@@ -5,6 +5,11 @@
 >
 > production 已使用 Paper v4、Index v4 与 protocol v2；不可达旧实现已删除，CP6 安全
 > Gate 与 CP7 一号作者 Gate 已通过。未发生真实旧 schema 迁移，也不声称发布已完成。
+>
+> 当前权威边界与同步日期：本文的 Paper v4 grammar、Index v4、protocol v2、迁移和安全
+> 合同于 2026-08-26 按 production source 复核；Road v0.6 的 UI、窗口几何与多行 Tags
+> 呈现是历史记录，当前 presentation 由 [Road v0.7 设计](road-v0-7-app-shell-design.md)
+> §17–§18 覆盖。
 
 ## 1. 核心判断
 
@@ -225,7 +230,7 @@ flowchart TD
 
 ### 6.2 Tauri / Rust
 
-- 继续只拥有 sidecar 生命周期、单队列 JSONL、请求匹配和原生 picker/open/reveal；
+- 继续只拥有 sidecar 生命周期、单队列 JSONL、请求匹配和原生 picker/confirmation/open/reveal；
 - 因 breaking DTO 与方法集变化，握手常量从 protocol v1 升至 v2；
 - 同步更新只读/mutation allowlist，删除旧只读卡片协议入口后不得残留兼容分支；
 - Rust 不理解 CardPage、不拆页、不校验类型，也不写作者文件。
@@ -233,7 +238,7 @@ flowchart TD
 ### 6.3 Python
 
 - Application Service 是唯一产品编排层和文件 mutation 入口；
-- `keikeu_core` 拥有 `Paper`、`CardPage`、严格校验和纯转换；
+- `keikeu_core` 拥有 `PaperV4`、`CardPageV4`、严格校验和纯转换；
 - `markdown_io.py` 继续独占 Paper Markdown parse/render；
 - `indexer.py` 只生成可重建投影；
 - v2/v3→v4 使用新的独立迁移模块；既有 `migration_v01.py` 保持冻结。
@@ -439,10 +444,10 @@ v2/v3 Tag 若含 LF、CR、其他控制/分行字符，或其续行会形成多�
    `index_degraded`，开放 Paper 内容工作但明确限制 Library/搜索。
 8. 迁移报告只记录数量、相对位置、错误分类和备份状态，不记录作者正文。
 
-既有 v0.1→v3 的字段映射、安全事务与证据语义冻结，但不能承诺
-`migration_v01.py` 字节不改：它当前直接 import active v3 model/codec/index。CP1–CP2
-允许最小接线，把这些依赖指向冻结的 legacy-v3 model/codec/staging projection；不得
-顺手重写算法或改变旧迁移结果。
+既有 v0.1→v3 的字段映射、安全事务与证据语义冻结。设计批准时
+`migration_v01.py` 直接 import active v3 model/codec/index；CP1–CP2 已完成最小接线，
+当前只依赖冻结的 `legacy_v01` / `legacy_v3` model、codec 与 staging projection，算法和
+旧迁移结果不变。
 
 若启动时识别为 v0.1，先运行冻结的 v0.1→v3 阶段。`migration.run` 只返回本阶段结果；
 成功后同一路径保持为“已选择但未 ready”的迁移上下文，不进入 normal runtime。UI 随后
@@ -671,8 +676,10 @@ changes：
 
 ### 13.1 方法分类与未知结果所有权
 
-CP0 必须把每个 v2 方法恰好放入下列一类；Python dispatcher 与 Rust policy 从同一张
-显式表校验，不能依名称前缀猜测：
+当前 Python `METHOD_CLASSIFICATIONS` 把 27 个 v2 方法恰好放入下列一类，其中
+`system.hello` 与 `system.resolve_target` 是宿主内部方法。Rust `public_policy` 独立镜像
+其余 25 个公开方法，Vue 另显式列出 18 个 durable methods；三端必须保持一致，但没有
+共享生成表，也不能依名称前缀猜测：
 
 | 类别 | 方法 | 响应丢失后的规则 |
 | --- | --- | --- |
@@ -755,10 +762,9 @@ Library/Vault 方法保留名字，只替换已批准的 shape；除只读恢复
 `paper.reconcile_save` 外不增加同义或逐页方法。CP0 的 protocol contract 必须把同一
 组名字和 DTO 同时写入 Python 与 Rust policy，禁止两端各自猜测。
 
-protocol v2 只能在 Vue Paper、Library 与 App 导航调用方已经准备好后作为一次
-垂直切换激活。CP1–CP3 的 v4 Core、迁移/Index 和前端组件保持 additive 或
-development-only，production runtime 继续完整使用 v0.5 contract；不得提交一个
-新 sidecar 与旧 Vue 无法共同启动的中间 Checkpoint。
+历史切换约束（已完成）：protocol v2 只在 Vue Paper、Library 与 App 导航调用方准备好后
+由 CP4 一次性垂直激活；CP1–CP3 的 v4 Core、迁移/Index 和前端组件保持 additive 或
+development-only。当前 production 只运行 v2，不保留新 sidecar 与旧 Vue 的中间组合。
 
 ## 14. Checkpoint 顺序
 

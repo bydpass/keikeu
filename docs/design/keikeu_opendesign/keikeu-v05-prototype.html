@@ -44,7 +44,7 @@
     *, *::before, *::after { box-sizing: border-box; }
     html { -webkit-text-size-adjust: 100%; }
     body {
-      margin: 0; padding: 24px;
+      margin: 0; padding: 68px 24px 24px;
       background: var(--bg);
       font-family: var(--font-body);
       font-size: 14px;
@@ -54,6 +54,14 @@
       min-height: 100vh;
       -webkit-font-smoothing: antialiased;
     }
+    .history-banner {
+      position: fixed; z-index: 100; inset: 0 0 auto;
+      padding: 11px 18px; border-bottom: 1px solid var(--accent);
+      color: var(--fg); background: var(--surface-warm);
+      font: 700 13px/1.5 -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+      text-align: center;
+    }
+    .history-banner a { color: var(--accent); }
 
     /* ─── app window ────────────────────────────────────────────── */
     .app-window {
@@ -672,6 +680,8 @@
   </style>
 </head>
 <body>
+
+<aside class="history-banner" aria-label="历史原型边界">Road v0.5 历史原型，2026-08-26 已确认不是 production 实现；Flashcard 与固定 rail 仅为历史。当前基线见 <a href="../design.html">Design map</a> 与 <a href="../road-v0-7-app-shell-design.md">Road v0.7 已接受设计</a>。</aside>
 
 <div class="app-window" id="app">
 

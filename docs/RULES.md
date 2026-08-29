@@ -31,7 +31,7 @@ During a staged Road, SPEC and the HTML maps may describe the approved target wh
 - Prefer existing code, Python stdlib, platform features, then already-installed dependencies.
 - New runtime dependencies require a concrete MVP need, packaging impact, maintenance risk, and developer approval.
 - No localhost, HTTP, WebSocket, telemetry, updater, or other network behavior is authorized.
-- Rust is limited to Tauri lifecycle, sidecar ownership, JSONL request matching, native directory selection, and Python-validated open/reveal.
+- Rust is limited to Tauri lifecycle, sidecar ownership, JSONL request matching, native directory selection and confirmation, and Python-validated open/reveal.
 
 ## 3. Author text and privacy
 
@@ -53,7 +53,7 @@ During a staged Road, SPEC and the HTML maps may describe the approved target wh
 - Recovery never overwrites another asset or rewrites a historical Paper code. A conflict stays in Trash and is reported.
 - Migration, delete, restore, conflict, and provider-folder changes start on fixtures or copied Vaults.
 - Classify an unsafe configured Vault read-only before copying. Copy only ordinary directories and regular files into a new Home-contained destination without following symlinks; any symlink or unsupported/special entry aborts with source and config untouched. Verify the regular-file manifest and bytes.
-- Parse Papers and rebuild/validate the index only for a v2/v3 safe copy before config switch. For v0.1, run the existing read-only preflight/manifest validation on the safe copy, switch config atomically to it, then enter the existing migration gate there; cancellation or failure leaves that unmodified safe copy selected. Never parse v0.1 as v2/v3 or write the unsafe source.
+- Parse Papers and classify schema readiness only on a verified v2/v3/v4 safe copy before config switch. A v2/v3 copy enters the existing migration gate. For v4, strictly parse each Paper but isolate and report path-local invalid Papers without blocking an otherwise-ready Vault; after selection, use the existing rebuildable-Index `current/degraded` contract. For v0.1, run the existing read-only preflight/manifest validation on the safe copy, switch config atomically to it, then enter the existing migration gate there; cancellation or failure leaves that unmodified safe copy selected. Never parse v0.1 as v2/v3/v4 or write the unsafe source.
 - Preserve and report externally created duplicate codes; block mutations involving them rather than renaming either asset.
 - 单份 Paper 的活动区/Trash 操作只接受显式受验证路径，永久删除逐文件 `unlink`，并且只 `rmdir` 已验证为空的目录。
 - 经明确确认的顶层文件夹删除与恢复把精确命名的完整目录树在 `cache/` 与 `.trash/cache/` 之间原子移动；不解析、不重写、不跟随其中内容。目标存在完全同名或 NFC+casefold 等价名称时，整次操作在写入前拒绝，不做部分合并。

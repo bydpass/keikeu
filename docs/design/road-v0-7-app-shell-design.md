@@ -7,6 +7,9 @@
 > 权威边界：[`SPEC`](../SPEC.md) 定义 CP8 已接受产品边界；本文保留 CP0–CP6 历史，并拥有 CP7/CP8 详细设计与验收矩阵。`PROJECT`、源码与测试继续标明当前实现与 Road 收口边界；工程证据不等于开发者接受。
 >
 > 伴随评审物：[`Road v0.7 HTML 计划书`](road-v0-7-planbook.html)；它只展示本设计与实施计划，不新增第三份规范权威。
+>
+> 文档同步：2026-08-26 按 CP8 production source 复核。§§1–16 保留 CP0–CP6 历史，
+> 当前界面以 §17（CP7）与 §18（CP8）override 为准。
 
 ## 1. 核心判断
 
@@ -137,6 +140,10 @@ Shell
 
 ## 8. Library 工作面
 
+> 历史边界：本节记录 CP0–CP6 的范围—列表—详情基线。当前 production 已由 §17.3
+> 覆盖为 scope/sidebar + 主结果/操作流，Paper 预览进入 top-layer Popover；§18.3 再定义
+> 竖版双 Anchor。以下结构不再是 CP8 截图基准。
+
 宽窗口保留已经工作的“范围—列表—详情/操作”结构：
 
 ```text
@@ -233,6 +240,9 @@ App.vue
 ## 14. 接受场景
 
 ### 14.1 Road v0.7 验收矩阵
+
+下表保留 CP0–CP6 的接受与证据口径；当前 CP8 presentation 还必须叠加 §17.5 与 §18.5
+矩阵。尤其 Library 的 inline/纵向详情已由 §17.3 top-layer Popover 覆盖。
 
 | 区域 | 必须成立 | 明确不得发生 | 最低证据 |
 | --- | --- | --- | --- |

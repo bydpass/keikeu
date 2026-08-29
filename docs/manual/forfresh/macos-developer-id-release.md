@@ -1,6 +1,7 @@
 # macOS Developer ID 人工发布手册
 
-> **暂停状态（2026-08-01）：** keikeu 打包计划已延期至 Road v0.8。
+> **预启动状态（2026-08-26）：** Road v0.8 [计划草案](../../../PLAN_road_v0_8.md)已记录，
+> 但 CP0 尚未获 seed 批准，打包、签名与受邀 Alpha 均未启动。
 > app-specific password 已停用，现有 Keychain 公证 profile 必须视为不可用。
 > 本文当前只用于教学，不授权创建凭据、构建发布候选或向 Apple 上传软件。
 
@@ -8,8 +9,8 @@
 [macOS 开发者入门手册](macos-developer-beginner-guide.html)。
 
 本文不是产品或工程权威。当前边界回到 [SPEC](../../SPEC.md)、
-[RULES](../../RULES.md) 和 [PROJECT](../../PROJECT.md)；Road v0.8 计划获批后，
-再由新计划决定精确发布契约和 Gate。
+[RULES](../../RULES.md)、[PROJECT](../../PROJECT.md) 与 Road v0.8 [计划草案](../../../PLAN_road_v0_8.md)；
+草案中的建议值只有在 CP0 seed 获明确批准后才成为实施合同和 Gate。
 
 ## 1. 当前状态
 
