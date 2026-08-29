@@ -10,6 +10,19 @@ manual/
 └─ prospect/                  产品与价值
 ```
 
+## 开发者 TUI
+
+完成依赖安装后，在仓库根目录运行 `./dev`。默认文档分组是 `Manual`，也可查看
+`Active docs`；预览为纯文本，`/` 搜索标题、路径与可见正文，`Enter` / `o` 用系统应用
+打开，`p` 打开同名 PDF。
+
+进程键位：`a` 使用已有 sidecar 启动；`b` 重建成功后启动，失败则停留在日志页；
+`s` 确认后停止；`K` 二次确认后强制终止。`q` 在进程运行时会先确认并等待进程组退出。
+TUI 只管理自己启动的任务，日志仅驻留内存。
+
+这里“默认展示 Manual”只定义人类界面：`docs/manual/` 仍是非权威、按需读取的说明，
+不进入 Agent 冷启动。TUI 状态与日志也不是产品验收证据。
+
 ## 系统理解
 
 [keikeu-current-logic.html](keikeu-current-logic.html) 与两个分类文件夹并列，简明说明已完成并归档的 Road v0.7、已接受的 CP8 响应式导航/Anchor composition、Road v0.6 延续的 Paper v4 业务链路、数据权威、保存防护与 Vue/Tauri/JSONL v2/Python 分层；最终 checkpoint 为 `2f03aee`。2026-08-26 同步还记录了 App-root pending intent 与 PaperView-scoped close guard 的实现偏差。最终核对 [PROJECT](../PROJECT.md)、[SPEC](../SPEC.md)、[RULES](../RULES.md) 与 [architecture](../architecture/architecture.html)。

@@ -2,7 +2,7 @@
 
 > Authority: current coordinates, module entry points, documentation index, and next gate. Product behavior belongs in [SPEC](SPEC.md); rules belong in [RULES](RULES.md).
 
-Updated: 2026-08-26
+Updated: 2026-08-29
 
 ## Current coordinates
 
@@ -162,8 +162,7 @@ The active [architecture page](architecture/architecture.html) describes the sin
 ## Documentation map
 
 ```text
-README
-  └─ PROJECT ── current coordinates and the next gate
+README ── PROJECT ── current coordinates and the next gate
        ├─ AUTHORITY ── product / rules / agent procedure
        ├─ VIEWS ────── design / interaction / architecture
        ├─ EVIDENCE ─── tests / acceptance / generated observations
@@ -179,6 +178,7 @@ README
 ## Commands
 
 ```bash
+./dev  # preferred local developer entry; added 2026-08-29
 .venv/bin/python -m pytest
 .venv/bin/python -m compileall -q src
 .venv/bin/python scripts/build_sidecar.py

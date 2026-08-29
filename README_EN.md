@@ -68,14 +68,20 @@ source .venv/bin/activate
 python -m pip install -e ".[dev]"
 python -m pip install -r requirements-build.lock
 npm --prefix frontend ci
+./dev
 .venv/bin/python scripts/build_sidecar.py
 npm --prefix frontend run tauri:dev
 ```
+
+Use `./dev` for daily work: press `a` to reuse the sidecar or `b` to rebuild
+before launch. It also shows owned-process logs and local docs; the final two
+commands remain available for direct troubleshooting.
 
 ## Repository map
 
 ```text
 README.md                 public entry and real commands
+dev                       developer TUI for launch, process logs, and local docs
 AGENTS.md                 agent operating discipline and read order
 docs/PROJECT.md           current coordinates, module entry points, next gate
 docs/SPEC.md              accepted CP8 product boundary

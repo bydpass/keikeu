@@ -34,6 +34,14 @@ Run this gate immediately after the skill is selected and before the first repos
 
 6. For bugs, use the caller trace to patch the shared root cause. For other tasks, choose the smallest patch that satisfies the declared scope.
 
+## Developer TUI context hook
+
+Apply this narrow route only when the task touches `dev`, its launch workflow, or `docs/manual/`.
+
+- For TUI or launch work, read `dev`, `tests/test_dev_tui.py`, and the actual owner of each affected wrapped command (currently `scripts/build_sidecar.py` and `frontend/package.json`); follow further callers only when the behavior reaches them.
+- For manual work, read `docs/manual/README.md` first, then only the exact manual files in scope. Human access to the complete manual tree does not make `docs/manual/` default agent context or authority.
+- Never select TUI logs, build outputs, binaries, or Vault data for a context pack or cite them as acceptance evidence.
+
 ## Implement
 
 - Confirm the behavior is required by the declared scope. Reuse existing code, then the standard library, platform features, and installed dependencies; write only the minimum new code.

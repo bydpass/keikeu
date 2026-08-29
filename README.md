@@ -68,14 +68,19 @@ source .venv/bin/activate
 python -m pip install -e ".[dev]"
 python -m pip install -r requirements-build.lock
 npm --prefix frontend ci
+./dev
 .venv/bin/python scripts/build_sidecar.py
 npm --prefix frontend run tauri:dev
 ```
+
+日常开发首选 `./dev`：按 `a` 使用现有 sidecar，按 `b` 重建后启动；它也显示所管理
+进程的日志并浏览本地文档。后两条底层命令保留用于直接排障。
 
 ## 仓库地图
 
 ```text
 README.md                 外部入口与运行命令
+dev                       开发者 TUI：启动、进程日志与本地文档
 AGENTS.md                 Agent 操作纪律与读图顺序
 docs/PROJECT.md           当前坐标、模块入口、下一闸门
 docs/SPEC.md              accepted CP8 产品边界

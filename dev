@@ -1,0 +1,799 @@
+#!/usr/bin/env python3
+"""Small macOS developer cockpit for launching keikeu and reading its docs."""
+
+from __future__ import annotations
+
+import curses
+from collections import deque
+from dataclasses import dataclass
+from html.parser import HTMLParser
+import os
+from pathlib import Path
+import queue
+import re
+import shutil
+import signal
+import subprocess
+import sys
+import threading
+import unicodedata
+from collections.abc import Callable, Iterable, Sequence
+from typing import TextIO
+
+
+ROOT = Path(__file__).resolve().parent
+VENV_PYTHON = ROOT / ".venv" / "bin" / "python"
+SIDECAR = ROOT / "frontend" / "src-tauri" / "binaries" / "keikeu-sidecar-aarch64-apple-darwin"
+APP_COMMAND = ("npm", "--prefix", "frontend", "run", "tauri:dev")
+BUILD_COMMAND = (str(VENV_PYTHON), "scripts/build_sidecar.py")
+OPEN_COMMAND = "/usr/bin/open"
+ALLOWED_DOC_SUFFIXES = {".md", ".html", ".pdf"}
+COLD_DOC_DIRS = {"acceptance", "archive", "generated"}
+LOG_LIMIT = 1000
+MIN_ROWS = 24
+MIN_COLS = 80
+ANSI_ESCAPE = re.compile(r"\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07]*(?:\x07|\x1b\\))")
+
+
+@dataclass(frozen=True)
+class Document:
+    path: Path
+    relative_path: str
+    title: str
+    body: str
+    group: str
+    pdf_path: Path | None = None
+
+
+class VisibleHtmlParser(HTMLParser):
+    BLOCK_TAGS = {
+        "article",
+        "aside",
+        "blockquote",
+        "br",
+        "dd",
+        "div",
+        "dl",
+        "dt",
+        "footer",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "header",
+        "li",
+        "main",
+        "nav",
+        "p",
+        "pre",
+        "section",
+        "table",
+        "td",
+        "th",
+        "tr",
+        "ul",
+    }
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.parts: list[str] = []
+        self.title_parts: list[str] = []
+        self.skip_depth = 0
+        self.in_title = False
+
+    def handle_starttag(
+        self, tag: str, attrs: list[tuple[str, str | None]]
+    ) -> None:
+        del attrs
+        if tag in {"script", "style"}:
+            self.skip_depth += 1
+            return
+        if self.skip_depth:
+            return
+        if tag == "title":
+            self.in_title = True
+            return
+        if tag in self.BLOCK_TAGS:
+            self.parts.append("\n")
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag in {"script", "style"}:
+            self.skip_depth = max(0, self.skip_depth - 1)
+            return
+        if self.skip_depth:
+            return
+        if tag == "title":
+            self.in_title = False
+            return
+        if tag in self.BLOCK_TAGS:
+            self.parts.append("\n")
+
+    def handle_data(self, data: str) -> None:
+        if self.skip_depth:
+            return
+        if self.in_title:
+            self.title_parts.append(data)
+        else:
+            self.parts.append(data)
+
+    def result(self) -> tuple[str, str]:
+        title = " ".join("".join(self.title_parts).split())
+        lines = []
+        for raw_line in "".join(self.parts).splitlines():
+            line = " ".join(raw_line.split())
+            if line:
+                lines.append(line)
+        return title, "\n".join(lines)
+
+
+def normalize_search(value: str) -> str:
+    return unicodedata.normalize("NFC", value).casefold()
+
+
+def markdown_title(text: str, fallback: str) -> str:
+    for line in text.splitlines():
+        if line.startswith("# ") and line[2:].strip():
+            return line[2:].strip()
+    return fallback
+
+
+def read_document(path: Path, root: Path, group: str) -> Document:
+    resolved = validate_document_path(path, root)
+    text = resolved.read_text(encoding="utf-8")
+    if resolved.suffix.lower() == ".html":
+        parser = VisibleHtmlParser()
+        parser.feed(text)
+        title, body = parser.result()
+    else:
+        title = markdown_title(text, resolved.stem)
+        body = text
+    pdf_candidate = resolved.with_suffix(".pdf")
+    pdf_path = None
+    if pdf_candidate.exists():
+        try:
+            pdf_path = validate_document_path(pdf_candidate, root)
+        except (OSError, ValueError):
+            pdf_path = None
+    return Document(
+        path=resolved,
+        relative_path=resolved.relative_to(root.resolve()).as_posix(),
+        title=title or resolved.stem,
+        body=body,
+        group=group,
+        pdf_path=pdf_path,
+    )
+
+
+def discover_documents(root: Path = ROOT) -> list[Document]:
+    root = root.resolve()
+    docs_root = root / "docs"
+    manual_root = docs_root / "manual"
+    candidates: list[tuple[Path, str]] = []
+
+    if manual_root.is_dir():
+        for path in manual_root.rglob("*"):
+            if path.suffix.lower() in {".md", ".html"} and not any(
+                part.startswith(".") for part in path.relative_to(manual_root).parts
+            ):
+                candidates.append((path, "manual"))
+
+    for path in root.glob("*.md"):
+        candidates.append((path, "active"))
+
+    if docs_root.is_dir():
+        for path in docs_root.rglob("*"):
+            if path.suffix.lower() not in {".md", ".html"}:
+                continue
+            relative_parts = path.relative_to(docs_root).parts
+            if not relative_parts or relative_parts[0] in COLD_DOC_DIRS | {"manual"}:
+                continue
+            if any(part.startswith(".") for part in relative_parts):
+                continue
+            candidates.append((path, "active"))
+
+    documents = []
+    for path, group in candidates:
+        try:
+            documents.append(read_document(path, root, group))
+        except (OSError, UnicodeError, ValueError):
+            continue
+    return sorted(
+        documents,
+        key=lambda item: (
+            item.group != "manual",
+            item.path.name.lower() != "readme.md",
+            normalize_search(item.relative_path),
+        ),
+    )
+
+
+def search_documents(documents: Iterable[Document], query_text: str) -> list[Document]:
+    query = normalize_search(query_text.strip())
+    if not query:
+        return list(documents)
+    return [
+        document
+        for document in documents
+        if query
+        in normalize_search(
+            f"{document.title}\n{document.relative_path}\n{document.body}"
+        )
+    ]
+
+
+def validate_document_path(path: Path, root: Path = ROOT) -> Path:
+    root = root.resolve()
+    resolved = path.resolve(strict=True)
+    if not resolved.is_file() or resolved.suffix.lower() not in ALLOWED_DOC_SUFFIXES:
+        raise ValueError("not an allowed document")
+    try:
+        relative = resolved.relative_to(root)
+    except ValueError as error:
+        raise ValueError("document escapes the repository") from error
+    if len(relative.parts) == 1:
+        if resolved.suffix.lower() != ".md":
+            raise ValueError("only root Markdown files are allowed")
+        return resolved
+    if relative.parts[0] != "docs":
+        raise ValueError("document is outside the docs tree")
+    return resolved
+
+
+def open_document(
+    path: Path,
+    root: Path = ROOT,
+    popen: Callable[..., subprocess.Popen[str]] = subprocess.Popen,
+) -> subprocess.Popen[str]:
+    resolved = validate_document_path(path, root)
+    return popen(
+        [OPEN_COMMAND, str(resolved)],
+        cwd=root.resolve(),
+        shell=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        text=True,
+    )
+
+
+def cell_width(text: str) -> int:
+    width = 0
+    for character in text:
+        category = unicodedata.category(character)
+        if unicodedata.combining(character) or category in {"Mn", "Me", "Cf"}:
+            continue
+        width += 2 if unicodedata.east_asian_width(character) in {"W", "F"} else 1
+    return width
+
+
+def clip_cells(text: str, maximum: int) -> str:
+    if maximum <= 0:
+        return ""
+    result = []
+    used = 0
+    for character in text:
+        character_width = cell_width(character)
+        if used + character_width > maximum:
+            break
+        result.append(character)
+        used += character_width
+    return "".join(result)
+
+
+def wrap_cells(text: str, maximum: int) -> list[str]:
+    if maximum <= 0:
+        return []
+    wrapped: list[str] = []
+    for source_line in text.splitlines() or [""]:
+        current = ""
+        used = 0
+        for character in source_line:
+            character_width = cell_width(character)
+            if current and used + character_width > maximum:
+                wrapped.append(current)
+                current = ""
+                used = 0
+            current += character
+            used += character_width
+        wrapped.append(current)
+    return wrapped
+
+
+def clean_log_line(line: str) -> str:
+    line = ANSI_ESCAPE.sub("", line).replace("\r", "").replace("\t", "    ")
+    return "".join(
+        character
+        for character in line.rstrip("\n")
+        if character == " " or not unicodedata.category(character).startswith("C")
+    )
+
+
+def process_group_alive(
+    pgid: int | None, killpg: Callable[[int, int], None] = os.killpg
+) -> bool:
+    if pgid is None:
+        return False
+    try:
+        killpg(pgid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
+def spawn_task(
+    command: Sequence[str],
+    *,
+    root: Path = ROOT,
+    popen: Callable[..., subprocess.Popen[str]] = subprocess.Popen,
+    getpgid: Callable[[int], int] = os.getpgid,
+) -> tuple[subprocess.Popen[str], int]:
+    process = popen(
+        list(command),
+        cwd=root.resolve(),
+        shell=False,
+        start_new_session=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        bufsize=1,
+    )
+    pgid = getpgid(process.pid)
+    if pgid != process.pid:
+        process.kill()
+        raise RuntimeError("managed task did not receive its own process group")
+    return process, pgid
+
+
+class ManagedTask:
+    def __init__(self) -> None:
+        self.process: subprocess.Popen[str] | None = None
+        self.pgid: int | None = None
+        self.label = "空闲"
+        self.last_exit: int | None = None
+        self.after_exit: str | None = None
+        self.logs: deque[str] = deque(maxlen=LOG_LIMIT)
+        self._incoming: queue.SimpleQueue[str] = queue.SimpleQueue()
+        self.exit_ready = False
+
+    @property
+    def active(self) -> bool:
+        return process_group_alive(self.pgid)
+
+    def log(self, message: str) -> None:
+        self.logs.append(f"[dev] {message}")
+
+    def _reader(self, stream: TextIO) -> None:
+        try:
+            for line in stream:
+                cleaned = clean_log_line(line)
+                if cleaned:
+                    self._incoming.put(cleaned)
+        finally:
+            stream.close()
+
+    def launch(
+        self,
+        command: Sequence[str],
+        label: str,
+        after_exit: str | None = None,
+    ) -> bool:
+        self.tick()
+        if self.active:
+            self.log("已有任务运行中。")
+            return False
+        try:
+            self.process, self.pgid = spawn_task(command)
+        except (OSError, RuntimeError) as error:
+            self.log(f"启动失败：{error}")
+            self.process = None
+            self.pgid = None
+            return False
+        self.label = label
+        self.last_exit = None
+        self.after_exit = after_exit
+        self.log(f"已启动 {label}，PID/PGID {self.pgid}。")
+        if self.process.stdout is not None:
+            threading.Thread(
+                target=self._reader,
+                args=(self.process.stdout,),
+                daemon=True,
+                name="keikeu-dev-log-reader",
+            ).start()
+        return True
+
+    def start_app(self) -> bool:
+        if shutil.which("npm") is None:
+            self.log("找不到 npm；请先安装项目锁定的 Node/npm。")
+            return False
+        if not SIDECAR.is_file():
+            self.log("缺少 sidecar；按 b 重建并启动。")
+            return False
+        return self.launch(APP_COMMAND, "应用")
+
+    def build_and_start(self) -> bool:
+        if not VENV_PYTHON.is_file():
+            self.log("缺少 .venv；请先完成 README 的一次性安装。")
+            return False
+        return self.launch(BUILD_COMMAND, "Sidecar 构建", "app-on-success")
+
+    def send_signal(
+        self,
+        requested_signal: int,
+        after_exit: str | None = None,
+        expected_pgid: int | None = None,
+    ) -> bool:
+        self.tick()
+        if not self.active or self.pgid is None:
+            self.log("没有正在运行的任务。")
+            return False
+        if expected_pgid is not None and self.pgid != expected_pgid:
+            self.log("任务已切换；未发送信号。")
+            return False
+        self.after_exit = after_exit
+        try:
+            os.killpg(self.pgid, requested_signal)
+        except ProcessLookupError:
+            self.tick()
+            return False
+        self.log(f"已向 PGID {self.pgid} 发送 {signal.Signals(requested_signal).name}。")
+        return True
+
+    def tick(self) -> None:
+        while True:
+            try:
+                self.logs.append(self._incoming.get_nowait())
+            except queue.Empty:
+                break
+        if self.process is None or self.pgid is None:
+            return
+        return_code = self.process.poll()
+        if return_code is None or process_group_alive(self.pgid):
+            return
+        completed_label = self.label
+        self.last_exit = return_code
+        next_action = self.after_exit
+        self.process = None
+        self.pgid = None
+        self.after_exit = None
+        self.label = "空闲"
+        self.log(f"{completed_label} 已退出，code={return_code}。")
+        if next_action == "app-on-success" and return_code == 0:
+            self.start_app()
+        elif next_action == "app":
+            self.start_app()
+        elif next_action == "quit":
+            self.exit_ready = True
+
+
+class DevTui:
+    def __init__(self, screen: curses.window, documents: list[Document]) -> None:
+        self.screen = screen
+        self.task = ManagedTask()
+        self.documents = documents
+        self.mode = "process"
+        self.doc_group = "manual"
+        self.query = ""
+        self.searching = False
+        self.selected = 0
+        self.preview_scroll = 0
+        self.log_scroll = 0
+        self.confirmation: tuple[str, Callable[[], None]] | None = None
+        self.message = "普通启动会读取当前本地配置；TUI 不直接读写 Vault。"
+
+    def _add(self, row: int, column: int, text: str, attribute: int = 0) -> None:
+        rows, columns = self.screen.getmaxyx()
+        if row < 0 or row >= rows or column < 0 or column >= columns - 1:
+            return
+        try:
+            self.screen.addstr(
+                row,
+                column,
+                clip_cells(text, columns - column - 1),
+                attribute,
+            )
+        except curses.error:
+            pass
+
+    def _header(self) -> None:
+        rows, columns = self.screen.getmaxyx()
+        active = "进程" if self.mode == "process" else "文档"
+        self._add(0, 0, f" keikeu dev  [1] 进程  [2] 文档  · 当前：{active}", curses.A_REVERSE)
+        if rows > 1:
+            self._add(1, 0, " " * max(0, columns - 1), curses.A_REVERSE)
+            self._add(1, 1, self.message, curses.A_REVERSE)
+
+    def _footer(self, text: str) -> None:
+        rows, columns = self.screen.getmaxyx()
+        if rows:
+            self._add(rows - 1, 0, " " * max(0, columns - 1), curses.A_REVERSE)
+            self._add(rows - 1, 1, text, curses.A_REVERSE)
+
+    def _draw_process(self) -> None:
+        rows, columns = self.screen.getmaxyx()
+        self.task.tick()
+        state = "运行中" if self.task.active else "已停止"
+        pid = str(self.task.pgid) if self.task.pgid is not None else "—"
+        exit_code = "—" if self.task.last_exit is None else str(self.task.last_exit)
+        self._add(3, 2, f"任务：{self.task.label}    状态：{state}    PID/PGID：{pid}    退出码：{exit_code}", curses.A_BOLD)
+        self._add(4, 2, "a 启动现有 sidecar · b 重建并启动 · r 重启 · s 停止 · K 强制终止")
+        self._add(5, 2, "停止和强制终止可能绕过未保存草稿保护，均需确认。")
+        self._add(7, 2, "日志（仅内存）：", curses.A_BOLD)
+        height = max(1, rows - 10)
+        width = max(1, columns - 4)
+        lines: list[str] = []
+        for log_line in self.task.logs:
+            lines.extend(wrap_cells(log_line, width))
+        maximum_scroll = max(0, len(lines) - height)
+        self.log_scroll = min(self.log_scroll, maximum_scroll)
+        end = len(lines) - self.log_scroll
+        start = max(0, end - height)
+        for offset, line in enumerate(lines[start:end]):
+            self._add(8 + offset, 2, line)
+        self._footer("1/2 切页 · PgUp/PgDn 滚动 · q 退出")
+
+    def _current_documents(self) -> list[Document]:
+        group_documents = [
+            document for document in self.documents if document.group == self.doc_group
+        ]
+        return search_documents(group_documents, self.query)
+
+    def _draw_docs(self) -> None:
+        rows, columns = self.screen.getmaxyx()
+        documents = self._current_documents()
+        if documents:
+            self.selected = min(self.selected, len(documents) - 1)
+        else:
+            self.selected = 0
+        group_name = "Manual" if self.doc_group == "manual" else "Active docs"
+        query = self.query or "—"
+        self._add(3, 2, f"分组：{group_name}    搜索：{query}    {len(documents)} 项", curses.A_BOLD)
+        list_top = 5
+        list_height = max(1, rows - 7)
+        left_width = min(38, max(28, columns // 3))
+        start = max(0, self.selected - list_height + 1)
+        for row_offset, document in enumerate(documents[start : start + list_height]):
+            index = start + row_offset
+            marker = "> " if index == self.selected else "  "
+            attribute = curses.A_REVERSE if index == self.selected else 0
+            self._add(
+                list_top + row_offset,
+                1,
+                clip_cells(marker + document.title, left_width - 2),
+                attribute,
+            )
+        divider = left_width
+        for row in range(list_top, rows - 1):
+            self._add(row, divider, "│")
+        if not documents:
+            self._add(6, left_width + 2, "没有匹配文档。")
+        else:
+            document = documents[self.selected]
+            right_column = left_width + 2
+            preview_width = max(1, columns - right_column - 2)
+            self._add(5, right_column, document.title, curses.A_BOLD)
+            self._add(6, right_column, document.relative_path)
+            attachment = "有 PDF 附件" if document.pdf_path else "无 PDF 附件"
+            self._add(7, right_column, f"纯文本预览 · {attachment}")
+            preview_lines = wrap_cells(document.body, preview_width)
+            preview_height = max(1, rows - 10)
+            maximum_scroll = max(0, len(preview_lines) - preview_height)
+            self.preview_scroll = min(self.preview_scroll, maximum_scroll)
+            for offset, line in enumerate(
+                preview_lines[self.preview_scroll : self.preview_scroll + preview_height]
+            ):
+                self._add(9 + offset, right_column, line)
+        if self.searching:
+            self._footer(f"搜索：{self.query}  · Enter 完成 · Esc 清除")
+        else:
+            self._footer("m Manual · d Active · ↑↓/jk · / 搜索 · Enter/o 打开 · p PDF · q 退出")
+
+    def draw(self) -> None:
+        self.screen.erase()
+        rows, columns = self.screen.getmaxyx()
+        if rows < MIN_ROWS or columns < MIN_COLS:
+            self._add(0, 0, "keikeu dev", curses.A_BOLD)
+            self._add(2, 0, f"终端至少需要 {MIN_COLS}×{MIN_ROWS}；当前 {columns}×{rows}。")
+            self._add(max(0, rows - 1), 0, "q 退出")
+            self.screen.refresh()
+            return
+        self._header()
+        if self.mode == "process":
+            self._draw_process()
+        else:
+            self._draw_docs()
+        if self.confirmation is not None:
+            prompt, _ = self.confirmation
+            self._add(rows - 3, 2, " " * max(0, columns - 5), curses.A_REVERSE)
+            self._add(rows - 3, 3, f"{prompt}  y/N", curses.A_REVERSE | curses.A_BOLD)
+        self.screen.refresh()
+
+    def _confirm(self, prompt: str, action: Callable[[], None]) -> None:
+        self.confirmation = (prompt, action)
+
+    def _confirm_signal(
+        self,
+        prompt: str,
+        requested_signal: int,
+        after_exit: str | None = None,
+    ) -> None:
+        expected_pgid = self.task.pgid
+        self._confirm(
+            prompt,
+            lambda: self.task.send_signal(
+                requested_signal,
+                after_exit,
+                expected_pgid,
+            ),
+        )
+
+    def _open_selected(self, pdf: bool = False) -> None:
+        documents = self._current_documents()
+        if not documents:
+            self.message = "没有可打开的文档。"
+            return
+        document = documents[self.selected]
+        path = document.pdf_path if pdf else document.path
+        if path is None:
+            self.message = "当前文档没有 PDF 附件。"
+            return
+        try:
+            open_document(path)
+        except (OSError, ValueError) as error:
+            self.message = f"打开失败：{error}"
+        else:
+            self.message = f"已交给系统打开：{path.relative_to(ROOT)}"
+
+    def _quit(self) -> None:
+        if self.task.active:
+            self._confirm_signal(
+                "进程仍在运行；发送 SIGINT，退出等待进程结束？",
+                signal.SIGINT,
+                "quit",
+            )
+        else:
+            self.task.exit_ready = True
+
+    def _handle_search(self, key: str | int) -> None:
+        if key in ("\n", "\r", curses.KEY_ENTER):
+            self.searching = False
+            return
+        if key == "\x1b":
+            self.query = ""
+            self.searching = False
+            self.selected = 0
+            self.preview_scroll = 0
+            return
+        if key in (curses.KEY_BACKSPACE, "\b", "\x7f"):
+            self.query = self.query[:-1]
+        elif isinstance(key, str) and key.isprintable():
+            self.query += key
+        self.selected = 0
+        self.preview_scroll = 0
+
+    def handle_key(self, key: str | int) -> None:
+        if self.confirmation is not None:
+            _, action = self.confirmation
+            self.confirmation = None
+            if isinstance(key, str) and key.lower() == "y":
+                action()
+            return
+        if self.searching:
+            self._handle_search(key)
+            return
+        if key == "1":
+            self.mode = "process"
+            return
+        if key == "2":
+            self.documents = discover_documents()
+            self.mode = "docs"
+            self.selected = 0
+            self.preview_scroll = 0
+            return
+        if key == "q":
+            self._quit()
+            return
+        if self.mode == "process":
+            if key == "a":
+                self.task.start_app()
+            elif key == "b":
+                self.task.build_and_start()
+            elif key == "r":
+                if self.task.active:
+                    self._confirm_signal(
+                        "停止当前任务并在进程组结束后启动应用？",
+                        signal.SIGINT,
+                        "app",
+                    )
+                else:
+                    self.task.start_app()
+            elif key == "s":
+                self._confirm_signal(
+                    "发送 SIGINT 停止当前任务？可能丢失未保存草稿。",
+                    signal.SIGINT,
+                )
+            elif key == "K":
+                self._confirm_signal(
+                    "强制终止当前进程组？这会绕过应用关闭保护。",
+                    signal.SIGKILL,
+                    self.task.after_exit,
+                )
+            elif key == curses.KEY_PPAGE:
+                self.log_scroll += 10
+            elif key == curses.KEY_NPAGE:
+                self.log_scroll = max(0, self.log_scroll - 10)
+            return
+
+        documents = self._current_documents()
+        if key in (curses.KEY_DOWN, "j") and documents:
+            self.selected = min(len(documents) - 1, self.selected + 1)
+            self.preview_scroll = 0
+        elif key in (curses.KEY_UP, "k") and documents:
+            self.selected = max(0, self.selected - 1)
+            self.preview_scroll = 0
+        elif key == curses.KEY_PPAGE:
+            self.preview_scroll = max(0, self.preview_scroll - 10)
+        elif key == curses.KEY_NPAGE:
+            self.preview_scroll += 10
+        elif key == "/":
+            self.documents = discover_documents()
+            self.selected = 0
+            self.preview_scroll = 0
+            self.searching = True
+        elif key == "\x1b":
+            self.query = ""
+            self.selected = 0
+            self.preview_scroll = 0
+        elif key in ("\n", "\r", curses.KEY_ENTER, "o"):
+            self._open_selected()
+        elif key == "p":
+            self._open_selected(pdf=True)
+        elif key == "m":
+            self.doc_group = "manual"
+            self.selected = 0
+            self.preview_scroll = 0
+        elif key == "d":
+            self.doc_group = "active"
+            self.selected = 0
+            self.preview_scroll = 0
+
+    def run(self) -> None:
+        try:
+            curses.curs_set(0)
+        except curses.error:
+            pass
+        self.screen.timeout(100)
+        while not self.task.exit_ready:
+            try:
+                self.task.tick()
+                self.draw()
+                key = self.screen.get_wch()
+            except curses.error:
+                continue
+            except KeyboardInterrupt:
+                self._quit()
+                continue
+            self.handle_key(key)
+
+
+def main() -> int:
+    if sys.version_info < (3, 11):
+        print("keikeu dev requires Python 3.11 or newer.", file=sys.stderr)
+        return 1
+    if sys.platform != "darwin":
+        print("keikeu dev currently supports macOS only.", file=sys.stderr)
+        return 1
+    if not sys.stdin.isatty() or not sys.stdout.isatty():
+        print("keikeu dev requires an interactive terminal.", file=sys.stderr)
+        return 1
+    documents = discover_documents()
+    curses.wrapper(lambda screen: DevTui(screen, documents).run())
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
