@@ -102,7 +102,10 @@ No AI generation, prose editor, sync, account, community, database, file watcher
 - iOS/iPadOS remain a separate 2026-08 direction; Android/HarmonyOS a separate 2026-Q4 direction; Windows a 2027 direction.
 - Linux and watchOS have no planned support. The iOS-only second user does not enter v0.x acceptance and returns no earlier than a separately designed iOS+Android v1.0.
 - Packaging, Developer ID distribution and Alpha release work are deferred to Road v0.8, which starts
-  no earlier than 2026-08-28 under a separate plan and Git boundary.
+  only under a separate approved plan and Git boundary. Its 2026-08-28 date condition is met, but the
+  plan/seed Gate and recorded close-guard prerequisite remain open as of 2026-08-29.
+- The repository `./dev` TUI, human manuals, and ignored context pack are developer workflow tools.
+  They are not product surfaces, runtime protocol components, author assets, or acceptance evidence.
 
 ## 9. Accepted Road v0.7 App Shell baseline (CP6 passed; CP7 override in §10)
 
@@ -133,9 +136,10 @@ CP2–CP4 provide current source, tests, and window evidence for this production
 provides the complete cross-stack baseline plus current-source synthetic Tauri evidence for the
 normal, native dirty-confirmation, Index, repair, `commit_unknown`, restart and no-replay paths. The
 separate [CP6 author Gate](acceptance/road-v0-7/cp6-author/report.md) passed by explicit developer
-judgment. CP7 subsequently passed its own four Gates and now supplies the accepted presentation and
-folder-lifecycle override in §10. Neither acceptance authorizes real-Vault action, scope outside §10,
-Road closeout, or remote Git operations.
+judgment under one bounded real-v4-Vault authorization, which is now consumed. CP7 subsequently
+passed its own four Gates and now supplies the accepted presentation and folder-lifecycle override in
+§10. Neither that consumed authorization nor later acceptance authorizes any further real-Vault
+action, scope outside §10, Road closeout, or remote Git operations.
 
 ## 10. Accepted Road v0.7 CP7 continuous-flow override
 

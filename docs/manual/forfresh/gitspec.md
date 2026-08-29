@@ -60,7 +60,7 @@ git log --oneline --decorate -n 10
 
 ### 开一条小分支
 
-先确认工作树干净，再开分支：
+先确认工作树干净，再开分支。下面是非 Road 小任务的示例：
 
 ```bash
 git switch -c codex/<short-task>
@@ -73,6 +73,9 @@ git switch -c codex/fix-vault-picker
 ```
 
 一条分支只做一件事。
+
+Road checkpoint 不使用这个通用示例；它按当前 [`RULES §7`](../../RULES.md#7-git)
+命名为 `<content-type>/cp<N>-<slug>`，并且只能从开发者已经通过的前一 checkpoint 建立。
 
 ### 改文件，跑检查
 
@@ -284,7 +287,10 @@ git log --oneline --decorate --graph --all -n 20
 剩余风险与下一条安全命令
 ```
 
-Agent 写代码。人拥有 diff 和历史。
+Agent 写代码。人拥有 diff 和历史。Agent 获得明确 commit 授权时，仍须按当前
+[`RULES §7`](../../RULES.md#7-git) 精确暂存、审查 staged diff，再调用已授权的
+DeepSeek `aic`；`aic` 失败不得退回裸 `git commit`。本手册里的 `git commit -m` 是人类
+理解 Git 对象的普通命令示例，不覆盖项目 Agent 流程。
 
 ## 12. 一分钟命令表
 
@@ -294,7 +300,7 @@ Agent 写代码。人拥有 diff 和历史。
 | 看未暂存改动 | `git diff` |
 | 看下次提交内容 | `git diff --staged` |
 | 看最近历史 | `git log --oneline --decorate -n 10` |
-| 开小分支 | `git switch -c codex/<task>` |
+| 开小分支（非 Road 示例） | `git switch -c codex/<task>`；Road 见 `RULES §7` |
 | 选文件 | `git add <exact-paths>` |
 | 保存到本地历史 | `git commit -m "type: summary"` |
 | 看远端 | `git fetch origin` |

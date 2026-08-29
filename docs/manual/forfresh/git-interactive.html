@@ -323,7 +323,7 @@
         <p class="section-note">每一步的输出，都是下一步的输入边界。</p>
         <ol>
           <li><strong>观察</strong><span>确认分支和全部脏文件；有未知修改就停下确认。</span></li>
-          <li><strong>限定</strong><span>一个 Phase、一条 `codex/` 分支、一个可独立审查的目标。</span></li>
+          <li><strong>限定</strong><span>一个 Phase、一条符合当前 RULES 的分支、一个可独立审查的目标；Road checkpoint 使用 <code>&lt;content-type&gt;/cp&lt;N&gt;-&lt;slug&gt;</code>，普通小任务才可用 <code>codex/</code>。</span></li>
           <li><strong>实现与检查</strong><span>读调用者，做最小修改，运行与风险相称的检查。</span></li>
           <li><strong>精确暂存</strong><span>只选已审查路径，再读 staged diff 与 status。</span></li>
           <li><strong>交接</strong><span>报告 HEAD、状态、证据和风险；commit 与远端动作等待明确授权。</span></li>

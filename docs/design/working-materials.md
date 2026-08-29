@@ -2,7 +2,7 @@
 
 > This index does not define authority. Product scope, implementation behavior, and current facts remain owned by `docs/SPEC.md`, `docs/RULES.md`, `docs/PROJECT.md`, runtime source, and passing tests.
 >
-> Updated: 2026-08-26 against the completed Road v0.7 / CP8 baseline.
+> Updated: 2026-08-29. The completed Road v0.7 / CP8 product baseline is unchanged; the later developer TUI, manuals, and context pack remain outside product design.
 
 ## Active approved authority
 
@@ -18,6 +18,7 @@
 - [Road v0.5 Planbook](../archive/road-v0-5/road-v0-5-planbook.html)
 - [Road v0.5 final UI prototype](keikeu_opendesign/keikeu-v05-prototype.html) — visible historical banner; retired Flashcard and rail remain intentionally unchanged.
 - [Earlier design exploration](boh_design.html) — visible historical banner; not a production token source.
+- [Road v0.8 pre-start release plan](../../PLAN_road_v0_8.md) — current next-Road draft; date condition met, seed and close-guard prerequisites still open, and no new product UI is approved.
 - Open Design generation context:
   - [Browser skill snapshot](keikeu_opendesign/.od-skills/agent-browser-6f025148da/SKILL.md)
   - [Prototype skill snapshot](keikeu_opendesign/.od-skills/web-prototype-bf31184c0c/SKILL.md)

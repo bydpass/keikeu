@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="author" content="keikeu contributors">
+  <meta name="description" content="keikeu 构建与打包手册：解释 Python editable install、Hatchling、PyInstaller Sidecar、Vite、Cargo、Tauri bundle 与 Road v0.8 发布边界。">
+  <meta name="keywords" content="keikeu, build, packaging, Hatchling, PyInstaller, Vite, Cargo, Tauri">
+  <meta name="generator" content="Kami 1.12.0">
+  <title>构建与打包手册 · keikeu</title>
+  <link rel="stylesheet" href="kami-manual.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">跳到正文</a>
+
+  <div class="manual-shell">
+    <aside class="manual-sidebar" aria-label="forfresh 手册系列">
+      <a class="series" href="../README.md">keikeu · forfresh manuals</a>
+      <nav aria-label="同系列手册">
+        <a href="developer-tui-quickstart.html">开发者 TUI 速查</a>
+        <a href="stack-component-atlas.html">技术栈与组件图鉴</a>
+        <a href="testing-and-evidence-guide.html">测试与证据</a>
+        <a href="build-and-packaging-guide.html" aria-current="page">构建与打包</a>
+        <a href="npm-beginner-guide.html">npm 入门</a>
+        <a href="tauri-vue-beginner-guide.html">Tauri + Vue</a>
+        <a href="python-caveman-guide.html">Python Caveman</a>
+        <a href="rust-beginner-guide.html">Rust 入门</a>
+        <a href="macos-developer-id-release.md">Developer ID 发布</a>
+      </nav>
+      <p class="rail-note">
+        人工说明，不是规范。版本与命令最终核对 manifest、lockfile、
+        <a href="../../PROJECT.md">PROJECT</a> 和
+        <a href="../../RULES.md">RULES</a>。
+      </p>
+    </aside>
+
+    <main id="main-content" class="manual-document" tabindex="-1">
+      <header class="cover">
+        <p class="eyebrow">keikeu · local build chain · beginner manual</p>
+        <h1>构建与打包</h1>
+        <p class="subtitle">
+          把“装 Python 项目”“生成 Sidecar”“构建前端”“编译 Rust”和“制作可分发应用”
+          分开看，再沿今天的源码走完一条真实构建链。
+        </p>
+        <p class="meta">
+          <span>keikeu contributors</span>
+          <span>简体中文</span>
+          <span>2026-08-29</span>
+          <span>Node 22.23.2 contract</span>
+          <span>Python &gt;=3.11,&lt;3.14</span>
+        </p>
+      </header>
+
+      <section class="summary" aria-labelledby="summary-title">
+        <h2 id="summary-title">先分清三个结果</h2>
+        <p class="lead">
+          editable install 让源码可被 Python 导入，Sidecar build 把 Python 链做成一个本机可执行文件，
+          Tauri build 才把前端、Rust 宿主和 Sidecar 组合为桌面应用。
+        </p>
+        <ol class="takeaways">
+          <li><span><code>npm run build</code> 只生成前端静态资产，不会生成完整桌面应用。</span></li>
+          <li><span><code>scripts/build_sidecar.py</code> 只重建 Sidecar，不会签名、公证或证明产品流程。</span></li>
+          <li><span>日常开发、Road v0.8 CP1 演练和 Developer ID 候选是三个不同 Gate，证据不能混用。</span></li>
+        </ol>
+        <aside class="truth-boundary">
+          <strong>事实边界：</strong>本页是 2026-08-29 的非权威教学快照，不修改或批准发布合同。
+          构建事实最终核对当前 manifest、lockfile 与脚本；Road 范围核对
+          <a href="../../../PLAN_road_v0_8.md">Road v0.8 计划</a>，权限与证据核对
+          <a href="../../RULES.md">RULES</a>。
+        </aside>
+      </section>
+
+      <nav class="toc" aria-labelledby="toc-title">
+        <p class="toc-label">Contents</p>
+        <h2 id="toc-title">阅读路线</h2>
+        <ol>
+          <li><a href="#layers">六层工具，各管一段</a></li>
+          <li><a href="#sidecar">Python 到 Sidecar</a></li>
+          <li><a href="#desktop">Vite、Cargo 与 Tauri</a></li>
+          <li><a href="#dev-tui"><code>./dev</code> 的两条路</a></li>
+          <li><a href="#artifacts">源码与产物边界</a></li>
+          <li><a href="#release-levels">开发、演练与发布</a></li>
+          <li><a href="#versions">版本契约与 CP1</a></li>
+        </ol>
+      </nav>
+
+      <section id="layers" class="chapter">
+        <p class="chapter-number">Chapter 01</p>
+        <h2>六层工具，各管一段</h2>
+        <p class="claim">
+          同一条命令链里出现 Python、Node 和 Rust，不代表它们在做同一件事。
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="keep" scope="col">层</th>
+                <th class="keep" scope="col">当前工具</th>
+                <th class="keep" scope="col">输入</th>
+                <th class="keep" scope="col">输出或作用</th>
+                <th class="keep" scope="col">不负责</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="keep">Python 开发安装</td>
+                <td class="keep"><code>pip install -e</code></td>
+                <td class="keep"><code>pyproject.toml</code> 与 <code>src/</code></td>
+                <td>让虚拟环境从当前源码导入 <code>keikeu_core</code>、<code>keikeu_bridge</code></td>
+                <td>独立可执行文件、桌面 bundle</td>
+              </tr>
+              <tr>
+                <td class="keep">Python build backend</td>
+                <td class="keep">Hatchling</td>
+                <td class="keep">项目 metadata 与 package 映射</td>
+                <td>按 Python 打包标准向 pip 提供 editable/wheel 构建能力</td>
+                <td>PyInstaller onefile、Tauri 应用</td>
+              </tr>
+              <tr>
+                <td class="keep">Python 冻结</td>
+                <td class="keep">PyInstaller 6.21.0</td>
+                <td class="keep"><code>sidecar_entry.py</code> 与 Python 模块</td>
+                <td>目标平台的单文件 Sidecar</td>
+                <td>前端、Rust 宿主、签名</td>
+              </tr>
+              <tr>
+                <td class="keep">前端构建</td>
+                <td class="keep">Vite 8.1.5</td>
+                <td class="keep">Vue、CSS 与静态资源</td>
+                <td><code>frontend/dist/</code></td>
+                <td>Rust binary、Sidecar、产品验收</td>
+              </tr>
+              <tr>
+                <td class="keep">原生编译</td>
+                <td class="keep">Cargo / Rust 1.88</td>
+                <td class="keep">Rust host、Tauri crates、Cargo lock</td>
+                <td>当前 target 的原生宿主</td>
+                <td>Python 冻结、Apple 公证</td>
+              </tr>
+              <tr>
+                <td class="keep">桌面组合</td>
+                <td class="keep">Tauri CLI / bundler</td>
+                <td class="keep">Vite 资产、Rust host、Sidecar、bundle 配置</td>
+                <td>开发应用或配置指定的 bundle</td>
+                <td>自动授予 Developer ID 信任</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>editable install 为什么仍然需要 backend</h3>
+        <p>
+          <code>python -m pip install -e ".[dev]"</code> 不复制一份长期脱离源码的 keikeu。
+          pip 读取 <a href="../../../pyproject.toml"><span class="path">pyproject.toml</span></a>，
+          按 Hatchling 的 package 映射把 <code>src/keikeu_core</code> 与
+          <code>src/keikeu_bridge</code> 暴露给虚拟环境。修改源码后通常无需重新安装；
+          metadata、依赖或 package 映射改变时再装一次。
+        </p>
+        <p>
+          Hatchling 是 build backend，不是应用运行时依赖。项目当前只在
+          <code>[build-system]</code> 声明 <code>hatchling</code>，没有在运行时依赖里添加它；
+          本页不为 Road v0.8 擅自发明一个精确版本锁。
+        </p>
+      </section>
+
+      <section id="sidecar" class="chapter">
+        <p class="chapter-number">Chapter 02</p>
+        <h2>Python 到 Sidecar</h2>
+        <p class="claim">
+          Tauri 不直接运行仓库里的 Python 文件；它启动一个按 target triple 命名的冻结可执行文件。
+        </p>
+
+        <pre><code>scripts/sidecar_entry.py
+  import keikeu_bridge.sidecar.main
+            │
+            ▼
+scripts/build_sidecar.py
+  rustc -Vv → host target triple
+  python -m PyInstaller --onefile
+            │
+            ▼
+frontend/src-tauri/binaries/
+  keikeu-sidecar-aarch64-apple-darwin
+            │
+            ▼
+tauri.conf.json externalBin: binaries/keikeu-sidecar
+            │
+            ▼
+Rust shell().sidecar("keikeu-sidecar") → protocol v2 hello</code></pre>
+
+        <ol class="flow">
+          <li><span><a href="../../../scripts/sidecar_entry.py"><code>sidecar_entry.py</code></a> 保持入口极薄，只调用现有 JSONL stdin/stdout service。</span></li>
+          <li><span><a href="../../../scripts/build_sidecar.py"><code>build_sidecar.py</code></a> 从 <code>rustc -Vv</code> 读取 host，而不是手写后缀。</span></li>
+          <li><span>PyInstaller 以 <code>--onefile</code> 冻结入口，并通过 <code>--paths src</code> 找到项目包。</span></li>
+          <li><span>最终 binary 写到 <code>frontend/src-tauri/binaries/</code>；中间 work、spec 与 cache 写到 <code>build/pyinstaller/</code>。</span></li>
+          <li><span><a href="../../../frontend/src-tauri/tauri.conf.json"><code>tauri.conf.json</code></a> 使用无 target 后缀的 <code>externalBin</code> 基名，Tauri 选择当前目标对应文件。</span></li>
+          <li><span>Rust 宿主通过 Tauri shell plugin 启动 <code>keikeu-sidecar</code>，再以 protocol v2 <code>system.hello</code> 核对会话。</span></li>
+        </ol>
+
+        <aside class="callout">
+          <span class="mini-label">不要直接附着 Sidecar</span>
+          <p>
+            Sidecar 的生命周期、stdin/stdout 和重启语义由 Rust/Tauri 持有。日常调试可观察
+            <code>./dev</code> 管理的宿主日志；不要另开一条人工通道窥探或抢占内部进程。
+          </p>
+        </aside>
+      </section>
+
+      <section id="desktop" class="chapter">
+        <p class="chapter-number">Chapter 03</p>
+        <h2>Vite、Cargo 与 Tauri</h2>
+        <p class="claim">
+          Tauri 是编排入口：开发时连接 Vite，构建时先产出静态前端，再让 Cargo 编译宿主并组合 bundle。
+        </p>
+
+        <h3>开发启动</h3>
+        <pre><code>npm --prefix frontend run tauri:dev</code></pre>
+        <ol class="flow">
+          <li><span>Tauri CLI 读取 <code>frontend/src-tauri/tauri.conf.json</code>。</span></li>
+          <li><span><code>beforeDevCommand</code> 运行 <code>npm run dev</code>，Vite 提供 <code>http://127.0.0.1:1420</code>。</span></li>
+          <li><span>Cargo 编译并启动 debug Rust host，WebView 载入 Vite 页面。</span></li>
+          <li><span>宿主从 <code>externalBin</code> 启动已存在的 Sidecar。</span></li>
+        </ol>
+
+        <h3>完整构建</h3>
+        <pre><code>npm --prefix frontend run tauri:build</code></pre>
+        <p>
+          <code>beforeBuildCommand</code> 运行 <code>npm run build</code>，Vite 把 Vue 前端写入
+          <code>frontend/dist/</code>。Cargo 随后编译 release host；Tauri 将
+          <code>frontendDist</code>、host 与 external binary 组合成当前配置要求的 bundle。
+          今天 <code>bundle.targets</code> 只列 <code>app</code>；Road v0.8 CP1 才负责明确 DMG target
+          与 rehearsal 配置。
+        </p>
+
+        <div class="callout">
+          <span class="mini-label">证据不要越级</span>
+          <p>
+            Vite build 只证明前端能产出；Cargo build 只证明 Rust 能编译；Tauri build 只证明
+            当前配置能组合产物。它们都不自动证明签名、公证、普通安装、重启、文件交接或产品接受。
+          </p>
+        </div>
+      </section>
+
+      <section id="dev-tui" class="chapter">
+        <p class="chapter-number">Chapter 04</p>
+        <h2><code>./dev</code> 的两条路</h2>
+        <p class="claim">
+          TUI 没有另一套 build system；它只用固定 argv 包装两条已有命令。
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">键</th>
+                <th scope="col">实际动作</th>
+                <th scope="col">何时使用</th>
+                <th scope="col">失败边界</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><kbd>a</kbd></td>
+                <td><code>npm --prefix frontend run tauri:dev</code></td>
+                <td>Sidecar 已存在，且 Python 部分未改变</td>
+                <td>缺少固定 Sidecar 时停止并提示使用 <kbd>b</kbd></td>
+              </tr>
+              <tr>
+                <td><kbd>b</kbd></td>
+                <td>先运行 <code>.venv/bin/python scripts/build_sidecar.py</code>；成功后再启动应用</td>
+                <td>Python core/bridge 或冻结输入改变后</td>
+                <td>build 非零退出时停在日志页，不静默启动旧 binary</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          <code>./dev</code> 自身由系统 <code>python3 &gt;=3.11</code> 运行，但冻结步骤明确使用项目
+          <code>.venv/bin/python</code>。它只管理自己启动的进程组，日志只保存在内存；它不会
+          修改 Tauri 的 Sidecar 生命周期，也不会杀死占用端口 <code>1420</code> 的未知进程。
+          键位与安全边界见<a href="developer-tui-quickstart.html">开发者 TUI 极简使用手册</a>。
+        </p>
+      </section>
+
+      <section id="artifacts" class="chapter">
+        <p class="chapter-number">Chapter 05</p>
+        <h2>源码与产物边界</h2>
+        <p class="claim">
+          判断一个目录能否删除或提交，先问它是事实来源、安装环境、中间缓存，还是待审查的候选产物。
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">位置</th>
+                <th scope="col">性质</th>
+                <th scope="col">来源</th>
+                <th scope="col">Git / 证据边界</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>src/</code>、<code>frontend/src/</code>、<code>frontend/src-tauri/src/</code></td>
+                <td>源码事实</td>
+                <td>人工维护</td>
+                <td>可进入聚焦提交；须审查 diff</td>
+              </tr>
+              <tr>
+                <td><code>.venv/</code>、<code>frontend/node_modules/</code></td>
+                <td>本机安装环境</td>
+                <td>pip / npm</td>
+                <td>ignored；不提交，不当产品证据</td>
+              </tr>
+              <tr>
+                <td><code>build/pyinstaller/</code></td>
+                <td>PyInstaller cache、work 与 spec 输出</td>
+                <td><code>build_sidecar.py</code></td>
+                <td>ignored；可重建</td>
+              </tr>
+              <tr>
+                <td><code>frontend/src-tauri/binaries/keikeu-sidecar-*</code></td>
+                <td>目标平台 Sidecar binary</td>
+                <td>PyInstaller</td>
+                <td>ignored；必须由对应源码重建</td>
+              </tr>
+              <tr>
+                <td><code>frontend/dist/</code></td>
+                <td>前端静态资产</td>
+                <td>Vite</td>
+                <td>ignored；不替代源码</td>
+              </tr>
+              <tr>
+                <td><code>frontend/src-tauri/target/</code></td>
+                <td>Cargo binary 与 Tauri bundle 输出根</td>
+                <td>Cargo / Tauri</td>
+                <td>ignored；<code>release/bundle/</code> 下的 app/DMG 仍不是自动批准候选</td>
+              </tr>
+              <tr>
+                <td><code>build/release/road-v0-8/</code></td>
+                <td>Road v0.8 rehearsal / candidate 的本地约定根</td>
+                <td>获批 Road 流程</td>
+                <td>ignored；不得存 secret、作者内容或原始凭据日志</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <aside class="callout">
+          <span class="mini-label">local-first 仍然适用</span>
+          <p>
+            构建不得读取真实 Vault 来“顺便测试”。smoke 使用隔离 Home 与 synthetic Vault；
+            应用 bundle、DMG、哈希、签名日志和作者资产都不进入普通源码提交。
+          </p>
+        </aside>
+      </section>
+
+      <section id="release-levels" class="chapter">
+        <p class="chapter-number">Chapter 06</p>
+        <h2>开发、演练与发布</h2>
+        <p class="claim">
+          输出都是 <code>.app</code>，也可能处在完全不同的信任状态；阶段名和实际证据必须一起看。
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">层级</th>
+                <th scope="col">目的</th>
+                <th scope="col">允许的动作</th>
+                <th scope="col">必须明确不声称</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>日常开发</td>
+                <td>快速联调当前源码</td>
+                <td><code>./dev</code>、Sidecar rebuild、<code>tauri:dev</code>、聚焦测试</td>
+                <td>可重复 release、签名、公证、用户验收</td>
+              </tr>
+              <tr>
+                <td>Road v0.8 CP1 rehearsal</td>
+                <td>证明锁定工具链能从 clean checkpoint 生成不可分发 app/DMG</td>
+                <td>校准版本与 selector；显式 unsigned/ad-hoc 配置；检查 arm64、Info.plist、protocol hello；跑 synthetic smoke</td>
+                <td>Developer ID 身份、Apple 接受、可外发候选</td>
+              </tr>
+              <tr>
+                <td>Developer ID candidate</td>
+                <td>生成可验证的签名、公证候选</td>
+                <td>仅在 CP2 身份就绪、CP3 单独授权后，从固定源码重新构建、签名、公证、staple 与哈希</td>
+                <td>沿用 CP1 产物或旧证据</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          CP1 不能调用真实签名私钥；若意外发现签名或公证环境输入，应停止演练。
+          CP3 也不能复用 CP1 产物，必须从固定 source commit 全新构建。签名、公证、staple 与
+          Gatekeeper 的教学解释继续阅读<a href="macos-developer-id-release.md">Developer ID 发布手册</a>；
+          实际进入条件仍以<a href="../../../PLAN_road_v0_8.md">Road v0.8 计划</a>为准。
+        </p>
+      </section>
+
+      <section id="versions" class="chapter">
+        <p class="chapter-number">Chapter 07</p>
+        <h2>版本契约与 CP1</h2>
+        <p class="claim">
+          精确版本要从所有权文件读取；一张手册只能记录快照，不能替 manifest 和 lockfile 冻结环境。
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">工具</th>
+                <th scope="col">2026-08-29 仓库事实</th>
+                <th scope="col">事实来源</th>
+                <th scope="col">CP1 待办</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Node / npm</td>
+                <td><code>22.23.2</code> / <code>10.9.8</code> manifest contract；<code>.node-version</code> 仍为 <code>22.23.1</code></td>
+                <td><a href="../../../frontend/package.json"><code>frontend/package.json</code></a>、<a href="../../../.node-version"><code>.node-version</code></a></td>
+                <td>按 CP0 批准值消除 selector 漂移</td>
+              </tr>
+              <tr>
+                <td>Python</td>
+                <td><code>&gt;=3.11,&lt;3.14</code>；<code>.python-version</code> 当前为 <code>3.13.14</code></td>
+                <td><a href="../../../pyproject.toml"><code>pyproject.toml</code></a>、<a href="../../../.python-version"><code>.python-version</code></a></td>
+                <td>核对 selector、实际稳定解释器与 build lock 注释</td>
+              </tr>
+              <tr>
+                <td>PyInstaller</td>
+                <td><code>6.21.0</code>；lock 注明 macOS arm64 / Python 3.13.14 的旧解析上下文</td>
+                <td><a href="../../../requirements-build.lock"><code>requirements-build.lock</code></a></td>
+                <td>在稳定工具链重新解析和验证</td>
+              </tr>
+              <tr>
+                <td>Rust / Cargo</td>
+                <td><code>1.88.0</code>、target <code>aarch64-apple-darwin</code></td>
+                <td><a href="../../../rust-toolchain.toml"><code>rust-toolchain.toml</code></a>、<a href="../../../frontend/src-tauri/Cargo.toml"><code>Cargo.toml</code></a></td>
+                <td>核对实际稳定工具与 Cargo lock</td>
+              </tr>
+              <tr>
+                <td>Tauri</td>
+                <td>Rust crate <code>2.11.5</code>；CLI <code>2.11.4</code></td>
+                <td><a href="../../../frontend/src-tauri/Cargo.toml"><code>Cargo.toml</code></a>、<a href="../../../frontend/package.json"><code>package.json</code></a></td>
+                <td>与 CP0 应用版本、bundle contract 和 build recipe 一起冻结</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          本次手册更新不修改 <code>.node-version</code>、<code>.python-version</code>、
+          <code>rust-toolchain.toml</code>、build lock 或 bundle 配置。现在修这些文件会提前进入
+          Road v0.8 CP1 的实施范围，并让教学文档提交混入工具链决策。
+        </p>
+
+        <h3>新人最短检查路线</h3>
+        <pre><code># 日常：使用开发 TUI
+./dev
+
+# TUI 外的同一条底层链
+.venv/bin/python scripts/build_sidecar.py
+npm --prefix frontend run tauri:dev
+
+# Road v0.8 CP1 才使用的 rehearsal 入口（须先满足 CP0 Gate）
+npm --prefix frontend run tauri:build -- --bundles app,dmg</code></pre>
+        <p>
+          命令成功后仍要记录实际工具版本、运行日期、输出、未执行项和对应源码状态。
+          应运行哪些测试及每项证据能证明什么，见<a href="testing-and-evidence-guide.html">测试与证据手册</a>；
+          各组件的职责与改动入口见<a href="stack-component-atlas.html">技术栈与组件图鉴</a>。
+        </p>
+      </section>
+
+      <section class="sources" aria-labelledby="sources-title">
+        <h2 id="sources-title">来源与继续阅读</h2>
+        <p>
+          项目内链接定义今天的实际链路；外部链接只解释工具通用行为，不能覆盖 keikeu 的
+          数据、证据或发布权限规则。
+        </p>
+
+        <h3>项目事实</h3>
+        <ol>
+          <li><a href="../../../pyproject.toml"><code>pyproject.toml</code></a>、<a href="../../../requirements-build.lock"><code>requirements-build.lock</code></a>、<a href="../../../scripts/build_sidecar.py"><code>scripts/build_sidecar.py</code></a></li>
+          <li><a href="../../../frontend/package.json"><code>frontend/package.json</code></a>、<a href="../../../frontend/src-tauri/Cargo.toml"><code>Cargo.toml</code></a>、<a href="../../../frontend/src-tauri/tauri.conf.json"><code>tauri.conf.json</code></a></li>
+          <li><a href="../../../PLAN_road_v0_8.md">Road v0.8 计划</a>、<a href="../../PROJECT.md">PROJECT</a>、<a href="../../RULES.md">RULES</a></li>
+        </ol>
+
+        <h3>官方工具文档</h3>
+        <ol>
+          <li><a href="https://hatch.pypa.io/dev/config/build/">Hatchling build configuration</a></li>
+          <li><a href="https://pyinstaller.org/en/stable/usage.html">PyInstaller usage</a></li>
+          <li><a href="https://vite.dev/guide/">Vite guide</a></li>
+          <li><a href="https://v2.tauri.app/zh-cn/develop/sidecar/">Tauri sidecar</a></li>
+        </ol>
+
+        <aside class="truth-boundary">
+          <strong>最后核对：</strong>手册与 manifest、lockfile、脚本或 Road 权威冲突时，手册错。
+          修正文档，不要让手册成为第二套 build recipe。
+        </aside>
+      </section>
+
+      <nav class="manual-pager" aria-label="上一篇和下一篇">
+        <a href="testing-and-evidence-guide.html">
+          <span>上一篇</span>
+          测试与证据手册
+        </a>
+        <a href="macos-developer-id-release.md">
+          <span>继续阅读</span>
+          Developer ID 发布手册
+        </a>
+      </nav>
+    </main>
+  </div>
+</body>
+</html>

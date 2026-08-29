@@ -3,6 +3,9 @@
 > 状态：开发者于 2026-08-26 授权把本草案与既有 `keikeu-routine` skill 改动一并落盘并提交。
 > 本次只建立可评审的发布计划，不是 CP0 checkpoint，也不授权构建、Keychain 修改、Apple
 > 上传、外部分发、tag、push 或 release。Road v0.8 仍不得早于 2026-08-28 启动。
+> 2026-08-29 状态复核：最早日期条件已经满足，但 §14 的计划/seed 批准仍未通过，
+> close-guard 偏差也尚未分配修复并聚焦重证，因此 Road 仍未启动。`./dev` 与技术手册是
+> CP0 前开发工具，不是 Road checkpoint、release build 或发布资产。
 >
 > 继承基线：Road v0.7 最终产品 checkpoint `2f03aee`，以及其后独立 closeout
 > `a7726ae`。Paper v4、Index v4、protocol v2、完整文件夹生命周期与已接受 App Shell 不变。

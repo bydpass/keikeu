@@ -7,7 +7,8 @@
 > Gate 与 CP7 一号作者 Gate 已通过。未发生真实旧 schema 迁移，也不声称发布已完成。
 >
 > 当前权威边界与同步日期：本文的 Paper v4 grammar、Index v4、protocol v2、迁移和安全
-> 合同于 2026-08-26 按 production source 复核；Road v0.6 的 UI、窗口几何与多行 Tags
+> 合同于 2026-08-26 按 production source 复核；2026-08-29 的开发者 TUI、手册与 context
+> pack 同步不改变这些合同。Road v0.6 的 UI、窗口几何与多行 Tags
 > 呈现是历史记录，当前 presentation 由 [Road v0.7 设计](road-v0-7-app-shell-design.md)
 > §17–§18 覆盖。
 

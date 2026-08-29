@@ -8,9 +8,9 @@
 
 Road v0.6 已完成并归档：production 使用 Paper v4、Index v4 与 protocol v2，Paper 本身就是可编辑的有序卡页；旧正常运行链已删除，未知结果与人工修复 Gate、一号真实作者 Gate 均已通过，且无未解决 P0/P1。
 
-Road v0.7 的 App Shell 与信息层级已通过 CP0–CP8。开发者于 2026-08-26 通过 CP8 原生 IME Gate D，并明确判定整个 Road v0.7 的产品与实施工作正式完工；底层 Paper v4 / Index v4 / protocol v2 不变。最终 checkpoint 为 `2f03aee`，[Road snapshot](docs/archive/snapshots/road-v0-7.html) 已独立归档。真实 Vault、push、tag、签名、打包与发布均未执行。Road v0.8 的[预启动计划草案](PLAN_road_v0_8.md)已记录，CP0 仍不得早于 2026-08-28，且尚未获 seed 批准。
+Road v0.7 的 App Shell 与信息层级已通过 CP0–CP8。开发者于 2026-08-26 通过 CP8 原生 IME Gate D，并明确判定整个 Road v0.7 的产品与实施工作正式完工；底层 Paper v4 / Index v4 / protocol v2 不变。最终 checkpoint 为 `2f03aee`，[Road snapshot](docs/archive/snapshots/road-v0-7.html) 已独立归档。CP6 的一次有界真实 v4 Vault 作者 Gate 已完成且授权已耗尽；此后未再操作真实 Vault，push、tag、签名、打包与发布均未执行。Road v0.8 的[预启动计划草案](PLAN_road_v0_8.md)已记录；2026-08-28 的日期条件已经满足，但 seed 尚未批准，close-guard 偏差也仍待分配修复与聚焦重证，因此 Road 尚未启动。
 
-文档与源码于 2026-08-26 按 Road v0.7 完成态复核。复核发现 App-root pending intent 的正常关闭保护仍错误地只挂在 `PaperView`；这是待修复的实现偏差，不改变已接受设计合同，并在 [PROJECT](docs/PROJECT.md) 记录为 Road v0.8 CP0 前置阻塞。
+产品文档与源码于 2026-08-26 按 Road v0.7 完成态复核。复核发现 App-root pending intent 的正常关闭保护仍错误地只挂在 `PaperView`；这是待修复的实现偏差，不改变已接受设计合同，并在 [PROJECT](docs/PROJECT.md) 记录为 Road v0.8 CP0 前置阻塞。2026-08-29 又加入独立的开发者 TUI、四份技术手册与本地 context-pack 交接流程；它们不改变产品界面、运行链或验收状态。
 
 Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响应式界面、本机沙盒 Vault 与真机修复验证；它不是 macOS Road 的合入闸门。Road v0.3 的工程、macOS candidate smoke 与 CP6 真实作者验收均已完成；检索更快且清楚、外部编辑器 handoff 清楚，未报告未解决 P0/P1。其设计与验收文档已[只读归档](docs/archive/road-v0-3/README.md)，未创建 v0.3 tag。**Road v0.4 已彻底完成**：Gate A、Gate B、产品验收与 macOS 15.7+ 兼容性均已通过；当前唯一桌面运行时为 Vue/Tauri 与本地 Python sidecar，Flet 已在 CP14 退役。**Road v0.5 也已完成并归档**：Paper Desk、保存基线、离开保护、Flashcard/Library 连贯性、全应用 Quiet Desk 视觉与固定滚动语义均已验收。实时坐标见 [PROJECT](docs/PROJECT.md)。
 
@@ -112,7 +112,7 @@ core 层负责。
 | 当前 Road v0.7 界面视觉规范 | [Design map](docs/design/design.html) |
 | 当前 Road v0.7 界面交互规范 | [Interaction map](docs/design/interaction.html) |
 | Agent 如何工作 | [AGENTS](AGENTS.md) |
-| 人工阅读的设计、Git 与伦理说明 | [Human manuals](docs/manual/README.md) |
+| 人工阅读的开发技术、设计、Git 与伦理说明 | [Human manuals](docs/manual/README.md) |
 | 历史为何这样演变 | [Archive](docs/archive/README.md) |
 
 ## 路线
@@ -127,7 +127,7 @@ Road v0.4   Vue/Tauri 前端替换完成；CP14 已验收
 Road v0.5   Quiet Desk UI 与交互收口完成；CP7 已验收并归档
 Road v0.6   Paper v4 卡页重构；CP7 已验收并归档
 Road v0.7   CP8 已验收并归档；最终 checkpoint 2f03aee
-Road v0.8   预启动计划草案已记录；CP0 最早 2026-08-28，仍待明确 seed 批准
+Road v0.8   日期条件已满足；仍待 seed 批准与 close-guard 修复/重证，Road 未启动
 Pre-Advance 可选 Markdown Outline；Road v0.7 之外且未排期，不阻塞核心流程
 之后        iOS/iPadOS（2026-08 方向）、Android/HarmonyOS（2026 Q4）、Windows（2027）
 ```

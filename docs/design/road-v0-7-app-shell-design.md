@@ -1,6 +1,6 @@
 # Road v0.7：App Shell、连续编辑流与响应式 Anchor 设计
 
-> 状态：开发者于 2026-08-20 批准原设计与实施计划；CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc`、CP3 `55b5313`、CP4 `6f69310`、CP5 `3259c42` 与 CP6 一号作者 Gate 均已通过。CP7 于 2026-08-25 通过 Gate D，并在 `1e17cea` 建立本地 checkpoint。CP8 完成 source、完整工程、五档布局、Figma 与实体键盘 macOS IME Gate，开发者于 2026-08-26 明确通过 Gate D 并判定 Road v0.7 产品与实施正式完工。最终 checkpoint 为 `2f03aee`；[Road snapshot](../archive/snapshots/road-v0-7.html) 已在其后独立归档。真实 Vault、push、tag、签名、打包与发布均未执行。
+> 状态：开发者于 2026-08-20 批准原设计与实施计划；CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc`、CP3 `55b5313`、CP4 `6f69310`、CP5 `3259c42` 与 CP6 一号作者 Gate 均已通过。CP7 于 2026-08-25 通过 Gate D，并在 `1e17cea` 建立本地 checkpoint。CP8 完成 source、完整工程、五档布局、Figma 与实体键盘 macOS IME Gate，开发者于 2026-08-26 明确通过 Gate D 并判定 Road v0.7 产品与实施正式完工。最终 checkpoint 为 `2f03aee`；[Road snapshot](../archive/snapshots/road-v0-7.html) 已在其后独立归档。CP6 的一次有界真实 v4 Vault 作者 Gate 已完成且授权已耗尽；此后未再操作真实 Vault，push、tag、签名、打包与发布均未执行。
 >
 > 基线：Road v0.6 已完成并验收的 Paper v4 / Index v4 / protocol v2。
 >
@@ -8,7 +8,8 @@
 >
 > 伴随评审物：[`Road v0.7 HTML 计划书`](road-v0-7-planbook.html)；它只展示本设计与实施计划，不新增第三份规范权威。
 >
-> 文档同步：2026-08-26 按 CP8 production source 复核。§§1–16 保留 CP0–CP6 历史，
+> 文档同步：2026-08-26 按 CP8 production source 复核；2026-08-29 再确认开发者 TUI、
+> 技术手册与 context pack 均在产品界面和运行链之外。§§1–16 保留 CP0–CP6 历史，
 > 当前界面以 §17（CP7）与 §18（CP8）override 为准。
 
 ## 1. 核心判断
@@ -478,4 +479,5 @@ composition、截图、Figma、full gate 或 debug bundle 构建仍不能替代�
 synthetic、build/OS/input-source 记录见 CP8 acceptance report。
 
 CP8 Gate D 已通过；最终 checkpoint 为 `2f03aee`，Road snapshot 已作为其后的独立文档
-closeout 创建。该 Git 收口不授权 push、tag、真实 Vault、签名、打包或发布；这些动作均未执行。
+closeout 创建。该 Git 收口不授权 push、tag、进一步真实 Vault 操作、签名、打包或发布；
+这些动作在收口阶段均未执行。

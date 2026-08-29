@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="author" content="keikeu contributors">
+  <meta name="description" content="keikeu 技术栈与组件图鉴：从 Vue、Tauri/Rust、JSONL v2 到 Python、Markdown、构建与测试工具。">
+  <meta name="keywords" content="keikeu, Vue, Tauri, Rust, Python, Vite, Vitest, pytest, PyInstaller">
+  <meta name="generator" content="Kami 1.12.0">
+  <title>技术栈与组件图鉴 · keikeu</title>
+  <link rel="stylesheet" href="kami-manual.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到正文</a>
+
+  <div class="manual-shell">
+    <aside class="manual-sidebar" aria-label="forfresh 手册系列">
+      <a class="series" href="../README.md">keikeu · forfresh</a>
+      <nav aria-label="同系列手册">
+        <a href="developer-tui-quickstart.html">TUI 极简使用</a>
+        <a href="stack-component-atlas.html" aria-current="page">技术栈与组件</a>
+        <a href="testing-and-evidence-guide.html">测试与证据</a>
+        <a href="build-and-packaging-guide.html">构建与打包</a>
+        <a href="npm-beginner-guide.html">npm 手册</a>
+        <a href="tauri-vue-beginner-guide.html">Tauri + Vue</a>
+        <a href="python-caveman-guide.html">Python Caveman</a>
+        <a href="rust-beginner-guide.html">Rust 简易入门</a>
+      </nav>
+      <p class="rail-note">
+        HUMAN MANUAL · NON-NORMATIVE<br>
+        当前状态看 PROJECT；工程与证据规则看 RULES。
+      </p>
+    </aside>
+
+    <main class="manual-document" id="main" tabindex="-1">
+      <header class="cover">
+        <p class="eyebrow">keikeu / stack atlas / newcomer</p>
+        <h1>技术栈与<br>组件图鉴</h1>
+        <p class="subtitle">
+          先看一条真实数据链，再认识每个直接组件的责任、入口与检查。
+          这是一张导航图，不是一份需要背诵的依赖清单。
+        </p>
+        <p class="meta">
+          <span>keikeu contributors</span>
+          <span>简体中文</span>
+          <span>2026-08-29</span>
+          <span>Road v0.7 accepted baseline</span>
+        </p>
+      </header>
+
+      <section class="summary" aria-labelledby="summary-title">
+        <h2 id="summary-title">先记住三件事</h2>
+        <p class="lead">
+          keikeu 是本地桌面应用，不是 Vue 网站加 HTTP 后端。界面、桌面宿主、业务规则和作者文件
+          分属不同层；每层只持有完成自己责任所需的最小能力。
+        </p>
+        <ol class="takeaways">
+          <li><span>Vue 画界面；Tauri/Rust 管桌面边界；Python 解释产品与文件规则。</span></li>
+          <li><span>JSONL v2、Paper v4、Index v4 是 keikeu 的接口或格式，不是第三方库。</span></li>
+          <li><span>版本表是 2026-08-29 快照；manifest、lock、源码与现场命令才是最终事实。</span></li>
+        </ol>
+      </section>
+
+      <nav class="toc" aria-labelledby="toc-title">
+        <p class="toc-label">Contents</p>
+        <h2 id="toc-title">阅读路线</h2>
+        <ol>
+          <li><a href="#chain">一条本地数据链</a></li>
+          <li><a href="#runtime">Runtime：界面与业务</a></li>
+          <li><a href="#native">Native boundary：桌面边界</a></li>
+          <li><a href="#build">Build：把源码变成应用</a></li>
+          <li><a href="#test">Test：检查不同层</a></li>
+          <li><a href="#tooling">Developer tooling：日常入口</a></li>
+          <li><a href="#routes">六类改动怎么找入口</a></li>
+          <li><a href="#snapshot">版本与事实边界</a></li>
+        </ol>
+      </nav>
+
+      <section class="chapter" id="chain">
+        <p class="chapter-number">Chapter 01</p>
+        <h2>一条本地数据链</h2>
+        <p class="claim">
+          判断组件归属时，先顺着数据走：可见操作从 Vue 出发，穿过受控的原生边界，最后由 Python
+          读取或写入作者拥有的 Markdown。
+        </p>
+
+        <pre><code>Vue 3 / WebView
+  组件、表单、draft、可见状态
+          │ @tauri-apps/api invoke
+          ▼
+Tauri 2 / Rust host
+  五个 command、窗口、原生能力、唯一 Sidecar 生命周期
+          │ stdin/stdout · JSONL v2
+          ▼
+Python · keikeu_bridge → keikeu_core
+  DTO、业务编排、模型、路径、Markdown、Index
+          │
+          ├──▶ Paper v4 Markdown  作者的 durable asset
+          └──▶ Index v4 JSON       可重建的辅助数据</code></pre>
+
+        <h3>三份项目契约，不是三项依赖</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">名称</th>
+                <th scope="col">它是什么</th>
+                <th scope="col">实现事实</th>
+                <th scope="col">不要误解成</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>JSONL v2</strong></td>
+                <td>Rust 与 Python Sidecar 之间逐行收发 JSON 的本地协议。</td>
+                <td><a href="../../../frontend/src-tauri/src/bridge.rs"><span class="path">bridge.rs</span></a> 与 <a href="../../../src/keikeu_bridge/protocol.py"><span class="path">protocol.py</span></a> 两端共同实现。</td>
+                <td>HTTP、WebSocket、npm 包或 Python 包。</td>
+              </tr>
+              <tr>
+                <td><strong>Paper v4</strong></td>
+                <td>作者内容的 Markdown grammar 与当前领域模型。</td>
+                <td><a href="../../../src/keikeu_core/models.py"><span class="path">models.py</span></a> 和 <a href="../../../src/keikeu_core/markdown_io.py"><span class="path">markdown_io.py</span></a>。</td>
+                <td>数据库表、Vue state 或第三方 Markdown CMS。</td>
+              </tr>
+              <tr>
+                <td><strong>Index v4</strong></td>
+                <td>从 Paper 扫描结果重建的 JSON 投影。</td>
+                <td><a href="../../../src/keikeu_core/indexer.py"><span class="path">indexer.py</span></a> 输出 <code>version: 4</code>。</td>
+                <td>作者内容权威、数据库或必须备份的唯一副本。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <aside class="callout">
+          <span class="mini-label">层与层之间只传必要数据</span>
+          <p>
+            Vue 不写 Markdown；Rust 不复制 Python 业务规则；<code>keikeu_core</code> 不导入 GUI 或 transport。
+            想“顺手”跨层时，先回到 <a href="../../architecture/architecture.html">Architecture</a> 与
+            <a href="../../RULES.md">RULES</a> 核对边界。
+          </p>
+        </aside>
+      </section>
+
+      <section class="chapter" id="runtime">
+        <p class="chapter-number">Chapter 02</p>
+        <h2>Runtime：界面与业务</h2>
+        <p class="claim">
+          Runtime 是用户操作应用时真正运行的代码。本节只看可见界面与产品规则；原生宿主留到下一节。
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="keep" scope="col">组件 / 版本快照</th>
+                <th class="keep" scope="col">用途 / 所在层</th>
+                <th class="keep" scope="col">职责边界</th>
+                <th class="keep" scope="col">事实来源 / 代码入口</th>
+                <th class="keep" scope="col">改动后的最小检查</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Vue</strong><br><code>3.5.40</code></td>
+                <td>WebView 界面运行时；组件、响应式状态、表单与可见导航。</td>
+                <td>不直接读写 Vault，不解释 Paper grammar，不持有原生进程。</td>
+                <td><a href="../../../frontend/package.json"><span class="path">frontend/package.json</span></a>；<a href="../../../frontend/src/main.js"><span class="path">main.js</span></a> → <a href="../../../frontend/src/App.vue"><span class="path">App.vue</span></a>。</td>
+                <td><code class="keep">npm --prefix frontend run test</code><br><code class="keep">npm --prefix frontend run build</code></td>
+              </tr>
+              <tr>
+                <td><strong>Python stdlib</strong><br><code>&gt;=3.11,&lt;3.14</code><br>现场 <code>3.13.15</code></td>
+                <td>业务与文件运行时；<code>keikeu_bridge</code> 编排请求，<code>keikeu_core</code> 处理模型和本地文件。</td>
+                <td>项目没有 Python runtime dependency；core 不导入 GUI/transport，bridge 不替 GUI 写界面。</td>
+                <td><a href="../../../pyproject.toml"><span class="path">pyproject.toml</span></a>；<a href="../../../src/keikeu_bridge/service.py"><span class="path">service.py</span></a> 与 <a href="../../../src/keikeu_core/"><span class="path">src/keikeu_core/</span></a>。</td>
+                <td><code class="keep">.venv/bin/python -m pytest</code><br><code class="keep">.venv/bin/python -m compileall -q src</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <aside class="callout">
+          <span class="mini-label">“无 runtime dependency”不等于没有开发工具</span>
+          <p>
+            pytest、Hatchling 和 PyInstaller 参与测试、安装或构建，不随 <code>keikeu_core</code>
+            成为产品业务依赖。先区分运行时与工具链，再决定版本应该写在哪里。
+          </p>
+        </aside>
+      </section>
+
+      <section class="chapter" id="native">
+        <p class="chapter-number">Chapter 03</p>
+        <h2>Native boundary：桌面边界</h2>
+        <p class="claim">
+          Tauri 把 WebView 接到 macOS；Rust 只提供窄 command、进程生命周期和获准的原生能力，不成为第二套业务后端。
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="keep" scope="col">组件 / 版本快照</th>
+                <th class="keep" scope="col">用途 / 所在层</th>
+                <th class="keep" scope="col">职责边界</th>
+                <th class="keep" scope="col">事实来源 / 代码入口</th>
+                <th class="keep" scope="col">改动后的最小检查</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Tauri JS API / plugins</strong><br><code>@tauri-apps/api 2.11.1</code><br><code>plugin-dialog 2.7.2</code></td>
+                <td>原生边界的 Vue 一侧；发起 <code>invoke</code> 与目录选择。</td>
+                <td>只能调用 Rust 注册且 capability 允许的能力；不能绕过 host 直接操作 Sidecar。</td>
+                <td><a href="../../../frontend/package.json"><span class="path">package.json</span></a>；<a href="../../../frontend/src/bridge.js"><span class="path">bridge.js</span></a> 与 <a href="../../../frontend/src-tauri/capabilities/main.json"><span class="path">capabilities/main.json</span></a>。</td>
+                <td><code class="keep">npm --prefix frontend run test</code>，再做聚焦 Tauri smoke。</td>
+              </tr>
+              <tr>
+                <td><strong>Tauri / Rust</strong><br><code>tauri 2.11.5</code><br><code>tauri-build 2.6.3</code><br><code>dialog 2.7.2</code> / <code>opener 2.5.4</code> / <code>shell 2.3.5</code><br><code>rustc 1.88.0</code></td>
+                <td>桌面宿主；窗口、插件、五个 command、唯一 Sidecar worker 与退出清理。</td>
+                <td>不解析 Paper，不维护 Index，不复制 Python service 规则。</td>
+                <td><a href="../../../frontend/src-tauri/Cargo.toml"><span class="path">Cargo.toml</span></a>；<a href="../../../frontend/src-tauri/src/main.rs"><span class="path">main.rs</span></a> → <a href="../../../frontend/src-tauri/src/lib.rs"><span class="path">lib.rs</span></a>。</td>
+                <td><code class="keep">cargo test --manifest-path frontend/src-tauri/Cargo.toml</code>，再做聚焦 Tauri smoke。</td>
+              </tr>
+              <tr>
+                <td><strong>Serde / serde_json</strong><br><code>1.0.229</code> / <code>1.0.151</code></td>
+                <td>Rust 数据边界；把 command 参数和 JSONL message 变成明确的 Rust/JSON 值。</td>
+                <td>只负责表示与序列化；协议方法、重试规则和业务含义仍由 keikeu 代码定义。</td>
+                <td><a href="../../../frontend/src-tauri/Cargo.toml"><span class="path">Cargo.toml</span></a>；<a href="../../../frontend/src-tauri/src/commands.rs"><span class="path">commands.rs</span></a> 与 <a href="../../../frontend/src-tauri/src/bridge.rs"><span class="path">bridge.rs</span></a>。</td>
+                <td><code class="keep">cargo test --manifest-path frontend/src-tauri/Cargo.toml</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          JavaScript API 与 Rust crate 的 patch 版本无需看起来完全相同；它们是不同发布物。
+          只读各自 manifest 与 lockfile，不靠名字相似猜兼容性。
+        </p>
+      </section>
+
+      <section class="chapter" id="build">
+        <p class="chapter-number">Chapter 04</p>
+        <h2>Build：把源码变成应用</h2>
+        <p class="claim">
+          构建链由几个小工具串起来。每个工具只产出下一层需要的东西；单层成功不能冒充完整桌面成功。
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="keep" scope="col">组件 / 版本快照</th>
+                <th class="keep" scope="col">用途 / 所在层</th>
+                <th class="keep" scope="col">职责边界</th>
+                <th class="keep" scope="col">事实来源 / 代码入口</th>
+                <th class="keep" scope="col">改动后的最小检查</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Vite / Vue plugin</strong><br><code>8.1.5</code> / <code>6.0.8</code></td>
+                <td>前端开发与静态资源构建；把 Vue SFC 交给浏览器/WebView 可执行的资产。</td>
+                <td>不编译 Rust，不打包 Python，不证明桌面窗口或 Vault 流程。</td>
+                <td><a href="../../../frontend/package.json"><span class="path">package.json</span></a>；<a href="../../../frontend/vite.config.js"><span class="path">vite.config.js</span></a>。</td>
+                <td><code class="keep">npm --prefix frontend run build</code></td>
+              </tr>
+              <tr>
+                <td><strong>Hatchling</strong><br>build backend，当前未精确固定</td>
+                <td>Python packaging；让 editable install / wheel 知道 <code>src/</code> 下的两个包。</td>
+                <td>不是产品运行时依赖，也不负责生成 Sidecar executable。</td>
+                <td><a href="../../../pyproject.toml"><span class="path">pyproject.toml</span></a> 的 <code>[build-system]</code> 与 wheel package mapping。</td>
+                <td>重新执行 <code class="keep">python -m pip install -e ".[dev]"</code>，再运行 Python tests。</td>
+              </tr>
+              <tr>
+                <td><strong>PyInstaller</strong><br><code>6.21.0</code></td>
+                <td>Sidecar packaging；把 Python 入口与项目包封装成当前 target 的 onefile binary。</td>
+                <td>不构建 Vue/Rust app，不决定 protocol 或文件规则。</td>
+                <td><a href="../../../requirements-build.lock"><span class="path">requirements-build.lock</span></a>；<a href="../../../scripts/build_sidecar.py"><span class="path">build_sidecar.py</span></a> → <a href="../../../scripts/sidecar_entry.py"><span class="path">sidecar_entry.py</span></a>。</td>
+                <td><code class="keep">.venv/bin/python scripts/build_sidecar.py</code></td>
+              </tr>
+              <tr>
+                <td><strong>Cargo</strong><br><code>1.88.0</code></td>
+                <td>Rust package manager 与 compiler driver；解析 Cargo manifest/lock 并构建 host。</td>
+                <td>不安装 npm/Python 包；<code>cargo test</code> 只覆盖 Rust 层。</td>
+                <td><a href="../../../frontend/src-tauri/Cargo.toml"><span class="path">Cargo.toml</span></a> 与 <a href="../../../frontend/src-tauri/Cargo.lock"><span class="path">Cargo.lock</span></a>。</td>
+                <td><code class="keep">cargo test --manifest-path frontend/src-tauri/Cargo.toml</code></td>
+              </tr>
+              <tr>
+                <td><strong>Tauri CLI</strong><br><code>2.11.4</code></td>
+                <td>桌面构建编排；连接 Vite、Cargo、配置与 <code>externalBin</code>。</td>
+                <td><code>tauri:dev</code> 是开发链，<code>tauri:build</code> 是 bundle 构建；两者都不等于签名、公证或产品接受。</td>
+                <td><a href="../../../frontend/package.json"><span class="path">package.json</span></a>；<a href="../../../frontend/src-tauri/tauri.conf.json"><span class="path">tauri.conf.json</span></a>。</td>
+                <td><code class="keep">npm --prefix frontend run tauri:dev</code>（受控 smoke）</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          完整链路与产物边界见 <a href="build-and-packaging-guide.html">构建与打包手册</a>；签名、公证和
+          Gatekeeper 继续看 <a href="macos-developer-id-release.md">Developer ID 发布手册</a>。
+        </p>
+      </section>
+
+      <section class="chapter" id="test">
+        <p class="chapter-number">Chapter 05</p>
+        <h2>Test：检查不同层</h2>
+        <p class="claim">
+          测试工具不是“质量通过”按钮。每个 runner 只能证明它实际执行的代码与环境。
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="keep" scope="col">组件 / 版本快照</th>
+                <th class="keep" scope="col">用途 / 所在层</th>
+                <th class="keep" scope="col">职责边界</th>
+                <th class="keep" scope="col">事实来源 / 代码入口</th>
+                <th class="keep" scope="col">改动后的最小检查</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Vitest</strong><br><code>4.1.10</code></td>
+                <td>JavaScript/Vue test runner；执行 <code>frontend/src/*.test.js</code>。</td>
+                <td>不会启动真实 Tauri WebView、Rust host 或 Python Sidecar。</td>
+                <td><a href="../../../frontend/package.json"><span class="path">package.json</span></a> 的 <code>test</code> script；<a href="../../../frontend/vite.config.js"><span class="path">vite.config.js</span></a>。</td>
+                <td><code class="keep">npm --prefix frontend run test</code></td>
+              </tr>
+              <tr>
+                <td><strong>Vue Test Utils</strong><br><code>2.4.11</code></td>
+                <td>Vue component test helper；mount 组件、触发事件、检查渲染状态。</td>
+                <td>组件 wrapper 不是原生窗口；bridge 通常是 mock。</td>
+                <td><a href="../../../frontend/package.json"><span class="path">package.json</span></a>；<a href="../../../frontend/src/App.test.js"><span class="path">App.test.js</span></a> 等聚焦测试。</td>
+                <td><code class="keep">npm --prefix frontend run test</code></td>
+              </tr>
+              <tr>
+                <td><strong>jsdom</strong><br><code>29.1.1</code></td>
+                <td>Vitest 的模拟 DOM 环境；让 Node 中的组件测试拥有常用浏览器接口。</td>
+                <td>不等于 Safari/WKWebView，不提供真实尺寸、IME、Finder、dialog 或 Tauri IPC。</td>
+                <td><a href="../../../frontend/package.json"><span class="path">package.json</span></a>；<a href="../../../frontend/vite.config.js"><span class="path">vite.config.js</span></a> 的 <code>environment: "jsdom"</code>。</td>
+                <td><code class="keep">npm --prefix frontend run test</code>；视觉/原生行为另做真实 smoke。</td>
+              </tr>
+              <tr>
+                <td><strong>pytest</strong><br><code>&gt;=8</code><br>现场 <code>9.1.1</code></td>
+                <td>Python test runner；覆盖 core、bridge、protocol、迁移与本地工具。</td>
+                <td>只使用 fixtures、临时目录或 synthetic Vault；通过不等于真实作者场景接受。</td>
+                <td><a href="../../../pyproject.toml"><span class="path">pyproject.toml</span></a>；<a href="../../../tests/"><span class="path">tests/</span></a>。</td>
+                <td><code class="keep">.venv/bin/python -m pytest</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          何时用 mock、fixture、fake Home 或 synthetic Vault，以及每条证据不能证明什么，见
+          <a href="testing-and-evidence-guide.html">测试与证据手册</a>。
+        </p>
+      </section>
+
+      <section class="chapter" id="tooling">
+        <p class="chapter-number">Chapter 06</p>
+        <h2>Developer tooling：日常入口</h2>
+        <p class="claim">
+          项目工具只是把已存在的命令包得更顺手，不创造第二套 build、context 或验收规则。
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="keep" scope="col">组件 / 版本快照</th>
+                <th class="keep" scope="col">用途 / 所在层</th>
+                <th class="keep" scope="col">职责边界</th>
+                <th class="keep" scope="col">事实来源 / 代码入口</th>
+                <th class="keep" scope="col">改动后的最小检查</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong><code>./dev</code></strong><br>项目脚本，无独立 semver</td>
+                <td>macOS 开发者 TUI；启动/重建应用、显示自己管理的日志、浏览本地文档。</td>
+                <td>只管理自己启动的进程组；不替代 Tauri lifecycle，不写日志文件，不把 manual 变成权威。</td>
+                <td><a href="../../../dev"><span class="path">dev</span></a>；<a href="../../../tests/test_dev_tui.py"><span class="path">test_dev_tui.py</span></a>。</td>
+                <td><code class="keep">.venv/bin/python -m pytest -q tests/test_dev_tui.py</code><br><code class="keep">.venv/bin/python -m py_compile dev</code></td>
+              </tr>
+              <tr>
+                <td><strong>Context pack + <code>keikeu-routine</code></strong><br>项目工作流，无独立 semver</td>
+                <td>Agent routing；把下一任务所需的少量 tracked 文本与自动权威文件写入 ignored 本地包。</td>
+                <td>只读当前工作树，不上传；不替代仓库工具、权威、测试或验收，也不接受未跟踪文件。</td>
+                <td><a href="../../../scripts/build_context_pack.py"><span class="path">build_context_pack.py</span></a>；<a href="../../../tests/test_build_context_pack.py"><span class="path">test_build_context_pack.py</span></a>；<a href="../../../.agents/skills/keikeu-routine/SKILL.md"><span class="path">keikeu-routine</span></a>。</td>
+                <td><code class="keep">.venv/bin/python -m pytest -q tests/test_build_context_pack.py</code><br>刷新后人工审查 header 与每个文件边界</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>两个入口，仍是一套命令</h3>
+        <ul class="flow">
+          <li><span><strong><code>a</code>：使用现有 Sidecar</strong><br>包装 <code>npm --prefix frontend run tauri:dev</code>。</span></li>
+          <li><span><strong><code>b</code>：重建再启动</strong><br>先调用 <code>.venv/bin/python scripts/build_sidecar.py</code>；成功后才启动 Tauri。</span></li>
+          <li><span><strong>文档页</strong><br>扫描本地 manual/active docs，并以纯文本搜索和预览；不实现另一套渲染器或索引。</span></li>
+        </ul>
+        <p>
+          五分钟键位与失败处理见 <a href="developer-tui-quickstart.html">TUI 极简使用手册</a>。
+          Context route 只在最终工作树/提交状态后刷新；它不会进入 Git，也不会因 TUI 可浏览
+          全部手册而自动收集 <code>docs/manual/</code>。
+        </p>
+      </section>
+
+      <section class="chapter" id="routes">
+        <p class="chapter-number">Chapter 07</p>
+        <h2>六类改动怎么找入口</h2>
+        <p class="claim">
+          不需要先读完整仓库。按任务选择一条窄路线，读 authority、目标、调用方和直接测试。
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">我要改</th>
+                <th scope="col">先读</th>
+                <th scope="col">常见入口</th>
+                <th scope="col">最小证据</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>UI</strong></td>
+                <td><a href="../../design/road-v0-7-app-shell-design.md">App Shell design</a> 与相关组件测试。</td>
+                <td><span class="path">frontend/src/*.vue</span>、<span class="path">style.css</span></td>
+                <td>聚焦 Vitest + Vite build；交互/视觉变化再做真实 viewport/Tauri 检查。</td>
+              </tr>
+              <tr>
+                <td><strong>原生能力</strong></td>
+                <td><a href="../../architecture/architecture.html">Architecture</a>、capability 与调用方。</td>
+                <td><span class="path">frontend/src/bridge.js</span>、<span class="path">commands.rs</span>、<span class="path">lib.rs</span></td>
+                <td>前端聚焦测试 + Cargo test + 真实 Tauri smoke。</td>
+              </tr>
+              <tr>
+                <td><strong>protocol</strong></td>
+                <td><a href="../../design/road-v0-6-paper-v4-design.md">Paper v4 design</a> 与两端 direct tests。</td>
+                <td><span class="path">bridge.rs</span> ↔ <span class="path">protocol.py</span></td>
+                <td>Rust bridge tests + <span class="path">tests/test_bridge_protocol.py</span>；两端版本必须同步。</td>
+              </tr>
+              <tr>
+                <td><strong>文件规则</strong></td>
+                <td><a href="../../SPEC.md">SPEC</a>、<a href="../../RULES.md">RULES</a> 与 Paper grammar。</td>
+                <td><span class="path">src/keikeu_core/</span>，再追 <span class="path">service.py</span></td>
+                <td>聚焦 pytest；迁移/删除/恢复先在 fixtures 或副本，绝不从唯一真实 Vault 起步。</td>
+              </tr>
+              <tr>
+                <td><strong>测试</strong></td>
+                <td><a href="testing-and-evidence-guide.html">测试与证据手册</a> 和被测行为 authority。</td>
+                <td><span class="path">tests/</span>、<span class="path">frontend/src/*.test.js</span>、Rust inline tests</td>
+                <td>失败前能复现，修复后聚焦通过；不要复用旧 pass count。</td>
+              </tr>
+              <tr>
+                <td><strong>构建</strong></td>
+                <td><a href="build-and-packaging-guide.html">构建与打包手册</a> 和对应 manifest/lock。</td>
+                <td><span class="path">build_sidecar.py</span>、<span class="path">tauri.conf.json</span>、三个 manifest</td>
+                <td>重建受影响产物；桌面链变化再做 Tauri smoke。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="chapter" id="snapshot">
+        <p class="chapter-number">Chapter 08</p>
+        <h2>版本与事实边界</h2>
+        <p class="claim">
+          版本快照帮助排错，不替代版本文件。先问“谁声明它、谁解析它、我现在实际运行谁”。
+        </p>
+
+        <h3>2026-08-29 快照</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">生态</th>
+                <th scope="col">声明契约</th>
+                <th scope="col">现场命令</th>
+                <th scope="col">已知边界</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Node / npm</td>
+                <td><code>22.23.2</code> / <code>10.9.8</code></td>
+                <td><code>v22.23.2</code> / <code>10.9.8</code></td>
+                <td><code>.node-version</code> 仍为 <code>22.23.1</code>；校准留给 Road v0.8 CP1。</td>
+              </tr>
+              <tr>
+                <td>Python</td>
+                <td><code>&gt;=3.11,&lt;3.14</code></td>
+                <td><code>3.13.15</code></td>
+                <td><code>.python-version</code> 仍为 <code>3.13.14</code>；校准留给 Road v0.8 CP1。</td>
+              </tr>
+              <tr>
+                <td>Rust / Cargo</td>
+                <td><code>rust-version = 1.88</code></td>
+                <td><code>1.88.0</code> / <code>1.88.0</code></td>
+                <td>直接 crate 精确写在 Cargo manifest；完整解析结果在 Cargo lock。</td>
+              </tr>
+              <tr>
+                <td>Python build</td>
+                <td>Hatchling backend；PyInstaller lock <code>6.21.0</code></td>
+                <td>PyInstaller <code>6.21.0</code></td>
+                <td>Hatchling 未作为 runtime venv 顶层包固定；不要虚构一个精确版本。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>直接依赖与传递依赖</h3>
+        <p>
+          本页只列 manifest 直接声明或项目直接执行的工具。npm/Cargo/PyInstaller 的 lockfile 仍应提交并用于重建，
+          但 lockfile 中的传递依赖不进入新人图鉴；排查供应链或解析冲突时再按需读取。
+        </p>
+
+        <aside class="truth-boundary" aria-labelledby="truth-title">
+          <h3 id="truth-title">Truth boundary</h3>
+          <p>
+            本页是非规范性人工手册，不创造依赖、架构、protocol、Vault、Git 或发布权限。
+            产品范围看 <a href="../../SPEC.md">SPEC</a>，工程和证据纪律看 <a href="../../RULES.md">RULES</a>，
+            当前阶段看 <a href="../../PROJECT.md">PROJECT</a>，模块生命周期看
+            <a href="../../architecture/architecture.html">Architecture</a>；运行时事实最终以当前源码、测试、manifest
+            和 lockfile 为准。若它们与本页冲突，本页错。
+          </p>
+        </aside>
+      </section>
+
+      <section class="sources" aria-labelledby="sources-title">
+        <p class="kicker">Sources</p>
+        <h2 id="sources-title">项目事实来源</h2>
+        <ol>
+          <li><a href="../../../frontend/package.json"><code>frontend/package.json</code></a> 与 <a href="../../../frontend/vite.config.js"><code>vite.config.js</code></a>：Node/npm、Vue、Vite 与测试工具。</li>
+          <li><a href="../../../frontend/src-tauri/Cargo.toml"><code>Cargo.toml</code></a>、<a href="../../../frontend/src-tauri/Cargo.lock"><code>Cargo.lock</code></a> 与 <a href="../../../frontend/src-tauri/tauri.conf.json"><code>tauri.conf.json</code></a>：Rust/Tauri 直接依赖、解析结果与桌面构建。</li>
+          <li><a href="../../../pyproject.toml"><code>pyproject.toml</code></a> 与 <a href="../../../requirements-build.lock"><code>requirements-build.lock</code></a>：Python 契约、packaging、pytest 与 Sidecar 构建工具。</li>
+          <li><a href="../../../dev"><code>dev</code></a>、<a href="../../../scripts/build_sidecar.py"><code>scripts/build_sidecar.py</code></a> 与 <a href="../../../scripts/sidecar_entry.py"><code>sidecar_entry.py</code></a>：开发 TUI 和 Sidecar build 入口。</li>
+          <li><a href="../../SPEC.md">SPEC</a>、<a href="../../RULES.md">RULES</a>、<a href="../../PROJECT.md">PROJECT</a> 与 <a href="../../architecture/architecture.html">Architecture</a>：范围、纪律、当前坐标和模块边界。</li>
+        </ol>
+      </section>
+
+      <nav class="manual-pager" aria-label="相邻手册">
+        <a href="developer-tui-quickstart.html">
+          <span>上一篇</span>
+          TUI 极简使用手册
+        </a>
+        <a href="testing-and-evidence-guide.html">
+          <span>下一篇</span>
+          测试与证据手册
+        </a>
+      </nav>
+    </main>
+  </div>
+</body>
+</html>

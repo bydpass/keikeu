@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="author" content="keikeu contributors">
+  <meta name="description" content="keikeu 开发者 TUI 五分钟速查：启动、日志、文档、停止与安全边界。">
+  <meta name="keywords" content="keikeu, developer TUI, curses, quickstart, manual">
+  <meta name="generator" content="Kami 1.12.0">
+  <title>开发者 TUI 极简使用手册 · keikeu</title>
+  <link rel="stylesheet" href="kami-manual.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到正文</a>
+
+  <div class="manual-shell">
+    <aside class="manual-sidebar" aria-label="forfresh 手册系列">
+      <a class="series" href="../README.md">keikeu · forfresh</a>
+      <nav aria-label="同系列手册">
+        <a href="developer-tui-quickstart.html" aria-current="page">TUI 极简手册</a>
+        <a href="stack-component-atlas.html">技术栈与组件图鉴</a>
+        <a href="testing-and-evidence-guide.html">测试与证据</a>
+        <a href="build-and-packaging-guide.html">构建与打包</a>
+        <a href="npm-beginner-guide.html">npm 手册</a>
+        <a href="tauri-vue-beginner-guide.html">Tauri + Vue</a>
+        <a href="python-caveman-guide.html">Python Caveman</a>
+        <a href="rust-beginner-guide.html">Rust 简易入门</a>
+        <a href="git-interactive.html">Git 状态地图</a>
+      </nav>
+      <p class="rail-note">
+        HUMAN MANUAL · NON-NORMATIVE<br>
+        当前行为看 <code>dev</code>；工程规则看 RULES。
+      </p>
+    </aside>
+
+    <main class="manual-document" id="main" tabindex="-1">
+      <header class="cover">
+        <p class="eyebrow">keikeu / developer cockpit / five-minute guide</p>
+        <h1>开发者 TUI<br>五分钟速查</h1>
+        <p class="subtitle">
+          记住三条路线就能开工：启动应用、重建 Sidecar、查手册。其余键位需要时再查表。
+        </p>
+        <p class="meta">
+          <span>keikeu contributors</span>
+          <time datetime="2026-08-29">2026-08-29</time>
+          <span>macOS · Python 3.11+</span>
+          <span>最小终端 80×24</span>
+        </p>
+      </header>
+
+      <section class="summary" aria-labelledby="summary-title">
+        <h2 id="summary-title">先记住这一屏</h2>
+        <p class="lead">
+          在仓库根目录运行 <code>./dev</code>。TUI 只管理自己启动的应用或构建任务；
+          它显示内存日志，也能检视 <code>docs/manual/</code> 与活动文档。
+        </p>
+        <ol class="takeaways">
+          <li><span><code>a</code>：Sidecar 已存在时，直接启动完整桌面应用。</span></li>
+          <li><span><code>b</code>：Python 改动后，重建 Sidecar；成功才启动应用。</span></li>
+          <li><span><code>2 → m → /</code>：进入文档页、选择 Manual、搜索标题或正文。</span></li>
+        </ol>
+        <aside class="truth-boundary">
+          <strong>权威边界：</strong>本页是速查，不定义新行为。若与
+          <a href="../../../dev"><code>dev</code></a>、
+          <a href="../../PROJECT.md">PROJECT</a> 或
+          <a href="../../RULES.md">RULES</a> 冲突，本页错。
+        </aside>
+      </section>
+
+      <nav class="toc" aria-labelledby="toc-title">
+        <p class="toc-label">Five-minute route</p>
+        <h2 id="toc-title">六个短章节</h2>
+        <ol>
+          <li><a href="#start">启动</a></li>
+          <li><a href="#routes">三条常用路线</a></li>
+          <li><a href="#keys">完整键位表</a></li>
+          <li><a href="#states">状态与错误</a></li>
+          <li><a href="#safety">安全边界</a></li>
+          <li><a href="#next">深入阅读</a></li>
+        </ol>
+      </nav>
+
+      <section class="chapter" id="start">
+        <p class="chapter-number">01</p>
+        <h2>启动</h2>
+        <p class="claim">从仓库根目录运行一个命令；日常操作留在同一个终端里。</p>
+        <pre><code>./dev</code></pre>
+        <ul>
+          <li>宿主必须是 macOS；TUI 使用系统 <code>python3</code>，版本至少为 3.11。</li>
+          <li>终端至少为 <code>80×24</code>。过小时只显示当前尺寸与退出提示。</li>
+          <li><code>a</code> 还需要 npm 与已经构建的 Sidecar；<code>b</code> 还需要项目 <code>.venv</code>。</li>
+          <li>应用会读取当前本地配置；TUI 本身不直接读取、写入或修复 Vault。</li>
+        </ul>
+      </section>
+
+      <section class="chapter" id="routes">
+        <p class="chapter-number">02</p>
+        <h2>三条常用路线</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">你要做什么</th>
+                <th scope="col">按键</th>
+                <th scope="col">看到什么</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>快速启动应用</td>
+                <td><code>./dev</code> → <code>a</code></td>
+                <td>使用现有 Sidecar 运行 <code>npm --prefix frontend run tauri:dev</code>。</td>
+              </tr>
+              <tr>
+                <td>Python 改动后启动</td>
+                <td><code>./dev</code> → <code>b</code></td>
+                <td>先运行 Sidecar 构建；退出码为 0 才继续启动应用。</td>
+              </tr>
+              <tr>
+                <td>查项目手册</td>
+                <td><code>2</code> → <code>m</code> → <code>/</code></td>
+                <td>输入关键词，按 Enter 完成搜索，再用方向键选择。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p><code>2</code> 打开文档页时已经默认选择 Manual；再按 <code>m</code> 只是显式回到该分组。</p>
+      </section>
+
+      <section class="chapter" id="keys">
+        <p class="chapter-number">03</p>
+        <h2>完整键位表</h2>
+
+        <h3>任何页面</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">键</th><th scope="col">作用</th><th scope="col">边界</th></tr></thead>
+            <tbody>
+              <tr><td><code>1</code> / <code>2</code></td><td>切换进程页 / 文档页。</td><td>进入文档页时重新扫描当前手册。</td></tr>
+              <tr><td><code>q</code></td><td>退出 TUI。</td><td>任务运行中时先确认，发送 SIGINT 并等待整个进程组退出。</td></tr>
+              <tr><td><code>y</code> / 其他键</td><td>确认 / 取消当前危险操作。</td><td>确认框出现后才生效；默认是取消。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>进程页</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">键</th><th scope="col">作用</th><th scope="col">注意</th></tr></thead>
+            <tbody>
+              <tr><td><code>a</code></td><td>使用现有 Sidecar 启动应用。</td><td>Sidecar 缺失时不会静默构建。</td></tr>
+              <tr><td><code>b</code></td><td>重建 Sidecar，成功后启动应用。</td><td>构建失败会停在日志页。</td></tr>
+              <tr><td><code>r</code></td><td>重启应用。</td><td>先确认停止，等旧 PGID 完全结束后再启动。</td></tr>
+              <tr><td><code>s</code></td><td>确认后发送 SIGINT。</td><td>可能绕过应用关闭保护并丢失未保存草稿；先保存工作。</td></tr>
+              <tr><td><code>K</code></td><td>确认后发送 SIGKILL。</td><td>强制终止会绕过应用关闭保护，只用于无法正常结束时。</td></tr>
+              <tr><td><code>PgUp</code> / <code>PgDn</code></td><td>向旧日志 / 新日志滚动。</td><td>日志只保存在当前 TUI 的内存 ring buffer。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>文档页</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">键</th><th scope="col">作用</th><th scope="col">注意</th></tr></thead>
+            <tbody>
+              <tr><td><code>m</code> / <code>d</code></td><td>Manual / Active docs。</td><td>活动文档排除 archive、acceptance 与 generated。</td></tr>
+              <tr><td><code>↑</code> <code>↓</code> / <code>j</code> <code>k</code></td><td>移动文档选择。</td><td>选择变化后预览回到顶部。</td></tr>
+              <tr><td><code>/</code></td><td>搜索标题、路径与可见正文。</td><td>开始搜索时重新扫描文档；Unicode 不区分大小写。</td></tr>
+              <tr><td><code>Enter</code> / <code>o</code></td><td>用系统应用打开当前文档。</td><td>打开前重新验证路径仍在仓库文档范围内。</td></tr>
+              <tr><td><code>p</code></td><td>打开同名 PDF 附件。</td><td>没有附件时只显示提示；本批新手册没有 PDF。</td></tr>
+              <tr><td><code>PgUp</code> / <code>PgDn</code></td><td>滚动纯文本预览。</td><td>HTML 只提取可见正文，不渲染 CSS。</td></tr>
+              <tr><td><code>Esc</code></td><td>清除搜索。</td><td>输入搜索时也可用 Esc 取消并清空。</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="chapter" id="states">
+        <p class="chapter-number">04</p>
+        <h2>状态与错误</h2>
+        <p>进程页始终显示任务名、状态、PID/PGID、最近退出码与最新输出。先读状态，再决定是否重试。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">提示</th><th scope="col">含义</th><th scope="col">下一步</th></tr></thead>
+            <tbody>
+              <tr><td>找不到 npm</td><td>当前 PATH 没有项目要求的 npm。</td><td>按 README 完成一次性安装并核对 Node/npm。</td></tr>
+              <tr><td>缺少 <code>.venv</code></td><td><code>b</code> 找不到固定的构建 Python。</td><td>按 README 创建环境并安装 build requirements。</td></tr>
+              <tr><td>缺少 sidecar；按 b 重建并启动。</td><td><code>a</code> 不会猜测或自动构建。</td><td>按 <code>b</code> 明确重建。</td></tr>
+              <tr><td>Sidecar 构建 已退出，code=&lt;非 0&gt;。</td><td>应用不会继续启动。</td><td>留在日志页，先修第一条实际错误。</td></tr>
+              <tr><td>已有任务运行中</td><td>TUI 拒绝叠加第二个受管任务。</td><td>等待、按 <code>s</code> 停止，或按 <code>r</code> 受控重启。</td></tr>
+              <tr><td>任务已切换；未发送信号</td><td>确认期间旧任务已被新任务替换。</td><td>重新看 PID/PGID；不要把旧确认施加到新任务。</td></tr>
+              <tr><td>终端至少需要 80×24</td><td>当前窗口无法安全显示布局。</td><td>放大终端后继续，或按 <code>q</code> 退出。</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="chapter" id="safety">
+        <p class="chapter-number">05</p>
+        <h2>安全边界</h2>
+        <ul class="flow">
+          <li><span><strong>只管自己的 PGID</strong><br>TUI 只记录和操作本实例通过固定 argv 启动的进程组。</span></li>
+          <li><span><strong>不抢占 1420</strong><br>未知进程占用 Vite 端口时只会让启动失败；TUI 不替你杀它。</span></li>
+          <li><span><strong>Sidecar 仍归 Rust</strong><br>TUI 不直接启动、附着或窥探应用内部 Python Sidecar。</span></li>
+          <li><span><strong>日志不落盘</strong><br>TUI 自己的合并输出只驻留内存；被包装工具可能按自己的规则生成 ignored cache。</span></li>
+        </ul>
+        <div class="callout">
+          <span class="mini-label">先保存，再停止</span>
+          <p><code>s</code>、<code>q</code> 与 <code>K</code> 都可能结束桌面进程。尤其 <code>K</code> 会绕过关闭保护；它不是日常退出键。</p>
+        </div>
+      </section>
+
+      <section class="chapter" id="next">
+        <p class="chapter-number">06</p>
+        <h2>深入阅读</h2>
+        <ul>
+          <li><a href="stack-component-atlas.html">技术栈与组件图鉴</a>：先判断问题属于哪一层。</li>
+          <li><a href="testing-and-evidence-guide.html">测试与证据手册</a>：选择最小检查并正确解释结果。</li>
+          <li><a href="build-and-packaging-guide.html">构建与打包手册</a>：理解 Sidecar、Vite、Cargo 与 Tauri 如何拼起来。</li>
+          <li><a href="tauri-vue-beginner-guide.html">Tauri + Vue 入门</a>：沿一次真实请求走完整桌面链。</li>
+          <li><a href="../README.md">人工文档地图</a>：查看全部 manual 与权威边界。</li>
+        </ul>
+      </section>
+
+      <nav class="manual-pager" aria-label="相邻手册">
+        <a href="../README.md"><span>返回</span>人工文档地图</a>
+        <a href="stack-component-atlas.html"><span>下一册</span>技术栈与组件图鉴</a>
+      </nav>
+    </main>
+  </div>
+</body>
+</html>

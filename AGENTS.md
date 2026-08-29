@@ -28,7 +28,9 @@ Never bulk-load the working tree. Start from this read map, then use `rg --files
 
 Treat `docs/acceptance/`, `docs/generated/`, `docs/manual/`, and `docs/archive/` as on-demand evidence or history, not default context. Build outputs, dependencies, caches, ignored Vaults, PDFs, and screenshots never enter a task context automatically.
 
-For a model without repository tools, generate a local reviewed task pack with `python scripts/build_context_pack.py --path <target>`. The pack contains current working-tree text from explicit repository paths, has a conservative size cap, stays under ignored `build/`, and is never uploaded automatically.
+For a model without repository tools, generate a local reviewed task pack with `.venv/bin/python scripts/build_context_pack.py --path <target>`. The pack contains current working-tree text from explicit tracked repository paths, has a conservative size cap, stays under ignored `build/`, and is never uploaded automatically.
+
+After the final reviewed worktree state, refresh `build/context/keikeu-context.txt` with the smallest tracked file set the next coding agent needs; authority files are included automatically. Review the header and included-file boundaries. The ignored pack is disposable routing context, never authority, test evidence, acceptance evidence, or a reason to stage an otherwise untracked file.
 
 ## Before editing
 
@@ -103,6 +105,7 @@ Before returning work:
 3. report checks run and not run;
 4. report data, provider, external-editor, platform, and acceptance risks;
 5. state staged/committed/pushed state; and
-6. give the safest next command.
+6. refresh and inspect the ignored local context route after the final worktree/commit state; and
+7. give the safest next command.
 
 The human must be able to explain and undo the diff.

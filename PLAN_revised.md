@@ -4,6 +4,7 @@
 
 完整只读计划书见
 [`docs/archive/road-v0-5/PLAN_revised.md`](docs/archive/road-v0-5/PLAN_revised.md)。
-当前 Road v0.7 的设计与执行状态见
+已完成 Road v0.7 的设计与执行记录见
 [`docs/design/road-v0-7-app-shell-design.md`](docs/design/road-v0-7-app-shell-design.md)与
-[`PLAN_road_v0_7.md`](PLAN_road_v0_7.md)。
+[`PLAN_road_v0_7.md`](PLAN_road_v0_7.md)。当前坐标见 [`docs/PROJECT.md`](docs/PROJECT.md)；
+尚未启动的 Road v0.8 见 [`PLAN_road_v0_8.md`](PLAN_road_v0_8.md)。

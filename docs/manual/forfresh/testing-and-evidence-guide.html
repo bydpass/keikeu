@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="author" content="keikeu contributors">
+  <meta name="description" content="keikeu 测试与证据手册：按改动选择 pytest、Vitest、Cargo、Vite、Tauri smoke 与文档检查，并守住 synthetic Vault 边界。">
+  <meta name="keywords" content="keikeu, pytest, Vitest, Vue Test Utils, jsdom, Cargo, Tauri, 测试证据">
+  <meta name="generator" content="Kami manual system">
+  <title>测试与证据手册 · keikeu</title>
+  <link rel="stylesheet" href="kami-manual.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">跳到正文</a>
+
+  <div class="manual-shell">
+    <aside class="manual-sidebar" aria-label="Forfresh 手册系列">
+      <a class="series" href="../README.md">keikeu · forfresh manuals</a>
+      <nav aria-label="系列目录">
+        <a href="developer-tui-quickstart.html">TUI 极简使用</a>
+        <a href="stack-component-atlas.html">技术栈图鉴</a>
+        <a href="testing-and-evidence-guide.html" aria-current="page">测试与证据</a>
+        <a href="build-and-packaging-guide.html">构建与打包</a>
+        <a href="npm-beginner-guide.html">npm 入门</a>
+        <a href="tauri-vue-beginner-guide.html">Tauri + Vue</a>
+        <a href="python-caveman-guide.html">Python Caveman</a>
+        <a href="rust-beginner-guide.html">Rust 入门</a>
+      </nav>
+      <p class="rail-note">
+        人工说明，不是规范。若本页与源码冲突，以源码、测试、
+        <a href="../../RULES.md">RULES</a> 和
+        <a href="../../SPEC.md">SPEC</a> 为准。
+      </p>
+    </aside>
+
+    <main id="main-content" class="manual-document" tabindex="-1">
+      <header class="cover">
+        <p class="eyebrow">keikeu · engineering evidence · manual</p>
+        <h1>测试与证据手册</h1>
+        <p class="subtitle">
+          先问改动穿过哪一层，再跑能覆盖那一层的最小检查；每条结果只证明它真正观察到的事情。
+        </p>
+        <p class="meta">
+          <span>keikeu contributors</span>
+          <span>简体中文</span>
+          <span>更新：2026-08-29</span>
+          <span>适用：Road v0.7 完成态</span>
+        </p>
+      </header>
+
+      <section class="summary" aria-labelledby="summary-title">
+        <h2 id="summary-title">先记住这句话</h2>
+        <p class="lead">
+          绿色检查不是一张万能通行证。focused test、全套测试、构建、平台 smoke、开发者 QA 与产品验收，是六种不同结论。
+        </p>
+        <ol class="takeaways">
+          <li><span>从真实改动和 caller 选择测试，不按“顺手”选择命令。</span></li>
+          <li><span>mock、jsdom、fake Home 与 synthetic Vault 都是隔离工具；隔离越强，能外推的真实环境结论越少。</span></li>
+          <li><span>报告实际命令、当次结果和没跑的检查；旧 pass count 不能续借。</span></li>
+        </ol>
+        <aside class="truth-boundary">
+          <strong>事实边界：</strong>本页帮助理解当前测试链，不定义 Gate，也不授予真实 Vault、发布、签名或远程操作权限。最终证据规则看
+          <a href="../../RULES.md">RULES §8</a>，当前阶段与实际结论看
+          <a href="../../PROJECT.md">PROJECT</a>。
+        </aside>
+      </section>
+
+      <nav class="toc" aria-labelledby="toc-title">
+        <h2 id="toc-title">目录</h2>
+        <ol>
+          <li><a href="#chapter-1">先分清六种结论</a></li>
+          <li><a href="#chapter-2">改动与最小证据矩阵</a></li>
+          <li><a href="#chapter-3">Python：pytest 与临时文件</a></li>
+          <li><a href="#chapter-4">Vue：Vitest、Test Utils 与 jsdom</a></li>
+          <li><a href="#chapter-5">Rust、构建与 Tauri smoke</a></li>
+          <li><a href="#chapter-6">隔离数据与证据记录</a></li>
+        </ol>
+      </nav>
+
+      <article id="chapter-1" class="chapter">
+        <p class="chapter-number">Chapter 01</p>
+        <h2>先分清六种结论</h2>
+        <p class="claim">证据强不强，不看命令跑了多久；看它是否真的经过了待证明的边界。</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">结论</th>
+                <th scope="col">需要看到什么</th>
+                <th scope="col">常见误报</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Focused behavior</td>
+                <td>直接测试目标分支、输入、输出和失败路径。</td>
+                <td>一个测试通过，就说整个模块稳定。</td>
+              </tr>
+              <tr>
+                <td>Engineering complete</td>
+                <td>范围内源码、直接测试、相关回归、构建与风险记录均完成。</td>
+                <td>只看测试数量，不看漏掉的跨层边界。</td>
+              </tr>
+              <tr>
+                <td>Platform smoke</td>
+                <td>实际桌面链启动，并观察本机能力、Sidecar 生命周期与退出。</td>
+                <td>把 Vite build 或 Cargo test 叫作 Tauri smoke。</td>
+              </tr>
+              <tr>
+                <td>File-service smoke</td>
+                <td>在明确隔离的数据上实际完成目标文件流程并核对落盘结果。</td>
+                <td>synthetic Vault 成功，就声称真实 provider 可用。</td>
+              </tr>
+              <tr>
+                <td>Developer QA</td>
+                <td>开发者实际判断布局、键盘、文案、恢复路径和交互舒适度。</td>
+                <td>用 jsdom assertion 替代真实窗口判断。</td>
+              </tr>
+              <tr>
+                <td>Product accepted</td>
+                <td>按 SPEC 或 Planbook 的真实作者场景逐项完成，并由开发者作出接受判断。</td>
+                <td>把 build、测试或历史报告自动升级为当前验收。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout">
+          <span class="mini-label">最短判断</span>
+          <p>如果检查没有经过某个边界，它就不能证明那个边界。例如：jsdom 没启动系统 WebView；Cargo test 没启动打包后的 Sidecar；synthetic Vault 没经过作者的真实文件服务。</p>
+        </div>
+      </article>
+
+      <article id="chapter-2" class="chapter">
+        <p class="chapter-number">Chapter 02</p>
+        <h2>改动与最小证据矩阵</h2>
+        <p class="claim">先跑最接近改动的检查；只有改动跨层或风险升高时，才沿链向外扩。</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="keep" scope="col">改动类型</th>
+                <th class="keep" scope="col">最小命令</th>
+                <th class="keep" scope="col">Fixture / mock</th>
+                <th class="keep" scope="col">证明什么</th>
+                <th class="keep" scope="col">不能证明什么</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Python core / bridge</td>
+                <td><code class="keep">.venv/bin/python -m pytest -q tests/test_目标.py</code></td>
+                <td><code>tmp_path</code>、<code>monkeypatch</code>、synthetic Vault</td>
+                <td>被执行的模型、协议、service 或文件规则。</td>
+                <td>Vue、Rust、真实 Sidecar 或平台流程。</td>
+              </tr>
+              <tr>
+                <td>Python 公共行为或共享文件边界</td>
+                <td><code class="keep">.venv/bin/python -m pytest</code><br><code class="keep">.venv/bin/python -m compileall -q src</code></td>
+                <td><code>testpaths</code> 下的当前测试，排除 <code>tests/test-vault</code></td>
+                <td>当前 Python 回归套件与源码可编译。</td>
+                <td>桌面 app 能启动或作者流程被接受。</td>
+              </tr>
+              <tr>
+                <td>单个 Vue 组件或 bridge helper</td>
+                <td><code class="keep">npm --prefix frontend run test -- src/目标.test.js</code></td>
+                <td>Vue Test Utils、jsdom、<code>vi.mock</code> bridge</td>
+                <td>组件状态、事件、DOM 语义和 IPC 参数。</td>
+                <td>真实 WebView、Rust command 或原生对话框。</td>
+              </tr>
+              <tr>
+                <td>Vue 共享行为或生产前端</td>
+                <td><code class="keep">npm --prefix frontend run test</code><br><code class="keep">npm --prefix frontend run build</code></td>
+                <td>jsdom 测试；Vite 生产构建</td>
+                <td>当前前端回归与 Vite bundle 可生成。</td>
+                <td>Tauri 生命周期、Sidecar 或平台视觉 QA。</td>
+              </tr>
+              <tr>
+                <td>Rust host / command / worker</td>
+                <td><code class="keep">cargo test --manifest-path frontend/src-tauri/Cargo.toml</code></td>
+                <td>Rust fake child / spawner 与内存队列</td>
+                <td>测试覆盖的 policy、请求排序、timeout 与失败分类。</td>
+                <td>真实 Python binary、窗口或系统服务。</td>
+              </tr>
+              <tr>
+                <td>Sidecar 构建链</td>
+                <td><code class="keep">.venv/bin/python scripts/build_sidecar.py</code></td>
+                <td>不应读取 Vault</td>
+                <td>当前源码可生成目标 triple 的 Sidecar binary。</td>
+                <td>binary 可被 Tauri 启动、重启或安全退出。</td>
+              </tr>
+              <tr>
+                <td>完整桌面边界</td>
+                <td><code>./dev</code> 后按 <code>b</code></td>
+                <td>fresh fake Home、isolated TMPDIR、synthetic Vault</td>
+                <td>当次 Tauri / Rust / JSONL / Python 链的已观察路径。</td>
+                <td>未操作的 provider、真实作者数据或产品验收。</td>
+              </tr>
+              <tr>
+                <td>文档</td>
+                <td><code class="keep">.venv/bin/python scripts/check_docs.py</code><br><code class="keep">git diff --check</code></td>
+                <td>无应用 fixture</td>
+                <td>活动文档、本地链接、预算、HTML id 与 diff whitespace。</td>
+                <td>任何应用代码、GUI、构建或产品行为。</td>
+              </tr>
+              <tr>
+                <td>Skill / context route</td>
+                <td><code class="keep">.venv/bin/python -m pytest -q tests/test_build_context_pack.py</code><br><code class="keep">.venv/bin/python scripts/check_docs.py</code></td>
+                <td>tracked synthetic paths；ignored output path</td>
+                <td>文件选择、冷上下文排除、二进制/逃逸/超限拒绝与输出 symlink 防护的被测规则。</td>
+                <td>当前生成包已经人工审查、应用行为正确或 checkpoint 被接受。</td>
+              </tr>
+              <tr>
+                <td>产品验收</td>
+                <td>无通用命令；执行当前 SPEC / Planbook 场景</td>
+                <td>明确获准的真实作者场景；先保留备份与边界记录</td>
+                <td>开发者实际接受的具体范围。</td>
+                <td>未执行场景、其他平台或未来版本。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>文件名中的“目标”不是固定脚本：先用 <code>rg</code> 找改动 owner、caller 与直接测试，再把真实路径代入。若改动同时穿过 Vue、Rust 与 Python，三层测试都要跑；涉及桌面生命周期时再加 Tauri smoke。</p>
+      </article>
+
+      <article id="chapter-3" class="chapter">
+        <p class="chapter-number">Chapter 03</p>
+        <h2>Python：pytest 与临时文件</h2>
+        <p class="claim">pytest 负责执行 Python 行为；fixture 负责把输入和环境摆到可重复、可丢弃的位置。</p>
+
+        <h3><code>tmp_path</code>：每个测试自己的工作台</h3>
+        <p><code>tmp_path</code> 提供一个独立的 <code>pathlib.Path</code>。keikeu 用它创建 synthetic Vault、Index、Markdown 和备份目标，不需要碰作者目录。当前 <a href="../../../pyproject.toml"><code>pyproject.toml</code></a> 还把 pytest 的 base temp 固定到 ignored 的 <code>tests/test-vault/pytest</code>，并明确排除该目录的递归收集。</p>
+
+        <h3><code>monkeypatch</code>：临时替换环境边界</h3>
+        <p><code>monkeypatch</code> 可在一个测试期间替换 Home resolver、系统调用或故障点，测试结束后恢复。它适合证明“写入失败后不改原 Vault”等分支；它不能证明真实操作系统恰好会以同样方式失败。</p>
+
+        <h3>Focused 与 full suite</h3>
+        <pre><code># 先跑直接测试
+.venv/bin/python -m pytest -q tests/test_bridge_service.py
+
+# 共享契约改变后再跑全部 Python 回归
+.venv/bin/python -m pytest
+.venv/bin/python -m compileall -q src</code></pre>
+        <p>不要从历史文档复制旧 pass count。测试增删、选择器和环境都会改变结果；只有当前 working tree 上实际运行的输出才是当前证据。</p>
+      </article>
+
+      <article id="chapter-4" class="chapter">
+        <p class="chapter-number">Chapter 04</p>
+        <h2>Vue：Vitest、Test Utils 与 jsdom</h2>
+        <p class="claim">这三者一起提供快速组件证据，但它们各自不是浏览器、Tauri 或产品验收。</p>
+
+        <dl>
+          <dt>Vitest</dt>
+          <dd>发现和运行 <code>*.test.js</code>，提供 assertion、spy、mock 与异步测试控制。项目脚本是 <code>npm --prefix frontend run test</code>。</dd>
+
+          <dt>Vue Test Utils</dt>
+          <dd>用 <code>mount</code> 创建 Vue 组件 wrapper，并触发输入、点击、props 与 emits。它证明组件在测试环境中的可见状态和交互。</dd>
+
+          <dt>jsdom</dt>
+          <dd><a href="../../../frontend/vite.config.js"><code>vite.config.js</code></a> 指定的模拟 DOM。它没有 macOS WebView 的渲染、窗口生命周期、原生 picker、IME 或真实尺寸感觉。</dd>
+
+          <dt>Bridge mock</dt>
+          <dd><code>vi.mock</code> 替换 Tauri IPC helper，让组件可稳定测试成功、错误与 pending。它能钉住调用参数，不能证明 Rust 或 Python 收到请求。</dd>
+        </dl>
+
+        <pre><code># 单文件反馈
+npm --prefix frontend run test -- src/PaperView.test.js
+
+# 共享行为与生产前端
+npm --prefix frontend run test
+npm --prefix frontend run build</code></pre>
+
+        <div class="callout">
+          <span class="mini-label">什么时候升级证据</span>
+          <p>改动触及 Tauri command、窗口关闭、原生能力、Sidecar 或布局舒适度时，Vitest 之后继续跑对应 Cargo test、真实 Tauri smoke 和规定尺寸的开发者 QA。</p>
+        </div>
+      </article>
+
+      <article id="chapter-5" class="chapter">
+        <p class="chapter-number">Chapter 05</p>
+        <h2>Rust、构建与 Tauri smoke</h2>
+        <p class="claim">Cargo test、Vite build 和 Tauri smoke 经过不同边界，三者不能互相代签。</p>
+
+        <h3>Cargo test</h3>
+        <p>当前 Rust tests 位于 <code>frontend/src-tauri/src/bridge.rs</code>，通过 fake child / spawner 检查单 worker、请求 envelope、timeout、kill 与 shutdown 等行为。命令从仓库根目录显式指定 manifest：</p>
+        <pre><code>cargo test --manifest-path frontend/src-tauri/Cargo.toml</code></pre>
+        <p>它会编译并执行 Rust test target，但不会自动证明真实 Sidecar binary、Tauri 窗口或系统 opener。</p>
+
+        <h3>Vite build</h3>
+        <p><code>npm --prefix frontend run build</code> 证明 Vue 源码能进入生产前端 bundle。它不启动 Rust host，也不读取 <code>externalBin</code>。</p>
+
+        <h3>Tauri smoke</h3>
+        <p>完整启动前必须有当前源码构建的 Sidecar。首选从 <code>./dev</code> 按 <code>b</code>，让工具先构建成功再启动；排障时可展开为：</p>
+        <pre><code>.venv/bin/python scripts/build_sidecar.py
+npm --prefix frontend run tauri:dev</code></pre>
+        <p>smoke 记录实际观察的路径，例如启动、hello、选择 synthetic Vault、一次读写、退出和残留进程。没观察的动作必须写成“未运行”，不能从“窗口出现了”推断。</p>
+      </article>
+
+      <article id="chapter-6" class="chapter">
+        <p class="chapter-number">Chapter 06</p>
+        <h2>隔离数据与证据记录</h2>
+        <p class="claim">测试环境必须可丢弃，证据必须可复核；ignored 只防止误提交，不会自动保护真实数据。</p>
+
+        <h3>四个安全工具</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">工具</th>
+                <th scope="col">用途</th>
+                <th scope="col">边界</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>tmp_path</code></td>
+                <td>单个 pytest 的文件树。</td>
+                <td>测试结束即可丢弃；不引用真实 Vault。</td>
+              </tr>
+              <tr>
+                <td><code>monkeypatch</code></td>
+                <td>临时 Home、系统调用和 fault injection。</td>
+                <td>只模拟指定边界；不能升级为平台证据。</td>
+              </tr>
+              <tr>
+                <td>fake Home</td>
+                <td>把 app config、local state 与默认路径隔离到 fresh 目录。</td>
+                <td><code>HOME</code> / <code>TMPDIR</code> 只传给本次 app smoke；结果不代表真实 provider。若同一步还用 <code>b</code> 构建 Sidecar，应显式保留已批准的 <code>RUSTUP_HOME</code> / <code>CARGO_HOME</code>，或先构建再切 app Home，避免 fake Home 隐藏工具链。</td>
+              </tr>
+              <tr>
+                <td>synthetic Vault</td>
+                <td>用虚构内容练习读写、迁移、Trash 与恢复。</td>
+                <td>放在 ignored 的 <code>tests/test-vault/</code>；绝不拿唯一真实 Vault 做第一次实验。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>一次证据记录至少写什么</h3>
+        <ol class="flow">
+          <li><span><strong>状态：</strong>branch、HEAD、working tree，以及是否使用当前源码重建 Sidecar。</span></li>
+          <li><span><strong>命令：</strong>完整记录实际执行的命令；不要只写“测试通过”。</span></li>
+          <li><span><strong>结果：</strong>退出码、当次 pass/fail 和真正观察到的场景。</span></li>
+          <li><span><strong>隔离：</strong>说明 fake Home、synthetic Vault、mock 或真实环境边界；去除作者正文、私有路径和 token。</span></li>
+          <li><span><strong>遗漏：</strong>明确未跑的平台、provider、外部编辑器、视觉 QA 与产品验收。</span></li>
+        </ol>
+
+        <h3>四个禁止替代</h3>
+        <ul>
+          <li>不拿旧 pass count 替代当前运行。</li>
+          <li>不拿 build success 或 jsdom 测试替代 Tauri smoke。</li>
+          <li>不拿 fake Home / synthetic Vault 替代真实作者验收。</li>
+          <li>不拿 context pack 替代源码审查、测试、平台 smoke 或 checkpoint 接受。</li>
+        </ul>
+
+        <aside class="truth-boundary">
+          <strong>真实 Vault 红线：</strong>迁移、删除、恢复和持久配置先在 fixture、copy 或 synthetic data 上验证。若验收确实需要真实作者场景，必须由当前 SPEC / Planbook 定义范围并获得开发者许可；测试便利不构成许可。
+        </aside>
+      </article>
+
+      <section class="sources" aria-labelledby="sources-title">
+        <h2 id="sources-title">来源与继续阅读</h2>
+        <p>本页于 2026-08-29 依据当前仓库配置、测试与证据规则编写。manual 是非权威解释；源码或规则改变后，本页必须随之校准。</p>
+
+        <h3>项目事实</h3>
+        <ol>
+          <li><a href="../../../pyproject.toml"><span class="path">pyproject.toml</span></a>：Python 范围、pytest 依赖、testpaths、base temp 与忽略目录。</li>
+          <li><a href="../../../frontend/package.json"><span class="path">frontend/package.json</span></a> 与 <a href="../../../frontend/vite.config.js"><span class="path">vite.config.js</span></a>：Vitest、Vue Test Utils、jsdom 和 Vite scripts。</li>
+          <li><a href="../../../frontend/src-tauri/Cargo.toml"><span class="path">frontend/src-tauri/Cargo.toml</span></a> 与 <a href="../../../frontend/src-tauri/src/bridge.rs"><span class="path">bridge.rs</span></a>：Rust manifest 与 host tests。</li>
+          <li><a href="../../../scripts/build_context_pack.py"><span class="path">build_context_pack.py</span></a>、<a href="../../../tests/test_build_context_pack.py"><span class="path">test_build_context_pack.py</span></a> 与 <a href="../../../.agents/skills/keikeu-routine/SKILL.md"><span class="path">keikeu-routine</span></a>：本地 context route 及其 Stop-hook 边界。</li>
+          <li><a href="../../RULES.md">RULES</a>、<a href="../../PROJECT.md">PROJECT</a> 与 <a href="../../acceptance/README.md">Acceptance evidence map</a>。</li>
+        </ol>
+
+        <h3>官方解释</h3>
+        <ol>
+          <li><a href="https://test-utils.vuejs.org/guide/">Vue Test Utils Guide</a></li>
+          <li><a href="https://docs.pytest.org/en/stable/how-to/fixtures.html">pytest：How to use fixtures</a></li>
+          <li><a href="https://doc.rust-lang.org/cargo/commands/cargo-test.html">Cargo Book：cargo test</a></li>
+        </ol>
+
+        <h3>同系列手册</h3>
+        <ol>
+          <li><a href="developer-tui-quickstart.html">TUI 极简使用手册</a>：用 <code>./dev</code> 启动、看日志和查手册。</li>
+          <li><a href="stack-component-atlas.html">技术栈与组件图鉴</a>：先定位改动属于哪一层。</li>
+          <li><a href="build-and-packaging-guide.html">构建与打包手册</a>：理解 Vite、Sidecar、Cargo 与 Tauri bundle。</li>
+          <li><a href="tauri-vue-beginner-guide.html">Tauri + Vue 入门</a>：沿一次真实请求理解跨层边界。</li>
+        </ol>
+
+        <aside class="truth-boundary">
+          <strong>最后核对：</strong>产品范围看 <a href="../../SPEC.md">SPEC</a>；工程、数据和证据纪律看 <a href="../../RULES.md">RULES</a>；当前阶段、命令与已运行结论看 <a href="../../PROJECT.md">PROJECT</a>。本页不保存任何一次运行的验收结论。
+        </aside>
+      </section>
+
+      <nav class="manual-pager" aria-label="上一篇和下一篇">
+        <a href="stack-component-atlas.html">
+          <span>上一篇</span>
+          技术栈与组件图鉴
+        </a>
+        <a href="build-and-packaging-guide.html">
+          <span>下一篇</span>
+          构建与打包手册
+        </a>
+      </nav>
+    </main>
+  </div>
+</body>
+</html>

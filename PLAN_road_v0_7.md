@@ -1,6 +1,6 @@
 # Road v0.7 实施计划（正式完工并归档）
 
-> 状态：开发者于 2026-08-20 批准原 CP0–CP6 计划并给出相应 advance YOLO；CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc`、CP3 `55b5313`、CP4 `6f69310`、CP5 `3259c42` 与 CP6 一号作者 Gate 均已通过。CP7 于 2026-08-25 通过 Gate D，并在 `1e17cea` 收口。CP8 完成 production、完整工程、Figma 与实体键盘 macOS IME Gate，开发者于 2026-08-26 明确通过 Gate D 并判定 Road v0.7 正式完工。最终 checkpoint 为 `2f03aeecc1f287e5cdb4f9ddab462ae169af68c4`；[Road snapshot](docs/archive/snapshots/road-v0-7.html) 已在其后独立归档。真实 Vault、push、tag、签名、打包与发布均未执行。
+> 状态：开发者于 2026-08-20 批准原 CP0–CP6 计划并给出相应 advance YOLO；CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc`、CP3 `55b5313`、CP4 `6f69310`、CP5 `3259c42` 与 CP6 一号作者 Gate 均已通过。CP7 于 2026-08-25 通过 Gate D，并在 `1e17cea` 收口。CP8 完成 production、完整工程、Figma 与实体键盘 macOS IME Gate，开发者于 2026-08-26 明确通过 Gate D 并判定 Road v0.7 正式完工。最终 checkpoint 为 `2f03aeecc1f287e5cdb4f9ddab462ae169af68c4`；[Road snapshot](docs/archive/snapshots/road-v0-7.html) 已在其后独立归档。CP6 的一次有界真实 v4 Vault 作者 Gate 已完成且授权已耗尽；此后未再操作真实 Vault，push、tag、签名、打包与发布均未执行。
 >
 > 目标设计：[`docs/design/road-v0-7-app-shell-design.md`](docs/design/road-v0-7-app-shell-design.md)
 >
@@ -25,7 +25,7 @@ Road v0.7 将已接受的 Paper、Library 与 Vault 收口为一个稳定桌面�
 - [`docs/RULES.md`](docs/RULES.md) 继续约束作者资产、Git、证据与安全边界。
 - [`docs/PROJECT.md`](docs/PROJECT.md)、源码和测试标明每个 Checkpoint 的当前事实。
 - 不得把未完成 target 写成已实现；每个 CP 只从前一已通过 checkpoint commit 建分支。
-- 每个 CP 单独 commit；CP0–CP6 的 advance YOLO 已用完。CP7 checkpoint 为 `1e17cea`，CP8 最终 checkpoint 为 `2f03aee`。Road snapshot 已作为 checkpoint 后的独立 closeout 变更创建；真实 Vault、push、tag、签名、打包与发布仍是独立决定。
+- 每个 CP 单独 commit；CP0–CP6 的 advance YOLO 已用完。CP7 checkpoint 为 `1e17cea`，CP8 最终 checkpoint 为 `2f03aee`。Road snapshot 已作为 checkpoint 后的独立 closeout 变更创建；后续真实 Vault、push、tag、签名、打包与发布仍是独立决定。
 
 ## 2. 全局范围
 
@@ -408,7 +408,7 @@ synthetic Vault 启动。开发者在 macOS `27.0`（`26A5421a`）、简体拼�
 选择“暴食”前没有中间查询，提交后只保留最终中文、只刷新一次且无残留 `ba`。
 开发者明确判断“全部通过，没有异常”；四类 P1 阻断均未出现。详细记录见
 [`CP8 report`](docs/acceptance/road-v0-7/cp8-responsive-navigation/report.md)。CP8 checkpoint
-随后以 `2f03aee` 创建；push、tag、真实 Vault、签名与发布均未执行。
+随后以 `2f03aee` 创建；CP8 阶段未再操作真实 Vault，push、tag、签名与发布均未执行。
 
 ## 17. CP8 已知风险
 

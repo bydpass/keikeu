@@ -2,7 +2,7 @@
 
 **Date**: 2026-07-25
 
-**Status**: accepted
+**Status**: accepted; exception expired 2026-07-26
 **Decider**: developer
 
 ## Context

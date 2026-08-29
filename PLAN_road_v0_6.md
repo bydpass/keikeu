@@ -658,5 +658,6 @@ Road v0.6 只有在 CP0–CP7 逐项完成声明证据、由 advance YOLO 通过
   精确暂存、DeepSeek `aic`、checkpoint commit 与连续执行由“全部 YOLO”预先授权；
   真实 Vault、push、tag、发布、closeout 与 CP7 commit 仍分别授权。
 
-批准状态形成独立干净基线提交后，Road v0.6 才能从该提交创建 CP0 分支。批准与
-advance YOLO 不表示任何 CP 已开始或已有未运行的证据。
+在 2026-08-02 批准当时，批准状态须先形成独立干净基线提交，Road v0.6 才能从该提交
+创建 CP0 分支；批准与 advance YOLO 当时不表示任何 CP 已开始或已有未运行的证据。
+本计划现为已完成并归档的施工记录，实际 checkpoint 与证据以上文完成态为准。

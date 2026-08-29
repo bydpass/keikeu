@@ -14,6 +14,10 @@
     <aside class="manual-sidebar" aria-label="forfresh 手册导航">
       <a class="series" href="../README.md">keikeu · forfresh</a>
       <nav aria-label="同系列手册">
+        <a href="developer-tui-quickstart.html">TUI 极简使用</a>
+        <a href="stack-component-atlas.html">技术栈图鉴</a>
+        <a href="testing-and-evidence-guide.html">测试与证据</a>
+        <a href="build-and-packaging-guide.html">构建与打包</a>
         <a href="npm-beginner-guide.html">npm 新人手册</a>
         <a href="tauri-vue-beginner-guide.html">Tauri + Vue 入门</a>
         <a href="python-caveman-guide.html" aria-current="page">Python Caveman</a>
@@ -232,7 +236,7 @@
         <h3>例：你要理解 <code>paper.save</code></h3>
         <pre><code>rg -n 'paper\.save|save_paper' src tests frontend/src frontend/src-tauri/src
 rg -n 'def .*save|class .*Paper' src/keikeu_core src/keikeu_bridge
-rg -n 'save' tests/test_markdown_io.py tests/test_bridge_protocol.py</code></pre>
+rg -n 'save' tests/test_markdown_v4.py tests/test_bridge_protocol.py</code></pre>
         <p>第一条找跨语言名字，第二条找 Python 实现，第三条找现有证据。读 protocol 的 dispatcher、service 方法、core 写入函数和它们的测试；不要只读报错位置。一个共享函数若是根因，在那里修一次通常比给每个调用者打补丁更小。</p>
 
         <h3>改动前写出三句话</h3>
@@ -243,8 +247,8 @@ rg -n 'save' tests/test_markdown_io.py tests/test_bridge_protocol.py</code></pre
         </ul>
 
         <h3>最小证据</h3>
-        <pre><code>.venv/bin/python -m pytest tests/test_models.py
-.venv/bin/python -m pytest tests/test_markdown_io.py
+        <pre><code>.venv/bin/python -m pytest tests/test_models_v4.py
+.venv/bin/python -m pytest tests/test_markdown_v4.py
 .venv/bin/python -m pytest tests/test_bridge_protocol.py
 .venv/bin/python -m compileall -q src</code></pre>
         <p>只改一个纯函数时先跑直接测试，再按风险扩到完整 pytest。<code>compileall</code> 只证明文件可编译，不证明业务正确；Sidecar 构建只证明可打包，不证明桌面产品已验收。证据名字要说准确。</p>
