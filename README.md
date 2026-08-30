@@ -8,9 +8,9 @@
 
 Road v0.6 已完成并归档：production 使用 Paper v4、Index v4 与 protocol v2，Paper 本身就是可编辑的有序卡页；旧正常运行链已删除，未知结果与人工修复 Gate、一号真实作者 Gate 均已通过，且无未解决 P0/P1。
 
-Road v0.7 的 App Shell 与信息层级已通过 CP0–CP8。开发者于 2026-08-26 通过 CP8 原生 IME Gate D，并明确判定整个 Road v0.7 的产品与实施工作正式完工；底层 Paper v4 / Index v4 / protocol v2 不变。最终 checkpoint 为 `2f03aee`，[Road snapshot](docs/archive/snapshots/road-v0-7.html) 已独立归档。CP6 的一次有界真实 v4 Vault 作者 Gate 已完成且授权已耗尽；此后未再操作真实 Vault，push、tag、签名、打包与发布均未执行。Road v0.8 的[预启动计划草案](PLAN_road_v0_8.md)已记录；2026-08-28 的日期条件已经满足，但 seed 尚未批准，close-guard 偏差也仍待分配修复与聚焦重证，因此 Road 尚未启动。
+Road v0.7 的 App Shell 与信息层级已通过 CP0–CP8。开发者于 2026-08-26 通过 CP8 原生 IME Gate D，并明确判定整个 Road v0.7 的产品与实施工作正式完工；底层 Paper v4 / Index v4 / protocol v2 不变。最终 checkpoint 为 `2f03aee`，[Road snapshot](docs/archive/snapshots/road-v0-7.html) 已独立归档。CP6 的一次有界真实 v4 Vault 作者 Gate 已完成且授权已耗尽；此后未再操作真实 Vault，push、tag、签名、打包与发布均未执行。Road v0.8 的[跨端基础方向与文档草案](PLAN_road_v0_8.md)已获本次同步批准，但可执行 CP0 seed 尚未批准，Road 也未启动；现有 close-guard 偏差必须先作为独立窄修复完成并聚焦重证，不能埋入跨端工程。
 
-产品文档与源码于 2026-08-26 按 Road v0.7 完成态复核。复核发现 App-root pending intent 的正常关闭保护仍错误地只挂在 `PaperView`；这是待修复的实现偏差，不改变已接受设计合同，并在 [PROJECT](docs/PROJECT.md) 记录为 Road v0.8 CP0 前置阻塞。2026-08-29 又加入独立的开发者 TUI 与四份技术手册；本地交接路由于 2026-08-30 迁至根目录 `CONTEXT.md`。这些开发工具不改变产品界面、运行链或验收状态。
+产品文档与源码于 2026-08-26 按 Road v0.7 完成态复核。复核发现 App-root pending intent 的正常关闭保护仍错误地只挂在 `PaperView`；这是待修复的实现偏差，不改变已接受设计合同，并在 [PROJECT](docs/PROJECT.md) 记录为 Road v0.8 开始前的独立阻塞项。2026-08-29 又加入独立的开发者 TUI 与四份技术手册；本地交接路由于 2026-08-30 迁至根目录 `CONTEXT.md`。这些开发工具不改变产品界面、运行链或验收状态。
 
 Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响应式界面、本机沙盒 Vault 与真机修复验证；它不是 macOS Road 的合入闸门。Road v0.3 的工程、macOS candidate smoke 与 CP6 真实作者验收均已完成；检索更快且清楚、外部编辑器 handoff 清楚，未报告未解决 P0/P1。其设计与验收文档已[只读归档](docs/archive/road-v0-3/README.md)，未创建 v0.3 tag。**Road v0.4 已彻底完成**：Gate A、Gate B、产品验收与 macOS 15.7+ 兼容性均已通过；当前唯一桌面运行时为 Vue/Tauri 与本地 Python sidecar，Flet 已在 CP14 退役。**Road v0.5 也已完成并归档**：Paper Desk、保存基线、离开保护、Flashcard/Library 连贯性、全应用 Quiet Desk 视觉与固定滚动语义均已验收。实时坐标见 [PROJECT](docs/PROJECT.md)。
 
@@ -51,8 +51,8 @@ Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响�
 
 - 本地优先；Markdown 是作者资产，JSON 索引可重建。
 - 不静默改写、覆盖、上传或评价作者文字。
-- 不做 keikeu 账号、云后端、遥测或后台同步。
-- 用户可选择 iCloud Drive 等操作系统暴露的普通文件目录。
+- 不做 keikeu 账号、云后端、遥测或 keikeu 管理的后台同步。
+- 当前桌面运行时可选择 iCloud Drive 等操作系统暴露的普通文件目录；计划中的共享 iCloud Documents Vault 仍未实现。
 - 不接入 fandom 数据库，不做 AI 代写、社区或内置正文编辑器。
 
 稳定产品边界见 [SPEC](docs/SPEC.md)，可判定纪律见 [RULES](docs/RULES.md)。
@@ -83,7 +83,7 @@ README.md                 外部入口与运行命令
 dev                       开发者 TUI：启动、进程日志与本地文档
 AGENTS.md                 Agent 操作纪律与读图顺序
 docs/PROJECT.md           当前坐标、模块入口、下一闸门
-docs/SPEC.md              accepted CP8 产品边界
+docs/SPEC.md              accepted CP8 产品边界与未实施跨端目标
 docs/RULES.md             工程、交互、数据与证据规则
 docs/design/              CP8 accepted 视觉、交互 map 与详细设计
 docs/architecture/        current/target 架构 map 与 ADR
@@ -127,9 +127,11 @@ Road v0.4   Vue/Tauri 前端替换完成；CP14 已验收
 Road v0.5   Quiet Desk UI 与交互收口完成；CP7 已验收并归档
 Road v0.6   Paper v4 卡页重构；CP7 已验收并归档
 Road v0.7   CP8 已验收并归档；最终 checkpoint 2f03aee
-Road v0.8   日期条件已满足；仍待 seed 批准与 close-guard 修复/重证，Road 未启动
+Road v0.8   跨端工程基础 + iPhone 可测试候选；方向已记录、CP0 seed 未批准，先独立修复并重证 close guard
+Road v0.9   iOS/macOS 首轮 Alpha + 正式宣发 Gate；未启动
+Road v0.10  Android 开发 + 二轮 Alpha；未启动
 Pre-Advance 可选 Markdown Outline；Road v0.7 之外且未排期，不阻塞核心流程
-之后        iOS/iPadOS（2026-08 方向）、Android/HarmonyOS（2026 Q4）、Windows（2027）
+之后        根据两轮 Alpha 数据决定 Windows Road；Linux、watchOS 未排期
 ```
 
 ## 许可

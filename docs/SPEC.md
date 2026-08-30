@@ -1,6 +1,6 @@
-# keikeu Product Boundary (Road v0.7 complete and archived)
+# keikeu Product Boundary (Road v0.7 accepted; Road v0.8 direction documented, CP0 seed not approved)
 
-> Authority: §§1–7 define the accepted product, author-asset, and data-safety boundary inherited from Road v0.6; §8 defines shared exclusions and platform scope; §9 records the Road v0.7 App Shell composition accepted at CP6; §10 defines the CP7 continuous-flow override accepted by developer Gate D on 2026-08-25; §11 defines the CP8 responsive-navigation override accepted by developer Gate D on 2026-08-26 and records the developer's Road v0.7 completion judgment. Detailed Paper v4 grammar, DTOs, migration, recovery, and protocol remain in the approved [Paper v4 design](design/road-v0-6-paper-v4-design.md); the current interface and acceptance matrix live in the [App Shell design](design/road-v0-7-app-shell-design.md). Current checkpoint and runtime facts live in [PROJECT](PROJECT.md), source, and tests.
+> Authority: §§1–7 define the accepted product, author-asset, and data-safety boundary inherited from Road v0.6; §8 defines shared exclusions and platform scope; §9 records the Road v0.7 App Shell composition accepted at CP6; §10 defines the CP7 continuous-flow override accepted by developer Gate D on 2026-08-25; §11 defines the CP8 responsive-navigation override accepted by developer Gate D on 2026-08-26 and records the developer's Road v0.7 completion judgment; §13 records the documented but unimplemented cross-platform target and does not authorize CP0. Detailed Paper v4 grammar, DTOs, migration, recovery, and protocol remain in the approved [Paper v4 design](design/road-v0-6-paper-v4-design.md); the current interface and acceptance matrix live in the [App Shell design](design/road-v0-7-app-shell-design.md). Current checkpoint and runtime facts live in [PROJECT](PROJECT.md), source, and tests.
 
 ## 1. Definition
 
@@ -19,7 +19,7 @@ The author leaves keikeu with the Paper itself. There is no separate Flashcard p
 - keikeu must not silently rewrite, normalize, delete, overwrite, upload, merge, score, or train on author text.
 - 完整文件夹树只有在界面明确说明“全部内容”并获得确认后才能移入废纸篓；不可恢复的整树销毁还需要废纸篓中的第二次明确确认。
 - The author chooses the Vault and external prose editor.
-- No account, cloud backend, telemetry, hidden remote service, or background sync is authorized.
+- The current accepted runtime has no account, cloud backend, telemetry, hidden remote service, or keikeu-managed background sync. The future opt-in iCloud Documents target is bounded by §13 and is not a current capability.
 - Damaged Paper Markdown is reported, not silently repaired or partially opened as an editable Paper.
 
 ## 3. Current runtime and accepted composition
@@ -89,21 +89,19 @@ The exact Markdown v4 shape, frontmatter scalar codec, page markers, reversible 
 ## 7. Architecture boundaries
 
 - Vue owns visible state, draft/baseline, active page, and App-root pending intent; it never reads or writes author files.
-- Rust owns desktop lifecycle, one Python sidecar, the JSONL queue, native directory selection/confirmation, and validated system actions; it never parses Markdown or implements product rules.
+- In the current desktop runtime, Rust owns lifecycle, one Python sidecar, the JSONL queue, native directory selection/confirmation, and validated system actions; it never parses Markdown or implements product rules.
 - The transport-agnostic Python service owns orchestration and strict DTOs. `keikeu_core` owns domain validation and file rules without GUI or transport imports.
-- `markdown_io.py` exclusively owns Paper Markdown. `vault.py` owns Home containment, supported Paper paths, active/Trash enumeration, code allocation, and destructive moves on those paths; migration modules separately own gated backup/staging/replacement. Index data is local and rebuildable.
-- No localhost, HTTP, WebSocket, account, telemetry, upload, hidden service, or automatic mutation replay is authorized.
+- In the current desktop runtime, `markdown_io.py` exclusively owns Paper Markdown. In that same runtime, `vault.py` owns Home containment, supported Paper paths, active/Trash enumeration, code allocation, and destructive moves on those paths; migration modules separately own gated backup/staging/replacement. A future Rust path may receive only the bounded mobile/shared-iCloud ownership in §13 after its contract and golden Gates pass. Index data is local and rebuildable.
+- The current accepted runtime has no localhost, HTTP, WebSocket, account, telemetry, upload, hidden service, or automatic mutation replay.
 
 ## 8. Explicit exclusions and platforms
 
 No AI generation, prose editor, sync, account, community, database, file watcher, Router, Pinia, TypeScript, UI kit, auto-save, page reorder, signing, notarization, staple, DMG, public distribution, mobile implementation, or cross-platform build enters Road v0.7.
 
-- macOS Apple Silicon is the only Road v0.7 engineering and first-author platform. Intel Mac is unsupported.
-- iOS/iPadOS remain a separate 2026-08 direction; Android/HarmonyOS a separate 2026-Q4 direction; Windows a 2027 direction.
-- Linux and watchOS have no planned support. The iOS-only second user does not enter v0.x acceptance and returns no earlier than a separately designed iOS+Android v1.0.
-- Packaging, Developer ID distribution and Alpha release work are deferred to Road v0.8, which starts
-  only under a separate approved plan and Git boundary. Its 2026-08-28 date condition is met, but the
-  plan/seed Gate and recorded close-guard prerequisite remain open as of 2026-08-30.
+- macOS Apple Silicon is the only Road v0.7 engineering and first-author platform. Intel Mac is unsupported. The historical Phase 7.5 iOS quick-test branch is not part of the accepted runtime or evidence for the new mobile target.
+- The documented sequence is Road v0.8 cross-platform foundations plus an iPhone test candidate; Road v0.9 iOS/macOS first Alpha plus the promotion Gate; Road v0.10 Android development plus second Alpha; and only then a Windows Road decision based on both rounds. Linux and watchOS have no scheduled work.
+- Road v0.8's direction is documented, but its executable CP0 seed is not approved and the Road has not started. The recorded App-root close-guard deviation is an independent narrow fix and focused re-verification prerequisite, not work to hide inside a Road v0.8 checkpoint.
+- Signing, notarization, TestFlight, DMG delivery, recruitment, promotion, Android implementation, and Windows implementation remain unperformed.
 - The repository `./dev` TUI, human manuals, and ignored root `CONTEXT.md` are developer workflow tools.
   They are not product surfaces, runtime protocol components, author assets, or acceptance evidence.
 
@@ -217,3 +215,42 @@ release remain separate and unperformed.
 3. **Safety integration:** CP6 exercises unknown-result ownership, strict repair states, Index verification, migration and path-mutation recovery, and the Chinese repair manual using synthetic data or complete copies.
 4. **Product acceptance:** CP7 separately requires the first author's real workflow. It is not part of CP6 engineering completion and needs separate real-Vault authorization.
 5. **Road closeout:** CP7 acceptance, snapshot, tag, push, signing, packaging, and release are separate decisions.
+
+## 13. Documented cross-platform target (not implemented or CP0-authorized)
+
+This section constrains future Road work. It does not change the accepted Road v0.7 runtime, prove a
+mobile build, authorize an Apple capability, or report an Alpha result.
+
+| Environment | Documented target backend |
+| --- | --- |
+| macOS local Vault | Current JSONL Python sidecar and Python Core, unchanged |
+| macOS shared iCloud Vault | In-process Rust Paper Core plus Apple-native file coordination |
+| iPhone local or shared iCloud Vault | The same in-process Rust Paper Core |
+| Road v0.10 Android local Vault | The same Rust Paper Core, with explicit Markdown import/export only |
+
+- Road v0.8 keeps the current macOS local-Vault runtime unchanged. Its mobile path keeps the existing
+  `bridgeRequest` boundary but replaces the unavailable mobile child-sidecar path with an in-process
+  Rust Paper Core, verified against Python-produced Paper v4 golden fixtures.
+- The v0.8 iPhone candidate is limited to creating, editing, saving, reopening, listing/searching, and
+  exporting one Paper as Markdown. Mobile Alpha search may scan Papers linearly instead of copying
+  Index v4. Trash, migration, folder management, external-editor handoff, whole-Vault export, and
+  formal iPad acceptance remain outside that candidate.
+- Chinese and English are the Alpha languages. Initial language follows the system setting, remains
+  manually switchable, and is stored only as disposable local device state.
+- Local storage is the default. iCloud Documents is an explicit opt-in that creates a new shared
+  cloud Vault; it never silently migrates, moves, or substitutes for an existing local Vault. Provider
+  discovery, download, reads, writes, and conflicts use Apple-native file coordination.
+- A private device-only recovery draft may protect an unsaved mobile edit. It is non-canonical, never
+  synced, clears only after a known successful Paper save, and on relaunch offers explicit recovery,
+  export, or discard.
+- An iCloud conflict never triggers automatic merge or deletion. The provider-current file may remain
+  active only after every losing conflict version has been preserved as a visible, non-overwritten
+  recovery copy. Replacing the active version first preserves the displaced version as well.
+- Road v0.9 may distribute the iOS candidate through external TestFlight and prefers a notarized
+  Developer ID DMG for macOS; if the shared-container Gate fails for that DMG, macOS Alpha uses
+  TestFlight instead. Real entitlement and cross-device Gates remain required. Road v0.9 owns
+  the 18+ Chinese/English first Alpha and the decision to begin formal promotion; age eligibility uses
+  self-attestation without collecting a birth date or identity document.
+- Road v0.10 adds Android to the second Alpha after formal promotion begins. Its first candidate stays
+  local-first with explicit Markdown import/export and adds no cloud service. Windows scheduling is
+  decided only from the two Alpha rounds.

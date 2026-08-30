@@ -4,12 +4,13 @@
 
 > slogan：存住一瞬的灵光
 >
-> 记录范围：Road v0.7 complete and archived · Paper v4；CP8 不改变数据合同
+> 记录范围：Road v0.7 complete and archived · Paper v4；另标 Road v0.8+ 已记录方向，CP0 seed 未批准
 >
 > 设计原则：本地优先、作者控制、直接编辑 Paper、无 AI 代写
 >
-> 文档同步：2026-08-26 按 Road v0.7 production source 复核。当前 close-guard 实现偏差
-> 记录在 [`PROJECT`](../../PROJECT.md)，不改写本文的已接受产品合同。
+> 文档同步：2026-08-30 按 Road v0.7 production source 与新版跨端路线复核。当前 close-guard
+> 实现偏差记录在 [`PROJECT`](../../PROJECT.md)；移动端、双语和 iCloud 均是后续目标，
+> 不改写本文的已接受产品合同，也不表示已经实现。
 
 ---
 
@@ -54,7 +55,33 @@ Flashcard 不再是单独视图、投影或资产；旧调用方已清零并从�
 
 ## 2. 用户、价值与边界
 
-Road v0.6 优先服务一号用户：使用 Apple Silicon Mac、单人私密创作、重视本地文件和文字控制的作者。
+新版一号用户画像是：已满 18 岁，以中文或英文进行同人/OC 文字创作，重视本地文件、
+普通 Markdown、隐私和文字控制的单人作者。年龄只作为未来 Alpha 准入条件，不采集生日、
+证件、具体年龄或年龄段，也不进入画像分析。
+
+Road v0.7 已接受产品仍只在 Apple Silicon Mac 上有运行和验收事实。Road v0.8 计划建立
+跨端工程基础与 iPhone 可测试候选，Road v0.9 才执行 iOS/macOS 首轮 Alpha；这些目标
+不能写成当前能力。Alpha 界面和材料计划提供中文、英文两套语言，参加者只需使用其中一种。
+
+当前没有可靠公开数据能回答目标作者的四端创作主设备占比。平台注册、广告触达或视频观看
+设备不等于写作设备，因此不填市场估算值：
+
+| Android | iOS | macOS | Windows |
+| --- | --- | --- | --- |
+| 待 Alpha 合格报名样本实测 | 待 Alpha 合格报名样本实测 | 待 Alpha 合格报名样本实测 | 待 Alpha 合格报名样本实测 |
+
+首轮报名把“创作主设备”定义为：过去三个月完成文字作品初稿和主要修改时使用最多的一台
+设备，只能单选。完整分母、聚合、渠道与偏差规则见
+[Alpha 用户画像与宣发渠道研究](alpha-audience-research.md)。
+
+画像还需要回答这些会改变产品判断的问题：
+
+- 测试语言、中文/英文输入法与双语切换需求；
+- 创作频率、创作年限，以及捕捉灵感、整理、初稿、修改、归档各阶段使用的设备；
+- 当前工具与 Markdown/普通文件经验；
+- 对本地文件、可导出性、隐私、跨设备同步的重视程度；
+- 丢灵感、找回、迁移与同步冲突中的主要痛点；
+- 键盘、触控、字号、对比度和屏幕阅读器等输入与可访问性需求。
 
 keikeu 提供：
 
@@ -72,7 +99,9 @@ keikeu 不提供：
 - Road v0.6 内的 Outline 编辑或生成；
 - 长篇正文工程、章节进度或 Notion 式通用数据库。
 
-二号用户只有 iOS 设备，因此不参加 v0.x 测试。其需求最早在同时具备 iOS 与 Android 客户端的 v1.0 重新设计，不能反向扩大 Road v0.6。
+首轮 Alpha 只接受能够使用 iPhone 或 macOS 完成任务的人；这是一条测试条件，不把
+Android/Windows 主设备作者排除出报名画像。Android 计划在首轮通过和正式宣发后快速开发，
+加入二轮 Alpha；Windows 是否进入后续 Road，由两轮实测决定。
 
 ---
 
@@ -337,20 +366,38 @@ Markdown（权威资产） + Index（可重建缓存） + Vault（用户目录�
 
 ---
 
-## 10. 平台与发布矩阵
+## 10. 平台、Alpha 与宣发矩阵
 
-| 平台 | 决定 | Road v0.6 含义 |
+| 平台 | 当前事实 | 已批准的后续方向 |
 | --- | --- | --- |
-| macOS Apple Silicon | 主力开发与唯一作者 Gate | 实现、测试和 smoke 的目标平台 |
-| Intel Mac | 明确不支持 | 不做 universal、x86_64 或 Rosetta 工作 |
-| iOS / iPadOS | 2026 年 8 月方向性目标 | 另行设计移动 runtime |
-| Android / HarmonyOS | 2026 Q4 方向性目标 | 另行设计与验收 |
-| Windows | 2027 方向性目标 | 不进入本 Road |
-| Linux / watchOS | 暂无安排 | 不承诺支持 |
+| macOS Apple Silicon | Road v0.7 已接受的唯一运行与作者 Gate | Road v0.9 与 iPhone 共同参加首轮 Alpha |
+| iPhone | 尚无已实现移动 runtime | Road v0.8 产出可测试候选，Road v0.9 参加首轮 Alpha |
+| iPadOS | 尚未实现 | 可做兼容观察，不进入首轮正式验收 |
+| Android | 尚未实现 | 首轮通过并正式宣发后进入开发，参加二轮 Alpha |
+| Windows | 尚未实现 | 两轮 Alpha 后按实测需求决定 Road |
+| Intel Mac / HarmonyOS / Linux / watchOS | 无已批准交付 | 不作当前承诺 |
 
-Python sidecar 是桌面子进程；Tauri 能面向移动端，并不意味着当前 runtime 可以自动搬到手机上。
+路线顺序固定为：
 
-Developer ID 签名、公证、staple、DMG 和人工分发延后至 Road v0.8。预启动计划草案已记录，但 CP0 尚未批准；Road v0.6/v0.7 均未执行打包发布，也未恢复已经停用的公证凭据。
+```text
+Road v0.8  跨端工程基础 + iPhone 可测试候选
+Road v0.9  iOS/macOS 首轮 Alpha + 正式宣发 Gate
+Road v0.10 Android 开发 + 二轮 Alpha
+之后       根据两轮数据决定 Windows Road
+```
+
+当前 macOS 本地 runtime 仍是 `Vue → Tauri/Rust → JSONL v2 → Python sidecar → Python Core`。
+Python sidecar 是桌面子进程，不能直接搬到 Tauri 移动端。Road v0.8 的目标方案是保留
+`bridgeRequest` 前端边界，在移动端使用进程内 Rust Paper Core；它要经过 Paper v4 golden
+fixture、真机文件与恢复 Gate，不能凭“同为 Tauri”宣称等价。
+
+首轮 Alpha 计划使用中文、英文两个测试组。小范围公开招募只在 iPhone 候选完成后进行；
+首轮达到安全、完成率和 iCloud 往返 Gate 后才正式宣发。主阵地是小红书 + X，副阵地是
+Bilibili + YouTube；微博与 Reddit 当前只作研究和社区观察。具体样本与放量判据见
+[Alpha 用户画像与宣发渠道研究](alpha-audience-research.md)。
+
+Road v0.6/v0.7 均未执行移动端开发、TestFlight、Developer ID 发布或 iCloud Documents
+配置。签名、公证、共享容器与跨端冲突恢复必须分别在后续 Road 以真实分发包和往返记录验证。
 
 ---
 
@@ -387,5 +434,7 @@ Road v0.6 的 keikeu 仍然是一款本地优先的写前整理工具，但它�
 - 当前坐标：[PROJECT](../../PROJECT.md)
 - Road v0.6 已接受书面设计：[Paper v4 产品与架构设计](../../design/road-v0-6-paper-v4-design.md)
 - Road v0.7 CP8 accepted override：[App Shell、连续编辑流与响应式 Anchor 设计](../../design/road-v0-7-app-shell-design.md)
+- 后续用户与渠道研究：[Alpha 用户画像与宣发渠道研究](alpha-audience-research.md)
+- 当前活动计划：[Road v0.8 跨端基础计划](../../../PLAN_road_v0_8.md)
 - 当前架构图：[architecture.html](../../architecture/architecture.html)
 - 当前交互图：[interaction.html](../../design/interaction.html)

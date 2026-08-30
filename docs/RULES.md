@@ -17,21 +17,22 @@ During a staged Road, SPEC and the HTML maps may describe the approved target wh
 
 ## 2. Architecture
 
-- The current desktop runtime is Vue/Vite JavaScript through a narrow Tauri/Rust host and one JSONL Python sidecar, with Python `>=3.11,<3.14`, Paper v4 author-owned Markdown, rebuildable Index v4 metadata, and protocol v2. Legacy Paper models/codecs are frozen inside the migration boundary and are not normal-runtime APIs.
+- The current accepted desktop runtime is Vue/Vite JavaScript through a narrow Tauri/Rust host and one JSONL Python sidecar, with Python `>=3.11,<3.14`, Paper v4 author-owned Markdown, rebuildable Index v4 metadata, and protocol v2. Legacy Paper models/codecs are frozen inside the migration boundary and are not normal-runtime APIs.
 - Flet was the accepted parity baseline through Gate A and product acceptance; CP14 removes it only after those gates and the macOS 15.7+ compatibility gate passed.
-- The Python application service is transport-agnostic and owns orchestration behind JSONL. Rust and Vue do not duplicate product rules.
+- In the current desktop runtime, the Python application service is transport-agnostic and owns orchestration behind JSONL. Rust and Vue do not duplicate product rules.
 - The developer owns architecture, dependencies, data models, build commands, and release artifacts; agent output must remain explainable and reviewable.
 - `keikeu_core` is pure Python and never imports Flet, Vue, Tauri, Rust, JSONL transport, or another GUI toolkit.
-- `markdown_io.py` exclusively owns Paper Markdown parsing and serialization.
-- `vault.py` exclusively owns Home containment, supported Paper-path validation, active/Trash enumeration, code allocation across those paths, and destructive filesystem moves.
+- In the current accepted desktop runtime, `markdown_io.py` exclusively owns Paper Markdown parsing and serialization; the Road v0.8 Rust target remains unaccepted until the shared Paper v4 golden Gate passes.
+- In the current desktop runtime, `vault.py` exclusively owns Home containment, supported Paper-path validation, active/Trash enumeration, code allocation across those paths, and destructive filesystem moves. A future Rust path may own only app-sandbox/shared-iCloud containment plus the bounded create/open/list/save/export loop after the Road v0.8 method/path contract and golden Gates pass; it does not take over current desktop-local, Trash, migration, or folder-mutation ownership.
 - GUI code calls the application service; it never renders Markdown or edits index JSON.
 - App pages pass validated Vault-relative Paper paths; they never recover a path by guessing `cache/<code>.md`.
 - Markdown is canonical author content. Index and device state are disposable.
 - Keep explicit files and control flow. Add abstractions only after a second real use exists.
 - Prefer existing code, Python stdlib, platform features, then already-installed dependencies.
 - New runtime dependencies require a concrete MVP need, packaging impact, maintenance risk, and developer approval.
-- No localhost, HTTP, WebSocket, telemetry, updater, or other network behavior is authorized.
-- Rust is limited to Tauri lifecycle, sidecar ownership, JSONL request matching, native directory selection and confirmation, and Python-validated open/reveal.
+- No app-managed localhost, HTTP, WebSocket, telemetry, updater, cloud backend, or remote API is authorized. A future opt-in operating-system iCloud Documents provider does not authorize a keikeu network client.
+- In the current desktop runtime, Rust is limited to Tauri lifecycle, sidecar ownership, JSONL request matching, native directory selection and confirmation, and Python-validated open/reveal.
+- The documented-but-unimplemented Road v0.8 target remains non-executable until its explicit seed Gate passes. If later approved, it may add an in-process Rust Paper Core only for the bounded mobile and shared-iCloud loop behind the existing `bridgeRequest` boundary. It must match Python-produced Paper v4 golden fixtures before it becomes an accepted runtime; it does not authorize a second schema, speculative shared framework, or a change to the current macOS local-Vault path.
 
 ## 3. Author text and privacy
 
@@ -60,6 +61,9 @@ During a staged Road, SPEC and the HTML maps may describe the approved target wh
 - 废纸篓文件夹的永久删除需要单独的不可撤销确认。Core 必须固定精确目录身份、随机隔离、预检同设备目录树并使用 symlink-safe 递归删除；平台不支持安全递归或出现挂载子树时拒绝且恢复隔离目录。符号链接只删除链接本身，绝不跟随到 Vault 外部。详见 [ADR-0008](architecture/decisions/0008-whole-folder-trash-lifecycle.md)。
 - A destructive migration requires a full backup outside the active Vault but still under Home, staging validation, a readable report, and safe failure behavior.
 - Disclose changes to selected Vault, device state, persistent config, signing, or generated platform projects before execution and report the result.
+- Planned iCloud Documents support remains local by default and opt-in only. It may create a new shared cloud Vault but must not silently migrate, move, replace, or fall back from an existing local Vault; unavailable containers leave the selected local state unchanged.
+- Planned iCloud reads, writes, discovery, downloads, and conflicts must use Apple-native file coordination. Never choose a winner from unsynchronized device clocks, automatically merge author text, or delete a provider conflict version. Preserve every losing or displaced version as a visible non-overwritten recovery copy before accepting or replacing the active file.
+- A planned mobile recovery draft is private device state, not canonical Paper Markdown. It must not sync, must clear only after a known successful durable save, and after relaunch must offer explicit recovery, export, or discard.
 
 ## 5. Interaction
 
@@ -70,7 +74,7 @@ During a staged Road, SPEC and the HTML maps may describe the approved target wh
 - Use responsive layouts, safe areas, keyboard reachability, readable contrast, visible focus, and text wrapping.
 - Every drag operation has a keyboard-reachable menu equivalent. Paper v4 has no page reordering; the v0.5 Highlight-reordering path retired at the completed Road v0.6 CP4 cutover.
 - Motion may clarify state but cannot be required to understand or complete a task.
-- System file services are ordinary paths. Do not pretend to manage provider sync, accounts, timing, or conflict merges.
+- In the current desktop runtime, system file services are ordinary paths. Future iCloud Documents work must use the native coordination boundary above and must not pretend to manage provider accounts, sync timing, or conflict merges.
 
 ## 6. Scope and classification
 
@@ -83,7 +87,7 @@ During a staged Road, SPEC and the HTML maps may describe the approved target wh
 
 No feature enters an acceptance or bug-fix Phase by being adjacent, attractive, or convenient.
 
-- Platform direction is macOS Apple Silicon first, iOS/iPadOS, Android/HarmonyOS, then Windows. Intel Mac is unsupported; Linux and watchOS have no scheduled work. Optional Outline work never blocks the core.
+- Platform direction is Road v0.8 cross-platform foundations plus an iPhone test candidate, Road v0.9 iOS/macOS first Alpha plus the formal-promotion Gate, then Road v0.10 Android plus the second Alpha. Windows is scheduled only after both Alpha rounds provide a decision basis. Intel Mac is unsupported; Linux and watchOS have no scheduled work. Optional Outline work never blocks the core.
 - Before MVP, do not add a plugin architecture, complex graph system, AI-required workflow, social system, external fandom database, or premature Windows/Linux parity.
 
 ## 7. Git

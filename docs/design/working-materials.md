@@ -17,5 +17,5 @@
 - [Road v0.7 non-authoritative interactive planbook companion — product complete](road-v0-7-planbook.html)
 - [Road v0.5 Planbook](../archive/road-v0-5/road-v0-5-planbook.html)
 - [Earlier design exploration](boh_design.html) — visible historical banner; not a production token source.
-- [Road v0.8 pre-start release plan](../../PLAN_road_v0_8.md) — current next-Road draft; date condition met, seed and close-guard prerequisites still open, and no new product UI is approved.
+- [Road v0.8 pre-start cross-platform foundation plan](../../PLAN_road_v0_8.md) — current next-Road draft; Road has not started, the runtime remains desktop-only, and macOS/iOS Alpha distribution belongs to Road v0.9.
 - Open Design generation context lives only in the local, git-ignored `docs/design/keikeu_opendesign/` directory (Road v0.5 final UI prototype, prototype/browser skill snapshots, templates, examples, and layout references). These are construction artifacts, not tracked authority or evidence.

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
   <meta name="author" content="keikeu contributors">
-  <meta name="description" content="keikeu 构建与打包手册：解释 Python editable install、Hatchling、PyInstaller Sidecar、Vite、Cargo、Tauri bundle 与 Road v0.8 发布边界。">
+  <meta name="description" content="keikeu 构建与打包手册：解释 Python editable install、Hatchling、PyInstaller Sidecar、Vite、Cargo、Tauri bundle 与 Road v0.9 发布边界。">
   <meta name="keywords" content="keikeu, build, packaging, Hatchling, PyInstaller, Vite, Cargo, Tauri">
   <meta name="generator" content="Kami 1.12.0">
   <title>构建与打包手册 · keikeu</title>
@@ -61,12 +61,13 @@
         <ol class="takeaways">
           <li><span><code>npm run build</code> 只生成前端静态资产，不会生成完整桌面应用。</span></li>
           <li><span><code>scripts/build_sidecar.py</code> 只重建 Sidecar，不会签名、公证或证明产品流程。</span></li>
-          <li><span>日常开发、Road v0.8 CP1 演练和 Developer ID 候选是三个不同 Gate，证据不能混用。</span></li>
+          <li><span>日常开发、Road v0.9 打包演练和 Developer ID 候选是三个不同 Gate，证据不能混用。</span></li>
         </ol>
         <aside class="truth-boundary">
           <strong>事实边界：</strong>本页是 2026-08-29 的非权威教学快照，不修改或批准发布合同。
-          构建事实最终核对当前 manifest、lockfile 与脚本；Road 范围核对
-          <a href="../../../PLAN_road_v0_8.md">Road v0.8 计划</a>，权限与证据核对
+          当前可运行链仍仅是桌面版本。构建事实最终核对当前 manifest、lockfile 与脚本；
+          跨端基础核对 <a href="../../../PLAN_road_v0_8.md">Road v0.8 计划</a>，发布阶段核对
+          <a href="../../PROJECT.md">PROJECT</a> 与未来获批的 Road v0.9 计划，权限与证据核对
           <a href="../../RULES.md">RULES</a>。
         </aside>
       </section>
@@ -81,7 +82,7 @@
           <li><a href="#dev-tui"><code>./dev</code> 的两条路</a></li>
           <li><a href="#artifacts">源码与产物边界</a></li>
           <li><a href="#release-levels">开发、演练与发布</a></li>
-          <li><a href="#versions">版本契约与 CP1</a></li>
+          <li><a href="#versions">版本契约与 Road Gate</a></li>
         </ol>
       </nav>
 
@@ -161,7 +162,7 @@
         <p>
           Hatchling 是 build backend，不是应用运行时依赖。项目当前只在
           <code>[build-system]</code> 声明 <code>hatchling</code>，没有在运行时依赖里添加它；
-          本页不为 Road v0.8 擅自发明一个精确版本锁。
+          本页不为后续 Road 擅自发明一个精确版本锁。
         </p>
       </section>
 
@@ -230,8 +231,8 @@ Rust shell().sidecar("keikeu-sidecar") → protocol v2 hello</code></pre>
           <code>beforeBuildCommand</code> 运行 <code>npm run build</code>，Vite 把 Vue 前端写入
           <code>frontend/dist/</code>。Cargo 随后编译 release host；Tauri 将
           <code>frontendDist</code>、host 与 external binary 组合成当前配置要求的 bundle。
-          今天 <code>bundle.targets</code> 只列 <code>app</code>；Road v0.8 CP1 才负责明确 DMG target
-          与 rehearsal 配置。
+          今天 <code>bundle.targets</code> 只列 <code>app</code>；Road v0.9 的获批发布 Gate 才负责明确
+          DMG target 与 rehearsal 配置。
         </p>
 
         <div class="callout">
@@ -338,12 +339,6 @@ Rust shell().sidecar("keikeu-sidecar") → protocol v2 hello</code></pre>
                 <td>Cargo / Tauri</td>
                 <td>ignored；<code>release/bundle/</code> 下的 app/DMG 仍不是自动批准候选</td>
               </tr>
-              <tr>
-                <td><code>build/release/road-v0-8/</code></td>
-                <td>Road v0.8 rehearsal / candidate 的本地约定根</td>
-                <td>获批 Road 流程</td>
-                <td>ignored；不得存 secret、作者内容或原始凭据日志</td>
-              </tr>
             </tbody>
           </table>
         </div>
@@ -382,7 +377,7 @@ Rust shell().sidecar("keikeu-sidecar") → protocol v2 hello</code></pre>
                 <td>可重复 release、签名、公证、用户验收</td>
               </tr>
               <tr>
-                <td>Road v0.8 CP1 rehearsal</td>
+                <td>Road v0.9 packaging rehearsal</td>
                 <td>证明锁定工具链能从 clean checkpoint 生成不可分发 app/DMG</td>
                 <td>校准版本与 selector；显式 unsigned/ad-hoc 配置；检查 arm64、Info.plist、protocol hello；跑 synthetic smoke</td>
                 <td>Developer ID 身份、Apple 接受、可外发候选</td>
@@ -390,23 +385,23 @@ Rust shell().sidecar("keikeu-sidecar") → protocol v2 hello</code></pre>
               <tr>
                 <td>Developer ID candidate</td>
                 <td>生成可验证的签名、公证候选</td>
-                <td>仅在 CP2 身份就绪、CP3 单独授权后，从固定源码重新构建、签名、公证、staple 与哈希</td>
-                <td>沿用 CP1 产物或旧证据</td>
+                <td>仅在身份就绪且候选 Gate 单独授权后，从固定源码重新构建、签名、公证、staple 与哈希</td>
+                <td>沿用 rehearsal 产物或旧证据</td>
               </tr>
             </tbody>
           </table>
         </div>
         <p>
-          CP1 不能调用真实签名私钥；若意外发现签名或公证环境输入，应停止演练。
-          CP3 也不能复用 CP1 产物，必须从固定 source commit 全新构建。签名、公证、staple 与
+          rehearsal 不能调用真实签名私钥；若意外发现签名或公证环境输入，应停止演练。
+          Developer ID candidate 也不能复用 rehearsal 产物，必须从固定 source commit 全新构建。签名、公证、staple 与
           Gatekeeper 的教学解释继续阅读<a href="macos-developer-id-release.md">Developer ID 发布手册</a>；
-          实际进入条件仍以<a href="../../../PLAN_road_v0_8.md">Road v0.8 计划</a>为准。
+          实际进入条件仍以未来获批的 Road v0.9 计划为准。
         </p>
       </section>
 
       <section id="versions" class="chapter">
         <p class="chapter-number">Chapter 07</p>
-        <h2>版本契约与 CP1</h2>
+        <h2>版本契约与 Road Gate</h2>
         <p class="claim">
           精确版本要从所有权文件读取；一张手册只能记录快照，不能替 manifest 和 lockfile 冻结环境。
         </p>
@@ -418,7 +413,7 @@ Rust shell().sidecar("keikeu-sidecar") → protocol v2 hello</code></pre>
                 <th scope="col">工具</th>
                 <th scope="col">2026-08-29 仓库事实</th>
                 <th scope="col">事实来源</th>
-                <th scope="col">CP1 待办</th>
+                <th scope="col">后续 Gate 待办</th>
               </tr>
             </thead>
             <tbody>
@@ -426,7 +421,7 @@ Rust shell().sidecar("keikeu-sidecar") → protocol v2 hello</code></pre>
                 <td>Node / npm</td>
                 <td><code>22.23.2</code> / <code>10.9.8</code> manifest contract；<code>.node-version</code> 仍为 <code>22.23.1</code></td>
                 <td><a href="../../../frontend/package.json"><code>frontend/package.json</code></a>、<a href="../../../.node-version"><code>.node-version</code></a></td>
-                <td>按 CP0 批准值消除 selector 漂移</td>
+                <td>按获批 Road 值消除 selector 漂移</td>
               </tr>
               <tr>
                 <td>Python</td>
@@ -450,7 +445,7 @@ Rust shell().sidecar("keikeu-sidecar") → protocol v2 hello</code></pre>
                 <td>Tauri</td>
                 <td>Rust crate <code>2.11.5</code>；CLI <code>2.11.4</code></td>
                 <td><a href="../../../frontend/src-tauri/Cargo.toml"><code>Cargo.toml</code></a>、<a href="../../../frontend/package.json"><code>package.json</code></a></td>
-                <td>与 CP0 应用版本、bundle contract 和 build recipe 一起冻结</td>
+                <td>与获批应用版本、bundle contract 和 build recipe 一起冻结</td>
               </tr>
             </tbody>
           </table>
@@ -459,7 +454,7 @@ Rust shell().sidecar("keikeu-sidecar") → protocol v2 hello</code></pre>
         <p>
           本次手册更新不修改 <code>.node-version</code>、<code>.python-version</code>、
           <code>rust-toolchain.toml</code>、build lock 或 bundle 配置。现在修这些文件会提前进入
-          Road v0.8 CP1 的实施范围，并让教学文档提交混入工具链决策。
+          跨端基础或发布 Road 的实施范围，并让教学文档提交混入工具链决策。
         </p>
 
         <h3>新人最短检查路线</h3>
@@ -470,7 +465,7 @@ Rust shell().sidecar("keikeu-sidecar") → protocol v2 hello</code></pre>
 .venv/bin/python scripts/build_sidecar.py
 npm --prefix frontend run tauri:dev
 
-# Road v0.8 CP1 才使用的 rehearsal 入口（须先满足 CP0 Gate）
+# Road v0.9 才使用的 packaging rehearsal 入口（须先满足获批 Gate）
 npm --prefix frontend run tauri:build -- --bundles app,dmg</code></pre>
         <p>
           命令成功后仍要记录实际工具版本、运行日期、输出、未执行项和对应源码状态。
@@ -490,7 +485,7 @@ npm --prefix frontend run tauri:build -- --bundles app,dmg</code></pre>
         <ol>
           <li><a href="../../../pyproject.toml"><code>pyproject.toml</code></a>、<a href="../../../requirements-build.lock"><code>requirements-build.lock</code></a>、<a href="../../../scripts/build_sidecar.py"><code>scripts/build_sidecar.py</code></a></li>
           <li><a href="../../../frontend/package.json"><code>frontend/package.json</code></a>、<a href="../../../frontend/src-tauri/Cargo.toml"><code>Cargo.toml</code></a>、<a href="../../../frontend/src-tauri/tauri.conf.json"><code>tauri.conf.json</code></a></li>
-          <li><a href="../../../PLAN_road_v0_8.md">Road v0.8 计划</a>、<a href="../../PROJECT.md">PROJECT</a>、<a href="../../RULES.md">RULES</a></li>
+          <li><a href="../../../PLAN_road_v0_8.md">Road v0.8 跨端基础计划</a>、<a href="../../PROJECT.md">PROJECT</a>、<a href="../../RULES.md">RULES</a>；发布进入条件等待 Road v0.9 计划批准</li>
         </ol>
 
         <h3>官方工具文档</h3>

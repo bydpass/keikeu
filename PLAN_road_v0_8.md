@@ -1,151 +1,173 @@
-# Road v0.8 实施计划（设计草案；Road 尚未启动）
+# Road v0.8 实施计划（跨端基础设计草案；Road 尚未启动）
 
-> 状态：开发者于 2026-08-26 授权把本草案与既有 `keikeu-routine` skill 改动一并落盘并提交。
-> 本次只建立可评审的发布计划，不是 CP0 checkpoint，也不授权构建、Keychain 修改、Apple
-> 上传、外部分发、tag、push 或 release。Road v0.8 仍不得早于 2026-08-28 启动。
-> 2026-08-29 状态复核：最早日期条件已经满足，但 §14 的计划/seed 批准仍未通过，
-> close-guard 偏差也尚未分配修复并聚焦重证，因此 Road 仍未启动。`./dev` 与技术手册是
-> CP0 前开发工具，不是 Road checkpoint、release build 或发布资产。
+> 状态：开发者于 2026-08-30 批准重写本草案并同步活动文档。本次文档提交不是 CP0
+> checkpoint，不授权修改产品代码、生成移动工程、配置 Apple 能力、签名、上传、招募、分发、
+> tag、push 或 release。Road v0.8 仍须通过 §14 的新计划/seed Gate 才能启动。
 >
-> 继承基线：Road v0.7 最终产品 checkpoint `2f03aee`，以及其后独立 closeout
-> `a7726ae`。Paper v4、Index v4、protocol v2、完整文件夹生命周期与已接受 App Shell 不变。
+> 继承基线：Road v0.7 最终产品 checkpoint `2f03aee` 及其独立 closeout `a7726ae`。
+> 当前 production 仍是 macOS Apple Silicon 上的 Vue/Tauri/JSONL/Python runtime；Paper v4、
+> Index v4、protocol v2、完整文件夹生命周期与已接受 App Shell 均未因本草案发生变化。
 >
-> 发布工程权威：本计划在 CP0 获开发者批准后定义 Road v0.8 的范围、顺序和 Gate；
-> [`docs/SPEC.md`](docs/SPEC.md) 继续定义产品边界，
-> [`docs/RULES.md`](docs/RULES.md) 继续定义数据、Git、证据与安全纪律。
+> 前置阻塞：App-root pending durable intent 的正常关闭保护仍错误地由 `PaperView` 注册。
+> 该偏差必须先作为独立窄修复完成并聚焦重证；不得混入本 Road 的跨端实现。
+>
+> 权威：[`docs/SPEC.md`](docs/SPEC.md) 定义产品边界，
+> [`docs/RULES.md`](docs/RULES.md) 定义数据、Git、证据与安全纪律，
+> [`docs/PROJECT.md`](docs/PROJECT.md) 区分当前运行事实与本计划目标。
 
-## 0. Road 目标
+## 0. Road 目标与后续生态位
 
-Road v0.8 把已接受的 Apple Silicon 桌面应用交付为一个可验证、可撤回的受邀 Alpha：
+Road v0.8 建立同一 Vue 产品界面的跨端工程基础，并交付一个可在实体 iPhone 上完成核心循环的
+开发候选；它不承担外部 Alpha、正式宣发或 Android 发布。
 
 ```text
-已接受源码 → 可重复构建演练 → Developer ID 候选
-           → 公证与 staple → 保留 quarantine 的接收机安装 Gate
+Road v0.8  跨端工程基础 + iPhone 可测试候选
+Road v0.9  iOS/macOS 首轮 Alpha + 正式宣发 Gate
+Road v0.10 Android 开发 + 二轮 Alpha
+之后       根据两轮实测决定 Windows Road
 ```
 
-本 Road 是打包与交付 Road，不是产品功能、数据、UI、平台扩张或自动更新 Road。
+移动端采用 Tauri + 进程内 Rust Paper Core，不恢复已退役的 Flet runtime。Tauri mobile
+不能启动当前 Python sidecar，因此移动端和 Apple 云端 Vault 不能伪装成现有桌面 transport
+的直接复用。
 
-## 1. 权威与执行纪律
+## 1. 执行纪律
 
-- 本草案提交只供批准；CP0 开始后才成为实施计划。
-- CP0 最早于 2026-08-28 创建，并从开发者明确接受的本计划提交开始。
-- 2026-08-26 文档/源码复核发现 App-root pending durable intent 的窗口关闭保护仍由
-  `PaperView` 注册；runtime blocked 卸载该组件后，以及 Library/Vault durable intent
-  存在时，没有等价的 App-root guard。该实现偏差不改写已接受合同；开发者必须先决定
-  由独立 Road 前修复还是修改本计划纳入窄修复，并以聚焦测试重证，之后才能批准 CP0 seed。
-- 每个 CP 只从前一个已通过 checkpoint commit 建立一条 focused branch。
-- 本 Road 不使用 advance YOLO。每个 checkpoint、Keychain 修改、Apple 上传、外部传输、
-  tag、push 与 release 都保留独立授权。
-- `docs/manual/forfresh/macos-developer-id-release.md` 只作教学参考；旧 profile、旧命令、
-  beta 例外与历史 pass count 均不能成为本 Road 证据。
-- 应用 bundle、DMG、source archive、哈希文件、原始签名/公证日志与凭据不进入 Git；
-  所有本地 rehearsal/候选产物只进入忽略的 `build/release/road-v0-8/` 或另行批准的外部目录。
-- 验收记录只写去标识结论；不写 Apple ID、邮箱、Team ID、证书 CN、profile 名、token、
-  私钥、本机绝对路径、Vault 路径、作者内容或测试者身份。
+- 本草案提交只供新计划评审；开发者明确批准 CP0 seed 后才成为可执行 Road。
+- close-guard 修复从当前已接受 checkpoint 单独建立 focused branch，修复和聚焦测试通过后才可
+  作为 CP0 seed 的前置事实。
+- 每个 CP 从前一个已通过 checkpoint commit 建立一条 focused branch；未通过的 CP 不得给下一个
+  CP 当 seed。
+- checkpoint、真实 iPhone、真实 Apple Account、Apple Developer Portal 持久修改、签名、上传、
+  TestFlight、外部分发、tag、push 与 release 分别授权。
+- 所有文件与生命周期实验先用 synthetic Vault、fixtures 或完整副本；未经窄授权不读写真实 Vault。
+- 生成的 Xcode/Tauri 工程、构建包、签名产物、原始设备日志和凭据不得进入 Git，除非 CP 明确证明
+  某个生成文件是可审查且必须跟踪的源码输入。
+- 证据只记录去标识结果，不记录 Apple ID、邮箱、Team ID、证书 CN、profile 名、设备名称、
+  本机路径、Vault 路径、作者内容或测试者身份。
 
-## 2. 建议发布合同（CP0 待批准）
+## 2. Current 与 target runtime
 
-| 项目 | 建议值 | 边界 |
-| --- | --- | --- |
-| Road 名称 | 打包与受邀 Alpha 发布 | 不含新产品能力 |
-| 应用版本 | `0.8.0` | 与 Road 对齐；不把候选号塞入产品版本 |
-| 首个候选 | `C01` / `alpha.1` | 后续任何重建使用新候选号 |
-| bundle identifier | `app.keikeu.desktop` | 保持既有身份；CP0 复核唯一性后冻结 |
-| 架构 | `arm64` | 不支持 Intel、universal 或 Rosetta |
-| 最低系统 | macOS `15.7` | 必须由同一最终候选在稳定目标系统重证 |
-| 容器 | Tauri 默认 DMG | 不做 PKG、自制背景或新打包依赖 |
-| Runtime | hardened runtime 开启 | 不启用 App Sandbox；不预加 entitlement |
-| 分发 | 一次受邀、人工传输 | 无公开下载、自动更新或 CI 发布 |
-| 许可 | GPLv3 + 对应 source archive | 不附加 NDA 或禁止再分发条款 |
-| 数据 | synthetic Vault | 真实 Vault 需独立窄授权，不是发布 Gate 前提 |
-
-建议产物名：
+### 2.1 当前已接受 runtime
 
 ```text
-keikeu-0.8.0-alpha.1-aarch64.dmg
-keikeu-0.8.0-alpha.1-source.tar.gz
-SHA256SUMS.txt
+Vue → Tauri/Rust → JSONL protocol v2 → Python service/core
+    → local Paper v4 Markdown / Index v4 / Vault
 ```
 
-Tauri `version` 建议为 `0.8.0`，macOS `bundleVersion` 建议从 `80001` 开始；`C02` 对应
-`80002`。Python、npm、Cargo、Tauri 与 sidecar hello 中的产品版本必须一致。
+Road v0.8 不重写 macOS 本地 Vault 路径；它继续拥有完整的现有 Library、Index、Trash、迁移、
+文件夹与外部编辑器能力。
+
+### 2.2 Road v0.8 target
+
+| 环境 | 存储 | 执行后端 | Road v0.8 能力 |
+| --- | --- | --- | --- |
+| macOS 本地 Vault | 当前本地 Markdown | 现有 Python sidecar | 保持完整现有能力 |
+| macOS iCloud Vault | App 的共享 iCloud Documents Vault | Rust Paper Core + Apple 文件协调 | 与 iPhone 相同的窄核心循环 |
+| iPhone 本地 Vault | App 沙盒 | Rust Paper Core | 窄核心循环 |
+| iPhone iCloud Vault | 同一共享 iCloud Documents Vault | Rust Paper Core + Apple 文件协调 | 窄核心循环与冲突恢复 |
+
+Vue 继续只持有可见状态与草稿，不直接写文件。Rust Paper Core 是非 GUI 的产品层，只在 mobile
+或 `icloud_documents` 存储模式处理 Paper v4；macOS 本地模式仍走 Python sidecar。两套实现都
+服从同一 Paper v4 书面 grammar 与共享 golden fixtures，不允许各自扩展 schema。
+
+前端继续调用现有 `bridgeRequest(method, params)` envelope：
+
+- `paper.create_draft`、`paper.open`、`paper.save` 与 `library.query` 保持现有语义和 DTO 形状；
+- macOS 本地请求继续进入 JSONL protocol v2；mobile/iCloud 请求由 Tauri host 在进程内分发；
+- `system.hello` / `startup.load` 返回明确的 platform、storage mode 与 capability，不让 UI 猜平台；
+- 新增的 storage、单篇导出与 conflict-recovery 方法只属于 host contract，不自动扩大 Python
+  sidecar 的 protocol v2；CP0 必须冻结方法表与错误码后才能实施。
 
 ## 3. 全局范围
 
 ### 3.1 包含
 
-- 冻结版本、bundle ID、架构、最低系统、容器、候选命名与回撤合同。
-- 校准 Node、npm、Python、PyInstaller、Rust、Cargo、Tauri、macOS 与 Xcode 工具锁。
-- 复用现有 PyInstaller sidecar 与 Tauri bundler，生成 release `.app` 和默认 DMG。
-- Developer ID Application 签名、hardened runtime、可信时间戳、嵌套 sidecar 验证。
-- 通过 `notarytool` 公证、审查同次提交日志、staple 与 Gatekeeper 验证。
-- 从候选源码 commit 生成对应 source archive，并交付 GPL、第三方许可说明和最终 SHA-256。
-- 在稳定 macOS 15.7+ Apple Silicon 接收机上保留 quarantine 完成安装与 synthetic smoke。
-- 失败时撤回候选；卸载应用不删除 Vault、配置或作者资产。
+- 中文/英文 UI：系统语言默认、设置内手动切换、本机持久选择。
+- 复用现有 Vue 页面与 `bridgeRequest` 边界；为 iPhone 调整 safe area、软键盘、IME 与 lifecycle。
+- 进程内 Rust Paper v4 窄 Core：创建、打开、整体 CAS 保存、列表/线性搜索和单篇 Markdown 导出。
+- Python 生成、Rust/Python 双边消费的 golden fixtures；覆盖未知 frontmatter、marker 转义、页面
+  规则、stale、首次/再次保存和失败前不写盘。
+- App 私有、仅本机的未保存恢复稿。
+- 本地沙盒 Vault；用户明确选择后才创建一个 iCloud Documents Vault。
+- Apple 原生 metadata discovery、按需下载、file coordination、current/conflict version 处理。
+- “冲突与恢复”列表：打开、导出、明确提升为当前版本；所有被替换版本先保留。
+- iOS simulator、实体 iPhone 与 macOS 开发候选的跨端工程 Gate。
 
 ### 3.2 不包含
 
-- Paper v4、Index v4、protocol v2、DTO、Core、bridge、保存、恢复或迁移合同变更。
-- UI 重构、Figma、DMG 皮肤、品牌精修或新产品功能。
-- AI、同步、账号、遥测、崩溃上报、后台服务、updater、自动下载或网络 runtime。
-- CI 持有签名/公证凭据、GitHub Release、公开下载站或远端自动发布。
-- App Sandbox、额外 entitlement、PKG、Mac App Store、TestFlight 或 App Store Connect 发布。
-- Intel Mac、universal binary、iOS/iPadOS、Android/HarmonyOS、Windows、Linux 或 watchOS。
-- 真实 Vault、第二产品用户、tag、push 或公开 release；这些不能由“Alpha”自动推出。
+- 外部 TestFlight、Developer ID 最终候选、公证 DMG、招募、公开宣发或真实 Alpha；归入 Road v0.9。
+- Android 实现或二轮 Alpha；归入 Road v0.10。
+- iPad 正式验收、Windows、Intel Mac、HarmonyOS、Linux 或 watchOS。
+- 移动端 Trash、永久删除、迁移、Vault relocation、文件夹管理、Branch、外部编辑器、批量导出或
+  整库 ZIP。
+- Rust Index v4、数据库、账号、CloudKit 数据库、自建同步服务、遥测、analytics、crash upload、
+  updater、后台 agent 或 localhost。
+- 自动把本地 Vault 搬到 iCloud、自动合并冲突、静默降级、自动重试未知 mutation。
+- Flet 恢复、通用 plugin architecture、通用存储抽象或为未来平台提前搭架子。
 
-## 4. 候选与凭据安全合同
+## 4. 产品与数据合同
 
-### 4.1 候选生命周期
+### 4.1 双语
 
-```text
-rehearsal          可丢弃；不得分发；不获得候选编号
-C01 pre-staple     已签名 DMG；只允许提交公证并记录 SHA-256
-C01 final          对同一 DMG staple 后重新计算 SHA-256
-retired            任一失败或额外字节变化；不得修补后继续冒充 C01
-```
+- 支持 `zh-CN` 与 `en` 两种界面语言；首次启动按系统 locale 选择，无法匹配时默认 English。
+- 设置页可随时切换，选择只写 App 的本机 device state；不进入 Vault、Paper 或 iCloud。
+- 使用一个项目内字符串表和现有 Vue state，不引入通用 i18n 依赖。
+- UI、错误、恢复、导出和 iCloud 状态均翻译；Paper、Tags、路径与作者内容绝不翻译或规范化。
+- Python/Rust/Apple adapter 返回稳定错误 code 和安全参数；Vue 决定最终文案。诊断不得携带正文。
 
-- 公证提交后，只有计划内的 staple 可以改变同一候选。
-- 签名、公证、staple、Gatekeeper、安装或 smoke 任一步失败，都撤回当前候选并从 clean
-  source commit 生成 `C02`；不得原地覆盖、ad-hoc 补签或移除 quarantine 绕过。
-- 最终候选身份由 source commit、版本、候选号、工具链摘要和完整交付集共同确定。
-  `SHA256SUMS.txt` 至少覆盖 final DMG 与对应 source archive；安装说明、GPL 与第三方 notice
-  必须包含在已哈希的交付文件内。任一交付文件变化都提升候选号并重新生成全部哈希。
-- “可重复”表示锁定输入和命令可再次构建，不声称签名/时间戳产物逐字节复现。
+### 4.2 Rust Paper Core
 
-### 4.2 凭据边界
+- 支持当前 Paper v4 严格 parse/render，不产生另一个 schema 或移动专用 Markdown。
+- 保留 intentionally blank optional fields 与可行的未知 frontmatter；损坏输入进入
+  `repair_required`，不部分打开成可编辑对象。
+- 整体保存使用打开时快照做 CAS；外部变化进入 `stale`，未知结果不自动重发。
+- 同目录临时文件与安全替换保证失败前不暴露部分 Paper；平台不能证明安全原子行为就阻断写入。
+- 移动 Library 只扫描受支持的 root/one-folder Paper 并在内存中线性搜索；不复制 Index v4。
+- 单篇导出只通过系统 Share Sheet 或 Files 明确交付一份 Markdown，不改变 canonical Paper。
 
-- CP2 前不查询、创建、替换或删除 Keychain 公证认证。
-- Developer ID 证书必须有匹配私钥；证据只记录可用/不可用，不复制原始输出。
-- CP0 必须在 `notarytool` Keychain profile 与 App Store Connect API key 中明确选择一种
-  本地认证方式。API key 如被选择，CP0 还须批准仓库外本机私密文件的位置类别、最小权限、
-  保留期限与撤销/删除边界；实际路径和内容不进入证据。任何 secret 都不进入参数、环境文件、
-  聊天、shell transcript、Git 或未经批准的明文文件。
-- Tauri 负责现有应用与嵌套二进制的构建/签名；Apple 原生工具负责公证、staple 和验证。
-- 不使用 `altool`、ad-hoc 发布签名、`codesign --deep --force`、右键打开、关闭 Gatekeeper
-  或删除 quarantine。
-- 原始公证日志仅在本机审查；tracked report 只记录状态、warning 数量、去标识根因和决定。
-- 一旦怀疑凭据进入参数、未经批准的明文文件、Git/history、聊天或日志，立即停止发布并撤销相关凭据；
-  完成本地暴露面清查后，只有经新授权才能建立新认证，受影响候选一律 retire。
+### 4.3 本机恢复稿
 
-### 4.3 工具链边界
+- 未保存草稿在输入静止后的短 debounce 与 App background/resign-active 时写入 App 私有恢复区。
+- 恢复稿按本机 draft/Paper identity 区分，不进入活动 Vault、Index 或 iCloud，也不冒充正式保存。
+- 成功正式保存或用户明确丢弃后清除；失败、`stale`、`repair_required` 或 `commit_unknown` 时保留。
+- 重启后只提供“恢复、导出、丢弃”；不自动覆盖正式 Paper。
 
-- 当前 macOS/Xcode 27 beta 只提供规划盘点，不自动获得发布资格。
-- CP0 必须为 CP3 冻结稳定 macOS 构建主机与稳定 Xcode。beta 例外如确有需要，只能通过单独 ADR
-  覆盖 CP1 rehearsal，并逐项写明动作、不可推导的兼容性结论和到期条件；不得授权 CP3
-  的 Developer ID 签名、公证或分发。没有稳定发布工具链就阻断 CP3。
-- `.node-version`、`.python-version`、`rust-toolchain.toml`、`requirements-build.lock`、npm/Cargo
-  lockfile 与实际工具必须一致；旧 CP13 workflow 不直接复用。
+### 4.4 iCloud Documents
+
+- 默认 `local`；`icloud_documents` 只能由作者明确启用。Alpha 每个 Apple Account 只支持一个
+  App-owned 云端 Vault。
+- 只允许创建或重新连接该云端 Vault；本 Road 不自动迁移已有本地 Vault，本地原件原样保留。
+- 容器不可用、iCloud Drive 关闭、账号不匹配、文件未下载或协调失败时显示明确状态并阻断相应
+  操作；不静默回到另一 Vault，也不搬动文件。
+- Apple adapter 使用 `NSMetadataQuery`/等价原生 discovery、按需下载、`NSFileCoordinator` 与
+  `NSFileVersion`/等价 conflict API；普通目录扫描不能冒充云端已同步。
+- Apple current version 作为活动版本；keikeu 不比较客户端时钟自行选赢家。
+- 每个 losing conflict version 先按原始字节保存到 Vault 的专用 recovery area，再向系统声明
+  已处理。恢复项 ID 使用时间与随机值，不含设备名称或账号标识。
+- “提升为当前版本”先把当时活动版本再保存成 recovery entry，然后执行安全 CAS；不自动 merge、
+  overwrite 或 delete 任一版本。
+- 同一 code 的离线并发新建也按 conflict 处理，不重写历史 Paper code；作者可导出后明确另建 Paper。
+
+### 4.5 平台与分发边界
+
+- Road v0.8 的正式 mobile Gate 是 iPhone；iPad 只记录观察结果，不据此声称适配或验收。
+- iCloud Documents 可用于 Developer ID macOS App，但 debug 成功不能证明最终分发 entitlement。
+- Road v0.9 必须用最终 TestFlight iOS build 与最终 Developer ID、公证、stapled macOS build 重证
+  shared container、embedded provisioning profile 和完整跨端往返。
+- 若最终 Developer ID DMG 的 shared-container Gate 无法通过，Road v0.9 将 macOS Alpha 分发
+  改为 TestFlight；不得带着失效 entitlement 发布 DMG。
 
 ## 5. 通用证据
 
-### 5.1 文档 Checkpoint
+### 5.1 文档 checkpoint
 
 ```bash
 .venv/bin/python scripts/check_docs.py
 git diff --check
 ```
 
-### 5.2 工程基线
+### 5.2 每个工程 checkpoint 的最低基线
 
 ```bash
 .venv/bin/python -m pytest
@@ -158,192 +180,163 @@ cargo fmt --manifest-path frontend/src-tauri/Cargo.toml --check
 git diff --check
 ```
 
-### 5.3 构建演练
-
-```bash
-.venv/bin/python scripts/build_sidecar.py
-npm --prefix frontend run tauri:build -- --bundles app,dmg
-```
-
-- 每次记录实际命令、日期、工具版本、结果和未执行项；不复制旧 pass count。
-- `file`、`lipo`、`vtool` 与 `PlistBuddy` 检查主程序/sidecar 架构、最低系统、版本和 bundle ID。
-- sidecar 必须实际完成 protocol v2 `system.hello`；旧 protocol v1 workflow 证据无效。
-- build 不证明签名、公证、安装、启动、重启、文件 handoff 或产品接受。
-
-### 5.4 信任与安装证据
-
-CP2 冻结实际工具链后再在本地 runbook 中写入带占位符的精确命令。至少验证：
-
-- `.app`、所有嵌套 Mach-O 与外层 DMG 的 Developer ID 签名；同时验证代码的 hardened runtime、
-  可信时间戳和 entitlement；
-- 不存在 `com.apple.security.get-task-allow=true`；
-- DMG 公证状态、同次 submission log、staple validation 与 Gatekeeper assessment；
-- staple 前后 DMG SHA-256、完整交付集 hash list，以及接收机逐项核对结果；
-- 普通安装、首次启动、退出、重启和 sidecar 无残留。
+- 记录实际命令、实际 pass/fail 与日期；不得复制旧 pass count。
+- iOS build 只证明 build；不证明安装、启动、恢复、文件访问、iCloud 或产品接受。
+- simulator 不替代实体 iPhone；debug provisioning 不替代 TestFlight/Developer ID 最终候选。
+- real-provider smoke 与 synthetic/local smoke 分开记录；不拿真实作者 Vault 做故障实验。
 
 ## 6. Checkpoint 总览
 
 | CP | 建议分支 | 结果 | 主要 Gate |
 | --- | --- | --- | --- |
-| CP0 | `docs/cp0-v08-release-contract` | 发布合同、稳定工具链、许可与证据边界 | 开发者批准计划；无双重权威 |
-| CP1 | `build/cp1-v08-release-rehearsal` | 同步版本/工具锁并完成不可分发构建演练 | `.app`/DMG/sidecar/合成 smoke 通过 |
-| CP2 | `chore/cp2-v08-credential-readiness` | Developer ID 与公证认证就绪 | 独立授权的 Keychain Gate 通过 |
-| CP3 | `release/cp3-v08-trust-candidate` | 签名、公证、staple 的最终 `C01` | 同一候选信任链与哈希通过 |
-| CP4 | `test/cp4-v08-alpha-install` | 受邀接收机安装与 synthetic Alpha Gate | 开发者明确接受；撤回则终止 |
+| CP0 | `docs/cp0-v08-cross-platform-contract` | 冻结 method、DTO、语言、storage、recovery 与 Apple 边界 | 开发者批准；current/target 无冲突 |
+| CP1 | `feat/cp1-v08-bilingual-shell` | 中英字符串表、locale 选择与双语错误/恢复 UI | macOS 回归与中英 IME/UI Gate |
+| CP2 | `feat/cp2-v08-rust-paper-core` | Rust 窄 Core 与共享 golden fixtures | Python/Rust byte 与错误语义一致 |
+| CP3 | `feat/cp3-v08-iphone-local-loop` | Tauri iOS、本地 Vault、恢复稿、单篇导出 | simulator + 实体 iPhone 核心循环 |
+| CP4 | `feat/cp4-v08-icloud-documents` | Apple coordination、云端 Vault、冲突恢复 | 本地/离线/冲突/不可用状态安全 |
+| CP5 | `test/cp5-v08-cross-platform-candidate` | macOS+iPhone 开发候选与 Road v0.9 handoff | 双语、跨端与回归 Gate；开发者接受 |
 
-## 7. CP0 — 发布合同与稳定基线
+## 7. CP0 — 合同与可行性
 
-**进入条件：** 日期不早于 2026-08-28；工作树 clean；开发者明确接受本计划提交作为 seed，
-并批准创建 `docs/cp0-v08-release-contract`。本次草案落地授权不替代该判断。
-
-**范围：**
-
-- 将进入前已批准的 §2 版本、bundle ID、架构、最低系统、DMG 与候选命名校准到活动权威；
-  如需修改，先更新本计划并重新取得 §14 批准，不在 CP0 内静默改合同。
-- 冻结受邀 Alpha 接收范围、人工传输渠道和无 NDA 的 GPL/source 交付方式。
-- 盘点稳定构建环境和全部工具锁；决定 beta 环境是排除、替换还是另立 ADR。
-- 审计 GPL、第三方 license notice 与对应 source archive：证明其覆盖最终二进制所需的构建/
-  安装脚本、捆绑 Rust/Python/JavaScript 模块的对应源码和第三方许可。`git archive` 只是一种
-  起点；如不足，必须扩展 source bundle，不能把仓库快照自动视为完整对应源码。
-- 校准 SPEC、PROJECT、README 与本计划的 current/target；不改 production code。
-- 运行 §5.2 完整基线。
-
-**明确不做：** 构建 release artifact、查询/修改 Keychain、调用 Apple 服务、选择真实 Vault、
-tag、push 或外部分发。
-
-**退出 Gate：** §14 进入批准已被准确记录；权威无冲突；CP3 稳定工具链可用；对应源码边界
-已经证明；§5.2 基线真实通过；没有未解释失败。
-
-## 8. CP1 — 可重复构建演练
+**进入条件：** close-guard 独立修复及 focused tests 已通过；工作树 clean；开发者明确批准本计划
+提交作为 seed，并批准创建 CP0 branch。
 
 **范围：**
 
-- 将 Python、npm、Cargo、Tauri 与 sidecar hello 的应用版本同步为 CP0 批准值。
-- 校准 `.node-version`、`.python-version`、build lock 注释与实际稳定工具链。
-- 显式配置 DMG target、hardened runtime、最低系统和 `bundleVersion`；不增加依赖。
-- 从 clean CP0 checkpoint 重建 sidecar、release `.app` 与默认 DMG。
-- 构建前确认没有签名/公证环境变量或 tracked signing identity；使用明确的临时 ad-hoc/unsigned
-  rehearsal 配置，并验证产物不是 Developer ID 签名。意外调用私钥立即阻断 CP1。
-- 校验主程序和 sidecar 均为 `arm64`，protocol v2 hello、Info.plist 与锁定合同一致。
-- 使用隔离 Home 与 synthetic Vault 完成启动、退出、重启、创建、保存和 Library 找回 smoke。
-- 按 CP0 已批准的对应源码打包方式生成 source rehearsal，并审查无 secret/author content；
-  只有 CP0 已证明充分时才可直接使用 `git archive`。
+- 冻结 mobile/iCloud method table、DTO、mutation 分类、稳定 error code、capability matrix 和
+  `local` / `icloud_documents` 状态机。
+- 冻结双语字符串 inventory、locale fallback、恢复稿与 conflict entry 生命周期。
+- 用最小 Tauri iOS probe 证明 WebView、Rust command、App sandbox path、safe-area 和 lifecycle
+  回调可达；probe 只用 synthetic data，不形成 product implementation。
+- 设计同一 Rust Core 在 iPhone 与 macOS iCloud mode 的调用边界；macOS local mode 不变。
+- 盘点 Apple Developer Program、explicit App IDs、shared iCloud container、开发/Developer ID
+  provisioning 与所需 entitlement，但不在没有独立授权时创建或修改它们。
+- 记录 Road v0.9 分发 Gate 与 Android handoff，不创建 v0.9/v0.10 空脚手架。
 
-**候选边界：** 本 CP 产物是 disposable rehearsal，不编号、不上传、不分发，也不能晋升为 C01。
+**退出 Gate：** 方法和数据合同完整；probe 没有发现必须改 runtime 方向的 blocker；Apple 配置需求
+可审计；基线与 docs checks 通过；开发者接受 CP0。
 
-**退出 Gate：** §5.2、§5.3、artifact inspection 与 synthetic smoke 通过；无未解决 P0/P1；
-release recipe 不依赖 beta-only 或未锁定输入。
-
-## 9. CP2 — Developer ID 与公证认证就绪
-
-**进入条件：** CP1 checkpoint 已通过；开发者另行批准只读身份盘点，并在需要时批准精确的
-Keychain 持久修改。
+## 8. CP1 — 双语 App Shell
 
 **范围：**
 
-- 本机确认 Apple Developer Program 状态、Developer ID Application 证书有效性和匹配私钥。
-- 选择 CP0 已批准的公证认证方式；停用的 app-specific password 与残留 profile 一律不复用。
-- 如需新认证，以安全提示读取 secret 并保存到 Keychain 或批准的本机私密存储。
-- 本机验证认证可用；tracked report 只记录布尔结果、工具版本、遗漏和风险。
+- 把全部用户可见字符串、错误与恢复状态迁入一个中文/英文字符串表；保持作者文本原样。
+- 按系统 locale 初始化并提供设置内切换；只复用现有 Vue/App state 与本机 device state。
+- 将现有 Python/Rust structured errors 映射到语言中立 code；未知错误使用安全通用文案，不显示正文、
+  绝对路径或 transport 细节。
+- 覆盖 Paper、Library、Vault、blocked/recovery、确认框、空态与辅助功能名称。
+- 在现有五个 viewport 复跑布局；实体 macOS 键盘验证中文、英文与切换后输入法不重复提交。
 
-**明确不做：** 构建 C01、上传软件、导出 `.p12`、创建 CI secret、打印身份/历史、修改源码、
-tag、push 或分发。
+**明确不做：** iOS 工程、Rust Paper Core、品牌重写、第三种语言或翻译平台。
 
-**退出 Gate：** 签名身份与认证均可用；没有敏感输出进入 Git、聊天或证据；开发者确认
-CP2 Gate。任一项不满足就停止，不进入 CP3。
+**退出 Gate：** 字符串 inventory 无硬编码漏项；两种 locale 的核心流和错误流可达；macOS 现有行为、
+IME、可访问名称与布局无回归。
 
-## 10. CP3 — Developer ID、公证与最终候选
-
-**进入条件：** CP2 checkpoint 已通过；工作树 clean；使用 CP0 冻结的稳定 macOS 构建主机
-与稳定 Xcode 工具链；开发者另行批准使用签名私钥和向 Apple 上传本候选。候选 source commit
-在构建前固定，macOS 或 Xcode 任一 beta 都不得进入 CP3。
+## 9. CP2 — Rust Paper Core
 
 **范围：**
 
-1. 从固定 source commit 全新生成 sidecar、frontend 与 Rust release binary，不复用 CP1 rehearsal。
-2. 运行已审查的 Tauri bundle/signing 流程；它必须在 DMG 组装前签名并验证所有嵌套 Mach-O
-   和 `.app` 的 Developer ID、hardened runtime、时间戳与 entitlement。
-3. 校验签名后 `.app` 的版本、`bundleVersion`、bundle ID、`arm64`、最低系统和 protocol v2 hello。
-4. 从该精确签名 `.app` 组装 DMG，使用 Developer ID Application 签名并验证外层 DMG；
-   挂载后再次验证其中 `.app` 和 sidecar 的签名与身份一致，然后生成 `C01 pre-staple` SHA-256。
-5. 仅提交该 DMG 公证，等待结果并审查同次完整日志；warning 也必须判断。
-6. 接受后对同一 DMG staple 并 validate；生成 `C01 final` SHA-256。
-7. 对 final DMG 运行 Gatekeeper assessment；生成已证明完整的对应 source archive，把 GPL、
-   第三方 notice 与安装说明纳入已哈希交付文件，并以 `SHA256SUMS.txt` 覆盖完整交付集。
-8. 用隔离 Home 复跑启动、退出、重启与 synthetic 核心 smoke。
+- 在现有 Tauri Rust crate 内建立最小非 GUI Paper module，不拆新服务或进程。
+- 从当前 Python Paper v4 fixtures 生成版本化 golden corpus；双方测试同一合法/非法/边界样本。
+- 实现 strict parse/render、create、open、CAS save、root/one-folder list 与线性 query。
+- 保留未知 frontmatter 和作者字节语义；覆盖 marker、Unicode、blank optional fields、重复 summary、
+  无效页面、stale、code collision、首次/再次保存与故障前不写盘。
+- 保持 UI envelope 与现有 DTO；mobile 不实现 Index v4、Trash、迁移或 folder mutation。
 
-**失败合同：** 任一步失败即 retire C01；修复从新 source commit 和新候选号开始。不得原地覆盖、
-跳过日志、移除 quarantine、降低安全策略或把一次成功推断到另一产物。
+**退出 Gate：** Python/Rust golden tests 对有效 render bytes、结构 DTO、拒绝类和错误 code 一致；
+安全替换在目标 Darwin 环境可证明；无法证明时阻断，不以普通 overwrite 代替。
 
-**退出 Gate：** 信任链、哈希、source/许可包与本机 synthetic smoke 全部通过；无未解决 P0/P1；
-tracked report 不含 secret 或身份信息。CP3 不授权外部传输。
-
-## 11. CP4 — 受邀 Alpha 安装 Gate
-
-**进入条件：** CP3 checkpoint 已通过；开发者批准完整交付集 hash list、接收环境、传输渠道和
-外部写入。接收机是稳定 macOS 15.7+ Apple Silicon，且没有既有 keikeu 配置或真实 Vault。
+## 10. CP3 — iPhone 本地核心循环
 
 **范围：**
 
-- 同时交付 final DMG、对应 source archive、GPL/notice、安装说明与 `SHA256SUMS.txt`；接收机
-  逐项核对所有交付文件的 hash。
-- 使用普通下载/传输路径保留 quarantine；打开 DMG 前只读验证 `com.apple.quarantine`
-  属性确实存在。属性缺失即停止，不能补写后冒充真实传输或计入 Gatekeeper 证据。
-- quarantine 与 hash 通过后，按普通方式打开 DMG 并拖入 Applications。
-- 不右键绕过、不删除 quarantine、不关闭 Gatekeeper、不从 build 目录直接启动。
-- 使用 synthetic 内容完成首次启动、Vault 初始化、创建/保存/重开 Paper、Library 找回、dirty
-  departure、Finder/default editor handoff、退出与重启；确认 host/sidecar 无残留。
-- 记录人工介入次数、成功/失败、P0/P1 和未执行项；不记录测试者身份、内容或路径。
-- 失败就停止继续分发并撤回候选；卸载只移除应用，不删除 Vault 或配置。
+- 生成并审查 Tauri iOS 项目；`#[cfg(mobile)]` 路径不得启动 sidecar 或调用 desktop-only opener。
+- 接入 Rust Paper Core、本地单 Vault、线性 Library、单篇系统导出和 App 私有恢复稿。
+- 调整 iPhone safe area、软键盘、portrait 编辑、selection/caret split、background/foreground、
+  memory pressure 后的明确恢复。
+- simulator 先覆盖自动化和生命周期；实体 iPhone 使用 synthetic Vault 完成创建、编辑、保存、
+  重启找回、搜索、导出、未保存恢复、stale 与失败保稿。
 
-**退出 Gate：** 完整交付集 hash 与原始 quarantine 均通过，同一 final DMG 在目标系统普通安装
-与核心 smoke 通过，无未解决 P0/P1，且开发者明确选择“接受 Alpha”。“撤回”是可记录的
-终止状态，不算 CP4 通过，也不能进入成功 closeout。自动化、builder smoke 或 Gatekeeper
-单项不能替代。
+**明确不做：** iCloud、iPad Gate、外部 TestFlight、真实作者内容或公开包。
 
-## 12. Road 完成与独立决定
+**退出 Gate：** 核心循环与双语输入在实体 iPhone 通过；没有 sidecar/localhost/隐藏上传；App 被系统
+终止后恢复稿可见且从不覆盖正式 Paper；无未解决 P0/P1。
 
-CP4 通过只证明首个受邀 Alpha 候选完成。以下仍是独立决定：
+## 11. CP4–CP5 — iCloud 与跨端候选
 
-- 使用真实 Vault；
-- 扩大测试者范围或公开下载；
-- tag、push、GitHub Release 或其他远端 release；
-- 自动更新、崩溃上报、支持 SLA 或下一候选；
-- Road snapshot 与 Road 完成判断。
+### CP4：iCloud Documents
 
-最终 checkpoint 获开发者接受后，按 RULES 在单独 closeout change 创建
-`docs/archive/snapshots/road-v0-8.html`；snapshot 不包含 DMG、源码包、原始日志、身份或 secret。
+- 经独立授权后创建/关联 explicit iOS/macOS App IDs 与同一 iCloud container；只记录脱敏状态。
+- 实现 Apple native adapter、状态机、新云端 Vault 和 recovery area。
+- 在 synthetic Papers 上覆盖：容器不可用、iCloud Drive 关闭、metadata-only、按需下载、离线创建/
+  编辑、恢复在线、并发保存、同 code 新建、多个 conflict versions 与 promote 回滚保护。
+- 验证 macOS 本地 Vault 从未被自动移动、选择或改写；云端 mode 只暴露窄核心循环。
+
+**CP4 退出 Gate：** 每个失败状态可解释、可恢复且无静默丢稿；所有 conflict bytes 可从 recovery
+列表打开或导出；两端 debug build 的单向与往返同步通过。该结论不替代最终分发 Gate。
+
+### CP5：跨端开发候选
+
+- 在同一 reviewed source checkpoint 构建 macOS 与实体 iPhone 开发候选。
+- 复跑 macOS local 完整回归、macOS iCloud 窄循环、iPhone local/iCloud 窄循环、中文/英文、
+  background/restart、offline/reconnect、conflict promote 与单篇导出。
+- 形成 Road v0.9 handoff：实际 Apple capability 状态、未解决 P2/P3、工具链、设备范围、最终分发
+  尚未证明项、测试招募统计合同和明确下一命令。
+
+**CP5 退出 Gate：** 无未解决 P0/P1；macOS local 行为未退化；实体 iPhone 核心循环与 debug
+iCloud 往返通过；开发者明确接受 Road v0.8。随后另作 snapshot/closeout，不自动启动 v0.9。
+
+## 12. Road v0.9 / v0.10 handoff 合同
+
+Road v0.9 才负责：
+
+- iOS external TestFlight 与 macOS Developer ID、公证、stapled DMG；DMG shared-container Gate
+  失败时改用 macOS TestFlight。
+- 手机候选完成后，只在小红书与 X 进行小范围 Alpha 招募；这不是正式发布宣传。
+- 14 天报名、目标 60 份合格样本（中文/英文各 30）；不足 40 时延长一次 7 天，仍不足只报告
+  探索性结果。
+- 入选 24 人（中文 12、英文 12），至少 8 人覆盖 iPhone、8 人覆盖 macOS，可双端重叠。
+- 正式宣发 Gate：无未解决 P0/P1、无静默丢稿；至少 18 人完成且中英各至少 8；创建、编辑、
+  保存、重开、搜索、导出六项任务逐项成功率至少 90%，分母为所有完成测试且被要求执行该项
+  任务的参与者，未完成该任务计失败；至少 6 人完成 iPhone↔macOS iCloud 往返。
+- Gate 通过后，小红书 + X 为主宣发，Bilibili + YouTube 为副宣发；微博、Reddit 仅作研究与
+  社区观察。
+
+正式宣发启动后才进入 Road v0.10：Android 复用 Rust Paper Core，首版保持本地 Markdown 与
+显式导入/导出，不新增跨平台云服务，并加入二轮 Alpha。Windows 只持续统计设备需求，待二轮证据
+后再决定，不与 Android 并行承诺。
+
+画像与招募完整统计合同见
+[`docs/manual/prospect/alpha-audience-research.md`](docs/manual/prospect/alpha-audience-research.md)。
 
 ## 13. 已知风险
 
 | 风险 | 控制 |
 | --- | --- |
-| beta 工作站冒充发布环境 | CP3 只用稳定 macOS 与稳定 Xcode；beta ADR 最多覆盖 CP1 rehearsal |
-| Python sidecar 未被完整签名 | CP3 逐个验证嵌套 Mach-O、hardened runtime 与时间戳 |
-| 公证后候选被悄悄改动 | 只允许 staple；其他变化 retire 并换候选号 |
-| 凭据或身份泄漏 | secret 只留 Keychain/批准私密存储；证据只写布尔与脱敏结论 |
-| 疑似凭据泄漏后仍继续候选 | 立即停止、撤销、清查暴露面；新授权后重建认证与候选 |
-| 最低系统声称沿用旧证据 | CP4 用同一 final hash 在稳定 macOS 15.7+ 重证 |
-| 传输绕过 quarantine | 从真实传输开始；禁止右键、`xattr` 删除和安全策略降级 |
-| GPL Alpha 被错误加 NDA | 二进制、对应 source 与 GPL 同时交付；不附加限制性条款 |
-| 发布测试读取真实作者配置 | 接收机无既有配置；只用 synthetic Vault |
-| DMG 美化吞掉 Road | 使用 Tauri 默认 DMG；视觉偏好按 P3 记录 |
-| Alpha 被误写成公开 release | CP4 只覆盖一个批准渠道和接收范围；扩大分发另行授权 |
+| Python/Rust 两套 Paper 实现漂移 | 同一书面 grammar、共享 golden corpus、byte/error 双边 Gate；不复制 Index/迁移/Trash |
+| macOS cloud 路径绕过 Apple coordination | cloud mode 与 mobile 共用 Rust Core + native adapter；Python 只处理本地 Vault |
+| iOS lifecycle 丢失未保存内容 | App 私有恢复稿、background flush、重启明确恢复；正式保存仍是唯一 canonical 边界 |
+| iCloud 冲突静默吞稿 | current 只作活动版本；每个 losing/current replacement 先保存 recovery bytes，不自动 merge/delete |
+| 离线并发创建同一 Paper code | 保留为 conflict，不重写历史 code；作者明确导出或另建 |
+| debug 同步被误当发布证据 | Road v0.9 用最终 TestFlight 与 Developer ID/TestFlight macOS 候选重证 entitlement/profile |
+| 双语扩张变成文案重写 | 只翻译现有产品和新状态，不改变 Paper、作者文本或产品边界 |
+| 画像用平台注册量冒充目标用户 | OS 占比只来自合格报名者；平台数据只决定渠道，不做总体加权 |
+| Road 被 Android/Windows 拖宽 | v0.8 只做 Apple 跨端基础；Android/Windows 保持后续 Gate |
 
 ## 14. 实施计划批准 Gate（尚未通过）
 
-CP0 开始前，开发者须逐项确认；若修改任一项，先更新本计划并重新批准：
+CP0 开始前，开发者须逐项确认；任一项改变时先更新本计划并重新批准：
 
-- [ ] Road 名称与范围为“打包与受邀 Alpha 发布”。
-- [ ] 应用版本、候选号、bundle ID、`arm64`、最低 macOS 与 DMG 合同。
-- [ ] CP3 稳定 macOS 构建主机、稳定 Xcode 与锁定工具链；beta ADR 如有，仅覆盖 CP1
-  rehearsal 并有明确期限。
-- [ ] hardened runtime、无 App Sandbox 与最小 entitlement 原则。
-- [ ] GPL/source archive、第三方 notice 与无 NDA 的交付合同。
-- [ ] CP0–CP4 顺序、分支、退出 Gate 与失败撤回语义。
-- [ ] synthetic Vault 是默认数据边界；真实 Vault 不进入本 Road 默认授权。
-- [ ] 不使用 advance YOLO；checkpoint、Keychain、Apple 上传、传输、tag、push、release 分别授权。
-- [ ] 本计划提交可在 2026-08-28 或之后作为 CP0 seed。
+- [ ] Road 名称与范围是“跨端工程基础 + iPhone 可测试候选”，不含外部 Alpha 或正式宣发。
+- [ ] close-guard 独立修复和 focused re-verification 已完成。
+- [ ] current macOS local runtime 保持 Python sidecar；mobile/macOS iCloud 使用窄 Rust Paper Core。
+- [ ] `bridgeRequest` envelope、方法表、DTO、error code 与 mutation ownership 已冻结。
+- [ ] 中英双语、恢复稿、local/iCloud storage、conflict recovery 合同已冻结。
+- [ ] iPhone 是正式 mobile Gate；iPad、Android、Windows 与移动完整生命周期明确排除。
+- [ ] Apple Account、App IDs、iCloud container、entitlement 与实体设备动作分别授权。
+- [ ] CP0–CP5 顺序、分支、证据与退出 Gate 被接受；不使用旧 pass count 或 debug 冒充发布证据。
+- [ ] synthetic data 是默认边界；真实 Vault、签名、上传、TestFlight、分发、tag、push 与 release
+  不由本计划批准自动获得授权。
 
-2026-08-26 的“落地并提交”只批准本草案与既有 skill 改动进入一个本地 planning commit；
-以上 checkbox 仍全部未通过。
+2026-08-30 的“实施本计划”只批准本草案和活动文档进入一个本地 documentation commit；以上
+checkbox 仍全部未通过。

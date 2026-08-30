@@ -1,7 +1,7 @@
 # macOS Developer ID 人工发布手册
 
-> **预启动状态（2026-08-26）：** Road v0.8 [计划草案](../../../PLAN_road_v0_8.md)已记录，
-> 但 CP0 尚未获 seed 批准，打包、签名与受邀 Alpha 均未启动。
+> **预启动状态（2026-08-30）：** Road v0.8 [跨端基础计划](../../../PLAN_road_v0_8.md)尚未启动；
+> 打包、签名与 iOS/macOS 首轮 Alpha 归属 Road v0.9，发布合同尚未批准。
 > app-specific password 已停用，现有 Keychain 公证 profile 必须视为不可用。
 > 本文当前只用于教学，不授权创建凭据、构建发布候选或向 Apple 上传软件。
 
@@ -9,8 +9,8 @@
 [macOS 开发者入门手册](macos-developer-beginner-guide.html)。
 
 本文不是产品或工程权威。当前边界回到 [SPEC](../../SPEC.md)、
-[RULES](../../RULES.md)、[PROJECT](../../PROJECT.md) 与 Road v0.8 [计划草案](../../../PLAN_road_v0_8.md)；
-草案中的建议值只有在 CP0 seed 获明确批准后才成为实施合同和 Gate。
+[RULES](../../RULES.md)、[PROJECT](../../PROJECT.md) 与 Road v0.8 [跨端基础计划](../../../PLAN_road_v0_8.md)；
+Developer ID 发布合同须由 Road v0.9 计划另行批准。
 
 ## 1. 当前状态
 
@@ -24,8 +24,8 @@
 当前不能声称：
 
 - 公证 profile 可用（app-specific password 已停用，残留 profile 必须视为不可用）；
-- Road v0.8 的版本、bundle identifier、架构、最低 macOS 或候选名已锁定；
-- 旧工具版本、beta 例外或旧命令可直接用于 v0.8；
+- Road v0.9 的版本、bundle identifier、架构、最低 macOS 或候选名已锁定；
+- 旧工具版本、beta 例外或旧命令可直接用于 v0.9；
 - 任何 keikeu 产物已签名、公证、staple、通过 Gatekeeper 或安装验证。
 
 本文不会删除 Keychain 中可能残留的 profile，也不会把残留项当作可用凭据。
@@ -38,7 +38,11 @@
 - PKG、自动更新、CI 签名或远端凭据；
 - Intel Mac、universal binary 或 Rosetta；
 - iOS、iPadOS、Android、HarmonyOS、Windows、Linux 或 watchOS；
-- 尚未批准的 Road v0.8 平台和产品范围。
+- 尚未批准的 Road v0.9 平台和产品范围。
+
+Road v0.9 的非权威默认路线是：macOS Alpha 首选公证 DMG；最终候选必须验证 iCloud
+entitlement 与 embedded provisioning profile。若 Developer ID DMG 无法通过共享 iCloud
+容器 Gate，则改用 macOS TestFlight。该默认值不授权任何构建、签名或上传动作。
 
 ## 3. 四个信任动作
 
@@ -61,7 +65,7 @@ Developer ID Application 证书与匹配私钥共同构成签名身份：
 - 证书关联 Developer ID 身份与公钥；
 - 私钥执行签名，必须留在 Keychain 或另行批准的私密存储；
 - 本项目不导出任何私钥或 `.p12`；
-- v0.8 开始时必须重新确认会员、证书有效性和匹配私钥。
+- v0.9 开始时必须重新确认会员、证书有效性和匹配私钥。
 
 ### Notary 认证凭据
 
@@ -70,7 +74,7 @@ Notary 认证只用于向 Apple 公证服务提交，与签名身份不同：
 - app-specific password 已停用；
 - 任何残留 Keychain profile 当前都视为不可用；
 - 现在不要查询、测试、创建或替换 profile；
-- v0.8 只有在开发者明确批准持久 Keychain 修改后，才能生成新认证；
+- v0.9 只有在开发者明确批准持久 Keychain 修改后，才能生成新认证；
 - 新密码必须由工具安全提示读取，不进入参数、环境变量、文件或聊天。
 
 停用 app-specific password 不等于 Developer ID 证书或私钥已被撤销。
@@ -91,9 +95,9 @@ Notary 认证只用于向 Apple 公证服务提交，与签名身份不同：
 不要通过右键打开、删除 quarantine、关闭安全策略、ad-hoc 签名或
 `--deep --force` 绕过失败。
 
-## 6. Road v0.8 必须重新锁定的契约
+## 6. Road v0.9 必须重新锁定的契约
 
-v0.8 开始打包前，开发者必须明确批准：
+v0.9 开始打包前，开发者必须明确批准：
 
 - 应用版本；
 - bundle identifier；
@@ -107,7 +111,7 @@ v0.8 开始打包前，开发者必须明确批准：
 
 旧 Road 的数值、候选名、beta 例外和命令不得自动沿用。
 
-## 7. v0.8 启动前检查
+## 7. v0.9 启动前检查
 
 重新开始时按顺序确认：
 
@@ -123,7 +127,7 @@ v0.8 开始打包前，开发者必须明确批准：
 
 ## 8. 未来候选的验证顺序
 
-精确命令必须在 Road v0.8 的实际工具链上逐条演练后补入。当前不提供旧命令。
+精确命令必须在 Road v0.9 的实际工具链上逐条演练后补入。当前不提供旧命令。
 
 未来至少要按以下顺序证明：
 
@@ -168,7 +172,7 @@ v0.8 开始打包前，开发者必须明确批准：
 2. 按普通方式打开分发容器并安装；
 3. 不右键绕过、不降低安全设置、不删除 quarantine；
 4. 正常启动、退出并重启应用；
-5. 使用合成内容完成 Road v0.8 批准的核心流程；
+5. 使用合成内容完成 Road v0.9 批准的核心流程；
 6. 记录完成情况和介入次数，不记录作品或真实路径。
 
 Gatekeeper 通过不能替代运行时 smoke；运行时通过也不能替代产品价值判断。

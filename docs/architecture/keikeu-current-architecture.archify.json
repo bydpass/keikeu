@@ -287,7 +287,7 @@
       "title": "当前状态 · 2026-08-30",
       "items": [
         "Road v0.7 已接受并归档；pendingIntent 与 PaperView close guard 仍有已记录偏差",
-        "./dev、manual、根目录 CONTEXT.md 路由位于产品运行链外；Road v0.8 与打包发布尚未启动"
+        "./dev、manual、根目录 CONTEXT.md 路由位于产品运行链外；当前 runtime 仍仅桌面可用，Road v0.8 跨端基础尚未启动，macOS/iOS Alpha 发布归 Road v0.9"
       ]
     }
   ]

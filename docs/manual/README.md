@@ -9,7 +9,7 @@ manual/
 ├─ keikeu-current-logic.html  系统理解
 ├─ paper-v4-repair.html       Paper v4 离线人工修复
 ├─ forfresh/                  项目开发技术手册
-└─ prospect/                  产品与价值
+└─ prospect/                  产品、用户研究与价值
 ```
 
 ## 开发者 TUI
@@ -81,13 +81,14 @@ builder 上传。未跟踪文件不能选入；不得只为刷新而擅自暂存
 | [Python Caveman 诠释](forfresh/python-caveman-guide.html) | Python 对象、core/bridge 分层、Markdown 权威与安全追代码 | [SPEC](../SPEC.md)、[RULES](../RULES.md) 与当前 `src/` / `tests/` |
 | [Rust 简易入门](forfresh/rust-beginner-guide.html) | Tauri 宿主、Option/Result、所有权、单 worker 与 Sidecar 生命周期 | [architecture](../architecture/architecture.html)、[RULES](../RULES.md) 与当前 `frontend/src-tauri/` |
 | [Git 状态地图](forfresh/git-interactive.html) → [Git 手册](forfresh/gitspec.md) | 工作区、暂存区、本地历史、远端与最短安全路径 | [RULES §7](../RULES.md#7-git) |
-| [macOS 开发者入门](forfresh/macos-developer-beginner-guide.html) → [Developer ID 发布手册](forfresh/macos-developer-id-release.md) | 签名、公证、staple、Gatekeeper 与 Road v0.8 预启动草案下仍受阻塞的发布骨架 | [Road v0.8 草案](../../PLAN_road_v0_8.md)、[PROJECT](../PROJECT.md) 与 [RULES](../RULES.md) |
+| [macOS 开发者入门](forfresh/macos-developer-beginner-guide.html) → [Developer ID 发布手册](forfresh/macos-developer-id-release.md) | 签名、公证、staple、Gatekeeper 与尚未批准的 Road v0.9 发布骨架 | [Road v0.8 跨端基础计划](../../PLAN_road_v0_8.md)、[PROJECT](../PROJECT.md) 与 [RULES](../RULES.md) |
 
 ## `prospect/`：产品与价值
 
 | 阅读路径 | 读到什么 | 最终核对 |
 | --- | --- | --- |
-| [产品设计](prospect/appdesign.md) | Road v0.6 建立、已归档 Road v0.7 继续使用的 Paper v4 产品模型；不定义 Gate | [Road v0.6 Paper v4 设计](../design/road-v0-6-paper-v4-design.md)、[Road v0.7 App Shell / CP8 accepted override](../design/road-v0-7-app-shell-design.md) |
+| [产品设计](prospect/appdesign.md) | 已接受的 Paper v4 产品模型，以及明确标作“未实现”的 Road v0.8+ 用户与平台方向 | [Road v0.6 Paper v4 设计](../design/road-v0-6-paper-v4-design.md)、[Road v0.7 App Shell / CP8 accepted override](../design/road-v0-7-app-shell-design.md)、[活动 Road v0.8](../../PLAN_road_v0_8.md) |
+| [Alpha 用户画像与宣发渠道研究](prospect/alpha-audience-research.md) | 2026-08-30 六平台新证据、四端待实测口径、18+ 准入、样本与正式宣发 Gate | [活动 Road v0.8](../../PLAN_road_v0_8.md)、[PROJECT](../PROJECT.md) 与 [SPEC](../SPEC.md) |
 | [技术伦理](prospect/ethics.md) | 作者控制、数据边界与功能评审方法 | [SPEC](../SPEC.md) 与 [RULES](../RULES.md) |
 
 若 manual 与 truth 冲突，manual 错；修 manual，不复制一份新规则。

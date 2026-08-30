@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <meta name="description" content="keikeu 的 macOS Developer ID、签名、公证、staple 与 Gatekeeper 入门手册；Road v0.8 预启动草案已记录，但 CP0 与发布动作仍受阻塞。">
+  <meta name="description" content="keikeu 的 macOS Developer ID、签名、公证、staple 与 Gatekeeper 入门手册；Road v0.9 发布合同尚未批准。">
   <title>macOS 开发者入门手册 · keikeu</title>
   <style>
     :root {
@@ -215,8 +215,8 @@
       当前可执行的打包计划。
     </p>
     <div class="banner">
-      <strong>预启动状态 · 2026-08-26：</strong>
-      Road v0.8 <a href="../../../PLAN_road_v0_8.md">计划草案</a>已记录，但 CP0 尚未获 seed 批准，打包与受邀 Alpha 均未启动。app-specific
+      <strong>预启动状态 · 2026-08-30：</strong>
+      Road v0.8 <a href="../../../PLAN_road_v0_8.md">跨端基础计划</a>尚未启动；打包、签名与 iOS/macOS 首轮 Alpha 归属 Road v0.9，发布合同尚未批准。app-specific
       password 已停用，现有 Keychain 公证 profile 必须视为不可用。现在不要
       创建、替换或测试公证凭据，也不要执行签名、公证或打包命令。
     </div>
@@ -229,7 +229,7 @@
       <a href="#workflow">未来工作流</a>
       <a href="#evidence">证据边界</a>
       <a href="#trouble">失败处理</a>
-      <a href="#restart">v0.8 重启条件</a>
+      <a href="#restart">v0.9 启动条件</a>
       <a href="#official">官方参考</a>
     </nav>
   </header>
@@ -252,15 +252,20 @@
           <h3>现在不能声称</h3>
           <ul>
             <li>公证 profile 可用（app-specific password 已停用，残留 profile 必须视为不可用）；</li>
-            <li>v0.8 的版本号、bundle ID、最低 macOS 或候选名已锁定；</li>
+            <li>v0.9 的版本号、bundle ID、最低 macOS 或候选名已锁定；</li>
             <li>任何 keikeu 产物已经签名、公证、staple 或通过 Gatekeeper；</li>
-            <li>旧工具版本和旧命令可以直接用于 v0.8。</li>
+            <li>旧工具版本和旧命令可以直接用于 v0.9。</li>
           </ul>
         </article>
       </div>
       <p class="note">
         本页不删除 Keychain 中可能残留的 profile，也不把残留项当成可用凭据。
-        v0.8 开始时必须重新盘点会员、证书、私钥、工具链与公证认证状态。
+        v0.9 开始时必须重新盘点会员、证书、私钥、工具链与公证认证状态。
+      </p>
+      <p class="note">
+        Road v0.9 的非权威默认路线是 macOS Alpha 首选公证 DMG；最终候选必须验证 iCloud
+        entitlement 与 embedded provisioning profile。若 Developer ID DMG 无法通过共享 iCloud
+        容器 Gate，则改用 macOS TestFlight。该默认值不授权任何发布动作。
       </p>
     </section>
 
@@ -292,7 +297,7 @@
       </ol>
       <p class="note">
         Apple 官方资料同时覆盖 App Store、Xcode 原生工程、DMG、ZIP 和 PKG。
-        v0.8 必须先决定 keikeu 的精确分发契约，再选择对应步骤。
+        v0.9 必须先决定 keikeu 的精确分发契约，再选择对应步骤。
       </p>
     </section>
 
@@ -419,7 +424,7 @@
         </article>
       </div>
       <p class="banner">
-        v0.8 启动前不要为了练习创建新 app-specific password 或覆盖 Keychain
+        v0.9 启动前不要为了练习创建新 app-specific password 或覆盖 Keychain
         profile。届时只有在明确批准持久修改后，才重新配置并立即验证。
       </p>
       <p>
@@ -431,9 +436,9 @@
 
     <section id="workflow">
       <p class="eyebrow">Future workflow</p>
-      <h2>v0.8 以后实际要验证的顺序</h2>
+      <h2>Road v0.9 实际要验证的顺序</h2>
       <ol>
-        <li>开发者批准 v0.8 发布契约：版本、bundle ID、架构、最低系统和容器。</li>
+        <li>开发者批准 v0.9 发布契约：版本、bundle ID、架构、最低系统和容器。</li>
         <li>盘点稳定工具链、会员、证书、匹配私钥与重新建立的公证认证。</li>
         <li>从明确 source commit 构建应用及所有嵌套代码。</li>
         <li>验证架构、版本、最低系统、hardened runtime 和运行时 smoke。</li>
@@ -445,7 +450,7 @@
         <li>只分发经过验证的最终哈希；任何实质修改都生成新候选。</li>
       </ol>
       <p class="banner">
-        本页故意不提供构建、codesign、notarytool 或 DMG 命令。v0.8 工具链、
+        本页故意不提供构建、codesign、notarytool 或 DMG 命令。v0.9 工具链、
         Tauri 配置和发布契约尚未锁定；复制旧命令会制造伪证据。
       </p>
     </section>
@@ -523,10 +528,10 @@
     </section>
 
     <section id="restart">
-      <p class="eyebrow">Road v0.8 restart gate</p>
+      <p class="eyebrow">Road v0.9 start gate</p>
       <h2>什么时候才重新开始打包</h2>
       <ol>
-        <li>开发者明确批准 Road v0.8 的发布目标与 no-YOLO Gate；</li>
+        <li>开发者明确批准 Road v0.9 的发布目标与 no-YOLO Gate；</li>
         <li>重新锁定版本、bundle ID、架构、最低 macOS 和候选命名；</li>
         <li>在当时的稳定 macOS、Xcode、Rust、Node、Python 与 Tauri 上盘点；</li>
         <li>重新验证 Developer ID 证书与匹配私钥；</li>
@@ -555,14 +560,14 @@
         keikeu 的产品和工程边界仍以
         <a href="../../SPEC.md">SPEC</a>、<a href="../../RULES.md">RULES</a> 与
         <a href="../../PROJECT.md">PROJECT</a> 与 Road v0.8
-        <a href="../../../PLAN_road_v0_8.md">计划草案</a>为准。草案只有在 CP0 seed 获明确批准后，
-        才定义可执行的精确发布契约。
+        <a href="../../../PLAN_road_v0_8.md">跨端基础计划</a>为准。可执行的 Developer ID
+        发布契约必须由 Road v0.9 计划另行批准。
       </p>
     </section>
   </main>
 
   <footer>
-    keikeu · macOS 开发者入门手册 · 2026-08-26 · Road v0.8 预启动草案已记录、CP0 未批准 ·
+    keikeu · macOS 开发者入门手册 · 2026-08-30 · Road v0.9 发布合同未批准 ·
     静态 HTML，无外部脚本、无凭据、无本机路径
   </footer>
 </body>
