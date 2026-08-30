@@ -8,8 +8,8 @@
 >
 > 伴随评审物：[`Road v0.7 HTML 计划书`](road-v0-7-planbook.html)；它只展示本设计与实施计划，不新增第三份规范权威。
 >
-> 文档同步：2026-08-26 按 CP8 production source 复核；2026-08-29 再确认开发者 TUI、
-> 技术手册与 context pack 均在产品界面和运行链之外。§§1–16 保留 CP0–CP6 历史，
+> 文档同步：2026-08-26 按 CP8 production source 复核；2026-08-30 再确认开发者 TUI、
+> 技术手册与根目录 `CONTEXT.md` 路由均在产品界面和运行链之外。§§1–16 保留 CP0–CP6 历史，
 > 当前界面以 §17（CP7）与 §18（CP8）override 为准。
 
 ## 1. 核心判断

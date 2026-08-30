@@ -10,7 +10,7 @@ Road v0.6 is complete and archived: production uses Paper v4, Index v4, and prot
 
 Road v0.7 passed CP0–CP8. On 2026-08-26 the developer completed the physical-keyboard macOS native-candidate-window check, passed CP8 Gate D, and explicitly declared Road v0.7 product and implementation work complete. Paper v4, Index v4, and protocol v2 remain unchanged. Final checkpoint `2f03aee` is bound by the independent [Road snapshot](docs/archive/snapshots/road-v0-7.html). CP6 completed one bounded real-v4-Vault author gate and consumed that authorization; no later real-Vault operation, push, tag, signing, packaging, or release was performed. A Road v0.8 [pre-start plan draft](PLAN_road_v0_8.md) is recorded. Its 2026-08-28 date condition has been met, but seed approval and assignment plus focused re-verification of the close-guard fix remain outstanding, so the Road has not started.
 
-The product documentation and source were rechecked against the completed Road v0.7 baseline on 2026-08-26. That audit found that normal-close protection for the App-root pending intent is still scoped to `PaperView`; this is an implementation deviation, not a change to the accepted design contract, and [PROJECT](docs/PROJECT.md) records it as a blocker before Road v0.8 CP0. A separate developer TUI, four technical manuals, and the local context-pack handoff flow were added on 2026-08-29; they do not change the product UI, runtime chain, or acceptance state.
+The product documentation and source were rechecked against the completed Road v0.7 baseline on 2026-08-26. That audit found that normal-close protection for the App-root pending intent is still scoped to `PaperView`; this is an implementation deviation, not a change to the accepted design contract, and [PROJECT](docs/PROJECT.md) records it as a blocker before Road v0.8 CP0. A separate developer TUI and four technical manuals were added on 2026-08-29; the local handoff route moved to root `CONTEXT.md` on 2026-08-30. These developer tools do not change the product UI, runtime chain, or acceptance state.
 
 Phase 7.5 is an independent lightweight iOS build for rapid testing. Its responsive UI, app-sandbox Vault, and on-device fixes are complete on a separate branch; it is not a merge gate in the macOS Road. Road v0.3 engineering, macOS candidate smoke, and CP6 real-author acceptance are complete: retrieval was faster and clear, the external-editor handoff was clear, and no unresolved P0/P1 was reported. Its design and acceptance records are now [read-only history](docs/archive/road-v0-3/README.md); no v0.3 tag was created. Road v0.4 Gate A, Gate B, product acceptance, and macOS 15.7+ compatibility have passed. The only desktop runtime is now Vue/Tauri with a local Python sidecar; Flet was retired in CP14. Road v0.5 is also complete and archived: Paper Desk, save baselines, departure protection, Flashcard/Library continuity, the whole-app Quiet Desk visual system, and fixed scrolling behavior are accepted. See [PROJECT](docs/PROJECT.md) for live coordinates.
 
@@ -90,9 +90,9 @@ docs/design/              CP8-accepted visual and interaction maps and design
 docs/architecture/        current/target architecture map and ADRs
 docs/acceptance/          supporting evidence; not an independent status source
 docs/manual/              supplementary human guides; never normative
-docs/generated/           rebuildable and disposable observations
 docs/archive/             read-only history; excluded from cold starts
 docs/archive/road-v0-4/   Road v0.4 planning and understanding-gate archive
+CONTEXT.md                ignored local agent route; never authoritative
 src/keikeu_core/          pure-Python domain and file logic
 src/keikeu_bridge/        application service, JSONL protocol, and sidecar
 frontend/                 Vue/Vite UI and Tauri/Rust host

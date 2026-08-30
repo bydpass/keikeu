@@ -20,17 +20,17 @@ Protect author control, local durability, privacy, and beginner-maintainability.
 | User flows and states | `docs/design/interaction.html` |
 | Why a key decision exists | `docs/architecture/decisions/` |
 
-`src/` and `tests/` are runtime facts. `docs/generated/` is observation only. `docs/manual/` is non-normative human explanation, and `docs/archive/` is read-only history; neither drives an agent cold start.
+`src/` and `tests/` are runtime facts. `docs/manual/` is non-normative human explanation, and `docs/archive/` is read-only history; neither drives an agent cold start.
 
 ## Context routing
 
 Never bulk-load the working tree. Start from this read map, then use `rg --files` and `rg` to read the target, every affected caller, direct tests, and only the authority needed for that behavior.
 
-Treat `docs/acceptance/`, `docs/generated/`, `docs/manual/`, and `docs/archive/` as on-demand evidence or history, not default context. Build outputs, dependencies, caches, ignored Vaults, PDFs, and screenshots never enter a task context automatically.
+Treat `docs/acceptance/`, `docs/manual/`, and `docs/archive/` as on-demand evidence or history, not default context. Build outputs, dependencies, caches, ignored Vaults, PDFs, and screenshots never enter a task context automatically.
 
-For a model without repository tools, generate a local reviewed task pack with `.venv/bin/python scripts/build_context_pack.py --path <target>`. The pack contains current working-tree text from explicit tracked repository paths, has a conservative size cap, stays under ignored `build/`, and is never uploaded automatically.
+For a model without repository tools, generate a local reviewed task route with `.venv/bin/python scripts/build_context_pack.py --path <target>`. The route contains current working-tree text from explicit tracked repository paths, has a conservative size cap, writes to the ignored repository-root `CONTEXT.md`, and is never uploaded automatically.
 
-After the final reviewed worktree state, refresh `build/context/keikeu-context.txt` with the smallest tracked file set the next coding agent needs; authority files are included automatically. Review the header and included-file boundaries. The ignored pack is disposable routing context, never authority, test evidence, acceptance evidence, or a reason to stage an otherwise untracked file.
+After the final reviewed worktree state, refresh `CONTEXT.md` with the smallest tracked file set the next coding agent needs; authority files are included automatically. Review the header and included-file boundaries. The ignored route is disposable context, never authority, test evidence, acceptance evidence, or a reason to stage an otherwise untracked file.
 
 ## Before editing
 
@@ -105,7 +105,7 @@ Before returning work:
 3. report checks run and not run;
 4. report data, provider, external-editor, platform, and acceptance risks;
 5. state staged/committed/pushed state; and
-6. refresh and inspect the ignored local context route after the final worktree/commit state; and
+6. refresh and inspect the ignored root `CONTEXT.md` route after the final worktree/commit state; and
 7. give the safest next command.
 
 The human must be able to explain and undo the diff.

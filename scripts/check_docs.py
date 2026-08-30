@@ -12,7 +12,6 @@ from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
 ARCHIVE = ROOT / "docs" / "archive"
-GENERATED = ROOT / "docs" / "generated"
 BUDGETS = {
     ROOT / "README.md": 140,
     ROOT / "README_EN.md": 140,
@@ -29,7 +28,6 @@ REQUIRED = {
     ROOT / "docs" / "architecture" / "architecture.html",
     ROOT / "docs" / "architecture" / "decisions" / "0001-document-authority.md",
     ROOT / "docs" / "acceptance" / "README.md",
-    ROOT / "docs" / "generated" / "README.md",
     ROOT / "docs" / "archive" / "README.md",
     ROOT / "docs" / "manual" / "README.md",
 }
@@ -82,7 +80,6 @@ def active_documents() -> list[Path]:
         and path.suffix in DOCUMENT_SUFFIXES
         and path in visible_files
         and ARCHIVE not in path.parents
-        and (GENERATED not in path.parents or path.name == "README.md")
     ]
     return sorted({*roots, *docs})
 

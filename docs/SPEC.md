@@ -103,8 +103,8 @@ No AI generation, prose editor, sync, account, community, database, file watcher
 - Linux and watchOS have no planned support. The iOS-only second user does not enter v0.x acceptance and returns no earlier than a separately designed iOS+Android v1.0.
 - Packaging, Developer ID distribution and Alpha release work are deferred to Road v0.8, which starts
   only under a separate approved plan and Git boundary. Its 2026-08-28 date condition is met, but the
-  plan/seed Gate and recorded close-guard prerequisite remain open as of 2026-08-29.
-- The repository `./dev` TUI, human manuals, and ignored context pack are developer workflow tools.
+  plan/seed Gate and recorded close-guard prerequisite remain open as of 2026-08-30.
+- The repository `./dev` TUI, human manuals, and ignored root `CONTEXT.md` are developer workflow tools.
   They are not product surfaces, runtime protocol components, author assets, or acceptance evidence.
 
 ## 9. Accepted Road v0.7 App Shell baseline (CP6 passed; CP7 override in §10)

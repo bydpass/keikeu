@@ -15,6 +15,22 @@ CONTEXT_PACK = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(CONTEXT_PACK)
 
 
+def test_tracked_files_excludes_worktree_deletions(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (tmp_path / "present.txt").write_text("present", encoding="utf-8")
+    monkeypatch.setattr(CONTEXT_PACK, "ROOT", tmp_path)
+    monkeypatch.setattr(
+        CONTEXT_PACK,
+        "_git_bytes",
+        lambda *args: b"present.txt\0deleted.txt\0",
+    )
+
+    assert CONTEXT_PACK._tracked_files() == {
+        CONTEXT_PACK.PurePosixPath("present.txt")
+    }
+
+
 def test_context_pack_includes_authority_and_only_selected_status() -> None:
     pack, paths, skipped = CONTEXT_PACK.build_context_pack(
         ["src/keikeu_core/vault.py"]
@@ -41,7 +57,7 @@ def test_directory_expansion_skips_cold_context_but_exact_history_is_allowed() -
     assert skipped["cold-context"] > 0
     assert not any(
         path.startswith(
-            ("docs/acceptance/", "docs/archive/", "docs/generated/", "docs/manual/")
+            ("docs/acceptance/", "docs/archive/", "docs/manual/")
         )
         for path in paths
     )
@@ -63,18 +79,29 @@ def test_context_pack_rejects_binary_escape_and_oversize_requests() -> None:
         CONTEXT_PACK.build_context_pack([], max_bytes=100)
 
 
-def test_context_pack_rejects_output_symlink_before_creating_outside_directory(
+def test_context_pack_writes_repository_root_context_document(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    outside = tmp_path / "outside"
-    outside.mkdir()
-    build_link = tmp_path / "build"
-    build_link.symlink_to(outside, target_is_directory=True)
+    output = tmp_path / "CONTEXT.md"
     monkeypatch.setattr(CONTEXT_PACK, "ROOT", tmp_path)
-    monkeypatch.setattr(
-        CONTEXT_PACK, "OUTPUT", build_link / "context" / "keikeu-context.txt"
-    )
+    monkeypatch.setattr(CONTEXT_PACK, "OUTPUT", output)
 
-    with pytest.raises(CONTEXT_PACK.ContextPackError, match="must not traverse a symlink"):
+    CONTEXT_PACK._write_atomic(b"route")
+
+    assert output.read_bytes() == b"route"
+    assert not (tmp_path / "build").exists()
+
+
+def test_context_pack_rejects_output_symlink(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    outside = tmp_path / "outside.txt"
+    outside.write_bytes(b"unchanged")
+    output_link = tmp_path / "CONTEXT.md"
+    output_link.symlink_to(outside)
+    monkeypatch.setattr(CONTEXT_PACK, "ROOT", tmp_path)
+    monkeypatch.setattr(CONTEXT_PACK, "OUTPUT", output_link)
+
+    with pytest.raises(CONTEXT_PACK.ContextPackError, match="not a symlink"):
         CONTEXT_PACK._write_atomic(b"safe")
-    assert not (outside / "context").exists()
+    assert outside.read_bytes() == b"unchanged"

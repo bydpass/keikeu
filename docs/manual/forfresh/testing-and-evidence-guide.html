@@ -44,7 +44,7 @@
         <p class="meta">
           <span>keikeu contributors</span>
           <span>简体中文</span>
-          <span>更新：2026-08-29</span>
+          <span>更新：2026-08-30</span>
           <span>适用：Road v0.7 完成态</span>
         </p>
       </header>
@@ -207,11 +207,11 @@
                 <td>任何应用代码、GUI、构建或产品行为。</td>
               </tr>
               <tr>
-                <td>Skill / context route</td>
+                <td>Skill / <code>CONTEXT.md</code> route</td>
                 <td><code class="keep">.venv/bin/python -m pytest -q tests/test_build_context_pack.py</code><br><code class="keep">.venv/bin/python scripts/check_docs.py</code></td>
-                <td>tracked synthetic paths；ignored output path</td>
+                <td>tracked synthetic paths；ignored root <code>CONTEXT.md</code></td>
                 <td>文件选择、冷上下文排除、二进制/逃逸/超限拒绝与输出 symlink 防护的被测规则。</td>
-                <td>当前生成包已经人工审查、应用行为正确或 checkpoint 被接受。</td>
+                <td>当前生成路由已经人工审查、应用行为正确或 checkpoint 被接受。</td>
               </tr>
               <tr>
                 <td>产品验收</td>
@@ -354,7 +354,7 @@ npm --prefix frontend run tauri:dev</code></pre>
           <li>不拿旧 pass count 替代当前运行。</li>
           <li>不拿 build success 或 jsdom 测试替代 Tauri smoke。</li>
           <li>不拿 fake Home / synthetic Vault 替代真实作者验收。</li>
-          <li>不拿 context pack 替代源码审查、测试、平台 smoke 或 checkpoint 接受。</li>
+          <li>不拿 <code>CONTEXT.md</code> 路由替代源码审查、测试、平台 smoke 或 checkpoint 接受。</li>
         </ul>
 
         <aside class="truth-boundary">
@@ -364,14 +364,14 @@ npm --prefix frontend run tauri:dev</code></pre>
 
       <section class="sources" aria-labelledby="sources-title">
         <h2 id="sources-title">来源与继续阅读</h2>
-        <p>本页于 2026-08-29 依据当前仓库配置、测试与证据规则编写。manual 是非权威解释；源码或规则改变后，本页必须随之校准。</p>
+        <p>本页于 2026-08-30 依据当前仓库配置、测试与证据规则校准。manual 是非权威解释；源码或规则改变后，本页必须随之校准。</p>
 
         <h3>项目事实</h3>
         <ol>
           <li><a href="../../../pyproject.toml"><span class="path">pyproject.toml</span></a>：Python 范围、pytest 依赖、testpaths、base temp 与忽略目录。</li>
           <li><a href="../../../frontend/package.json"><span class="path">frontend/package.json</span></a> 与 <a href="../../../frontend/vite.config.js"><span class="path">vite.config.js</span></a>：Vitest、Vue Test Utils、jsdom 和 Vite scripts。</li>
           <li><a href="../../../frontend/src-tauri/Cargo.toml"><span class="path">frontend/src-tauri/Cargo.toml</span></a> 与 <a href="../../../frontend/src-tauri/src/bridge.rs"><span class="path">bridge.rs</span></a>：Rust manifest 与 host tests。</li>
-          <li><a href="../../../scripts/build_context_pack.py"><span class="path">build_context_pack.py</span></a>、<a href="../../../tests/test_build_context_pack.py"><span class="path">test_build_context_pack.py</span></a> 与 <a href="../../../.agents/skills/keikeu-routine/SKILL.md"><span class="path">keikeu-routine</span></a>：本地 context route 及其 Stop-hook 边界。</li>
+          <li><a href="../../../scripts/build_context_pack.py"><span class="path">build_context_pack.py</span></a>、<a href="../../../tests/test_build_context_pack.py"><span class="path">test_build_context_pack.py</span></a> 与 <a href="../../../.agents/skills/keikeu-routine/SKILL.md"><span class="path">keikeu-routine</span></a>：根目录 <code>CONTEXT.md</code> 路由及其 Stop-hook 边界。</li>
           <li><a href="../../RULES.md">RULES</a>、<a href="../../PROJECT.md">PROJECT</a> 与 <a href="../../acceptance/README.md">Acceptance evidence map</a>。</li>
         </ol>
 

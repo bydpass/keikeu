@@ -1,4 +1,4 @@
-"""Build a small, local text bundle for models without repository tools."""
+"""Build a small, local context route for models without repository tools."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ import tempfile
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "build" / "context" / "keikeu-context.txt"
+OUTPUT = ROOT / "CONTEXT.md"
 DEFAULT_MAX_BYTES = 1_048_576
 AUTHORITY_FILES = (
     PurePosixPath("AGENTS.md"),
@@ -23,13 +23,12 @@ AUTHORITY_FILES = (
 COLD_CONTEXT_PREFIXES = (
     PurePosixPath("docs/acceptance"),
     PurePosixPath("docs/archive"),
-    PurePosixPath("docs/generated"),
     PurePosixPath("docs/manual"),
 )
 
 
 class ContextPackError(RuntimeError):
-    """A request would produce an unsafe or misleading context pack."""
+    """A request would produce an unsafe or misleading context route."""
 
 
 def _git_bytes(*args: str) -> bytes:
@@ -50,11 +49,12 @@ def _git_text(*args: str) -> str:
 
 
 def _tracked_files() -> set[PurePosixPath]:
-    return {
+    tracked = {
         PurePosixPath(raw.decode("utf-8"))
         for raw in _git_bytes("ls-files", "-z").split(b"\0")
         if raw
     }
+    return {path for path in tracked if (ROOT / path.as_posix()).exists()}
 
 
 def _relative_request(raw: str) -> PurePosixPath:
@@ -136,7 +136,7 @@ def _render(files: list[tuple[str, str]], skipped: dict[str, int]) -> bytes:
     status = _git_text("status", "--short", "--", *paths).strip() or "(clean)"
     skipped_text = ", ".join(f"{name}={count}" for name, count in skipped.items()) or "none"
     parts = [
-        "# keikeu task context pack\n",
+        "# keikeu task context route\n",
         f"Branch: {branch}\n",
         f"HEAD: {head}\n",
         f"Selected files: {len(files)}\n",
@@ -171,19 +171,14 @@ def build_context_pack(
 
 
 def _write_atomic(data: bytes) -> None:
-    relative_output = OUTPUT.relative_to(ROOT)
-    current = ROOT
-    for part in relative_output.parts[:-1]:
-        current /= part
-        if current.is_symlink():
-            raise ContextPackError("context output must not traverse a symlink")
-    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    if not OUTPUT.parent.resolve().is_relative_to(ROOT) or OUTPUT.is_symlink():
-        raise ContextPackError("context output must remain inside the repository build directory")
+    if OUTPUT != ROOT / "CONTEXT.md" or OUTPUT.is_symlink():
+        raise ContextPackError(
+            "context output must be the repository-root CONTEXT.md and not a symlink"
+        )
     temporary_path: Path | None = None
     try:
         with tempfile.NamedTemporaryFile(
-            dir=OUTPUT.parent,
+            dir=ROOT,
             prefix=".keikeu-context-",
             delete=False,
         ) as temporary:
@@ -240,7 +235,7 @@ def main(argv: list[str] | None = None) -> int:
             _write_atomic(pack)
             print(f"{OUTPUT.relative_to(ROOT)}: {len(paths)} files, {len(pack)} bytes")
     except ContextPackError as error:
-        print(f"Context pack failed: {error}", file=sys.stderr)
+        print(f"Context route failed: {error}", file=sys.stderr)
         return 1
     return 0
 

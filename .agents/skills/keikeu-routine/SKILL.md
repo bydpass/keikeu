@@ -33,7 +33,7 @@ Run this gate immediately after the skill is selected and before the first repos
    ```
 
 6. For bugs, use the caller trace to patch the shared root cause. For other tasks, choose the smallest patch that satisfies the declared scope.
-7. If the task explicitly requests a context-pack refresh, declare the smallest tracked `--path` set the next coding agent needs. Do not generate it yet or trust an existing pack as authority; the final route belongs to the Stop hook after all edits, checks, and authorized Git actions.
+7. If the task explicitly requests a `CONTEXT.md` refresh, declare the smallest tracked `--path` set the next coding agent needs. Do not generate it yet or trust the existing route as authority; the final route belongs to the Stop hook after all edits, checks, and authorized Git actions.
 
 ## Developer TUI context hook
 
@@ -42,7 +42,7 @@ Apply this narrow route only when the task touches `dev`, its launch workflow, o
 - For TUI or launch work, read `dev`, `tests/test_dev_tui.py`, and the actual owner of each affected wrapped command (currently `scripts/build_sidecar.py` and `frontend/package.json`); follow further callers only when the behavior reaches them.
 - For manual work, read `docs/manual/README.md` first, then only the exact manual files in scope. Human access to the complete manual tree does not make `docs/manual/` default agent context or authority.
 - When a later context refresh genuinely needs manual or TUI material, select only `dev`, its focused test, the manual index, and the exact manuals needed for that next task. Never select the whole manual directory merely because the TUI can browse it.
-- Never select TUI logs, build outputs, binaries, or Vault data for a context pack or cite them as acceptance evidence.
+- Never select TUI logs, build outputs, binaries, or Vault data for `CONTEXT.md` or cite them as acceptance evidence.
 
 ## Implement
 
@@ -52,7 +52,7 @@ Apply this narrow route only when the task touches `dev`, its launch workflow, o
 - Develop and verify migration, delete, recovery, and persistent-config changes only against fixtures, copies, or synthetic data, never the only real Vault.
 - Leave one focused regression check for each bug fix.
 
-## Context pack refresh hook
+## CONTEXT route refresh hook
 
 Run this hook only when the developer explicitly requests a refresh or when the Stop hook reaches its final routing step.
 
@@ -66,9 +66,9 @@ Run this hook only when the developer explicitly requests a refresh or when the 
      --dry-run
    ```
 
-3. Generate with the identical `--path` arguments and without `--dry-run`. Directory expansion intentionally skips `docs/manual/`, `docs/acceptance/`, `docs/archive/`, and `docs/generated/`; select an exact cold file only when the next task genuinely needs it.
-4. Confirm `build/context/keikeu-context.txt` is ignored. Review its header for current branch, HEAD, selected-file status, selected/skipped counts, and current-local-tree source; then review every `BEGIN FILE` boundary.
-5. Never include author content, secrets, ignored data, private/external paths, logs, binaries, build output, or unrelated evidence. The pack is disposable routing context, never authority, test evidence, acceptance evidence, or an upload target.
+3. Generate with the identical `--path` arguments and without `--dry-run`. Directory expansion intentionally skips `docs/manual/`, `docs/acceptance/`, and `docs/archive/`; select an exact cold file only when the next task genuinely needs it.
+4. Confirm the repository-root `CONTEXT.md` is ignored. Review its header for current branch, HEAD, selected-file status, selected/skipped counts, and current-local-tree source; then review every `BEGIN FILE` boundary.
+5. Never include author content, secrets, ignored data, private/external paths, logs, binaries, build output, or unrelated evidence. `CONTEXT.md` is disposable routing context, never authority, test evidence, acceptance evidence, or an upload target.
 6. The builder accepts only `git ls-files` entries. If a required new file is untracked, do not stage it solely to make the refresh pass unless the current Git task already authorizes that exact staging; report the route as stale instead.
 7. Atomic generation preserves the previous pack on failure. Report the exact error and stale state; never hand-edit the pack or claim a failed refresh succeeded.
 
@@ -111,5 +111,5 @@ Run this gate immediately before the final response for every repository-changin
 5. Report data, provider, external-editor, platform, and acceptance risks plus staged, committed, and pushed state.
 6. If a commit was explicitly authorized, follow the exact-staging and `aic` procedure in `docs/RULES.md` §7, then inspect the resulting commit. DeepSeek `aic` has standing developer authorization for this repository after the staged diff is reviewed and found free of secrets and author content: name DeepSeek and report the staged boundary, but do not ask again for provider approval. Explicit commit authority is still required; another provider, a sensitive or unexpected diff, or revoked authorization requires a new decision. Treat the authorized invocation and the commit it creates as one transaction without a second authorization.
 7. After the final accepted Road checkpoint commit, follow `docs/RULES.md` §8 for the separate Road snapshot closeout.
-8. After the final worktree state, checks, and any authorized commit or Road snapshot are complete, run the Context pack refresh hook. Reuse and narrow the Start-hook `--path` set when one was declared; otherwise choose the smallest reviewed tracked set now.
+8. After the final worktree state, checks, and any authorized commit or Road snapshot are complete, run the CONTEXT route refresh hook. Reuse and narrow the Start-hook `--path` set when one was declared; otherwise choose the smallest reviewed tracked set now.
 9. Give the safest next command.

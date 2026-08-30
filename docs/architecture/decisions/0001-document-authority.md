@@ -23,7 +23,7 @@ Use one authority per question:
 - `docs/design/*.html` — executable visual and interaction specimens;
 - `docs/architecture/architecture.html` — intended module and lifecycle map;
 - `src/` and `tests/` — observed runtime facts; and
-- `docs/generated/` — rebuildable observations that never define intent.
+- ignored root `CONTEXT.md` — disposable task routing that never defines intent.
 
 Human-facing explanations live under `docs/manual/`. They may provide fuller narrative or teaching material, but must point back to the active authority and never redefine it.
 

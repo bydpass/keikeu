@@ -2,7 +2,7 @@
 
 > This index does not define authority. Product scope, implementation behavior, and current facts remain owned by `docs/SPEC.md`, `docs/RULES.md`, `docs/PROJECT.md`, runtime source, and passing tests.
 >
-> Updated: 2026-08-29. The completed Road v0.7 / CP8 product baseline is unchanged; the later developer TUI, manuals, and context pack remain outside product design.
+> Updated: 2026-08-30. The completed Road v0.7 / CP8 product baseline is unchanged; the later developer TUI, manuals, and root `CONTEXT.md` route remain outside product design.
 
 ## Active approved authority
 

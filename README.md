@@ -10,7 +10,7 @@ Road v0.6 已完成并归档：production 使用 Paper v4、Index v4 与 protoco
 
 Road v0.7 的 App Shell 与信息层级已通过 CP0–CP8。开发者于 2026-08-26 通过 CP8 原生 IME Gate D，并明确判定整个 Road v0.7 的产品与实施工作正式完工；底层 Paper v4 / Index v4 / protocol v2 不变。最终 checkpoint 为 `2f03aee`，[Road snapshot](docs/archive/snapshots/road-v0-7.html) 已独立归档。CP6 的一次有界真实 v4 Vault 作者 Gate 已完成且授权已耗尽；此后未再操作真实 Vault，push、tag、签名、打包与发布均未执行。Road v0.8 的[预启动计划草案](PLAN_road_v0_8.md)已记录；2026-08-28 的日期条件已经满足，但 seed 尚未批准，close-guard 偏差也仍待分配修复与聚焦重证，因此 Road 尚未启动。
 
-产品文档与源码于 2026-08-26 按 Road v0.7 完成态复核。复核发现 App-root pending intent 的正常关闭保护仍错误地只挂在 `PaperView`；这是待修复的实现偏差，不改变已接受设计合同，并在 [PROJECT](docs/PROJECT.md) 记录为 Road v0.8 CP0 前置阻塞。2026-08-29 又加入独立的开发者 TUI、四份技术手册与本地 context-pack 交接流程；它们不改变产品界面、运行链或验收状态。
+产品文档与源码于 2026-08-26 按 Road v0.7 完成态复核。复核发现 App-root pending intent 的正常关闭保护仍错误地只挂在 `PaperView`；这是待修复的实现偏差，不改变已接受设计合同，并在 [PROJECT](docs/PROJECT.md) 记录为 Road v0.8 CP0 前置阻塞。2026-08-29 又加入独立的开发者 TUI 与四份技术手册；本地交接路由于 2026-08-30 迁至根目录 `CONTEXT.md`。这些开发工具不改变产品界面、运行链或验收状态。
 
 Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响应式界面、本机沙盒 Vault 与真机修复验证；它不是 macOS Road 的合入闸门。Road v0.3 的工程、macOS candidate smoke 与 CP6 真实作者验收均已完成；检索更快且清楚、外部编辑器 handoff 清楚，未报告未解决 P0/P1。其设计与验收文档已[只读归档](docs/archive/road-v0-3/README.md)，未创建 v0.3 tag。**Road v0.4 已彻底完成**：Gate A、Gate B、产品验收与 macOS 15.7+ 兼容性均已通过；当前唯一桌面运行时为 Vue/Tauri 与本地 Python sidecar，Flet 已在 CP14 退役。**Road v0.5 也已完成并归档**：Paper Desk、保存基线、离开保护、Flashcard/Library 连贯性、全应用 Quiet Desk 视觉与固定滚动语义均已验收。实时坐标见 [PROJECT](docs/PROJECT.md)。
 
@@ -89,9 +89,9 @@ docs/design/              CP8 accepted 视觉、交互 map 与详细设计
 docs/architecture/        current/target 架构 map 与 ADR
 docs/acceptance/          支持性验收记录；不独立定义状态
 docs/manual/              面向人的补充说明；不定义规范
-docs/generated/           可重建、可删除的观察输出
 docs/archive/             只读历史；不参与冷启动
 docs/archive/road-v0-4/   Road v0.4 计划书与理解闸门归档
+CONTEXT.md                ignored 本地 Agent 路由；不定义权威
 src/keikeu_core/          纯 Python 领域与文件逻辑
 src/keikeu_bridge/        Application Service、JSONL 协议与 sidecar
 frontend/                 Vue/Vite 界面与 Tauri/Rust 宿主
