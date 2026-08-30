@@ -1,10 +1,12 @@
 # Road v0.7 实施计划（正式完工并归档）
 
-> 状态：开发者于 2026-08-20 批准原 CP0–CP6 计划并给出相应 advance YOLO；CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc`、CP3 `55b5313`、CP4 `6f69310`、CP5 `3259c42` 与 CP6 一号作者 Gate 均已通过。CP7 于 2026-08-25 通过 Gate D，并在 `1e17cea` 收口。CP8 完成 production、完整工程、Figma 与实体键盘 macOS IME Gate，开发者于 2026-08-26 明确通过 Gate D 并判定 Road v0.7 正式完工。最终 checkpoint 为 `2f03aeecc1f287e5cdb4f9ddab462ae169af68c4`；[Road snapshot](docs/archive/snapshots/road-v0-7.html) 已在其后独立归档。CP6 的一次有界真实 v4 Vault 作者 Gate 已完成且授权已耗尽；此后未再操作真实 Vault，push、tag、签名、打包与发布均未执行。
+> **ARCHIVE · READ ONLY · Road v0.7 frozen planbook**
+
+> 状态：开发者于 2026-08-20 批准原 CP0–CP6 计划并给出相应 advance YOLO；CP0 `fb52b55`、CP1 `8019969`、CP2 `55d45fc`、CP3 `55b5313`、CP4 `6f69310`、CP5 `3259c42` 与 CP6 一号作者 Gate 均已通过。CP7 于 2026-08-25 通过 Gate D，并在 `1e17cea` 收口。CP8 完成 production、完整工程、Figma 与实体键盘 macOS IME Gate，开发者于 2026-08-26 明确通过 Gate D 并判定 Road v0.7 正式完工。最终 checkpoint 为 `2f03aeecc1f287e5cdb4f9ddab462ae169af68c4`；[Road snapshot](../../archive/snapshots/road-v0-7.html) 已在其后独立归档。CP6 的一次有界真实 v4 Vault 作者 Gate 已完成且授权已耗尽；此后未再操作真实 Vault，push、tag、签名、打包与发布均未执行。
 >
-> 目标设计：[`docs/design/road-v0-7-app-shell-design.md`](docs/design/road-v0-7-app-shell-design.md)
+> 目标设计：[`docs/design/road-v0-7-app-shell-design.md`](../../design/road-v0-7-app-shell-design.md)
 >
-> 伴随评审物：[`docs/design/road-v0-7-planbook.html`](docs/design/road-v0-7-planbook.html)（非规范权威，不构成实现或 Gate 证据）
+> 伴随评审物：[`docs/design/road-v0-7-planbook.html`](../../design/road-v0-7-planbook.html)（非规范权威，不构成实现或 Gate 证据）
 >
 > 当前接受基线：Road v0.6 Paper v4 / Index v4 / protocol v2。
 
@@ -20,10 +22,10 @@ Road v0.7 将已接受的 Paper、Library 与 Vault 收口为一个稳定桌面�
 
 ## 1. 权威与执行纪律
 
-- 当前已接受产品由 [`docs/SPEC.md`](docs/SPEC.md) 定义。
-- Road v0.7 App Shell 增量、CP7 与 CP8 accepted override 由已批准的[设计](docs/design/road-v0-7-app-shell-design.md)定义。
-- [`docs/RULES.md`](docs/RULES.md) 继续约束作者资产、Git、证据与安全边界。
-- [`docs/PROJECT.md`](docs/PROJECT.md)、源码和测试标明每个 Checkpoint 的当前事实。
+- 当前已接受产品由 [`docs/SPEC.md`](../../SPEC.md) 定义。
+- Road v0.7 App Shell 增量、CP7 与 CP8 accepted override 由已批准的[设计](../../design/road-v0-7-app-shell-design.md)定义。
+- [`docs/RULES.md`](../../RULES.md) 继续约束作者资产、Git、证据与安全边界。
+- [`docs/PROJECT.md`](../../PROJECT.md)、源码和测试标明每个 Checkpoint 的当前事实。
 - 不得把未完成 target 写成已实现；每个 CP 只从前一已通过 checkpoint commit 建分支。
 - 每个 CP 单独 commit；CP0–CP6 的 advance YOLO 已用完。CP7 checkpoint 为 `1e17cea`，CP8 最终 checkpoint 为 `2f03aee`。Road snapshot 已作为 checkpoint 后的独立 closeout 变更创建；后续真实 Vault、push、tag、签名、打包与发布仍是独立决定。
 
@@ -119,7 +121,7 @@ Python/Rust 无改动不代表可以复制历史结果；CP0 与 CP5 各运行�
 
 **退出 Gate：** 开发者明确批准导航层级、两种尺寸与 Paper 内容优先方向。
 
-**结果（已通过）：** 合成 Shell、Paper、Library、新 Paper、正常 Vault context 与阻塞恢复点击路径均已实现；两种目标尺寸、键盘 focus、完整 Vitest、fresh production build 与 prototype bundle 隔离通过。开发者 advance YOLO 覆盖退出判断；证据见 [`CP1 report`](docs/acceptance/road-v0-7/cp1-grayscale/report.md)。
+**结果（已通过）：** 合成 Shell、Paper、Library、新 Paper、正常 Vault context 与阻塞恢复点击路径均已实现；两种目标尺寸、键盘 focus、完整 Vitest、fresh production build 与 prototype bundle 隔离通过。开发者 advance YOLO 覆盖退出判断；证据见 [`CP1 report`](../../acceptance/road-v0-7/cp1-grayscale/report.md)。
 
 ## 7. CP2 — Production App Shell
 
@@ -138,7 +140,7 @@ Python/Rust 无改动不代表可以复制历史结果；CP0 与 CP5 各运行�
 
 **退出 Gate：** 导航稳定；取消不改变 destination；确认只执行一次原有 intent。
 
-**结果（已通过）：** production 紧凑 Shell、语义当前位置、单一 dirty guard、已保存 path 的 Vault 往返、新 Paper 实例替换、durable pending-intent 锁与 runtime blocker 接管均有直接测试和合成浏览器证据；两种目标尺寸无横向溢出，完整 Vitest、fresh build 与 prototype bundle 隔离通过。开发者 advance YOLO 覆盖退出判断；证据见 [`CP2 report`](docs/acceptance/road-v0-7/cp2-shell/report.md)。
+**结果（已通过）：** production 紧凑 Shell、语义当前位置、单一 dirty guard、已保存 path 的 Vault 往返、新 Paper 实例替换、durable pending-intent 锁与 runtime blocker 接管均有直接测试和合成浏览器证据；两种目标尺寸无横向溢出，完整 Vitest、fresh build 与 prototype bundle 隔离通过。开发者 advance YOLO 覆盖退出判断；证据见 [`CP2 report`](../../acceptance/road-v0-7/cp2-shell/report.md)。
 
 ## 8. CP3 — Paper 工作面
 
@@ -154,7 +156,7 @@ Python/Rust 无改动不代表可以复制历史结果；CP0 与 CP5 各运行�
 
 **退出 Gate：** 创建、编辑、分页、删除、保存、离开保护和错误恢复无行为回归。
 
-**结果（已通过）：** 重复 hero、页面级导航与常驻 runtime/path 状态已退出；Paper 名、Tags、页数、dirty/saving/degraded 状态形成 Paper context，code/path/time 与整份删除进入原生详情，单页不显示冗余页码。保存 pending 时作者字段保持焦点但进入只读，分页、删除、类型与全局入口均锁定，避免保存返回后覆盖新输入。直接测试、两尺寸生产浏览器、中文 composition、`Cmd+S`、校验、Index degraded 与 dirty confirm 路径均通过。开发者 advance YOLO 覆盖退出判断；证据见 [`CP3 report`](docs/acceptance/road-v0-7/cp3-paper/report.md)。
+**结果（已通过）：** 重复 hero、页面级导航与常驻 runtime/path 状态已退出；Paper 名、Tags、页数、dirty/saving/degraded 状态形成 Paper context，code/path/time 与整份删除进入原生详情，单页不显示冗余页码。保存 pending 时作者字段保持焦点但进入只读，分页、删除、类型与全局入口均锁定，避免保存返回后覆盖新输入。直接测试、两尺寸生产浏览器、中文 composition、`Cmd+S`、校验、Index degraded 与 dirty confirm 路径均通过。开发者 advance YOLO 覆盖退出判断；证据见 [`CP3 report`](../../acceptance/road-v0-7/cp3-paper/report.md)。
 
 ## 9. CP4 — Library、Vault 与恢复
 
@@ -170,7 +172,7 @@ Python/Rust 无改动不代表可以复制历史结果；CP0 与 CP5 各运行�
 
 **退出 Gate：** 两尺寸下日常与阻塞路径完整；Finder/Trash/恢复没有语义退化。
 
-**结果（已通过）：** Library 重复页头与页面级导航退出，`1220×780` 保留范围—列表—详情三段，`920×680` 将详情与操作纵排在列表之后；正常 Vault 先显示零请求的本地环境 context，显式进入后才展开已有 picker。migration、`commit_unknown`、protocol mismatch、Trash/恢复、永久删除取消、Finder/default-editor handoff、pending mutation 全工作面锁、focus 与两尺寸 overflow 均有直接测试及 production-browser 证据。开发者 advance YOLO 覆盖退出判断；证据见 [`CP4 report`](docs/acceptance/road-v0-7/cp4-library-vault/report.md)。
+**结果（已通过）：** Library 重复页头与页面级导航退出，`1220×780` 保留范围—列表—详情三段，`920×680` 将详情与操作纵排在列表之后；正常 Vault 先显示零请求的本地环境 context，显式进入后才展开已有 picker。migration、`commit_unknown`、protocol mismatch、Trash/恢复、永久删除取消、Finder/default-editor handoff、pending mutation 全工作面锁、focus 与两尺寸 overflow 均有直接测试及 production-browser 证据。开发者 advance YOLO 覆盖退出判断；证据见 [`CP4 report`](../../acceptance/road-v0-7/cp4-library-vault/report.md)。
 
 ## 10. CP5 — 集成与安全 Gate
 
@@ -186,7 +188,7 @@ Python/Rust 无改动不代表可以复制历史结果；CP0 与 CP5 各运行�
 
 **退出 Gate：** 无未解决 P0/P1；自动检查、平台 smoke 和未执行项分别记录。
 
-**结果（已通过）：** Python `265`、Vitest `77`、Rust `12`、compileall、sidecar build、Vite build、Rust format、文档与 bundle 隔离均通过。隔离 fake Home 的当前源码 Tauri smoke 实际完成启动、两页保存、Library 找回、Vault 往返、原生 dirty 两分支、`920×680`、Index degraded/rebuild、repair/recheck、fault-injected `commit_unknown` 重启与 no-replay；正常 sidecar 按 SHA 恢复并复启，host/child/Vite 均无残留。无未解决 P0/P1、无 scope drift；证据见 [`CP5 report`](docs/acceptance/road-v0-7/cp5-integration/report.md)。
+**结果（已通过）：** Python `265`、Vitest `77`、Rust `12`、compileall、sidecar build、Vite build、Rust format、文档与 bundle 隔离均通过。隔离 fake Home 的当前源码 Tauri smoke 实际完成启动、两页保存、Library 找回、Vault 往返、原生 dirty 两分支、`920×680`、Index degraded/rebuild、repair/recheck、fault-injected `commit_unknown` 重启与 no-replay；正常 sidecar 按 SHA 恢复并复启，host/child/Vite 均无残留。无未解决 P0/P1、无 scope drift；证据见 [`CP5 report`](../../acceptance/road-v0-7/cp5-integration/report.md)。
 
 ## 11. CP6 — 一号作者 Gate（已通过）
 
@@ -211,7 +213,7 @@ Tags、路径或内容截图。
 两种目标尺寸与层级理解满足退出 Gate，且无未解决 P0/P1。功能介入次数、分视口叙述与
 P2/P3 未单独报告，不虚构为 0。Gate 后去标识化检查确认所选 Home 内 Vault 仍为 v4、
 migration stage `ready`、Index `current`，候选应用与 Vite 正常退出且无残留；未记录正文、
-名称、Tags、路径、截图或原始日志。证据见 [`CP6 report`](docs/acceptance/road-v0-7/cp6-author/report.md)。
+名称、Tags、路径、截图或原始日志。证据见 [`CP6 report`](../../acceptance/road-v0-7/cp6-author/report.md)。
 
 ## 12. CP7 — 连续编辑流与默认窗口（Gate D 已通过）
 
@@ -275,7 +277,7 @@ store、UI kit、自制弹窗框架、移动端构建、真实 Vault 操作、�
 
 **首批整改快照（已被后续退回覆盖）：** 窄屏范围改为原生紧凑下拉，偶数/奇数文件夹下范围区高度一致，Paper 保持首屏；folder mutation 的失败报告在刷新后保留，失败不再跳走，完整成功后才切回“全部”。Tags 改为 baseline 对齐；详情关闭按钮移除自动焦点并使用灰色边框，首项重复分隔线退出；窄屏 Shell 保持单行 `56px` 顶栏。该快照曾保留“未知项阻断”与 inline Library 预览，因此不再代表当前候选。
 
-**后续整改与最终判断：** 普通文件夹删除现在把完整目录树原子移入废纸篓，恢复整树回移；只有废纸篓中的不可撤销二次确认才执行 identity-pinned、fd-relative、symlink-safe 递归销毁。Library 搜索在 composition 期间不刷新，提交词同值去重；每个 Paper 结果使用与触发器相邻的原生 top-layer Popover，不再占据列表下方版面。文件夹操作紧贴范围控件，所有原生控件与 `200` 字符名称在四档均受容器约束。协议/DTO/Paper/Index 不变，决策见 [ADR-0008](docs/architecture/decisions/0008-whole-folder-trash-lifecycle.md)。源码、全量工程、真实浏览器四档、隔离 Tauri 与 Figma 增量证据已经完成，独立终审为 `0 P0 / 0 P1`；开发者于 2026-08-25 明确通过 Gate D。原生 macOS 候选窗未由自动化触发，不冒充 CP7 证据，转为 CP8 的独立人工复核项。
+**后续整改与最终判断：** 普通文件夹删除现在把完整目录树原子移入废纸篓，恢复整树回移；只有废纸篓中的不可撤销二次确认才执行 identity-pinned、fd-relative、symlink-safe 递归销毁。Library 搜索在 composition 期间不刷新，提交词同值去重；每个 Paper 结果使用与触发器相邻的原生 top-layer Popover，不再占据列表下方版面。文件夹操作紧贴范围控件，所有原生控件与 `200` 字符名称在四档均受容器约束。协议/DTO/Paper/Index 不变，决策见 [ADR-0008](../../architecture/decisions/0008-whole-folder-trash-lifecycle.md)。源码、全量工程、真实浏览器四档、隔离 Tauri 与 Figma 增量证据已经完成，独立终审为 `0 P0 / 0 P1`；开发者于 2026-08-25 明确通过 Gate D。原生 macOS 候选窗未由自动化触发，不冒充 CP7 证据，转为 CP8 的独立人工复核项。
 
 ## 13. 已知风险
 
@@ -385,7 +387,7 @@ Cargo fmt、debug `.app` bundle 与 marker scan 均通过。Figma file
 `Eubz4vHZ0YaCk0Mki12ljS` 已完成精确标题的 version-history 保存流程，Page `71:2` 原位
 重命名为 `CP8 · 响应式锚点与横向滚轮`，Sections `71:4` / `71:5` 及五档 bounds/font/CP7
 residue 递归审计 clean。connector 未暴露 version ID，因此不补写 ID。实际命令与布局证据
-见 [`CP8 report`](docs/acceptance/road-v0-7/cp8-responsive-navigation/report.md)。
+见 [`CP8 report`](../../acceptance/road-v0-7/cp8-responsive-navigation/report.md)。
 
 ### Gate D — 原生 IME 与开发者接受（已通过：2026-08-26）
 
@@ -407,7 +409,7 @@ synthetic Vault 启动。开发者在 macOS `27.0`（`26A5421a`）、简体拼�
 `com.apple.inputmethod.SCIM.ITABC` 下用实体键盘输入 `baoshi`：候选窗出现且稳定，
 选择“暴食”前没有中间查询，提交后只保留最终中文、只刷新一次且无残留 `ba`。
 开发者明确判断“全部通过，没有异常”；四类 P1 阻断均未出现。详细记录见
-[`CP8 report`](docs/acceptance/road-v0-7/cp8-responsive-navigation/report.md)。CP8 checkpoint
+[`CP8 report`](../../acceptance/road-v0-7/cp8-responsive-navigation/report.md)。CP8 checkpoint
 随后以 `2f03aee` 创建；CP8 阶段未再操作真实 Vault，push、tag、签名与发布均未执行。
 
 ## 17. CP8 已知风险
@@ -424,11 +426,11 @@ synthetic Vault 启动。开发者在 macOS `27.0`（`26A5421a`）、简体拼�
 ## 18. Road 完工与 v0.8 交接
 
 开发者于 2026-08-26 明确判定：CP8 完成后，Road v0.7 的产品与实施工作正式完工。CP8
-checkpoint 已创建为 `2f03aee`；本 Road 的[只读施工 snapshot](docs/archive/snapshots/road-v0-7.html)
+checkpoint 已创建为 `2f03aee`；本 Road 的[只读施工 snapshot](../../archive/snapshots/road-v0-7.html)
 在该 checkpoint 后独立加入，因此 Road v0.7 已完成 Git 文档收口。未创建 tag，亦未 push、
 签名、打包或发布。
 
 Road v0.8 的方向冻结为“打包 + Alpha 发布”，最早于 2026-08-28 开始。截至 Road v0.7
 closeout 时尚未创建 v0.8 分支、计划、构建或发布资产。开发者随后于 2026-08-26 授权落地
-[v0.8 pre-start 计划草案](PLAN_road_v0_8.md)；该草案不代表 Road 启动，CP0 仍须另行批准
+[v0.8 pre-start 计划草案](../../../PLAN_road_v0_8.md)；该草案不代表 Road 启动，CP0 仍须另行批准
 计划、seed 与发布边界。

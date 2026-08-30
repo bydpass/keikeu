@@ -936,7 +936,7 @@ Road v0.6 只有在以下条件全部满足后才能完成：
 - 没有要求 Road v0.6 执行发布或二号用户测试。
 
 审阅结果：开发者于 2026-08-02 批准本书面设计，随后授权开始执行
-[`PLAN_road_v0_6.md`](../../PLAN_road_v0_6.md)，并以 advance YOLO 覆盖 CP0–CP7 的
+[`PLAN_road_v0_6.md`](../archive/road-v0-6/PLAN_road_v0_6.md)，并以 advance YOLO 覆盖 CP0–CP7 的
 开发者退出判断。批准状态已形成独立基线提交 `9bb722a`；后续“全部 YOLO”授权
 CP0–CP6 的分支、精确暂存、DeepSeek `aic`、checkpoint commit 与连续执行，但不替代
 实际证据，也不授权真实 Vault、push、tag、发布、closeout 或 CP7 commit。

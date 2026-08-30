@@ -76,10 +76,10 @@ builder 上传。未跟踪文件不能选入；不得只为刷新而擅自暂存
 | [技术栈与组件图鉴](forfresh/stack-component-atlas.html) | Vue → Tauri/Rust → JSONL v2 → Python → Markdown/Index 的组件职责与任务路由 | 当前依赖 metadata、[architecture](../architecture/architecture.html) 与源码入口 |
 | [测试与证据手册](forfresh/testing-and-evidence-guide.html) | 改动类型、最小命令、fixture/mock，以及每项检查能证明和不能证明什么 | 当前测试、[RULES](../RULES.md) 与 [SPEC](../SPEC.md) |
 | [构建与打包手册](forfresh/build-and-packaging-guide.html) | editable install、Hatchling、PyInstaller、Vite、Cargo 与 Tauri bundle 的边界 | 当前构建脚本、配置与 [PROJECT](../PROJECT.md) |
-| [npm 新人手册](forfresh/npm-beginner-guide.html)（[PDF](forfresh/npm-beginner-guide.pdf)） | Node/npm 边界、锁文件、当前脚本、依赖纪律与故障速查 | [frontend/package.json](../../frontend/package.json)、[PROJECT](../PROJECT.md) 与 [RULES](../RULES.md) |
-| [Tauri + Vue 入门](forfresh/tauri-vue-beginner-guide.html)（[PDF](forfresh/tauri-vue-beginner-guide.pdf)） | Vue 状态流、Tauri command、Sidecar、一次保存与恢复语义 | [architecture](../architecture/architecture.html)、[SPEC](../SPEC.md) 与 [RULES](../RULES.md) |
-| [Python Caveman 诠释](forfresh/python-caveman-guide.html)（[PDF](forfresh/python-caveman-guide.pdf)） | Python 对象、core/bridge 分层、Markdown 权威与安全追代码 | [SPEC](../SPEC.md)、[RULES](../RULES.md) 与当前 `src/` / `tests/` |
-| [Rust 简易入门](forfresh/rust-beginner-guide.html)（[PDF](forfresh/rust-beginner-guide.pdf)） | Tauri 宿主、Option/Result、所有权、单 worker 与 Sidecar 生命周期 | [architecture](../architecture/architecture.html)、[RULES](../RULES.md) 与当前 `frontend/src-tauri/` |
+| [npm 新人手册](forfresh/npm-beginner-guide.html) | Node/npm 边界、锁文件、当前脚本、依赖纪律与故障速查 | [frontend/package.json](../../frontend/package.json)、[PROJECT](../PROJECT.md) 与 [RULES](../RULES.md) |
+| [Tauri + Vue 入门](forfresh/tauri-vue-beginner-guide.html) | Vue 状态流、Tauri command、Sidecar、一次保存与恢复语义 | [architecture](../architecture/architecture.html)、[SPEC](../SPEC.md) 与 [RULES](../RULES.md) |
+| [Python Caveman 诠释](forfresh/python-caveman-guide.html) | Python 对象、core/bridge 分层、Markdown 权威与安全追代码 | [SPEC](../SPEC.md)、[RULES](../RULES.md) 与当前 `src/` / `tests/` |
+| [Rust 简易入门](forfresh/rust-beginner-guide.html) | Tauri 宿主、Option/Result、所有权、单 worker 与 Sidecar 生命周期 | [architecture](../architecture/architecture.html)、[RULES](../RULES.md) 与当前 `frontend/src-tauri/` |
 | [Git 状态地图](forfresh/git-interactive.html) → [Git 手册](forfresh/gitspec.md) | 工作区、暂存区、本地历史、远端与最短安全路径 | [RULES §7](../RULES.md#7-git) |
 | [macOS 开发者入门](forfresh/macos-developer-beginner-guide.html) → [Developer ID 发布手册](forfresh/macos-developer-id-release.md) | 签名、公证、staple、Gatekeeper 与 Road v0.8 预启动草案下仍受阻塞的发布骨架 | [Road v0.8 草案](../../PLAN_road_v0_8.md)、[PROJECT](../PROJECT.md) 与 [RULES](../RULES.md) |
 

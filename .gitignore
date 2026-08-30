@@ -1,4 +1,5 @@
 .DS_Store
+*.swp
 
 #施工/设计文件
 #files_for_construction
@@ -6,6 +7,7 @@ tests/test-vault/
 tests/test-vault-bak/
 tests/keikeu-backups/
 docs/design/keikeu_opendesign/
+docs/manual/forfresh/*.pdf
 # Python
 .venv/
 __pycache__/

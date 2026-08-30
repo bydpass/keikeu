@@ -1,6 +1,8 @@
 # Road v0.6 实施计划（已完成并归档）
 
-> 状态：依据已批准的 [Paper v4 产品与架构设计](docs/design/road-v0-6-paper-v4-design.md)
+> **ARCHIVE · READ ONLY · Road v0.6 frozen planbook**
+
+> 状态：依据已批准的 [Paper v4 产品与架构设计](../../design/road-v0-6-paper-v4-design.md)
 > 于 2026-08-02 重写；开发者于同日授权开始执行 Road v0.6，并以 advance YOLO
 > 预先覆盖 CP0–CP7 的开发者退出判断，随后以“全部 YOLO”预先授权 CP0–CP6 的分支、
 > 精确暂存、DeepSeek `aic`、checkpoint commit 与连续执行。YOLO 不替代实际证据，也
@@ -23,14 +25,14 @@ CP4 已将 production 一次切换为 Paper v4、Index v4 与 protocol v2；CP5 
 旧正常链；CP6 已完成未知结果、repair、手册与合成安全 Gate。冻结 v3 reader 只存在于
 迁移边界。CP7 一号真实作者 Gate 已完成实际场景、修复并复验一个确认框 P1，随后以
 `18a1024` 提交。Road closeout 已获授权并形成
-[`road-v0-6.html`](docs/archive/snapshots/road-v0-6.html)；tag、push 与发布未执行。
+[`road-v0-6.html`](../../archive/snapshots/road-v0-6.html)；tag、push 与发布未执行。
 
 ## 1. 权威、批准与执行纪律
 
 - 产品与架构 target 以
-  [`docs/design/road-v0-6-paper-v4-design.md`](docs/design/road-v0-6-paper-v4-design.md)
+  [`docs/design/road-v0-6-paper-v4-design.md`](../../design/road-v0-6-paper-v4-design.md)
   为准；本计划只安排顺序、证据和 Gate，不另造第二份 schema 或 protocol 权威。
-- 在 CP0 校准前，[`docs/SPEC.md`](docs/SPEC.md)、[`docs/RULES.md`](docs/RULES.md)、
+- 在 CP0 校准前，[`docs/SPEC.md`](../../SPEC.md)、[`docs/RULES.md`](../../RULES.md)、
   `src/` 与 `tests/` 继续描述或证明 v0.5 current；target/current 不得混写。
 - 开发者已审阅实际计划并授权开始执行。批准状态必须写回本文件与 `docs/PROJECT.md`
   并形成干净基线提交，之后才能创建 CP0 分支。

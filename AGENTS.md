@@ -11,7 +11,7 @@ Protect author control, local durability, privacy, and beginner-maintainability.
 | Need | Authority |
 | --- | --- |
 | Product scope and acceptance | `docs/SPEC.md` |
-| Latest completed desktop Road and accepted UI baseline | `docs/design/road-v0-7-app-shell-design.md`, then `PLAN_road_v0_7.md` |
+| Latest completed desktop Road and accepted UI baseline | `docs/design/road-v0-7-app-shell-design.md`, then `docs/archive/road-v0-7/PLAN_road_v0_7.md` |
 | Current Paper v4 grammar and protocol baseline | `docs/design/road-v0-6-paper-v4-design.md` |
 | Current phase and next gate | `docs/PROJECT.md` |
 | Engineering, interaction, data, evidence rules | `docs/RULES.md` |

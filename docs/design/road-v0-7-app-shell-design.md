@@ -294,7 +294,7 @@ App Shell 增量只在以下场景通过时接受；CP6 已给出整体通过判
 - [x] Paper、Library、Vault 与阻塞恢复的结构正确。
 - [x] 不修改 Paper v4、Index v4、protocol v2、Python 或 Rust。
 - [x] `1220×780`、`920×680`、键盘与一号作者 Gate 足以判断完成。
-- [x] [`PLAN_road_v0_7.md`](../../PLAN_road_v0_7.md) 的 Checkpoint 顺序可以执行。
+- [x] [`PLAN_road_v0_7.md`](../archive/road-v0-7/PLAN_road_v0_7.md) 的 Checkpoint 顺序可以执行。
 
 该批准与 advance YOLO 已用于通过 CP0–CP6；实际证据见各 checkpoint report。CP6 的窄范围真实 Vault 使用已经单独授权并完成，但不延伸到后续操作。CP7 使用下节新增合同；push、tag、closeout 与发布未获授权。
 
