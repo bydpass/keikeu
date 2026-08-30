@@ -1,0 +1,294 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "keikeu 当前桌面架构",
+    "locale": "zh-CN",
+    "output": "keikeu-current-architecture.html",
+    "animation": "none",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/bydpass/keikeu.git",
+      "revision": "71a18079e3095df9cc5a6faf103adf3be7d83926"
+    },
+    "viewBox": [930, 700]
+  },
+  "components": [
+    {
+      "id": "author",
+      "type": "external",
+      "label": "作者",
+      "sublabel": "本机单用户 · 明确确认",
+      "pos": [10, 190],
+      "size": [120, 76]
+    },
+    {
+      "id": "vueShell",
+      "type": "frontend",
+      "label": "Vue 3 App Shell",
+      "sublabel": "Paper / Library / Vault · pendingIntent",
+      "tag": "VISIBLE STATE",
+      "sources": [
+        { "path": "frontend/src/App.vue", "line": 22, "label": "App root state" },
+        { "path": "frontend/src/bridge.js", "line": 5, "label": "narrow invoke adapter" }
+      ],
+      "pos": [170, 188],
+      "size": [150, 80]
+    },
+    {
+      "id": "rustHost",
+      "type": "backend",
+      "label": "Tauri / Rust Host",
+      "sublabel": "window lifecycle · one worker queue",
+      "tag": "OWNS SIDECAR",
+      "sources": [
+        { "path": "frontend/src-tauri/src/lib.rs", "line": 7, "label": "host lifecycle" },
+        { "path": "frontend/src-tauri/src/bridge.rs", "line": 228, "label": "serialized bridge" },
+        { "path": "frontend/src-tauri/src/commands.rs", "line": 7, "label": "native commands" }
+      ],
+      "pos": [360, 188],
+      "size": [160, 80]
+    },
+    {
+      "id": "jsonlV2",
+      "type": "messagebus",
+      "label": "JSONL v2",
+      "sublabel": "stdin/stdout · session · strict DTO",
+      "tag": "NO NETWORK",
+      "sources": [
+        { "path": "src/keikeu_bridge/protocol.py", "line": 32, "label": "protocol contract" },
+        { "path": "src/keikeu_bridge/dto.py", "line": 1, "label": "typed values" },
+        { "path": "src/keikeu_bridge/sidecar.py", "line": 12, "label": "sidecar entry" }
+      ],
+      "pos": [170, 390],
+      "size": [150, 80]
+    },
+    {
+      "id": "pythonService",
+      "type": "backend",
+      "label": "Python Service",
+      "sublabel": "orchestration · CAS / reconcile",
+      "tag": "MUTATION ENTRY",
+      "sources": [
+        { "path": "src/keikeu_bridge/service.py", "line": 113, "label": "KeikeuService" },
+        { "path": "src/keikeu_bridge/local_state.py", "line": 1, "label": "device state" }
+      ],
+      "pos": [360, 390],
+      "size": [160, 80]
+    },
+    {
+      "id": "pythonCore",
+      "type": "backend",
+      "label": "keikeu_core",
+      "sublabel": "domain + safe filesystem rules",
+      "tag": "NO GUI / TRANSPORT",
+      "sources": [
+        { "path": "src/keikeu_core/models.py", "line": 81, "label": "Paper v4 model" },
+        { "path": "src/keikeu_core/markdown_io.py", "line": 372, "label": "Markdown CAS" },
+        { "path": "src/keikeu_core/vault.py", "line": 173, "label": "Home containment" }
+      ],
+      "pos": [550, 390],
+      "size": [160, 80]
+    },
+    {
+      "id": "paperMarkdown",
+      "type": "database",
+      "label": "Paper v4 Markdown",
+      "sublabel": "card-page files · durable author asset",
+      "tag": "CANONICAL",
+      "sources": [
+        { "path": "src/keikeu_core/markdown_io.py", "line": 219, "label": "strict parse/render" },
+        { "path": "docs/SPEC.md", "line": 11, "label": "author-control contract" }
+      ],
+      "pos": [750, 390],
+      "size": [170, 80]
+    },
+    {
+      "id": "macosNative",
+      "type": "external",
+      "label": "macOS Native",
+      "sublabel": "picker · confirm · open/reveal · window",
+      "tag": "APPLE SILICON",
+      "sources": [
+        { "path": "frontend/src-tauri/src/commands.rs", "line": 28, "label": "picker + opener" },
+        { "path": "frontend/src/bridge.js", "line": 36, "label": "confirm + close" }
+      ],
+      "pos": [360, 28],
+      "size": [160, 78]
+    },
+    {
+      "id": "deviceState",
+      "type": "database",
+      "label": "Device Config / State",
+      "sublabel": "selected Vault · daily claim",
+      "tag": "DISPOSABLE",
+      "sources": [
+        { "path": "src/keikeu_bridge/sidecar.py", "line": 8, "label": "config path" },
+        { "path": "src/keikeu_bridge/local_state.py", "line": 44, "label": "atomic local state" }
+      ],
+      "pos": [360, 570],
+      "size": [160, 74]
+    },
+    {
+      "id": "indexV4",
+      "type": "database",
+      "label": "Index v4",
+      "sublabel": "local query projection",
+      "tag": "REBUILDABLE",
+      "sources": [
+        { "path": "src/keikeu_core/indexer.py", "line": 258, "label": "rebuild" },
+        { "path": "src/keikeu_core/indexer.py", "line": 357, "label": "query" }
+      ],
+      "pos": [550, 570],
+      "size": [160, 74]
+    },
+    {
+      "id": "trashMigration",
+      "type": "security",
+      "label": "Trash / Migration",
+      "sublabel": "atomic move · gated backup",
+      "tag": "GUARDED",
+      "sources": [
+        { "path": "src/keikeu_core/vault.py", "line": 1866, "label": "Vault layout" },
+        { "path": "src/keikeu_core/migration_v4.py", "line": 1, "label": "migration gate" },
+        { "path": "docs/architecture/decisions/0008-whole-folder-trash-lifecycle.md", "line": 1, "label": "folder lifecycle" }
+      ],
+      "pos": [740, 570],
+      "size": [180, 74]
+    },
+    {
+      "id": "externalEditor",
+      "type": "external",
+      "label": "外部编辑器 / Finder",
+      "sublabel": "author-controlled handoff",
+      "sources": [
+        { "path": "src/keikeu_bridge/service.py", "line": 1473, "label": "validated target" },
+        { "path": "frontend/src-tauri/src/commands.rs", "line": 64, "label": "system open/reveal" }
+      ],
+      "pos": [750, 190],
+      "size": [170, 80]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Tauri desktop app",
+      "wraps": ["vueShell", "rustHost", "macosNative"],
+      "pad": 22
+    }
+  ],
+  "connections": [
+    {
+      "id": "authorUsesApp",
+      "from": "author",
+      "to": "vueShell",
+      "label": "编辑 · 检索 · 明确确认",
+      "labelDy": -44,
+      "variant": "emphasis"
+    },
+    {
+      "id": "vueInvokesHost",
+      "from": "vueShell",
+      "to": "rustHost",
+      "label": "narrow commands · structured results",
+      "labelDy": -44
+    },
+    {
+      "id": "hostOwnsSidecar",
+      "from": "rustHost",
+      "to": "jsonlV2",
+      "label": "single owned sidecar · serialized I/O",
+      "labelDy": 64,
+      "variant": "emphasis"
+    },
+    {
+      "id": "jsonlDispatches",
+      "from": "jsonlV2",
+      "to": "pythonService",
+      "label": "strict DTO dispatch · session",
+      "labelDy": 64
+    },
+    {
+      "id": "serviceCallsCore",
+      "from": "pythonService",
+      "to": "pythonCore",
+      "label": "单次 mutation · 只读 reconcile",
+      "labelDy": 64
+    },
+    {
+      "id": "coreOwnsMarkdown",
+      "from": "pythonCore",
+      "to": "paperMarkdown",
+      "label": "strict parse/render · CAS",
+      "labelDy": -54,
+      "variant": "emphasis"
+    },
+    {
+      "id": "rustUsesNative",
+      "from": "rustHost",
+      "to": "macosNative",
+      "label": "validated native actions",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "serviceUsesDeviceState",
+      "from": "pythonService",
+      "to": "deviceState",
+      "label": "local config / claim",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 64,
+      "variant": "dashed"
+    },
+    {
+      "id": "coreBuildsIndex",
+      "from": "pythonCore",
+      "to": "indexV4",
+      "label": "rebuild / query projection",
+      "labelDy": 64,
+      "variant": "dashed"
+    },
+    {
+      "id": "coreGuardsTrash",
+      "from": "pythonCore",
+      "to": "trashMigration",
+      "label": "atomic move / gated migration",
+      "variant": "security"
+    },
+    {
+      "id": "markdownHandoff",
+      "from": "paperMarkdown",
+      "to": "externalEditor",
+      "label": "validated open/reveal",
+      "labelDy": -44,
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "所有权边界",
+      "items": [
+        "Vue 只持有可见状态；Rust 持有桌面生命周期与单一 Sidecar",
+        "Python service 是唯一编排入口；keikeu_core 不依赖 GUI 或 transport"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "本地数据权威",
+      "items": [
+        "Paper v4 Markdown 是 canonical author asset；Index 与 device state 可丢弃",
+        "外部修改由下一次保存的 CAS 检查保护；mutation 不自动 replay"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "当前状态 · 2026-08-29",
+      "items": [
+        "Road v0.7 已接受并归档；pendingIntent 与 PaperView close guard 仍有已记录偏差",
+        "./dev、manual、context pack 位于产品运行链外；Road v0.8 与打包发布尚未启动"
+      ]
+    }
+  ]
+}
