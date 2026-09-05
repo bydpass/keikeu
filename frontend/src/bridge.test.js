@@ -150,4 +150,27 @@ describe("Tauri bridge envelope", () => {
     expect(secondEvent.preventDefault).toHaveBeenCalledOnce();
     expect(destroy).toHaveBeenCalledOnce();
   });
+
+  it("coalesces repeated close requests and permits retry after destroy fails", async () => {
+    isTauri.mockReturnValue(true);
+    let handler;
+    let answer;
+    const destroy = vi.fn().mockRejectedValueOnce(new Error("window still open")).mockResolvedValue(undefined);
+    getCurrentWindow.mockReturnValue({
+      destroy,
+      onCloseRequested: vi.fn(async (callback) => { handler = callback; return vi.fn(); }),
+    });
+    const departure = vi.fn(() => new Promise((resolve) => { answer = resolve; }));
+    await registerWindowCloseGuard(departure);
+    const first = handler({ preventDefault: vi.fn() });
+    const repeated = { preventDefault: vi.fn() };
+    await handler(repeated);
+    expect(repeated.preventDefault).toHaveBeenCalledOnce();
+    expect(departure).toHaveBeenCalledOnce();
+    answer(true);
+    await expect(first).rejects.toThrow("window still open");
+    departure.mockResolvedValueOnce(true);
+    await handler({ preventDefault: vi.fn() });
+    expect(destroy).toHaveBeenCalledTimes(2);
+  });
 });

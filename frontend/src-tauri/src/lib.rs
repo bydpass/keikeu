@@ -10,6 +10,44 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
+            // The macOS predefined Quit calls Cocoa terminate directly, bypassing close guards.
+            #[cfg(target_os = "macos")]
+            {
+                use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
+                let menu = Menu::default(app.handle())?;
+                let items = menu.items()?;
+                let app_menu = items
+                    .first()
+                    .and_then(|item| item.as_submenu())
+                    .ok_or("missing macOS app menu")?;
+                let items = app_menu.items()?;
+                let quit = items
+                    .last()
+                    .and_then(|item| item.as_predefined_menuitem())
+                    .ok_or("missing macOS Quit item")?;
+                let quit_text = PredefinedMenuItem::quit(app.handle(), None)?.text()?;
+                if quit.text()? != quit_text {
+                    return Err("unexpected macOS Quit item".into());
+                }
+                app_menu.remove(quit)?;
+                app_menu.append(&MenuItem::with_id(
+                    app.handle(),
+                    "guarded-quit",
+                    quit_text,
+                    true,
+                    Some("Cmd+Q"),
+                )?)?;
+                app.set_menu(menu)?;
+                app.on_menu_event(|handle, event| {
+                    if event.id() == "guarded-quit" {
+                        if let Some(window) = handle.get_webview_window("main") {
+                            if window.close().is_err() {
+                                eprintln!("could not request guarded window close");
+                            }
+                        }
+                    }
+                });
+            }
             app.manage(BridgeHandle::start(app.handle().clone()));
             Ok(())
         })

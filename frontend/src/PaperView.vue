@@ -6,7 +6,6 @@ import {
   bridgeRequest,
   confirmDiscardChanges,
   openSystemTarget,
-  registerWindowCloseGuard,
 } from "./bridge.js";
 
 const props = defineProps({
@@ -38,7 +37,6 @@ const notice = ref("");
 const error = ref(null);
 const deleteDialog = ref(null);
 let dailyTimer;
-let unlistenClose;
 let hasObservedDirty = false;
 
 const savedPath = computed(() => paper.value?.path ?? null);
@@ -374,13 +372,9 @@ function confirmDeparture() {
 
 defineExpose({ confirmDeparture });
 
-onMounted(async () => {
-  await loadStartup();
-  unlistenClose = await registerWindowCloseGuard(() => requestDeparture());
-});
+onMounted(loadStartup);
 onUnmounted(() => {
   window.clearTimeout(dailyTimer);
-  unlistenClose?.();
 });
 </script>
 

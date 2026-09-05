@@ -100,7 +100,7 @@ No AI generation, prose editor, sync, account, community, database, file watcher
 
 - macOS Apple Silicon is the only Road v0.7 engineering and first-author platform. Intel Mac is unsupported. The historical Phase 7.5 iOS quick-test branch is not part of the accepted runtime or evidence for the new mobile target.
 - The documented sequence is Road v0.8 iPhone core creation plus Mac iCloud synchronization; independent desktop parity and Python product-runtime retirement; Road v0.9 iOS/macOS first external Alpha plus the promotion Gate; Road v0.10 Android plus second Alpha; then a Windows decision from both rounds. Linux and watchOS have no scheduled work.
-- Road v0.8's direction is documented, but its executable CP0 seed is not approved and the Road has not started. The recorded App-root close-guard deviation is an independent narrow fix and focused re-verification prerequisite, not work to hide inside a Road v0.8 checkpoint.
+- Road v0.8's direction is documented, but its executable CP0 seed is not approved and the Road has not started. The independently implemented [App-root close-guard candidate](acceptance/close-guard-2026-09-04.md) has focused and native-window evidence; on 2026-09-05 the developer manually confirmed protection for all normal exit paths except force quit and passed this independent prerequisite. This is not a v0.8 checkpoint or CP0 seed approval.
 - Signing, notarization, TestFlight, DMG delivery, recruitment, promotion, Android implementation, and Windows implementation remain unperformed.
 - The repository `./dev` TUI, human manuals, and ignored root `CONTEXT.md` are developer workflow tools.
   They are not product surfaces, runtime protocol components, author assets, or acceptance evidence.

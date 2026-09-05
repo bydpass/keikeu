@@ -70,7 +70,7 @@ builder 上传。未跟踪文件不能选入；不得只为刷新而擅自暂存
 
 ## 系统理解
 
-[keikeu-current-logic.html](keikeu-current-logic.html) 与两个分类文件夹并列，简明说明已完成并归档的 Road v0.7、已接受的 CP8 响应式导航/Anchor composition、Road v0.6 延续的 Paper v4 业务链路、数据权威、保存防护与 Vue/Tauri/JSONL v2/Python 分层；最终 checkpoint 为 `2f03aee`。2026-08-30 状态复核继续记录 App-root pending intent 与 PaperView-scoped close guard 的实现偏差，并明确开发者工具不进入产品运行链。最终核对 [PROJECT](../PROJECT.md)、[SPEC](../SPEC.md)、[RULES](../RULES.md) 与 [architecture](../architecture/architecture.html)。
+[keikeu-current-logic.html](keikeu-current-logic.html) 与两个分类文件夹并列，简明说明已完成并归档的 Road v0.7、已接受的 CP8 响应式导航/Anchor composition、Road v0.6 延续的 Paper v4 业务链路、数据权威、保存防护与 Vue/Tauri/JSONL v2/Python 分层；最终 checkpoint 为 `2f03aee`。2026-09-05 [独立关闭保护报告与代码导读](../acceptance/close-guard-2026-09-04.md)分别说明 App-owned 修复的原生检查、工具事件与开发者人工验收；常规退出入口保护已通过，强制退出除外。最终核对 [PROJECT](../PROJECT.md)、[SPEC](../SPEC.md)、[RULES](../RULES.md) 与 [architecture](../architecture/architecture.html)。
 
 [paper-v4-repair.html](paper-v4-repair.html) 是面向普通纯文本编辑器用户的离线修复手册，包含完整 schema v4 示例、类型/空值、可逆转义、错误含义、Finder、未知保存、重新检查和 Index 重建；app 不会自动改写损坏文件。
 

@@ -5,14 +5,12 @@ import PaperView from "./PaperView.vue";
 import {
   confirmDiscardChanges,
   openSystemTarget,
-  registerWindowCloseGuard,
 } from "./bridge.js";
 
 vi.mock("./bridge.js", () => ({
   bridgeRequest: vi.fn(),
   confirmDiscardChanges: vi.fn(),
   openSystemTarget: vi.fn(),
-  registerWindowCloseGuard: vi.fn(),
 }));
 
 const runtime = {
@@ -68,7 +66,6 @@ beforeEach(() => {
   vi.resetAllMocks();
   confirmDiscardChanges.mockResolvedValue(true);
   openSystemTarget.mockResolvedValue(undefined);
-  registerWindowCloseGuard.mockResolvedValue(vi.fn());
   Object.defineProperty(navigator, "clipboard", {
     configurable: true,
     value: { writeText: vi.fn().mockResolvedValue(undefined) },
@@ -362,7 +359,7 @@ describe("Road v0.7 Paper runtime", () => {
     expect(wrapper.text()).toContain("已确认上次保存落盘");
   });
 
-  it("keeps the window close guard active until an unknown intent is abandoned", async () => {
+  it("requires explicit departure confirmation even when an unknown draft matches its baseline", async () => {
     const submitted = {
       display_name: null,
       tags: [],
@@ -382,11 +379,6 @@ describe("Road v0.7 Paper runtime", () => {
         submitted,
       },
     };
-    let closeGuard;
-    registerWindowCloseGuard.mockImplementation(async (guard) => {
-      closeGuard = guard;
-      return vi.fn();
-    });
     const request = vi.fn(async (method) => {
       if (method === "startup.load") return ready();
       if (method === "paper.reconcile_save") return {
@@ -401,9 +393,9 @@ describe("Road v0.7 Paper runtime", () => {
     const wrapper = await mountPaper(request, { pendingIntent: pending });
 
     confirmDiscardChanges.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
-    await expect(closeGuard()).resolves.toBe(false);
+    await expect(wrapper.vm.confirmDeparture()).resolves.toBe(false);
     expect(wrapper.emitted("intent-settled")).toBeUndefined();
-    await expect(closeGuard()).resolves.toBe(true);
+    await expect(wrapper.vm.confirmDeparture()).resolves.toBe(true);
     expect(wrapper.emitted("intent-settled")).toHaveLength(1);
   });
 

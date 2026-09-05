@@ -8,9 +8,9 @@
 
 Road v0.6 已完成并归档：production 使用 Paper v4、Index v4 与 protocol v2，Paper 本身就是可编辑的有序卡页；旧正常运行链已删除，未知结果与人工修复 Gate、一号真实作者 Gate 均已通过，且无未解决 P0/P1。
 
-Road v0.7 的 App Shell 与信息层级已通过 CP0–CP8。开发者于 2026-08-26 通过 CP8 原生 IME Gate D，并明确判定整个 Road v0.7 的产品与实施工作正式完工；底层 Paper v4 / Index v4 / protocol v2 不变。最终 checkpoint 为 `2f03aee`，[Road snapshot](docs/archive/snapshots/road-v0-7.html) 已独立归档。CP6 的一次有界真实 v4 Vault 作者 Gate 已完成且授权已耗尽；此后未再操作真实 Vault，push、tag、签名、打包与发布均未执行。2026-09-04 已批准重构 [Road v0.8 计划](PLAN_road_v0_8.md)：复用 Vue/Tauri，逐步统一 Rust Core，交付 iPhone 核心创作与 Mac iCloud 同步候选；候选后独立完成桌面对等和 Python 产品运行时退役，双后端不进入首轮外部 Alpha。软件 CP0 seed 尚未批准，Road 未启动；现有 close-guard 偏差须先独立修复并聚焦重证。
+Road v0.7 的 App Shell 与信息层级已通过 CP0–CP8。开发者于 2026-08-26 通过 CP8 原生 IME Gate D，并明确判定整个 Road v0.7 的产品与实施工作正式完工；底层 Paper v4 / Index v4 / protocol v2 不变。最终 checkpoint 为 `2f03aee`，[Road snapshot](docs/archive/snapshots/road-v0-7.html) 已独立归档。CP6 的一次有界真实 v4 Vault 作者 Gate 已完成且授权已耗尽；后续独立修复的实际测试边界见下述报告，未推送或发布。2026-09-04 已批准重构 [Road v0.8 计划](PLAN_road_v0_8.md)：复用 Vue/Tauri，逐步统一 Rust Core，交付 iPhone 核心创作与 Mac iCloud 同步候选；候选后独立完成桌面对等和 Python 产品运行时退役，双后端不进入首轮外部 Alpha。软件 CP0 seed 尚未批准，Road 未启动；独立关闭保护已完成聚焦／原生窗口检查，并于 2026-09-05 通过开发者人工验收：除强制退出外，所有常规退出入口受到保护。
 
-产品文档与源码于 2026-08-26 按 Road v0.7 完成态复核。复核发现 App-root pending intent 的正常关闭保护仍错误地只挂在 `PaperView`；这是待修复的实现偏差，不改变已接受设计合同，并在 [PROJECT](docs/PROJECT.md) 记录为 Road v0.8 开始前的独立阻塞项。2026-08-29 又加入独立的开发者 TUI 与四份技术手册；本地交接路由于 2026-08-30 迁至根目录 `CONTEXT.md`。这些开发工具不改变产品界面、运行链或验收状态。
+产品文档与源码于 2026-08-26 按 Road v0.7 完成态复核。当时发现 App-root pending intent 的关闭保护只挂在 `PaperView`；2026-09-05 的[独立修复报告与教学](docs/acceptance/close-guard-2026-09-04.md)分别记录代理检查、开发者人工验收，以及测试工具自动重启导致正式每日启动状态更新的事件。当前批准边界见 [PROJECT](docs/PROJECT.md)。2026-08-29 又加入独立的开发者 TUI 与四份技术手册；本地交接路由于 2026-08-30 迁至根目录 `CONTEXT.md`。这些开发工具不改变产品界面、运行链或验收状态。
 
 Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响应式界面、本机沙盒 Vault 与真机修复验证；它不是 macOS Road 的合入闸门。Road v0.3 的工程、macOS candidate smoke 与 CP6 真实作者验收均已完成；检索更快且清楚、外部编辑器 handoff 清楚，未报告未解决 P0/P1。其设计与验收文档已[只读归档](docs/archive/road-v0-3/README.md)，未创建 v0.3 tag。**Road v0.4 已彻底完成**：Gate A、Gate B、产品验收与 macOS 15.7+ 兼容性均已通过；当前唯一桌面运行时为 Vue/Tauri 与本地 Python sidecar，Flet 已在 CP14 退役。**Road v0.5 也已完成并归档**：Paper Desk、保存基线、离开保护、Flashcard/Library 连贯性、全应用 Quiet Desk 视觉与固定滚动语义均已验收。实时坐标见 [PROJECT](docs/PROJECT.md)。
 
@@ -127,7 +127,7 @@ Road v0.4   Vue/Tauri 前端替换完成；CP14 已验收
 Road v0.5   Quiet Desk UI 与交互收口完成；CP7 已验收并归档
 Road v0.6   Paper v4 卡页重构；CP7 已验收并归档
 Road v0.7   CP8 已验收并归档；最终 checkpoint 2f03aee
-Road v0.8   iPhone 核心创作 + Mac iCloud 同步候选；CP0 seed 未批准，先独立修复并重证 close guard
+Road v0.8   iPhone 核心创作 + Mac iCloud 同步候选；CP0 seed 未批准，关闭保护前置验收已通过
 独立收口    候选后完成桌面对等与 Python 产品运行时退役；首轮外部 Alpha 前必须通过
 Road v0.9   iOS/macOS 首轮 Alpha + 正式宣发 Gate；须先通过统一核心收口，未启动
 Road v0.10  Android 开发 + 二轮 Alpha；未启动

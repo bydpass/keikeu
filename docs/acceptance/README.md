@@ -2,6 +2,7 @@
 
 > Supporting evidence only. Current conclusions live in [`PROJECT.md`](../PROJECT.md); archived Road evidence never defines a new active Road.
 
+- [`close-guard-2026-09-04.md`](close-guard-2026-09-04.md) — independent App-root close-guard candidate, code guide, native-window evidence, tool incident and evidence boundaries; developer manual acceptance passed on 2026-09-05 for all normal exit paths except force quit.
 - [`phase8.md`](phase8.md) — completed, de-identified one-shot and two-session author evidence.
 - [`../archive/road-v0-3/acceptance/road_v0_3.md`](../archive/road-v0-3/acceptance/road_v0_3.md): read-only Road v0.3 CP5 evidence and completed CP6 result.
 - [`road_v0_4_cp10.md`](road_v0_4_cp10.md) — completed CP10 Flet/Vue-Tauri Gate A parity evidence.

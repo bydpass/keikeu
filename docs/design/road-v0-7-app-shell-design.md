@@ -202,6 +202,8 @@ App.vue
 - Shell 先直接留在 `App.vue`；只有出现第二个真实复用点时才抽组件。
 - PaperView 只新增一个窄的 `confirmDeparture()` 暴露面，并在打开或保存后把当前已保存
   path 回报给 App；dirty、baseline、close guard 与确认文案仍由 PaperView 拥有。
+
+  **2026-09-05 独立修复候选说明：** 上句保留 CP2 当时的组件分工记录；当前候选将窗口监听器交给 App，Paper 只保留 dirty／baseline 与 departure 判断。2026-09-05 开发者人工复核已通过常规退出入口保护（强制退出除外）；检查与验收分别见[关闭保护报告](../acceptance/close-guard-2026-09-04.md)，不重写 CP2 的历史验收。
 - `新 Paper` 只有在 departure guard 通过后才清空 `paperPath` 并递增 Paper render
   generation，确保当前 PaperView 被替换而不是在同一实例里静默换稿。
 - Paper/Library 切换和 Vault 入口只组合已有状态、事件与上述窄接口。

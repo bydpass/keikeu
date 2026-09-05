@@ -56,10 +56,17 @@ export async function registerWindowCloseGuard(requestDeparture) {
     return () => {};
   }
   const currentWindow = getCurrentWindow();
+  let closing = false;
   return currentWindow.onCloseRequested(async (event) => {
     event.preventDefault();
-    if (await requestDeparture()) {
-      await currentWindow.destroy();
+    if (closing) return;
+    closing = true;
+    try {
+      if (await requestDeparture()) {
+        await currentWindow.destroy();
+      }
+    } finally {
+      closing = false;
     }
   });
 }

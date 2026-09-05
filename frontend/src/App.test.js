@@ -5,8 +5,11 @@ import tauriConfig from "../src-tauri/tauri.conf.json";
 import App from "./App.vue";
 import appSource from "./App.vue?raw";
 import PrototypeView from "./PrototypeView.vue";
+import LibraryView from "./LibraryView.vue";
+import VaultView from "./VaultView.vue";
 import {
   bridgeRequest,
+  confirmAction,
   confirmDiscardChanges,
   getRuntimeStatus,
   registerWindowCloseGuard,
@@ -16,6 +19,7 @@ import {
 vi.mock("./bridge.js", () => ({
   bridgeRequest: vi.fn(),
   chooseVaultDirectory: vi.fn(),
+  confirmAction: vi.fn(),
   confirmDiscardChanges: vi.fn(),
   getRuntimeStatus: vi.fn(),
   openSystemTarget: vi.fn(),
@@ -112,6 +116,7 @@ beforeEach(() => {
   getRuntimeStatus.mockResolvedValue(runtime);
   restartSidecar.mockResolvedValue(runtime);
   confirmDiscardChanges.mockResolvedValue(true);
+  confirmAction.mockResolvedValue(false);
   registerWindowCloseGuard.mockResolvedValue(vi.fn());
   bridgeRequest.mockImplementation(defaultBridge);
 });
@@ -121,6 +126,144 @@ afterEach(() => {
 });
 
 describe("Road v0.7 desktop shell", () => {
+  function closeGuard() {
+    expect(registerWindowCloseGuard).toHaveBeenCalledOnce();
+    return registerWindowCloseGuard.mock.calls[0][0];
+  }
+
+  it("owns one close listener across Paper, Library, Vault and App teardown", async () => {
+    const unlisten = vi.fn();
+    registerWindowCloseGuard.mockResolvedValue(unlisten);
+    const wrapper = await mountApp();
+    await expect(closeGuard()()).resolves.toBe(true);
+    for (const destination of ["Library", "Vault", "编辑 Paper", "新 Paper"]) {
+      await shellButtonByText(wrapper, destination).trigger("click");
+      await flushPromises();
+      await expect(closeGuard()()).resolves.toBe(true);
+      expect(unlisten).not.toHaveBeenCalled();
+    }
+    mounted.pop().unmount();
+    expect(unlisten).toHaveBeenCalledOnce();
+  });
+
+  it("delegates dirty Paper close to its existing cancel and discard choices", async () => {
+    const wrapper = await mountApp();
+    await wrapper.get(".page-content-field textarea").setValue("Keep this close draft");
+    confirmDiscardChanges.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    await expect(closeGuard()()).resolves.toBe(false);
+    expect(wrapper.get(".page-content-field textarea").element.value).toBe("Keep this close draft");
+    await expect(closeGuard()()).resolves.toBe(true);
+  });
+
+  it("keeps an unknown Save protected after Paper unload and retains it if destroy does not happen", async () => {
+    let rejectSave;
+    bridgeRequest.mockImplementation((method) => {
+      if (method === "paper.save") return new Promise((resolve, reject) => { rejectSave = reject; });
+      if (method === "paper.reconcile_save") return {
+        state: "not_committed", paper: { ...draft, pages: [{ name: null, content: "Retain me", type: null }] },
+        index_state: "current",
+      };
+      return defaultBridge(method);
+    });
+    const wrapper = await mountApp();
+    await wrapper.get(".page-content-field textarea").setValue("Retain me");
+    await buttonByText(wrapper, "保存").trigger("click");
+    await expect(closeGuard()()).resolves.toBe(false);
+    expect(confirmAction).not.toHaveBeenCalled();
+    rejectSave({ code: "commit_unknown", message: "response lost" });
+    await flushPromises();
+    expect(wrapper.find(".paper-v4-workbench").exists()).toBe(false);
+    await expect(closeGuard()()).resolves.toBe(false);
+    expect(confirmAction.mock.calls[0][0]).toContain("内存中的草稿");
+    confirmAction.mockRejectedValueOnce(new Error("dialog unavailable"));
+    await expect(closeGuard()()).resolves.toBe(false);
+    expect(wrapper.get('[role="alert"]').text()).toContain("无法确认关闭");
+    confirmAction.mockResolvedValueOnce(true);
+    await expect(closeGuard()()).resolves.toBe(true);
+    // Permission to close must not erase the only snapshot before window destruction succeeds.
+    await buttonByText(wrapper, "重启本地 Core").trigger("click");
+    await flushPromises();
+    expect(wrapper.get(".page-content-field textarea").element.value).toBe("Retain me");
+    expect(bridgeRequest.mock.calls.filter(([method]) => method === "paper.save")).toHaveLength(1);
+    expect(bridgeRequest.mock.calls.filter(([method]) => method === "paper.reconcile_save")).toHaveLength(1);
+  });
+
+  it.each([
+    ["Library", LibraryView, "library.branch", "library"],
+    ["Vault", VaultView, "vault.open", "vault"],
+  ])("protects %s writes in flight and unknown results after its page unloads", async (destination, component, method, family) => {
+    let rejectWrite;
+    bridgeRequest.mockImplementation((name) => name === method
+      ? new Promise((resolve, reject) => { rejectWrite = reject; })
+      : defaultBridge(name));
+    const wrapper = await mountApp();
+    await shellButtonByText(wrapper, destination).trigger("click");
+    await flushPromises();
+    const surface = wrapper.findComponent(component);
+    const outcome = surface.props("request")(method, {}, { family, method }).catch((error) => error);
+    await expect(closeGuard()()).resolves.toBe(false);
+    expect(confirmAction).not.toHaveBeenCalled();
+    rejectWrite({ code: "commit_unknown", message: "response lost" });
+    surface.vm.$emit("runtime-blocked", await outcome);
+    await flushPromises();
+    expect(wrapper.findComponent(component).exists()).toBe(false);
+    await expect(closeGuard()()).resolves.toBe(false);
+    expect(confirmAction.mock.calls[0][0]).toContain("操作记录");
+    confirmAction.mockResolvedValueOnce(true);
+    await expect(closeGuard()()).resolves.toBe(true);
+    expect(bridgeRequest.mock.calls.filter(([name]) => name === method)).toHaveLength(1);
+  });
+
+  it("allows a blocked startup with no pending intent to close", async () => {
+    getRuntimeStatus.mockResolvedValue({ state: "blocked", error: { code: "sidecar_unavailable" } });
+    await mountApp();
+    await expect(closeGuard()()).resolves.toBe(true);
+    expect(confirmAction).not.toHaveBeenCalled();
+  });
+
+  it("rejects an old close answer if a write starts while the dialog is open", async () => {
+    let answer;
+    let finishSave;
+    confirmDiscardChanges.mockImplementationOnce(() => new Promise((resolve) => { answer = resolve; }));
+    bridgeRequest.mockImplementation((method) => method === "paper.save"
+      ? new Promise((resolve) => { finishSave = resolve; })
+      : defaultBridge(method));
+    const wrapper = await mountApp();
+    await wrapper.get(".page-content-field textarea").setValue("New write");
+    const closing = closeGuard()();
+    await buttonByText(wrapper, "保存").trigger("click");
+    answer(true);
+    await expect(closing).resolves.toBe(false);
+    finishSave({ paper: { ...draft, path: draft.target_path, source_digest: "saved" }, warnings: [] });
+    await flushPromises();
+    await expect(closeGuard()()).resolves.toBe(true);
+  });
+
+  it("does not enter the workspace until the close listener is installed", async () => {
+    let finishRegistration;
+    registerWindowCloseGuard.mockImplementation(() => new Promise((resolve) => { finishRegistration = resolve; }));
+    const wrapper = await mountApp();
+    expect(bridgeRequest).not.toHaveBeenCalled();
+    expect(getRuntimeStatus).not.toHaveBeenCalled();
+    mounted.pop().unmount();
+    const unlisten = vi.fn();
+    finishRegistration(unlisten);
+    await flushPromises();
+    expect(unlisten).toHaveBeenCalledOnce();
+    expect(getRuntimeStatus).not.toHaveBeenCalled();
+  });
+
+  it("blocks startup on listener registration failure and retries before restarting Core", async () => {
+    registerWindowCloseGuard.mockRejectedValueOnce(new Error("listener unavailable"));
+    const wrapper = await mountApp();
+    expect(wrapper.text()).toContain("关闭保护未能启动");
+    expect(bridgeRequest).not.toHaveBeenCalled();
+    await buttonByText(wrapper, "重启本地 Core").trigger("click");
+    await flushPromises();
+    expect(registerWindowCloseGuard).toHaveBeenCalledTimes(2);
+    expect(wrapper.find(".paper-v4-workbench").exists()).toBe(true);
+  });
+
   it("keeps the default desktop window portrait-safe at 720 × 900", () => {
     const mainWindow = tauriConfig.app.windows.find(({ label }) => label === "main");
     expect(mainWindow).toMatchObject({

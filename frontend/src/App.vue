@@ -8,7 +8,13 @@ import {
   ref,
 } from "vue";
 
-import { bridgeRequest, getRuntimeStatus, restartSidecar } from "./bridge.js";
+import {
+  bridgeRequest,
+  confirmAction,
+  getRuntimeStatus,
+  registerWindowCloseGuard,
+  restartSidecar,
+} from "./bridge.js";
 import LibraryView from "./LibraryView.vue";
 import PaperView from "./PaperView.vue";
 import VaultView from "./VaultView.vue";
@@ -29,6 +35,7 @@ const vaultReturnDestination = ref("paper");
 const vaultCanCancel = ref(false);
 const libraryContextGeneration = ref(0);
 const pendingIntent = ref(null);
+const closeError = ref("");
 const paperView = ref(null);
 const paperRenderGeneration = ref(0);
 const workSurface = ref(null);
@@ -68,6 +75,9 @@ const blockedCopy = computed(() => {
   };
 });
 let refreshTimer;
+let unlistenClose;
+let appUnmounted = false;
+let durableRequests = 0;
 
 const durableMethods = new Set([
   "vault.open",
@@ -105,6 +115,7 @@ async function appRequest(method, params = {}, intent = null) {
       vault_locator: params.vault_locator ?? null,
       summary: { fields: Object.keys(params).sort() },
     });
+    durableRequests += 1;
   }
   try {
     const result = await bridgeRequest(method, params);
@@ -113,6 +124,55 @@ async function appRequest(method, params = {}, intent = null) {
   } catch (error) {
     if (durable && error?.code !== "commit_unknown") pendingIntent.value = null;
     throw error;
+  } finally {
+    if (durable) durableRequests -= 1;
+  }
+}
+
+async function requestWindowClose() {
+  closeError.value = "";
+  if (appUnmounted || durableRequests || restarting.value || shellNavigating.value) return false;
+  const intent = pendingIntent.value;
+  let allowed;
+  try {
+    if (intent) {
+      const hasDraft = intent.family === "paper_save";
+      allowed = await confirmAction(
+        hasDraft
+          ? "上次保存结果仍未确认。关闭将放弃仅保存在内存中的草稿，且不会撤销可能已完成的保存。要放弃草稿并关闭吗？"
+          : "上次写入结果仍未确认。关闭将放弃本次操作记录，且不会撤销可能已完成的磁盘操作。要放弃记录并关闭吗？",
+        { okLabel: hasDraft ? "放弃草稿并关闭" : "放弃记录并关闭", cancelLabel: "留下核对" },
+      );
+    } else {
+      allowed = paperView.value ? await paperView.value.confirmDeparture() : true;
+    }
+  } catch {
+    closeError.value = "无法确认关闭；草稿和操作记录仍保留，请重试。";
+    return false;
+  }
+  // A dialog answer belongs to the state it described. Keep snapshots until destruction succeeds.
+  return allowed && !appUnmounted && !durableRequests && !restarting.value
+    && !shellNavigating.value && pendingIntent.value === intent;
+}
+
+async function installCloseGuard() {
+  if (unlistenClose) return true;
+  try {
+    const unlisten = await registerWindowCloseGuard(requestWindowClose);
+    if (appUnmounted) {
+      unlisten();
+      return false;
+    }
+    unlistenClose = unlisten;
+    return true;
+  } catch {
+    blockRuntime({
+      code: "close_guard_unavailable",
+      layer: "vue_ui",
+      message: "关闭保护未能启动；工作面尚未打开，请重试。",
+      recovery: "retry",
+    });
+    return false;
   }
 }
 
@@ -138,6 +198,7 @@ async function refreshStatus() {
 async function restart() {
   restarting.value = true;
   try {
+    if (!(await installCloseGuard())) return;
     status.value = await restartSidecar();
     if (status.value.state === "ready") {
       destination.value = "paper";
@@ -271,12 +332,16 @@ function showVault() {
   return runShellIntent(() => openVault(null, paperPath.value));
 }
 
-onMounted(() => {
-  if (!showPrototype) {
+onMounted(async () => {
+  if (!showPrototype && await installCloseGuard()) {
     refreshStatus();
   }
 });
-onUnmounted(() => window.clearTimeout(refreshTimer));
+onUnmounted(() => {
+  appUnmounted = true;
+  window.clearTimeout(refreshTimer);
+  unlistenClose?.();
+});
 </script>
 
 <template>
@@ -414,6 +479,7 @@ onUnmounted(() => window.clearTimeout(refreshTimer));
       </button>
     </section>
   </main>
+  <p v-if="closeError" role="alert" class="runtime-panel">{{ closeError }}</p>
 </template>
 
 <style scoped>
