@@ -8,9 +8,9 @@
 >
 > 设计原则：本地优先、作者控制、直接编辑 Paper、无 AI 代写
 >
-> 文档同步：2026-08-30 按 Road v0.7 production source 与新版跨端路线复核。当前 close-guard
-> 实现偏差记录在 [`PROJECT`](../../PROJECT.md)；移动端、双语和 iCloud 均是后续目标，
-> 不改写本文的已接受产品合同，也不表示已经实现。
+> 文档同步：2026-09-04 只重构未来路线，未复验源码或设备。Road v0.7 当前产品合同不变；
+> close-guard 偏差仍见 [`PROJECT`](../../PROJECT.md)。v0.8 候选包含 iPhone 创作与 Mac 同步，
+> 之后独立完成桌面对等与 Python 产品运行时退役，才进入首轮外部 Alpha；均未实现。
 
 ---
 
@@ -59,9 +59,9 @@ Flashcard 不再是单独视图、投影或资产；旧调用方已清零并从�
 普通 Markdown、隐私和文字控制的单人作者。年龄只作为未来 Alpha 准入条件，不采集生日、
 证件、具体年龄或年龄段，也不进入画像分析。
 
-Road v0.7 已接受产品仍只在 Apple Silicon Mac 上有运行和验收事实。Road v0.8 计划建立
-跨端工程基础与 iPhone 可测试候选，Road v0.9 才执行 iOS/macOS 首轮 Alpha；这些目标
-不能写成当前能力。Alpha 界面和材料计划提供中文、英文两套语言，参加者只需使用其中一种。
+Road v0.7 已接受产品仍只在 Apple Silicon Mac 上有运行和验收事实。Road v0.8 计划交付
+iPhone 核心创作与 Mac iCloud 同步候选，之后独立完成统一核心收口，再由 Road v0.9
+执行 iOS/macOS 首轮外部 Alpha；这些目标不能写成当前能力。Alpha 界面和材料计划提供中文、英文两套语言，参加者只需使用其中一种。
 
 当前没有可靠公开数据能回答目标作者的四端创作主设备占比。平台注册、广告触达或视频观看
 设备不等于写作设备，因此不填市场估算值：
@@ -371,7 +371,7 @@ Markdown（权威资产） + Index（可重建缓存） + Vault（用户目录�
 | 平台 | 当前事实 | 已批准的后续方向 |
 | --- | --- | --- |
 | macOS Apple Silicon | Road v0.7 已接受的唯一运行与作者 Gate | Road v0.9 与 iPhone 共同参加首轮 Alpha |
-| iPhone | 尚无已实现移动 runtime | Road v0.8 产出可测试候选，Road v0.9 参加首轮 Alpha |
+| iPhone | 当前接受运行链尚无移动实现 | Road v0.8 产出创作与 Mac 同步候选；统一核心收口后参加 v0.9 首轮 Alpha |
 | iPadOS | 尚未实现 | 可做兼容观察，不进入首轮正式验收 |
 | Android | 尚未实现 | 首轮通过并正式宣发后进入开发，参加二轮 Alpha |
 | Windows | 尚未实现 | 两轮 Alpha 后按实测需求决定 Road |
@@ -380,21 +380,25 @@ Markdown（权威资产） + Index（可重建缓存） + Vault（用户目录�
 路线顺序固定为：
 
 ```text
-Road v0.8  跨端工程基础 + iPhone 可测试候选
+Road v0.8  iPhone 核心创作 + Mac iCloud 同步候选
+独立收口   桌面对等 + Python 产品运行时退役，首轮外部 Alpha 前必须通过
 Road v0.9  iOS/macOS 首轮 Alpha + 正式宣发 Gate
 Road v0.10 Android 开发 + 二轮 Alpha
 之后       根据两轮数据决定 Windows Road
 ```
 
 当前 macOS 本地 runtime 仍是 `Vue → Tauri/Rust → JSONL v2 → Python sidecar → Python Core`。
-Python sidecar 是桌面子进程，不能直接搬到 Tauri 移动端。Road v0.8 的目标方案是保留
-`bridgeRequest` 前端边界，在移动端使用进程内 Rust Paper Core；它要经过 Paper v4 golden
-fixture、真机文件与恢复 Gate，不能凭“同为 Tauri”宣称等价。
+现有 Python 子进程不能直接搬到 Tauri iOS，但嵌入 Python 在平台上可行。本项目选择保留
+Vue/Tauri 与 `bridgeRequest`，逐步统一 Rust Core；v0.8 Mac 本地暂留 Python，移动与云端
+共用 Rust。候选后迁移桌面剩余能力，对等与安全切换通过后才退役 Python 产品运行时。
+这项维护决策和验证条件见 [ADR-0009](../../architecture/decisions/0009-unified-rust-core-transition.md)；
+Paper v4 不变，过渡期 protocol v2 冻结，host 能力单列，无 Index 的结果不得伪装为正常 Index。
 
-首轮 Alpha 计划使用中文、英文两个测试组。小范围公开招募只在 iPhone 候选完成后进行；
+首轮 Alpha 计划使用中文、英文两个测试组。小范围公开招募须在 iPhone 同步候选及独立统一核心收口完成后进行；
 首轮达到安全、完成率和 iCloud 往返 Gate 后才正式宣发。主阵地是小红书 + X，副阵地是
-Bilibili + YouTube；微博与 Reddit 当前只作研究和社区观察。具体样本与放量判据见
-[Alpha 用户画像与宣发渠道研究](alpha-audience-research.md)。
+Bilibili + YouTube；微博与 Reddit 当前只作研究和社区观察。既有样本与宣发决定保留在
+[活动计划的后续决策记录](../../../PLAN_road_v0_8.md#6-后续决策记录)；
+[用户研究手册](alpha-audience-research.md)只提供非规范性研究说明。
 
 Road v0.6/v0.7 均未执行移动端开发、TestFlight、Developer ID 发布或 iCloud Documents
 配置。签名、公证、共享容器与跨端冲突恢复必须分别在后续 Road 以真实分发包和往返记录验证。

@@ -2,15 +2,23 @@
 
 > 这里解释“为什么”和“如何理解”，不回答“现在必须怎么做”。当前答案回到 [PROJECT](../PROJECT.md)、[SPEC](../SPEC.md)、[RULES](../RULES.md) 与 [AGENTS](../../AGENTS.md)。
 
-> 2026-08-30：保留前日新增的开发者 TUI 与四份速查手册，并把本地交接路由校准为仓库根目录 `CONTEXT.md`。
+> 2026-09-04：同步 [v0.8 计划](../../PLAN_road_v0_8.md) 的未来路线：iPhone 创作与 Mac iCloud 同步候选之后，独立完成桌面对等及 Python 产品运行时退役，首轮外部 Alpha 前必须通过。当前桌面链、手册命令与根目录 `CONTEXT.md` 路由不变。
 
 ```text
 manual/
 ├─ keikeu-current-logic.html  系统理解
+├─ road-v0-8-guide.md         当前计划导读
 ├─ paper-v4-repair.html       Paper v4 离线人工修复
 ├─ forfresh/                  项目开发技术手册
 └─ prospect/                  产品、用户研究与价值
 ```
+
+## 理解本次 Road v0.8
+
+先读 [Road v0.8 导读](road-v0-8-guide.md)：交付范围、当前与未来架构、CP0–CP5 的顺序、
+保存和恢复的具体例子，以及候选验收、统一核心收口和外部 Alpha 的区别。
+它解释 [活动计划](../../PLAN_road_v0_8.md) 与
+[ADR-0009](../architecture/decisions/0009-unified-rust-core-transition.md)，不增加合同或证明阶段通过。
 
 ## 开发者 TUI
 

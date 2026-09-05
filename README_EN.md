@@ -8,7 +8,7 @@
 
 Road v0.6 is complete and archived: production uses Paper v4, Index v4, and protocol v2; the Paper itself is the ordered editable card-page artifact. The obsolete normal-runtime chain is gone, the unknown-result and manual-repair gate passed, and the first-author gate passed with no unresolved P0/P1.
 
-Road v0.7 passed CP0–CP8. On 2026-08-26 the developer completed the physical-keyboard macOS native-candidate-window check, passed CP8 Gate D, and explicitly declared Road v0.7 product and implementation work complete. Paper v4, Index v4, and protocol v2 remain unchanged. Final checkpoint `2f03aee` is bound by the independent [Road snapshot](docs/archive/snapshots/road-v0-7.html). CP6 completed one bounded real-v4-Vault author gate and consumed that authorization; no later real-Vault operation, push, tag, signing, packaging, or release was performed. The Road v0.8 [cross-platform direction and documentation draft](PLAN_road_v0_8.md) is approved for this synchronization, but an executable CP0 seed is not approved and the Road has not started. The existing close-guard deviation must first be fixed narrowly and reverified independently rather than hidden inside the cross-platform work.
+Road v0.7 passed CP0–CP8. On 2026-08-26 the developer completed the physical-keyboard macOS native-candidate-window check, passed CP8 Gate D, and explicitly declared Road v0.7 product and implementation work complete. Paper v4, Index v4, and protocol v2 remain unchanged. Final checkpoint `2f03aee` is bound by the independent [Road snapshot](docs/archive/snapshots/road-v0-7.html). CP6 completed one bounded real-v4-Vault author gate and consumed that authorization; no later real-Vault operation, push, tag, signing, packaging, or release was performed. On 2026-09-04 the developer approved the [Road v0.8 plan refactor](PLAN_road_v0_8.md): retain Vue/Tauri, progressively unify the Rust Core, and deliver iPhone core creation with Mac iCloud synchronization. An independent stage after that candidate must achieve desktop parity and retire the Python product runtime before the first external Alpha. The software CP0 seed remains unapproved and the Road unstarted; the existing close-guard deviation first needs its independent fix and focused re-verification.
 
 The product documentation and source were rechecked against the completed Road v0.7 baseline on 2026-08-26. That audit found that normal-close protection for the App-root pending intent is still scoped to `PaperView`; this is an implementation deviation, not a change to the accepted design contract, and [PROJECT](docs/PROJECT.md) records it as an independent blocker before Road v0.8 starts. A separate developer TUI and four technical manuals were added on 2026-08-29; the local handoff route moved to root `CONTEXT.md` on 2026-08-30. These developer tools do not change the product UI, runtime chain, or acceptance state.
 
@@ -128,8 +128,8 @@ Road v0.4   Vue/Tauri frontend replacement complete; CP14 accepted
 Road v0.5   Quiet Desk UI and interaction closeout complete; CP7 accepted and archived
 Road v0.6   Paper v4 card-page reconstruction; CP7 accepted and archived
 Road v0.7   CP8 accepted and archived; final checkpoint 2f03aee
-Road v0.8   cross-platform foundations + iPhone test candidate; direction documented, CP0 seed unapproved; close-guard fix/recheck first
-Road v0.9   iOS/macOS first Alpha + formal-promotion Gate; not started
+Road v0.8   iPhone core creation + Mac iCloud sync candidate; CP0 seed unapproved; close-guard fix/recheck first
+Road v0.9   iOS/macOS first Alpha + promotion; independent desktop parity/Python retirement must pass first, not started
 Road v0.10  Android development + second Alpha; not started
 Pre-Advance optional Markdown Outline; outside Road v0.7 and unscheduled, never blocks the core flow
 later       decide the Windows Road from both Alpha rounds; Linux and watchOS unscheduled

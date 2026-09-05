@@ -1,4 +1,4 @@
-# keikeu Product Boundary (Road v0.7 accepted; Road v0.8 direction documented, CP0 seed not approved)
+# keikeu Product Boundary (Road v0.7 accepted; revised v0.8 direction documented, software CP0 seed not approved)
 
 > Authority: §§1–7 define the accepted product, author-asset, and data-safety boundary inherited from Road v0.6; §8 defines shared exclusions and platform scope; §9 records the Road v0.7 App Shell composition accepted at CP6; §10 defines the CP7 continuous-flow override accepted by developer Gate D on 2026-08-25; §11 defines the CP8 responsive-navigation override accepted by developer Gate D on 2026-08-26 and records the developer's Road v0.7 completion judgment; §13 records the documented but unimplemented cross-platform target and does not authorize CP0. Detailed Paper v4 grammar, DTOs, migration, recovery, and protocol remain in the approved [Paper v4 design](design/road-v0-6-paper-v4-design.md); the current interface and acceptance matrix live in the [App Shell design](design/road-v0-7-app-shell-design.md). Current checkpoint and runtime facts live in [PROJECT](PROJECT.md), source, and tests.
 
@@ -91,7 +91,7 @@ The exact Markdown v4 shape, frontmatter scalar codec, page markers, reversible 
 - Vue owns visible state, draft/baseline, active page, and App-root pending intent; it never reads or writes author files.
 - In the current desktop runtime, Rust owns lifecycle, one Python sidecar, the JSONL queue, native directory selection/confirmation, and validated system actions; it never parses Markdown or implements product rules.
 - The transport-agnostic Python service owns orchestration and strict DTOs. `keikeu_core` owns domain validation and file rules without GUI or transport imports.
-- In the current desktop runtime, `markdown_io.py` exclusively owns Paper Markdown. In that same runtime, `vault.py` owns Home containment, supported Paper paths, active/Trash enumeration, code allocation, and destructive moves on those paths; migration modules separately own gated backup/staging/replacement. A future Rust path may receive only the bounded mobile/shared-iCloud ownership in §13 after its contract and golden Gates pass. Index data is local and rebuildable.
+- In the current desktop runtime, `markdown_io.py` exclusively owns Paper Markdown. In that same runtime, `vault.py` owns Home containment, supported Paper paths, active/Trash enumeration, code allocation, and destructive moves on those paths; migration modules separately own gated backup/staging/replacement. The v0.8 Rust path may receive bounded mobile/shared-iCloud ownership after its contract and golden Gates pass; desktop ownership changes only in the separate post-candidate convergence under §13. Index data is local and rebuildable.
 - The current accepted runtime has no localhost, HTTP, WebSocket, account, telemetry, upload, hidden service, or automatic mutation replay.
 
 ## 8. Explicit exclusions and platforms
@@ -99,7 +99,7 @@ The exact Markdown v4 shape, frontmatter scalar codec, page markers, reversible 
 No AI generation, prose editor, sync, account, community, database, file watcher, Router, Pinia, TypeScript, UI kit, auto-save, page reorder, signing, notarization, staple, DMG, public distribution, mobile implementation, or cross-platform build enters Road v0.7.
 
 - macOS Apple Silicon is the only Road v0.7 engineering and first-author platform. Intel Mac is unsupported. The historical Phase 7.5 iOS quick-test branch is not part of the accepted runtime or evidence for the new mobile target.
-- The documented sequence is Road v0.8 cross-platform foundations plus an iPhone test candidate; Road v0.9 iOS/macOS first Alpha plus the promotion Gate; Road v0.10 Android development plus second Alpha; and only then a Windows Road decision based on both rounds. Linux and watchOS have no scheduled work.
+- The documented sequence is Road v0.8 iPhone core creation plus Mac iCloud synchronization; independent desktop parity and Python product-runtime retirement; Road v0.9 iOS/macOS first external Alpha plus the promotion Gate; Road v0.10 Android plus second Alpha; then a Windows decision from both rounds. Linux and watchOS have no scheduled work.
 - Road v0.8's direction is documented, but its executable CP0 seed is not approved and the Road has not started. The recorded App-root close-guard deviation is an independent narrow fix and focused re-verification prerequisite, not work to hide inside a Road v0.8 checkpoint.
 - Signing, notarization, TestFlight, DMG delivery, recruitment, promotion, Android implementation, and Windows implementation remain unperformed.
 - The repository `./dev` TUI, human manuals, and ignored root `CONTEXT.md` are developer workflow tools.
@@ -216,41 +216,52 @@ release remain separate and unperformed.
 4. **Product acceptance:** CP7 separately requires the first author's real workflow. It is not part of CP6 engineering completion and needs separate real-Vault authorization.
 5. **Road closeout:** CP7 acceptance, snapshot, tag, push, signing, packaging, and release are separate decisions.
 
-## 13. Documented cross-platform target (not implemented or CP0-authorized)
+## 13. Documented unified-core target (not implemented or software-CP0-authorized)
 
-This section constrains future Road work. It does not change the accepted Road v0.7 runtime, prove a
-mobile build, authorize an Apple capability, or report an Alpha result.
+The 2026-09-04 plan refactor retains Vue/Tauri and chooses progressive Rust Core unification.
+[ADR-0009](architecture/decisions/0009-unified-rust-core-transition.md) records the decision and its
+conditional replacement of ADR-0004. Documentation approval proves no mobile build, Apple capability,
+software checkpoint, migration, or Alpha result; current runtime ownership above remains in force.
 
-| Environment | Documented target backend |
+| Stage / environment | Target backend and boundary |
 | --- | --- |
-| macOS local Vault | Current JSONL Python sidecar and Python Core, unchanged |
-| macOS shared iCloud Vault | In-process Rust Paper Core plus Apple-native file coordination |
-| iPhone local or shared iCloud Vault | The same in-process Rust Paper Core |
-| Road v0.10 Android local Vault | The same Rust Paper Core, with explicit Markdown import/export only |
+| v0.8 macOS local Vault | Existing JSONL Python sidecar and full desktop capabilities, unchanged |
+| v0.8 macOS shared iCloud Vault | In-process Rust Paper Core plus Apple-native file coordination |
+| v0.8 iPhone local / shared iCloud Vault | The same Rust Paper Core; cloud mode adds native coordination |
+| Independent post-candidate convergence | Rust takes over remaining desktop capabilities after parity and switch validation; Python product runtime retires |
+| First external Alpha and later Android | Unified Rust product Core; Python may remain a development comparison tool only |
 
-- Road v0.8 keeps the current macOS local-Vault runtime unchanged. Its mobile path keeps the existing
-  `bridgeRequest` boundary but replaces the unavailable mobile child-sidecar path with an in-process
-  Rust Paper Core, verified against Python-produced Paper v4 golden fixtures.
-- The v0.8 iPhone candidate is limited to creating, editing, saving, reopening, listing/searching, and
-  exporting one Paper as Markdown. Mobile Alpha search may scan Papers linearly instead of copying
-  Index v4. Trash, migration, folder management, external-editor handoff, whole-Vault export, and
-  formal iPad acceptance remain outside that candidate.
-- Chinese and English are the Alpha languages. Initial language follows the system setting, remains
-  manually switchable, and is stored only as disposable local device state.
-- Local storage is the default. iCloud Documents is an explicit opt-in that creates a new shared
-  cloud Vault; it never silently migrates, moves, or substitutes for an existing local Vault. Provider
-  discovery, download, reads, writes, and conflicts use Apple-native file coordination.
-- A private device-only recovery draft may protect an unsaved mobile edit. It is non-canonical, never
-  synced, clears only after a known successful Paper save, and on relaunch offers explicit recovery,
-  export, or discard.
-- An iCloud conflict never triggers automatic merge or deletion. The provider-current file may remain
-  active only after every losing conflict version has been preserved as a visible, non-overwritten
-  recovery copy. Replacing the active version first preserves the displaced version as well.
-- Road v0.9 may distribute the iOS candidate through external TestFlight and prefers a notarized
-  Developer ID DMG for macOS; if the shared-container Gate fails for that DMG, macOS Alpha uses
-  TestFlight instead. Real entitlement and cross-device Gates remain required. Road v0.9 owns
-  the 18+ Chinese/English first Alpha and the decision to begin formal promotion; age eligibility uses
-  self-attestation without collecting a birth date or identity document.
-- Road v0.10 adds Android to the second Alpha after formal promotion begins. Its first candidate stays
-  local-first with explicit Markdown import/export and adds no cloud service. Windows scheduling is
-  decided only from the two Alpha rounds.
+- The v0.8 iPhone candidate includes multi-page Paper creation/editing, save/reopen, list/search,
+  single-Paper Markdown export, local draft recovery, and mandatory Mac iCloud round trips. Mobile
+  and cloud capabilities are narrow; desktop-local Trash, migration, folders and external-editor
+  handoff remain available. Full mobile management, whole-Vault export and formal iPad acceptance
+  are excluded. Mobile/cloud search may scan supported Papers linearly without Index v4.
+- Keep the existing `bridgeRequest` boundary and Paper v4 file contract. Freeze host capabilities,
+  shared business DTOs and host-only methods separately from unchanged Python JSONL protocol v2;
+  never fabricate a current Index state for a backend without an Index.
+- Each client uses one controlled backend for its selected Vault: no dual writes or automatic
+  fallback to another writer after an error. Cross-device concurrency still requires coordination.
+- Chinese and English follow the system initially, remain manually switchable, and store the choice
+  only in local device state; author text, names and Tags are not translated or normalized.
+- Local is the default. Explicit iCloud opt-in creates or reconnects one shared cloud Vault without
+  moving an existing local Vault. Resolve dirty drafts and pending writes before switching; validate
+  the new target before changing selection. Failed switches keep the old selection, and old results
+  cannot be applied to a new storage identity. Discovery/download/read/write use Apple-native APIs.
+- Recovery drafts are private, non-canonical and unsynced, keyed by storage, Paper/draft identity
+  and revision. Clear only the matching successfully saved revision or an explicitly discarded draft;
+  retain newer edits and all failed/unknown saves. Surface recovery-write failure. Relaunch offers
+  recovery, export or discard without overwriting Paper; only the last persisted draft is guaranteed.
+- Distinguish pre-replacement failure, committed-but-response-lost and external changes; retain the
+  draft and reconcile read-only, never replay an unknown write. Preserve and verify every conflict's
+  raw bytes before marking it handled, and preserve the displaced current version before promotion.
+  Interrupted recovery must not overwrite copies; no automatic merge, deletion or clock-based winner.
+- Independent post-candidate convergence must preserve all desktop Index, folder, Trash, migration,
+  recovery, device-state and system-action behavior on fixtures/copies. Only parity, safe switching
+  and developer acceptance permit removing sidecar, product JSONL calls and Python packaging.
+  The first external Alpha is blocked until that convergence passes; v0.8 acceptance alone is insufficient.
+- Road v0.9 owns final external TestFlight iOS and Developer ID/notarized/stapled macOS validation;
+  if the DMG shared-container gate fails, macOS Alpha uses TestFlight with its own actual-build checks.
+  Debug sync does not prove distribution. The 18+ Chinese/English first Alpha uses self-attestation
+  without birth dates or identity documents; promotion remains a separate gate.
+- Road v0.10 adds Android and the second Alpha after promotion begins: local Markdown and explicit
+  import/export, no new cloud service. Windows timing depends on both Alpha rounds.

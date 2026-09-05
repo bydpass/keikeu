@@ -17,5 +17,9 @@
 - [Road v0.7 non-authoritative interactive planbook companion — product complete](road-v0-7-planbook.html)
 - [Road v0.5 Planbook](../archive/road-v0-5/road-v0-5-planbook.html)
 - [Earlier design exploration](boh_design.html) — visible historical banner; not a production token source.
-- [Road v0.8 pre-start cross-platform foundation plan](../../PLAN_road_v0_8.md) — current next-Road draft; Road has not started, the runtime remains desktop-only, and macOS/iOS Alpha distribution belongs to Road v0.9.
 - Open Design generation context lives only in the local, git-ignored `docs/design/keikeu_opendesign/` directory (Road v0.5 final UI prototype, prototype/browser skill snapshots, templates, examples, and layout references). These are construction artifacts, not tracked authority or evidence.
+
+## Planned direction, not current implementation
+
+- [Revised Road v0.8 plan](../../PLAN_road_v0_8.md) — iPhone core creation and mandatory Mac iCloud sync; software CP0 seed unapproved. Independent desktop parity and Python product-runtime retirement must follow the candidate before the first external Alpha.
+- [ADR-0009](../architecture/decisions/0009-unified-rust-core-transition.md) — retains Vue/Tauri and bounds progressive Rust Core unification; current runtime and historical acceptance remain unchanged.
