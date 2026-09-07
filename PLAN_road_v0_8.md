@@ -343,4 +343,4 @@ Archify architecture 的 validate／deliver 为 showcase 9/9，0 错误、0 警�
 CP4 工程提交为 `ee7d488`。CP5 已交付同源码开发候选与 [个人真机测试单](docs/acceptance/road-v0-8/cp5-candidate.md)。
 交付检查补充隔离 Mac 候选的 Sidecar 配置，避免普通启动继承原全局 Vault。
 Mac 已完成合成稿两页创建／保存／重开、关闭取消保护及外部修改防覆盖检查；修复 Library 对全文结果的重复过滤。
-前端全量 140 项通过，两端候选已重建；iPhone Mirroring 等待本人验证，必需原生界面及 provider 批次 B 未齐；当前停留在候选已交付／待验，不标记 CP5 或 Goal 完成。
+前端全量 140 项通过，两端候选已重建；手机两页保存重开、中文重启保持及普通界面在线云稿往返已取证；离线、并发等 provider 批次 B 仍未齐；当前停留在候选已交付／待验，不标记 CP5 或 Goal 完成。
