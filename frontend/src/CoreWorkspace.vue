@@ -125,7 +125,7 @@ function load(p, recovery = null) {
 }
 async function act(operation) {
   if (busy.value) return;
-  error.value = ""; busy.value = true;
+  error.value = ""; notice.value = ""; busy.value = true;
   try { await operation(); } catch (e) { report(e); } finally { busy.value = false; }
 }
 async function create() {
@@ -177,7 +177,7 @@ async function save(value) {
         await flush();
       } else {
         await request("host.draft.discard", { token: draftId.value, revision: submittedRevision });
-        revision.value = 0; protectedRevision.value = 0; raw = null;
+        revision.value = 0; protectedRevision.value = 0;
       }
       state.value = "ready"; notice.value = t("已保存", "Saved"); await refresh();
     } catch (e) {

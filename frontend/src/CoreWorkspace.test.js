@@ -27,6 +27,7 @@ beforeEach(() => {
     }
     if (method === "host.export") return {state:"cancelled"};
     if (method === "paper.save") {
+      if (!records.has(p.draft_id)) throw {code:"validation_failed"};
       if (deferredSave) await deferredSave;
       return {paper:{...paper,path:paper.target_path,edit_token:"saved",display_name:p.display_name,tags:p.tags,pages:p.pages},warnings:[]};
     }
@@ -110,4 +111,33 @@ it("keeps local drafts and preserved conflict exports visible while the cloud pr
   await flushPromises();
   expect(bridgeRequest).toHaveBeenCalledWith("host.conflict.export", {token:"copy",storage_id:"storage",generation:1});
   expect(records.has("offline-draft")).toBe(true);
+});
+
+it("protects unchanged and edited snapshots before saving again", async () => {
+  const host = bridgeRequest.getMockImplementation();
+  const rustJson = (value) => Array.isArray(value) ? value.map(rustJson)
+    : value && typeof value === "object" ? Object.fromEntries(Object.keys(value).sort().map(key => [key, rustJson(value[key])])) : value;
+  bridgeRequest.mockImplementation(async (method, params) => rustJson(await host(method, params)));
+  await start(); await input("first save");
+  await wrapper.get(".save-action").trigger("click"); await flushPromises();
+  await wrapper.get(".save-action").trigger("click"); await flushPromises();
+  expect(wrapper.text()).not.toContain("validation_failed");
+  await input("edited after saving");
+  await vi.advanceTimersByTimeAsync(500); await flushPromises();
+  expect([...records.values()][0]?.raw.pages[0].content).toBe("edited after saving");
+  const original = bridgeRequest.getMockImplementation();
+  bridgeRequest.mockImplementation(async (method, p) => {
+    if (method === "paper.save") {
+      expect(records.get(p.draft_id)?.revision).toBe(p.revision);
+      expect(records.get(p.draft_id)?.raw.pages[0].content).toBe("edited after saving");
+    }
+    return original(method, p);
+  });
+  await wrapper.get(".save-action").trigger("click"); await flushPromises();
+  expect(calls.filter(([method]) => method === "paper.save")).toHaveLength(3);
+  failPut = true;
+  await wrapper.get(".save-action").trigger("click"); await flushPromises();
+  expect(wrapper.text()).toContain("recovery_unavailable");
+  expect(wrapper.text()).not.toContain("Saved");
+  expect(wrapper.get("textarea").element.value).toBe("edited after saving");
 });
