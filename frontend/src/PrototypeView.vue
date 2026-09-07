@@ -57,6 +57,7 @@ const toast = ref("");
 const selectedPaper = computed(
   () => papers.value.find((paper) => paper.path === selectedPath.value) ?? newPaperTemplate,
 );
+const libraryQuery = ref("");
 const libraryEntries = computed(() =>
   papers.value.map((paper) => ({
     path: paper.path,
@@ -69,7 +70,11 @@ const libraryEntries = computed(() =>
     page_names: paper.pages.map((page) => page.name).filter(Boolean),
     created: paper.created,
     updated: paper.updated,
-  })),
+  })).filter((entry) =>
+    [entry.display_name, entry.code, entry.folder, entry.preview, ...entry.tags, ...entry.page_names]
+      .filter(Boolean).join("\0").toLocaleLowerCase()
+      .includes(libraryQuery.value.trim().toLocaleLowerCase()),
+  ),
 );
 
 function savePaper(editable) {
@@ -163,6 +168,8 @@ function startNewPaper() {
       >
         <LibraryV4Projection
           :entries="libraryEntries"
+          :query="libraryQuery"
+          @search="libraryQuery = $event"
           @open="openPaper"
         />
       </section>

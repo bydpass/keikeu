@@ -2,7 +2,7 @@
 
 > Authority: current coordinates, module entry points, documentation index, and next gate. Product behavior belongs in [SPEC](SPEC.md); rules belong in [RULES](RULES.md).
 
-Updated: 2026-09-07 (Road v0.8 CP5 personal candidates delivered; mandatory device acceptance pending)
+Updated: 2026-09-07 (Road v0.8 CP5 search regression fixed and Mac synthetic UI checked; mandatory device acceptance pending)
 
 ## Current coordinates
 

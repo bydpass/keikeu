@@ -18,29 +18,9 @@ const emit = defineEmits([
 const query = ref(props.query);
 const selectedPath = ref(props.entries[0]?.path ?? null);
 const previewPopoverIdPrefix = `library-preview-popover-${useId()}`;
-const normalizedQuery = computed(() => query.value.trim().toLocaleLowerCase());
-const filteredEntries = computed(() => {
-  if (!normalizedQuery.value) {
-    return props.entries;
-  }
-  return props.entries.filter((entry) =>
-    [
-      entry.display_name,
-      entry.code,
-      entry.folder,
-      entry.preview,
-      ...(entry.tags ?? []),
-      ...(entry.page_names ?? []),
-    ]
-      .filter(Boolean)
-      .join("\0")
-      .toLocaleLowerCase()
-      .includes(normalizedQuery.value),
-  );
-});
 const selected = computed(
-  () => filteredEntries.value.find((entry) => entry.path === selectedPath.value)
-    ?? filteredEntries.value[0]
+  () => props.entries.find((entry) => entry.path === selectedPath.value)
+    ?? props.entries[0]
     ?? null,
 );
 
@@ -100,10 +80,10 @@ function previewPopoverId(entry) {
       <section aria-labelledby="library-results-title">
         <div class="library-count">
           <h3 id="library-results-title">Paper</h3>
-          <span>{{ filteredEntries.length }} / {{ entries.length }}</span>
+          <span>{{ entries.length }} 份 Paper</span>
         </div>
         <ul class="library-v4-list">
-          <li v-for="entry in filteredEntries" :key="entry.path">
+          <li v-for="entry in entries" :key="entry.path">
             <button
               type="button"
               class="library-paper-trigger"
@@ -173,7 +153,7 @@ function previewPopoverId(entry) {
             </aside>
           </li>
         </ul>
-        <p v-if="filteredEntries.length === 0" class="library-empty">没有匹配的 Paper。</p>
+        <p v-if="entries.length === 0" class="library-empty">没有匹配的 Paper。</p>
       </section>
     </div>
 

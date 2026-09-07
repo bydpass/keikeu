@@ -33,15 +33,27 @@ const entries = [
 ];
 
 describe("LibraryV4Projection", () => {
-  it("shows Paper fallback labels, page metadata, and searches every page name", async () => {
+  it("shows Paper labels and metadata, and delegates searches to its owner", async () => {
     const wrapper = mount(LibraryV4Projection, { props: { entries } });
     expect(wrapper.text()).toContain("K-20260802-002");
     expect(wrapper.text()).toContain("2 页");
 
     await wrapper.get('input[type="search"]').setValue("回声");
+    expect(wrapper.emitted("search")).toEqual([["回声"]]);
+    await wrapper.setProps({ entries: [entries[0]] });
     expect(wrapper.findAll(".library-v4-list > li")).toHaveLength(1);
     expect(wrapper.get(".library-v4-list strong").text()).toBe("夜车");
   });
+
+  it.each(["STRASSE", "e\u0301", "仅第二页正文"])(
+    "preserves authoritative full-text matches for %s even without matching preview metadata",
+    async (query) => {
+      const wrapper = mount(LibraryV4Projection, { props: { entries: [entries[0]], query } });
+      expect(wrapper.findAll(".library-v4-list > li")).toHaveLength(1);
+      await wrapper.get(".open-paper").trigger("click");
+      expect(wrapper.emitted("open")[0]).toEqual([entries[0].path]);
+    },
+  );
 
   it("opens the whole selected Paper without a page deep-link", async () => {
     const wrapper = mount(LibraryV4Projection, { props: { entries } });
@@ -56,6 +68,7 @@ describe("LibraryV4Projection", () => {
   it("keeps the detail and open action aligned with a filtered result", async () => {
     const wrapper = mount(LibraryV4Projection, { props: { entries } });
     await wrapper.get('input[type="search"]').setValue("另一条");
+    await wrapper.setProps({ entries: [entries[1]] });
     await wrapper.get(".open-paper").trigger("click");
 
     expect(wrapper.get(".library-preview-popover h3").text()).toBe("K-20260802-002");
@@ -106,6 +119,7 @@ describe("LibraryV4Projection", () => {
 
     expect(wrapper.emitted("search")).toEqual([["暴食"]]);
     expect(input.element.value).toBe("暴食");
+    await wrapper.setProps({ entries: [entries[0]] });
     expect(wrapper.findAll(".library-v4-list > li")).toHaveLength(1);
   });
 
