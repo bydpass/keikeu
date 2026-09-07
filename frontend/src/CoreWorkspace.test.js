@@ -141,3 +141,30 @@ it("protects unchanged and edited snapshots before saving again", async () => {
   expect(wrapper.text()).not.toContain("Saved");
   expect(wrapper.get("textarea").element.value).toBe("edited after saving");
 });
+
+it("blocks departure during a download request and ignores its completion after unmount", async () => {
+  const original = bridgeRequest.getMockImplementation();
+  let completeDownload;
+  bridgeRequest.mockImplementation((method, params) => {
+    if (method === "host.cloud.status") return Promise.resolve({items:[{path:"cache/pending.md",token:"pending",state:"not_downloaded"}]});
+    if (method === "host.conflict.list") return Promise.resolve({copies:[],pending:null});
+    if (method === "host.cloud.download") return new Promise(resolve => { completeDownload = resolve; });
+    return original(method, params);
+  });
+  wrapper = mount(CoreWorkspace, {props:{capabilities:{backend:"rust",storage_kind:"icloud",storage_id:"cloud",generation:1}}});
+  await flushPromises();
+  await wrapper.findAll("button").find(button => button.text() === "Download").trigger("click");
+  await flushPromises();
+  expect(completeDownload).toBeTypeOf("function");
+  await expect(wrapper.vm.confirmDeparture()).resolves.toBe(false);
+  expect(confirmAction).not.toHaveBeenCalled();
+  wrapper.unmount();
+  await start();
+  await input("new local input");
+  const callsBeforeCompletion = bridgeRequest.mock.calls.length;
+  completeDownload({state:"requested"});
+  await flushPromises();
+  expect(bridgeRequest.mock.calls).toHaveLength(callsBeforeCompletion);
+  expect(wrapper.get("textarea").element.value).toBe("new local input");
+  expect(wrapper.text()).not.toContain("Download requested");
+});
