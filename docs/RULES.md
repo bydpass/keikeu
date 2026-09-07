@@ -109,6 +109,8 @@ No feature enters an acceptance or bug-fix Phase by being adjacent, attractive, 
 
 ## 8. Evidence
 
+- In the revised Road v0.8 plan, distinguish an authorized engineering checkpoint from device/provider acceptance. CP3/CP4 engineering checks may qualify the next engineering branch while explicitly listed device checks remain pending for candidate batch B; this never declares those checks passed. CP1 platform feasibility remains an early gate, and CP5 acceptance requires every mandatory device/provider result. Do not repeatedly seek the same approval or block independent work while awaiting a device action.
+
 - A focused test proves only the behavior it exercises.
 - Automated test temporary files stay under the ignored repository path `tests/test-vault/`; tests never select or mutate a real Vault.
 - A synthetic-Vault smoke does not prove a real provider service or real-author workflow.

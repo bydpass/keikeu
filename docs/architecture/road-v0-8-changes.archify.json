@@ -1,0 +1,235 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Road v0.8 · 保留什么，新增什么",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1360,
+      800
+    ]
+  },
+  "components": [
+    {
+      "id": "baseline_ui",
+      "type": "frontend",
+      "label": "当前 · Mac Vue",
+      "sublabel": "保留界面与已验收关闭保护",
+      "pos": [
+        60,
+        100
+      ],
+      "size": [
+        245,
+        84
+      ]
+    },
+    {
+      "id": "baseline_host",
+      "type": "backend",
+      "label": "当前 · Tauri",
+      "sublabel": "进程桥接与系统动作",
+      "pos": [
+        390,
+        100
+      ],
+      "size": [
+        245,
+        84
+      ]
+    },
+    {
+      "id": "baseline_python",
+      "type": "backend",
+      "label": "保留 · Python Core",
+      "sublabel": "Mac 本地完整资料管理",
+      "pos": [
+        720,
+        100
+      ],
+      "size": [
+        245,
+        84
+      ]
+    },
+    {
+      "id": "baseline_vault",
+      "type": "external",
+      "label": "保留 · 本地 Vault",
+      "sublabel": "Paper v4 / Index v4",
+      "pos": [
+        1050,
+        100
+      ],
+      "size": [
+        245,
+        84
+      ]
+    },
+    {
+      "id": "phone_ui",
+      "type": "frontend",
+      "label": "CP3 · iPhone Vue",
+      "sublabel": "新增触屏创作与恢复入口",
+      "pos": [
+        60,
+        360
+      ],
+      "size": [
+        245,
+        84
+      ]
+    },
+    {
+      "id": "paper_core",
+      "type": "backend",
+      "label": "CP2 · Rust Paper Core",
+      "sublabel": "新增解析、保存与搜索",
+      "pos": [
+        390,
+        360
+      ],
+      "size": [
+        245,
+        84
+      ]
+    },
+    {
+      "id": "phone_store",
+      "type": "external",
+      "label": "CP3 · 手机本机存储",
+      "sublabel": "Paper 与独立恢复稿",
+      "pos": [
+        1050,
+        360
+      ],
+      "size": [
+        245,
+        84
+      ]
+    },
+    {
+      "id": "mac_cloud_ui",
+      "type": "frontend",
+      "label": "CP4 · Mac 云端入口",
+      "sublabel": "新增核心创作与版本恢复",
+      "pos": [
+        60,
+        610
+      ],
+      "size": [
+        245,
+        84
+      ]
+    },
+    {
+      "id": "apple_files",
+      "type": "backend",
+      "label": "CP1 / CP4 · Apple 适配",
+      "sublabel": "发现、下载、协调与保全",
+      "pos": [
+        390,
+        610
+      ],
+      "size": [
+        245,
+        84
+      ]
+    },
+    {
+      "id": "shared_cloud",
+      "type": "cloud",
+      "label": "CP4 · iCloud Documents",
+      "sublabel": "Mac / iPhone 共享 Paper",
+      "pos": [
+        1050,
+        610
+      ],
+      "size": [
+        245,
+        84
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "起点 5ff26fe · 已有产品链，本 Road 保留",
+      "wraps": [
+        "baseline_ui",
+        "baseline_host",
+        "baseline_python",
+        "baseline_vault"
+      ],
+      "pad": 22
+    }
+  ],
+  "connections": [
+    {
+      "from": "baseline_ui",
+      "to": "baseline_host"
+    },
+    {
+      "from": "baseline_host",
+      "to": "baseline_python",
+      "label": "JSONL v2"
+    },
+    {
+      "from": "baseline_python",
+      "to": "baseline_vault"
+    },
+    {
+      "from": "phone_ui",
+      "to": "paper_core",
+      "label": "调用"
+    },
+    {
+      "from": "paper_core",
+      "to": "phone_store",
+      "label": "本机读写"
+    },
+    {
+      "from": "paper_core",
+      "to": "apple_files",
+      "label": "云端读写",
+      "labelDy": 70
+    },
+    {
+      "from": "mac_cloud_ui",
+      "to": "paper_core",
+      "label": "共享调用"
+    },
+    {
+      "from": "apple_files",
+      "to": "shared_cloud",
+      "label": "原生文件协调"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "slate",
+      "title": "现在：重新规划",
+      "items": [
+        "基线 5ff26fe；关闭保护保留",
+        "图中 CP1–CP4 均是待建目标"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "施工主线",
+      "items": [
+        "CP0 合同 → CP1 平台 → CP2 核心",
+        "CP3 本机 → CP4 同步 → CP5 候选"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "最终交付",
+      "items": [
+        "同一源码的 Mac / iPhone 测试候选",
+        "桌面 Rust 收口另立项，外部 Alpha 前完成"
+      ]
+    }
+  ]
+}

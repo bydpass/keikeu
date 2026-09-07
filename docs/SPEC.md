@@ -1,4 +1,4 @@
-# keikeu Product Boundary (Road v0.7 accepted; revised v0.8 direction documented, software CP0 seed not approved)
+# keikeu Product Boundary (Road v0.7 accepted; v0.8 replanning from 5ff26fe)
 
 > Authority: §§1–7 define the accepted product, author-asset, and data-safety boundary inherited from Road v0.6; §8 defines shared exclusions and platform scope; §9 records the Road v0.7 App Shell composition accepted at CP6; §10 defines the CP7 continuous-flow override accepted by developer Gate D on 2026-08-25; §11 defines the CP8 responsive-navigation override accepted by developer Gate D on 2026-08-26 and records the developer's Road v0.7 completion judgment; §13 records the documented but unimplemented cross-platform target and does not authorize CP0. Detailed Paper v4 grammar, DTOs, migration, recovery, and protocol remain in the approved [Paper v4 design](design/road-v0-6-paper-v4-design.md); the current interface and acceptance matrix live in the [App Shell design](design/road-v0-7-app-shell-design.md). Current checkpoint and runtime facts live in [PROJECT](PROJECT.md), source, and tests.
 
@@ -100,7 +100,7 @@ No AI generation, prose editor, sync, account, community, database, file watcher
 
 - macOS Apple Silicon is the only Road v0.7 engineering and first-author platform. Intel Mac is unsupported. The historical Phase 7.5 iOS quick-test branch is not part of the accepted runtime or evidence for the new mobile target.
 - The documented sequence is Road v0.8 iPhone core creation plus Mac iCloud synchronization; independent desktop parity and Python product-runtime retirement; Road v0.9 iOS/macOS first external Alpha plus the promotion Gate; Road v0.10 Android plus second Alpha; then a Windows decision from both rounds. Linux and watchOS have no scheduled work.
-- Road v0.8's direction is documented, but its executable CP0 seed is not approved and the Road has not started. The independently implemented [App-root close-guard candidate](acceptance/close-guard-2026-09-04.md) has focused and native-window evidence; on 2026-09-05 the developer manually confirmed protection for all normal exit paths except force quit and passed this independent prerequisite. This is not a v0.8 checkpoint or CP0 seed approval.
+- Road v0.8 is being replanned after the 2026-09-07 rollback to `5ff26fe`; the new iteration has not started. Prior attempt evidence does not establish this iteration's acceptance. The independently implemented [App-root close-guard candidate](acceptance/close-guard-2026-09-04.md) has focused and native-window evidence; on 2026-09-05 the developer manually confirmed protection for all normal exit paths except force quit and passed this independent prerequisite. This is not a v0.8 checkpoint or CP0 seed approval.
 - Signing, notarization, TestFlight, DMG delivery, recruitment, promotion, Android implementation, and Windows implementation remain unperformed.
 - The repository `./dev` TUI, human manuals, and ignored root `CONTEXT.md` are developer workflow tools.
   They are not product surfaces, runtime protocol components, author assets, or acceptance evidence.
@@ -220,7 +220,9 @@ release remain separate and unperformed.
 
 The 2026-09-04 plan refactor retains Vue/Tauri and chooses progressive Rust Core unification.
 [ADR-0009](architecture/decisions/0009-unified-rust-core-transition.md) records the decision and its
-conditional replacement of ADR-0004. Documentation approval proves no mobile build, Apple capability,
+conditional replacement of ADR-0004. The 2026-09-07 rollback to `5ff26fe` restarts planning; the revised
+[plan and change map](../PLAN_road_v0_8.md#0-先看我们正在改什么) distinguish engineering checkpoints from device acceptance.
+Documentation approval proves no mobile build, Apple capability,
 software checkpoint, migration, or Alpha result; current runtime ownership above remains in force.
 
 | Stage / environment | Target backend and boundary |
@@ -255,6 +257,8 @@ software checkpoint, migration, or Alpha result; current runtime ownership above
   draft and reconcile read-only, never replay an unknown write. Preserve and verify every conflict's
   raw bytes before marking it handled, and preserve the displaced current version before promotion.
   Interrupted recovery must not overwrite copies; no automatic merge, deletion or clock-based winner.
+  Same-code creation covers both native version conflicts and provider-renamed sibling files: discover,
+  preserve, export and offer explicit recovery without silently renaming files or rewriting codes.
 - Independent post-candidate convergence must preserve all desktop Index, folder, Trash, migration,
   recovery, device-state and system-action behavior on fixtures/copies. Only parity, safe switching
   and developer acceptance permit removing sidecar, product JSONL calls and Python packaging.
