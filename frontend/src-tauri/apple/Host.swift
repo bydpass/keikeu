@@ -10,7 +10,7 @@ import AppKit
 public func keikeuHostNative(_ input: UnsafePointer<CChar>) -> UnsafeMutablePointer<CChar>? {
     do {
         let request = try JSONSerialization.jsonObject(with: Data(String(cString: input).utf8)) as? [String: String] ?? [:]
-        var result: [String: String]
+        var result: [String: Any]
         switch request["method"] {
         case "locale":
             result = ["locale": Locale.preferredLanguages.first ?? "en"]
@@ -66,7 +66,7 @@ public func keikeuHostNative(_ input: UnsafePointer<CChar>) -> UnsafeMutablePoin
             semaphore.wait()
             result = ["state": outcome]
         default:
-            result = ["state": "unsupported"]
+            result = request["method"]?.hasPrefix("cloud.") == true ? Cloud.request(request) : ["state": "unsupported"]
         }
         let data = try JSONSerialization.data(withJSONObject: result)
         return strdup(String(decoding: data, as: UTF8.self))

@@ -13,21 +13,21 @@ pub fn runtime_status(bridge: State<'_, BridgeHandle>) -> RuntimeStatus {
 pub async fn bridge_request(
     method: String,
     params: Value,
+    app: AppHandle,
     bridge: State<'_, BridgeHandle>,
 ) -> Result<Value, BridgeError> {
-    if method == "host.capabilities" {
-        return Ok(
-            serde_json::json!({"ok":true,"result":{"platform":"macos","backend":"python",
-            "storage_id":"desktop-local","generation":1,"methods":["host.capabilities"]}}),
-        );
+    match crate::host::dispatch(app, method.clone(), params.clone()).await {
+        Ok(crate::host::Dispatch::Native(value)) => Ok(crate::host::envelope(Ok(value))),
+        Ok(crate::host::Dispatch::Python(_lease)) => {
+            let mut params = params;
+            if let Some(params) = params.as_object_mut() {
+                params.remove("storage_id");
+                params.remove("generation");
+            }
+            bridge.request(method, params).await
+        }
+        Err(error) => Ok(crate::host::envelope(Err(error))),
     }
-    if method.starts_with("host.") {
-        return Ok(crate::host::envelope(Err(crate::paper::Error::new(
-            "unsupported_method",
-            "method_unavailable",
-        ))));
-    }
-    bridge.request(method, params).await
 }
 
 #[tauri::command]

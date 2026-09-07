@@ -331,3 +331,9 @@ Archify architecture 的 validate／deliver 为 showcase 9/9，0 错误、0 警�
 - CP1 提交：`69fb2f2`。CP2：[共享 Core 证据](docs/acceptance/road-v0-8/cp2-core.md)记录两端 corpus、文件安全、Unicode 选择、只读对账及本轮检查；提前 YOLO 覆盖工程退出，允许进入 CP3。
 
 - CP2 提交：`50707f5`。CP3：[本机创作证据](docs/acceptance/road-v0-8/cp3-local.md)记录宿主分派、原文保护、双语编辑、系统导出、Scene 启动修复、设备宿主重启恢复与五尺寸检查。提前 YOLO 覆盖工程退出；可进入 CP4，明确保留批次 B 的原生界面与输入缺项。
+
+### CP4 当前执行记录
+
+两端存储路由、云发现／下载、协调读写、冲突原字节保全与明确恢复已实现；
+本轮 Mac → iPhone → Mac 合成内容往返通过。详见 [CP4 证据](docs/acceptance/road-v0-8/cp4-cloud.md)。
+工程检查通过，按提前 YOLO 收口本地 checkpoint 并进入 CP5 候选准备。完整 provider 场景和原生界面仍属于 CP5 批次 B，尚未宣称同步验收通过。

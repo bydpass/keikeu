@@ -9,6 +9,7 @@ const t = (zh, en) => locale.value === "en" ? en : zh;
 const paper = ref(null), rawDraft = ref(null), baseline = ref(undefined);
 const repair = ref(null);
 const state = ref("ready"), error = ref(""), notice = ref("");
+const cloudItems = ref([]), conflictCopies = ref([]), pendingPromotion = ref(null);
 const drafts = ref([]), entries = ref([]), fileErrors = ref([]), query = ref("");
 const busy = ref(false), dirty = ref(false), protectedRevision = ref(0), revision = ref(0);
 const editorKey = ref(0), draftId = ref(null);
@@ -26,10 +27,59 @@ async function request(method, params = {}) {
   return result;
 }
 async function refresh() {
-  const [list, recovery] = await Promise.all([
+  const [list, recovery, cloud, conflicts] = await Promise.allSettled([
     request("library.query", { query: query.value, scope: "active" }), request("host.draft.list"),
+    props.capabilities.storage_kind === "icloud" ? request("host.cloud.status") : Promise.resolve({ items: [] }),
+    props.capabilities.storage_kind === "icloud" ? request("host.conflict.list") : Promise.resolve({ copies: [] }),
   ]);
-  entries.value = list.entries; fileErrors.value = list.errors; drafts.value = recovery.drafts;
+  // Provider failure must not hide the independent local recovery journal.
+  if (recovery.status === "fulfilled") drafts.value = recovery.value.drafts;
+  if (cloud.status === "fulfilled") cloudItems.value = cloud.value.items;
+  if (conflicts.status === "fulfilled") { conflictCopies.value = conflicts.value.copies; pendingPromotion.value = conflicts.value.pending; }
+  if (list.status === "fulfilled") { entries.value = list.value.entries; fileErrors.value = list.value.errors; }
+  else { entries.value = []; fileErrors.value = []; }
+  for (const result of [recovery, conflicts, list, cloud]) if (result.status === "rejected") throw result.reason;
+}
+async function preserveConflicts() {
+  await act(async () => {
+    const result = await request("host.conflict.preserve");
+    conflictCopies.value = result.copies;
+    notice.value = t("冲突原字节已保存在本机恢复区。", "Original conflict bytes are preserved in local recovery.");
+    await refresh();
+  });
+}
+async function reconcilePromotion() {
+  const result = await request("host.conflict.reconcile");
+  notice.value = `${t("恢复结果核对", "Recovery result")}: ${result.state}`;
+  await refresh();
+}
+async function promoteConflict(token) {
+  if (!(await confirmDeparture())) return;
+  await act(async () => {
+    const inspection = await request("host.conflict.inspect", { token });
+    if (!(await confirmAction(t(`先保全当前稿，再将所选原文件恢复到 ${inspection.path}？其他冲突文件会保留。`,
+      `Preserve the current Paper, then restore the selected original file to ${inspection.path}? Other conflict files are retained.`)))) return;
+    try {
+      await request("host.conflict.promote", { inspection: inspection.inspection });
+      await reconcilePromotion();
+    } catch (e) {
+      try { await refresh(); } catch { /* Keep the original operation error and any recovered local records. */ }
+      throw e;
+    }
+  });
+}
+async function exportConflict(token) {
+  await act(async () => {
+    const result = await request("host.conflict.export", { token });
+    notice.value = result.state === "exported" ? t("副本已交给系统", "Copy handed to the system") : t("已取消导出", "Export cancelled");
+  });
+}
+async function download(token) {
+  await act(async () => {
+    await request("host.cloud.download", { token });
+    notice.value = t("已请求下载；请稍后刷新检查。", "Download requested; refresh to check progress.");
+    await refresh();
+  });
 }
 function acceptRaw(value) {
   const next = { code: value.code, display_name: value.display_name, tags_text: value.tags_text,
@@ -180,6 +230,7 @@ onBeforeUnmount(() => { disposed = true; clearTimeout(timer); document.removeEve
   <main class="core-workspace" :lang="locale">
     <header class="core-toolbar">
       <strong>keikeu</strong>
+      <slot name="storage" :locale="locale" />
       <button :disabled="busy || state === 'commit_unknown'" @click="create">{{ t('新 Paper', 'New Paper') }}</button>
       <label><span class="sr-only">{{ t('语言', 'Language') }}</span><select :value="locale" :disabled="busy" @change="setLocale"><option value="zh-CN">中文</option><option value="en">English</option></select></label>
     </header>
@@ -192,6 +243,16 @@ onBeforeUnmount(() => { disposed = true; clearTimeout(timer); document.removeEve
         <button :disabled="busy" @click="exportCopy('draft', item.token)">{{ t('导出', 'Export') }}</button>
         <button :disabled="busy" @click="discard(item)">{{ t('丢弃', 'Discard') }}</button>
       </div>
+    </section>
+    <section v-if="capabilities.storage_kind === 'icloud'" class="core-recovery">
+      <h2>{{ t('冲突与恢复版本', 'Conflicts and recovery versions') }}</h2>
+      <button :disabled="busy" @click="preserveConflicts">{{ t('检查并保全全部冲突版本', 'Check and preserve all conflict versions') }}</button>
+      <button v-if="pendingPromotion" :disabled="busy" @click="act(reconcilePromotion)">{{ t('只读核对恢复结果', 'Check recovery result') }}</button>
+      <p v-for="item in conflictCopies" :key="item.token">
+        {{ item.path }} · {{ item.digest.slice(0, 12) }} · {{ item.valid ? t('可解析', 'Readable Paper') : t('损坏原文件', 'Damaged original file') }}
+        <button :disabled="busy" @click="exportConflict(item.token)">{{ t('导出原字节', 'Export original bytes') }}</button>
+        <button v-if="item.valid" :disabled="busy || !!pendingPromotion" @click="promoteConflict(item.token)">{{ t('恢复为活动稿', 'Restore as active Paper') }}</button>
+      </p>
     </section>
     <section v-if="repair" role="alert">
       <p>{{ repair.path }} · {{ t('文件需要人工修复，原字节保留。', 'This file needs manual repair; its original bytes are retained.') }}</p>
@@ -209,6 +270,13 @@ onBeforeUnmount(() => { disposed = true; clearTimeout(timer); document.removeEve
     </section>
     <section class="core-library">
       <h2>Library</h2>
+      <div v-if="capabilities.storage_kind === 'icloud'">
+        <p>{{ t('iCloud 状态不代表另一台设备已收到文件。', 'iCloud status does not confirm receipt on another device.') }}</p>
+        <p v-for="item in cloudItems" :key="item.path">
+          {{ item.path }} · {{ item.state === 'available' ? (item.uploading ? t('上传中', 'Uploading') : t('本机可读', 'Readable locally')) : t('尚未就绪', 'Not ready') }}
+          <button v-if="item.state === 'not_downloaded'" :disabled="busy" @click="download(item.token)">{{ t('下载', 'Download') }}</button>
+        </p>
+      </div>
       <form @submit.prevent="act(refresh)"><label>{{ t('搜索全部页面', 'Search all pages') }}<input v-model="query" type="search"></label><button :disabled="busy">{{ t('搜索', 'Search') }}</button></form>
       <ul><li v-for="entry in entries" :key="entry.path"><button :disabled="busy" @click="open(entry.path)">{{ entry.display_name || entry.code }}</button><p>{{ entry.preview }}</p></li></ul>
       <p v-for="item in fileErrors" :key="item.path" role="alert"><button :disabled="busy" @click="open(item.path)">{{ item.path }}</button> · {{ t('需要修复', 'Needs repair') }} ({{ item.reason }})</p>
@@ -219,8 +287,8 @@ onBeforeUnmount(() => { disposed = true; clearTimeout(timer); document.removeEve
 .core-workspace { max-width: 960px; margin: auto; padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
 .core-toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 16px; }
 .core-toolbar strong { margin-right: auto; }
-button, input, select { font: inherit; min-height: 44px; }
-button { cursor: pointer; padding: 8px 12px; color: var(--ink); background: var(--paper); border: 1px solid var(--rule); border-radius: var(--radius-xs); }
+button, :slotted(button), input, select { font: inherit; min-height: 44px; }
+button, :slotted(button) { cursor: pointer; padding: 8px 12px; color: var(--ink); background: var(--paper); border: 1px solid var(--rule); border-radius: var(--radius-xs); }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .core-library, .core-recovery { border-top: 1px solid var(--rule); margin-top: 24px; padding-top: 12px; }
 .core-library ul { list-style: none; padding: 0; }

@@ -116,3 +116,16 @@ Rust `paper.reconcile_save` 使用该恢复 `draft_id` 读取宿主保护的完�
 恢复区不可写时，`host.export(source: raw, raw: ...)` 可将当前编辑原文交给系统导出；
 此入口不写正式稿、不清恢复稿，不把未通过 Paper 校验的输入伪装成 Markdown Paper。
 只读核对后，`host.draft.put(settle: true)` 新修订可确认未提交结果；宿主会重新核对，绝不重放保存。
+
+## CP4 实际接口补充
+
+- `host.storage.inspect(kind)` 返回会话 token；`host.storage.select(token)` 成功后返回新 capabilities。
+  选择、语言及恢复身份保存在本机；Mac Python 请求在宿主验证后去除 storage_id／generation 再进入原协议。
+- `host.cloud.status` 返回逐文件不透明 token、path 与原生状态；`host.cloud.download(token)` 只请求下载。
+- `host.conflict.preserve` 发现两类冲突并整批保全，返回副本目录；`host.conflict.list` 在离线时同样可用，
+  返回 copies 和未决恢复 pending；`host.conflict.export(token)` 只向系统交付原字节副本。
+- `host.conflict.inspect(token)` 返回活动稿摘要及 inspection；`host.conflict.promote(inspection)`
+  先保全活动稿，再记录恢复意图并协调 CAS。`host.conflict.reconcile` 只读当前字节，返回
+  committed／not_committed／stale 并结束本次待确认意图；无自动重发。有效副本保留原始字节而非重排格式。
+- 原生版本 token 绑定账号与根目录。保全 journal 增加缺省 conflicts、acknowledged、pending_promotion 字段，
+  CP3 版本 1 可直接读取；全部本机保存并排除云备份。改名 sibling 保持原位置，只有明确恢复后、摘要仍匹配的副本才解除重复 code 阻断。

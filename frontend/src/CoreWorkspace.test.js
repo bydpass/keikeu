@@ -92,3 +92,22 @@ it("flushes on pagehide before the idle timer elapses",async () => {
   await start();await input("background draft");window.dispatchEvent(new Event("pagehide"));await flushPromises();
   expect([...records.values()][0].raw.pages[0].content).toBe("background draft");
 });
+it("keeps local drafts and preserved conflict exports visible while the cloud provider is unavailable", async () => {
+  const original = bridgeRequest.getMockImplementation();
+  records.set("offline-draft", {revision:1});
+  bridgeRequest.mockImplementation(async (method,p) => {
+    if (method === "library.query" || method === "host.cloud.status") throw {code:"icloud_account_unavailable"};
+    if (method === "host.conflict.list") return {copies:[{token:"copy",path:"cache/other.md",digest:"0123456789abcdef",valid:false}]};
+    if (method === "host.conflict.export") return {state:"cancelled"};
+    return original(method,p);
+  });
+  wrapper=mount(CoreWorkspace,{props:{capabilities:{backend:"rust",storage_kind:"icloud",storage_id:"storage",generation:1}}});
+  await flushPromises();
+  expect(wrapper.text()).toContain(paper.code);
+  expect(wrapper.text()).toContain("cache/other.md");
+  expect(wrapper.text()).toContain("icloud_account_unavailable");
+  await wrapper.findAll("button").find(b=>b.text()==="Export original bytes").trigger("click");
+  await flushPromises();
+  expect(bridgeRequest).toHaveBeenCalledWith("host.conflict.export", {token:"copy",storage_id:"storage",generation:1});
+  expect(records.has("offline-draft")).toBe(true);
+});

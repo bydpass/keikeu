@@ -28,6 +28,8 @@ const showPrototype =
   new URLSearchParams(window.location.search).get("prototype") === "1";
 const capabilities = ref(null);
 const hostError = ref(null);
+const storageError = ref("");
+const storageBusy = ref(false);
 const retryHost = () => window.location.reload();
 const hostZh = (navigator.language ?? "").startsWith("zh");
 const coreWorkspace = ref(null);
@@ -124,7 +126,12 @@ async function appRequest(method, params = {}, intent = null) {
     durableRequests += 1;
   }
   try {
-    const result = await bridgeRequest(method, params);
+    const cap = capabilities.value;
+    const scope = cap?.storage_id ? { storage_id: cap.storage_id, generation: cap.generation } : {};
+    const result = await bridgeRequest(method, { ...params, ...scope });
+    if (cap && (capabilities.value?.storage_id !== cap.storage_id || capabilities.value?.generation !== cap.generation)) {
+      throw { code: "stale_session" };
+    }
     if (durable) pendingIntent.value = null;
     return result;
   } catch (error) {
@@ -136,6 +143,7 @@ async function appRequest(method, params = {}, intent = null) {
 }
 
 async function requestWindowClose() {
+  if (storageBusy.value) return false;
   if (capabilities.value?.backend === "rust") return coreWorkspace.value ? coreWorkspace.value.confirmDeparture() : false;
   closeError.value = "";
   if (appUnmounted || durableRequests || restarting.value || shellNavigating.value) return false;
@@ -339,6 +347,36 @@ function showVault() {
   return runShellIntent(() => openVault(null, paperPath.value));
 }
 
+async function switchStorage(locale = null) {
+  const zh = locale ? locale === "zh-CN" : hostZh;
+  if (storageBusy.value || shellBlocked.value || durableRequests || restarting.value) return;
+  storageBusy.value = true; storageError.value = "";
+  const cap = capabilities.value;
+  const kind = cap.storage_kind === "icloud" ? "local" : "icloud";
+  try {
+    const editor = cap.backend === "rust" ? coreWorkspace.value : paperView.value;
+    if (editor && !(await editor.confirmDeparture())) return;
+    if (pendingIntent.value || durableRequests || shellNavigating.value) return;
+    const scope = { storage_id: cap.storage_id, generation: cap.generation };
+    const inspection = await bridgeRequest("host.storage.inspect", { ...scope, kind });
+    const description = kind === "icloud"
+      ? (zh ? "打开 iCloud 中的 keikeu 工作区？首次使用会创建工作区。本机稿件不会自动搬入。" : "Open the keikeu workspace in iCloud? First use creates the workspace. Local Papers stay in local storage.")
+      : (zh ? "返回本机存储？云端稿件与本机恢复记录会保留。" : "Return to local storage? Cloud Papers and local recovery records are retained.");
+    if (!(await confirmAction(description))) return;
+    if (capabilities.value !== cap || pendingIntent.value || durableRequests || shellNavigating.value) return;
+    // Recheck the editor after the system dialog, including changes typed while it was open.
+    if (editor && !(await editor.confirmDeparture())) return;
+    const selected = await bridgeRequest("host.storage.select", { ...scope, token: inspection.token });
+    window.clearTimeout(refreshTimer);
+    capabilities.value = selected;
+    paperPath.value = null; paperStartup.value = null; vaultStartup.value = null;
+    destination.value = "paper"; paperRenderGeneration.value += 1; libraryContextGeneration.value += 1;
+    if (selected.backend === "rust") status.value = { state: "ready" };
+    else await refreshStatus();
+  } catch (e) { storageError.value = `${zh ? "切换未完成" : "Switch incomplete"}: ${e?.code ?? "operation_failed"}`; }
+  finally { storageBusy.value = false; }
+}
+
 onMounted(async () => {
   if (!showPrototype && await installCloseGuard()) {
     try {
@@ -367,11 +405,18 @@ onUnmounted(() => {
     </section>
   </main>
 
-  <CoreWorkspace v-else-if="capabilities?.backend === 'rust'" ref="coreWorkspace" :capabilities="capabilities" />
+  <CoreWorkspace v-else-if="capabilities?.backend === 'rust'" :key="`${capabilities.storage_id}:${capabilities.generation}`" ref="coreWorkspace" :capabilities="capabilities" :inert="storageBusy">
+    <template #storage="{ locale }">
+      <button :disabled="storageBusy || shellBlocked" @click="switchStorage(locale)">{{ capabilities.storage_kind === 'icloud' ? (locale === 'zh-CN' ? '切换到本机' : 'Use local storage') : (locale === 'zh-CN' ? '选择 iCloud' : 'Choose iCloud') }}</button>
+      <span v-if="storageError" role="alert">{{ storageError }}</span>
+    </template>
+  </CoreWorkspace>
 
-  <div v-else-if="status.state === 'ready'" class="app-shell">
+  <div v-else-if="status.state === 'ready'" class="app-shell" :inert="storageBusy">
     <header class="app-shellbar">
       <strong class="app-shell-brand">keikeu</strong>
+      <button v-if="capabilities?.methods?.includes('host.storage.select')" :disabled="storageBusy || shellBlocked" @click="switchStorage()">选择 iCloud</button>
+      <span v-if="storageError" role="alert">{{ storageError }}</span>
       <nav class="app-shell-daily" aria-label="日常位置">
         <button
           type="button"

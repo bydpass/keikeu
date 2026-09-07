@@ -55,6 +55,31 @@ pub fn run() {
                     }
                 });
             }
+            let initialized = (|| -> paper::Result<host::router::Router> {
+                let support = app.path().app_data_dir().map_err(|_| {
+                    paper::Error::new("host_unavailable", "app_directory_unavailable")
+                })?;
+                let locale = host::apple::call(serde_json::json!({"method":"locale"}))?;
+                host::router::Router::open(
+                    &support,
+                    None,
+                    locale["locale"].as_str().unwrap_or("en"),
+                )
+            })();
+            #[cfg(debug_assertions)]
+            if let Ok(support) = app.path().app_data_dir() {
+                host::smoke::cloud_run(&support);
+            }
+            #[cfg(debug_assertions)]
+            let initialized = if std::env::args().any(|arg| arg == "--keikeu-cloud-smoke") {
+                Err(paper::Error::new(
+                    "host_unavailable",
+                    "synthetic_smoke_only",
+                ))
+            } else {
+                initialized
+            };
+            app.manage(host::Host(std::sync::Mutex::new(initialized)));
             app.manage(BridgeHandle::start(app.handle().clone()));
             Ok(())
         })
@@ -102,34 +127,13 @@ async fn bridge_request(
     params: serde_json::Value,
     app: tauri::AppHandle,
 ) -> serde_json::Value {
-    tauri::async_runtime::spawn_blocking(move || {
-        let state = app.state::<host::Host>();
-        let result = match state.0.lock() {
-            Ok(mut session) => match session.as_mut() {
-                Ok(s) => s.request(&method, params),
-                Err(e) => Err(e.clone()),
-            },
-            Err(_) => Err(paper::Error::new("host_unavailable", "restart_to_recover")),
-        };
-        // Release the storage queue before showing a system panel; background draft writes can proceed.
-        let result = result.and_then(|v| match v.get("native_export") {
-            Some(request) => {
-                let result = host::apple::call(request.clone())?;
-                if !matches!(result["state"].as_str(), Some("exported" | "cancelled")) {
-                    return Err(paper::Error::new("export_failed", "system_export_failed"));
-                }
-                Ok(result)
-            }
-            None => Ok(v),
-        });
-        host::envelope(result)
-    })
-    .await
-    .unwrap_or_else(|_| {
-        host::envelope(Err(paper::Error::new(
-            "commit_unknown",
-            "worker_result_unknown",
-        )))
+    host::envelope(match host::dispatch(app, method, params).await {
+        Ok(host::Dispatch::Native(value)) => Ok(value),
+        Ok(host::Dispatch::Python(_)) => Err(paper::Error::new(
+            "unsupported_method",
+            "method_unavailable",
+        )),
+        Err(error) => Err(error),
     })
 }
 
@@ -139,7 +143,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
-            let initialized = (|| -> paper::Result<host::Session> {
+            let initialized = (|| -> paper::Result<host::router::Router> {
                 let support = app.path().app_data_dir().map_err(|_| {
                     paper::Error::new("host_unavailable", "app_directory_unavailable")
                 })?;
@@ -152,8 +156,25 @@ pub fn run() {
                     &private,
                     locale["locale"].as_str().unwrap_or("en"),
                 )?;
-                Ok(session)
+                host::router::Router::open(
+                    &support,
+                    Some(session),
+                    locale["locale"].as_str().unwrap_or("en"),
+                )
             })();
+            #[cfg(debug_assertions)]
+            if let Ok(support) = app.path().app_data_dir() {
+                host::smoke::cloud_run(&support);
+            }
+            #[cfg(debug_assertions)]
+            let initialized = if std::env::args().any(|arg| arg == "--keikeu-cloud-smoke") {
+                Err(paper::Error::new(
+                    "host_unavailable",
+                    "synthetic_smoke_only",
+                ))
+            } else {
+                initialized
+            };
             app.manage(host::Host(std::sync::Mutex::new(initialized)));
             Ok(())
         })

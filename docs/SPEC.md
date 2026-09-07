@@ -19,7 +19,7 @@ The author leaves keikeu with the Paper itself. There is no separate Flashcard p
 - keikeu must not silently rewrite, normalize, delete, overwrite, upload, merge, score, or train on author text.
 - 完整文件夹树只有在界面明确说明“全部内容”并获得确认后才能移入废纸篓；不可恢复的整树销毁还需要废纸篓中的第二次明确确认。
 - The author chooses the Vault and external prose editor.
-- The current accepted runtime has no account, cloud backend, telemetry, hidden remote service, or keikeu-managed background sync. The future opt-in iCloud Documents target is bounded by §13 and is not a current capability.
+- The current accepted runtime has no account, cloud backend, telemetry, hidden remote service, or keikeu-managed background sync. The opt-in iCloud Documents candidate is bounded by §13 and is not yet part of the accepted baseline.
 - Damaged Paper Markdown is reported, not silently repaired or partially opened as an editable Paper.
 
 ## 3. Current runtime and accepted composition
@@ -89,7 +89,7 @@ The exact Markdown v4 shape, frontmatter scalar codec, page markers, reversible 
 ## 7. Architecture boundaries
 
 - Vue owns visible state, draft/baseline, active page, and App-root pending intent; it never reads or writes author files.
-- In the current desktop runtime, Rust owns lifecycle, one Python sidecar, the JSONL queue, native directory selection/confirmation, and validated system actions; it never parses Markdown or implements product rules.
+- In the accepted desktop-local runtime, Rust owns lifecycle, one Python sidecar, the JSONL queue, native directory selection/confirmation, and validated system actions; it never parses Markdown or implements product rules.
 - The transport-agnostic Python service owns orchestration and strict DTOs. `keikeu_core` owns domain validation and file rules without GUI or transport imports.
 - In the current desktop runtime, `markdown_io.py` exclusively owns Paper Markdown. In that same runtime, `vault.py` owns Home containment, supported Paper paths, active/Trash enumeration, code allocation, and destructive moves on those paths; migration modules separately own gated backup/staging/replacement. The v0.8 Rust path may receive bounded mobile/shared-iCloud ownership after its contract and golden Gates pass; desktop ownership changes only in the separate post-candidate convergence under §13. Index data is local and rebuildable.
 - The current accepted runtime has no localhost, HTTP, WebSocket, account, telemetry, upload, hidden service, or automatic mutation replay.
@@ -223,7 +223,7 @@ The 2026-09-04 plan refactor retains Vue/Tauri and chooses progressive Rust Core
 conditional replacement of ADR-0004. The 2026-09-07 rollback to `5ff26fe` restarted planning, followed by explicit CP0–CP5 engineering authorization; the revised
 [plan and change map](../PLAN_road_v0_8.md#0-先看我们正在改什么) distinguish engineering checkpoints from device acceptance.
 Documentation approval proves no mobile build, Apple capability,
-software checkpoint, migration, or Alpha result. Current implementation: [CP2](acceptance/road-v0-8/cp2-core.md) provides the shared Rust Paper Core; [CP3](acceptance/road-v0-8/cp3-local.md) integrates the iPhone local candidate with raw draft recovery and native export. Desktop-local ownership remains unchanged; cloud implementation and mandatory candidate device acceptance remain pending.
+software checkpoint, migration, or Alpha result. Current implementation: [CP2](acceptance/road-v0-8/cp2-core.md) provides the shared Rust Paper Core; [CP3](acceptance/road-v0-8/cp3-local.md) integrates the iPhone local candidate with raw draft recovery and native export. [CP4](acceptance/road-v0-8/cp4-cloud.md) implements explicit cloud routing, native file coordination and conflict preservation/recovery; the current candidate completed an online Mac–iPhone–Mac content round trip. Desktop-local ownership remains unchanged. CP4 engineering checks passed under advance YOLO; mandatory candidate device/provider acceptance remains pending.
 
 | Stage / environment | Target backend and boundary |
 | --- | --- |

@@ -23,6 +23,9 @@ impl Snapshot {
 
 pub struct Vault {
     home: File,
+    anchor_path: PathBuf,
+    coordinated_paths: Option<Vec<String>>,
+    acknowledged: std::collections::HashMap<String, String>,
     relative: PathBuf,
     root: File,
 }
@@ -67,6 +70,15 @@ pub(crate) fn open_at(dir: &File, name: &str, flags: i32) -> Result<File> {
         return Err(std::io::Error::last_os_error().into());
     }
     Ok(unsafe { File::from_raw_fd(fd) })
+}
+
+fn mkdir_at(parent: &File, name: &str) -> Result<()> {
+    let name = cstring(name)?;
+    if unsafe { libc::mkdirat(parent.as_raw_fd(), name.as_ptr(), 0o700) } != 0 {
+        return Err(std::io::Error::last_os_error().into());
+    }
+    parent.sync_all()?;
+    Ok(())
 }
 
 pub(crate) fn directory_at(dir: &File, path: &Path) -> Result<File> {
@@ -306,17 +318,91 @@ impl Vault {
         let home = fs::OpenOptions::new()
             .read(true)
             .custom_flags(libc::O_DIRECTORY | libc::O_NOFOLLOW)
-            .open(canonical_home)?;
+            .open(&canonical_home)?;
         let directory = directory_at(&home, relative)?;
         directory_at(&directory, Path::new("cache"))?;
         Ok(Self {
             home,
+            anchor_path: canonical_home,
+            coordinated_paths: None,
+            acknowledged: Default::default(),
             relative: relative.into(),
             root: directory,
         })
     }
 
+    /// The host alone supplies an Apple-returned container; never pass a frontend path here.
+    /// Initialization is called only inside native coordination after explicit cloud selection.
+    pub(crate) fn open_apple_container(
+        container: &Path,
+        relative: &Path,
+        initialize: bool,
+    ) -> Result<Self> {
+        let raw = relative.to_str().ok_or_else(invalid)?;
+        let parts: Vec<_> = raw.split('/').collect();
+        if parts.len() != 2
+            || parts[0] != "Documents"
+            || parts[1].is_empty()
+            || parts[1].starts_with('.')
+            || parts[1].contains(':')
+        {
+            return Err(invalid());
+        }
+        let anchor_path = container.canonicalize()?;
+        let home = fs::OpenOptions::new()
+            .read(true)
+            .custom_flags(libc::O_DIRECTORY | libc::O_NOFOLLOW)
+            .open(&anchor_path)?;
+        if initialize && !entry_exists(&home, "Documents")? {
+            mkdir_at(&home, "Documents")?;
+        }
+        let documents = directory_at(&home, Path::new("Documents"))?;
+        if initialize && !entry_exists(&documents, parts[1])? {
+            let temporary = format!(".keikeu-init-{}", uuid::Uuid::new_v4());
+            mkdir_at(&documents, &temporary)?;
+            let root = directory_at(&documents, Path::new(&temporary))?;
+            mkdir_at(&root, "cache")?;
+            root.sync_all()?;
+            rename(&documents, &temporary, parts[1], true)?;
+            documents.sync_all()?;
+        }
+        // Never add cache to an unknown pre-existing directory.
+        let root = directory_at(&home, relative)?;
+        directory_at(&root, Path::new("cache"))?;
+        let result = Self {
+            home,
+            anchor_path,
+            relative: relative.into(),
+            root,
+            coordinated_paths: Some(vec![]),
+            acknowledged: Default::default(),
+        };
+        result.guard(Path::new(""), &result.root)?;
+        Ok(result)
+    }
+
+    pub(crate) fn set_coordinated_paths(&mut self, mut paths: Vec<String>) -> Result<()> {
+        if self.coordinated_paths.is_none() {
+            return Err(invalid());
+        }
+        for path in &paths {
+            supported(path)?;
+        }
+        paths.sort();
+        paths.dedup();
+        self.coordinated_paths = Some(paths);
+        Ok(())
+    }
+
     fn guard(&self, parent_path: &Path, parent: &File) -> Result<()> {
+        let anchor = fs::OpenOptions::new()
+            .read(true)
+            .custom_flags(libc::O_DIRECTORY | libc::O_NOFOLLOW)
+            .open(&self.anchor_path)
+            .map_err(|_| stale())?;
+        if identity(&anchor.metadata()?) != identity(&self.home.metadata()?) {
+            return Err(stale());
+        }
         let root = directory_at(&self.home, &self.relative).map_err(|_| stale())?;
         if identity(&root.metadata()?) != identity(&self.root.metadata()?) {
             return Err(stale());
@@ -328,8 +414,32 @@ impl Vault {
         Ok(())
     }
 
+    fn require_coordinated(&self, path: &str) -> Result<()> {
+        if self
+            .coordinated_paths
+            .as_ref()
+            .is_some_and(|paths| !paths.iter().any(|p| p == path))
+        {
+            return Err(Error::new("not_downloaded", "native_discovery_required"));
+        }
+        Ok(())
+    }
+
+    pub(crate) fn read_raw_optional(&self, path: &str) -> Result<Option<Vec<u8>>> {
+        self.require_coordinated(path)?;
+        let (relative, name) = supported(path)?;
+        let parent = directory_at(&self.root, &relative)?;
+        self.guard(&relative, &parent)?;
+        if entry_exists(&parent, name)? {
+            self.read_raw(path).map(Some)
+        } else {
+            Ok(None)
+        }
+    }
+
     /// Read a bounded active-area file verbatim for an explicit repair export.
     pub fn read_raw(&self, path: &str) -> Result<Vec<u8>> {
+        self.require_coordinated(path)?;
         let (relative, name) = supported(path)?;
         let parent = directory_at(&self.root, &relative)?;
         self.guard(&relative, &parent)?;
@@ -339,6 +449,7 @@ impl Vault {
     }
 
     pub fn read(&self, path: &str) -> Result<Snapshot> {
+        self.require_coordinated(path)?;
         let (relative, name) = supported(path)?;
         let parent = directory_at(&self.root, &relative)?;
         self.guard(&relative, &parent)?;
@@ -360,21 +471,34 @@ impl Vault {
     pub fn list(&self) -> Result<(Vec<Snapshot>, Vec<(String, Error)>)> {
         let root = directory_at(&self.root, Path::new("cache"))?;
         self.guard(Path::new("cache"), &root)?;
-        let mut paths = Vec::new();
         let mut errors = Vec::new();
-        for name in names(&root)? {
-            if name.ends_with(".md") {
-                paths.push(format!("cache/{name}"));
-            } else if let Ok(folder) = directory_at(&root, Path::new(&name)) {
-                for child in names(&folder)? {
-                    if child.ends_with(".md") {
-                        paths.push(format!("cache/{name}/{child}"));
+        let paths = if let Some(paths) = &self.coordinated_paths {
+            paths.clone()
+        } else {
+            let mut paths = Vec::new();
+            for name in names(&root)? {
+                if name.ends_with(".md") {
+                    paths.push(format!("cache/{name}"));
+                } else if let Ok(folder) = directory_at(&root, Path::new(&name)) {
+                    for child in names(&folder)? {
+                        if child.ends_with(".md") {
+                            paths.push(format!("cache/{name}/{child}"));
+                        }
                     }
                 }
             }
-        }
+            paths
+        };
         let mut papers = Vec::new();
         for path in paths {
+            if self.coordinated_paths.is_some() {
+                let (relative, name) = supported(&path)?;
+                let parent = directory_at(&self.root, &relative)?;
+                self.guard(&relative, &parent)?;
+                if !entry_exists(&parent, name)? {
+                    continue;
+                }
+            }
             match self.read(&path) {
                 Ok(p) => papers.push(p),
                 Err(e) => errors.push((path, e)),
@@ -414,39 +538,103 @@ impl Vault {
         ))
     }
 
+    pub(crate) fn acknowledge_preserved(
+        &mut self,
+        copies: std::collections::HashMap<String, String>,
+    ) {
+        self.acknowledged = copies;
+    }
     fn unique(&self, code: &str, excluding: Option<&str>) -> Result<()> {
+        if let Some(enlisted) = &self.coordinated_paths {
+            // A file appearing after discovery must be enlisted in a new native batch before reading.
+            let cache = directory_at(&self.root, Path::new("cache"))?;
+            for name in names(&cache)? {
+                let paths = if name.ends_with(".md") {
+                    vec![format!("cache/{name}")]
+                } else if let Ok(folder) = directory_at(&cache, Path::new(&name)) {
+                    names(&folder)?
+                        .into_iter()
+                        .filter(|n| n.ends_with(".md"))
+                        .map(|n| format!("cache/{name}/{n}"))
+                        .collect()
+                } else {
+                    vec![]
+                };
+                if paths.iter().any(|path| !enlisted.contains(path)) {
+                    return Err(Error::new("stale_snapshot", "rediscover_new_cloud_items"));
+                }
+            }
+            self.guard(Path::new("cache"), &cache)?;
+        }
         let (papers, errors) = self.list()?;
         let key = comparison_key(code);
-        if papers
+        let paths = papers
             .iter()
-            .any(|p| Some(p.path.as_str()) != excluding && comparison_key(&p.paper.code) == key)
-            || errors.iter().any(|(path, _)| {
-                Some(path.as_str()) != excluding
-                    && Path::new(path)
-                        .file_stem()
-                        .and_then(|s| s.to_str())
-                        .is_some_and(|s| comparison_key(s) == key)
-            })
-        {
-            return Err(Error::new("duplicate_code", "paper_code_already_present"));
-        }
-        // A provider-renamed sibling may have valid bytes but a mismatched filename.
-        // Inspect those already-listed bytes too; do not infer identity from filenames alone.
-        for (path, _) in errors {
+            .map(|s| &s.path)
+            .chain(errors.iter().map(|(path, _)| path));
+        for path in paths {
             if Some(path.as_str()) == excluding {
                 continue;
             }
-            let (relative, name) = supported(&path)?;
-            let parent = directory_at(&self.root, &relative)?;
-            let (bytes, _) = read_at(&parent, name)?;
-            if parse(&bytes).is_ok_and(|p| comparison_key(&p.code) == key) {
+            let bytes = self.read_raw(path)?;
+            if self
+                .acknowledged
+                .get(path)
+                .is_some_and(|digest| *digest != format!("{:x}", Sha256::digest(&bytes)))
+            {
+                return Err(Error::new("conflict_required", "preserved_sibling_changed"));
+            }
+            let same_code = parse(&bytes).is_ok_and(|p| comparison_key(&p.code) == key)
+                || Path::new(path)
+                    .file_stem()
+                    .and_then(|s| s.to_str())
+                    .is_some_and(|s| comparison_key(s) == key);
+            if same_code
+                && self.acknowledged.get(path) != Some(&format!("{:x}", Sha256::digest(&bytes)))
+            {
                 return Err(Error::new("duplicate_code", "provider_sibling_preserved"));
             }
         }
         Ok(())
     }
 
+    /// Explicit raw recovery only: the host has durably preserved the active bytes and this copy.
+    pub(crate) fn promote_raw(
+        &self,
+        path: &str,
+        proposed: &[u8],
+        expected_digest: Option<&str>,
+    ) -> Result<Snapshot> {
+        self.require_coordinated(path)?;
+        let paper = parse(proposed)?;
+        let (relative, name) = supported(path)?;
+        if name != format!("{}.md", paper.code) {
+            return Err(invalid());
+        }
+        let parent = directory_at(&self.root, &relative)?;
+        self.guard(&relative, &parent)?;
+        let expected = if entry_exists(&parent, name)? {
+            let value = read_at(&parent, name)?;
+            if expected_digest != Some(format!("{:x}", Sha256::digest(&value.0)).as_str()) {
+                return Err(stale());
+            }
+            Some(value)
+        } else {
+            if expected_digest.is_some() {
+                return Err(stale());
+            }
+            None
+        };
+        self.publish(
+            path,
+            proposed.to_vec(),
+            expected.as_ref().map(|(bytes, id)| (bytes.as_slice(), *id)),
+            || {},
+        )
+    }
+
     pub fn save(&self, path: &str, paper: &Paper, expected: Option<&Snapshot>) -> Result<Snapshot> {
+        self.require_coordinated(path)?;
         self.save_before_publish(path, paper, expected, || {})
     }
 
@@ -459,7 +647,7 @@ impl Vault {
     ) -> Result<Snapshot> {
         let proposed = render(paper)?;
         parse(&proposed)?; // Never publish bytes that our strict reader cannot reopen.
-        let (relative, name) = supported(path)?;
+        let (_, name) = supported(path)?;
         if name != format!("{}.md", paper.code)
             || expected.is_some_and(|s| {
                 s.path != path || s.paper.code != paper.code || s.paper.created != paper.created
@@ -467,12 +655,29 @@ impl Vault {
         {
             return Err(invalid());
         }
+        self.publish(
+            path,
+            proposed,
+            expected.map(|s| (s.bytes.as_slice(), s.identity)),
+            before_publish,
+        )
+    }
+
+    fn publish(
+        &self,
+        path: &str,
+        proposed: Vec<u8>,
+        expected: Option<(&[u8], (u64, u64))>,
+        before_publish: impl FnOnce(),
+    ) -> Result<Snapshot> {
+        let paper = parse(&proposed)?;
+        let (relative, name) = supported(path)?;
         let parent = directory_at(&self.root, &relative)?;
         self.guard(&relative, &parent)?;
         self.unique(&paper.code, expected.map(|_| path))?;
         if let Some(old) = expected {
             let (bytes, id) = read_at(&parent, name)?;
-            if bytes != old.bytes || id != old.identity {
+            if bytes != old.0 || id != old.1 {
                 return Err(stale());
             }
         } else if entry_exists(&parent, name)? {
@@ -505,7 +710,7 @@ impl Vault {
             let displaced = read_at(&parent, &temporary);
             let verified = displaced
                 .as_ref()
-                .is_ok_and(|(bytes, id)| *bytes == old.bytes && *id == old.identity)
+                .is_ok_and(|(bytes, id)| *bytes == old.0 && *id == old.1)
                 && self.guard(&relative, &parent).is_ok();
             if !verified {
                 let (previous_bytes, previous_id) = displaced.map_err(|_| unknown())?;
@@ -521,7 +726,7 @@ impl Vault {
                 unlink_owned(&parent, &temporary, &proposed, proposed_id)?;
                 return Err(stale());
             }
-            unlink_owned(&parent, &temporary, &old.bytes, old.identity)?;
+            unlink_owned(&parent, &temporary, old.0, old.1)?;
         }
         // A post-publication failure must not invite replay, even if bytes appear committed.
         parent.sync_all().map_err(|_| unknown())?;
@@ -540,6 +745,71 @@ impl Vault {
 mod tests {
     use super::*;
     use std::os::unix::fs::symlink;
+
+    #[test]
+    fn apple_anchor_and_enlisted_paths_reject_escape_and_replacement() {
+        let base = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../tests/test-vault")
+            .canonicalize()
+            .unwrap()
+            .join(format!("apple-anchor-{}", uuid::Uuid::new_v4()));
+        fs::create_dir_all(base.join("container")).unwrap();
+        let container = base.join("container");
+        assert!(
+            Vault::open_apple_container(&container, Path::new("Documents/../escape"), true)
+                .is_err()
+        );
+        let mut vault =
+            Vault::open_apple_container(&container, Path::new("Documents/keikeu"), true).unwrap();
+        let corpus: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../../tests/fixtures/paper-v4-golden.json"
+        ))
+        .unwrap();
+        let paper: Paper = serde_json::from_value(corpus["cases"][0]["paper"].clone()).unwrap();
+        let path = format!("cache/{}.md", paper.code);
+        assert_eq!(
+            vault.save(&path, &paper, None).unwrap_err().code,
+            "not_downloaded"
+        );
+        vault.set_coordinated_paths(vec![path.clone()]).unwrap();
+        vault.save(&path, &paper, None).unwrap();
+        assert_eq!(vault.list().unwrap().0.len(), 1);
+        let snapshot = vault.read(&path).unwrap();
+        fs::write(
+            container.join("Documents/keikeu/cache/newly-arrived.md"),
+            b"unlisted bytes",
+        )
+        .unwrap();
+        assert_eq!(
+            vault
+                .save(&path, &paper, Some(&snapshot))
+                .unwrap_err()
+                .reason,
+            "rediscover_new_cloud_items"
+        );
+        assert_eq!(vault.read(&path).unwrap().bytes, snapshot.bytes);
+        let unknown = container.join("Documents/unknown");
+        fs::create_dir(&unknown).unwrap();
+        assert!(
+            Vault::open_apple_container(&container, Path::new("Documents/unknown"), true).is_err()
+        );
+        assert!(!unknown.join("cache").exists());
+        symlink(
+            base.join("outside"),
+            container.join("Documents/keikeu/cache/link.md"),
+        )
+        .unwrap();
+        vault
+            .set_coordinated_paths(vec!["cache/link.md".into()])
+            .unwrap();
+        assert!(vault.read_raw("cache/link.md").is_err());
+        assert!(vault
+            .set_coordinated_paths(vec!["cache/../../escape.md".into()])
+            .is_err());
+        fs::rename(&container, base.join("held-container")).unwrap();
+        fs::create_dir_all(container.join("Documents/keikeu/cache")).unwrap();
+        assert_eq!(vault.list().unwrap_err().code, "stale_snapshot");
+    }
 
     #[test]
     fn save_reopen_search_cas_and_escape() {

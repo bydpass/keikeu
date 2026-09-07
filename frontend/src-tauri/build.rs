@@ -42,6 +42,8 @@ fn main() {
                 "-sdk",
                 String::from_utf8(sdk_path.stdout).unwrap().trim(),
                 "apple/Host.swift",
+                "apple/Cloud.swift",
+                "apple/AppleFiles.swift",
                 "-o",
                 &format!("{out}/libKeikeuNative.a"),
             ])
@@ -49,6 +51,9 @@ fn main() {
             .unwrap();
         assert!(status.success(), "Apple host compilation failed");
         println!("cargo:rerun-if-changed=apple/Host.swift");
+        println!("cargo:rerun-if-changed=apple/Cloud.swift");
+        println!("cargo:rerun-if-changed=apple/AppleFiles.swift");
+        println!("cargo:rustc-link-lib=framework=CryptoKit");
         let swift = std::process::Command::new("xcrun")
             .args(["--find", "swiftc"])
             .output()

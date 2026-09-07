@@ -638,3 +638,42 @@ describe("Road v0.7 desktop shell", () => {
     await flushPromises();
   });
 });
+
+describe("CP4 explicit storage selection", () => {
+  const local = { backend: "python", storage_kind: "local", storage_id: "local-test", generation: 1,
+    methods: ["host.storage.select"] };
+  it("retains the mounted local editor after a failed cloud selection", async () => {
+    let finishInspection;
+    const inspection = new Promise(resolve => { finishInspection = resolve; });
+    bridgeRequest.mockImplementation((method, params) => {
+      if (method === "host.capabilities") return local;
+      if (method === "host.storage.inspect") return inspection;
+      if (method === "host.storage.select") throw { code: "icloud_account_changed" };
+      return defaultBridge(method, params);
+    });
+    confirmAction.mockResolvedValue(true);
+    const wrapper = await mountApp();
+    const editor = wrapper.findComponent({ name: "PaperView" }).element;
+    await buttonByText(wrapper, "选择 iCloud").trigger("click");
+    await flushPromises();
+    await expect(registerWindowCloseGuard.mock.calls[0][0]()).resolves.toBe(false);
+    finishInspection({ token: "inspection" });
+    await flushPromises();
+    expect(wrapper.text()).toContain("icloud_account_changed");
+    expect(wrapper.findComponent({ name: "PaperView" }).element).toBe(editor);
+    expect(bridgeRequest).toHaveBeenCalledWith("host.storage.select", {
+      storage_id: "local-test", generation: 1, token: "inspection",
+    });
+  });
+  it("does not select or create cloud storage when the system confirmation is cancelled", async () => {
+    bridgeRequest.mockImplementation((method, params) => {
+      if (method === "host.capabilities") return local;
+      if (method === "host.storage.inspect") return { token: "inspection" };
+      return defaultBridge(method, params);
+    });
+    const wrapper = await mountApp();
+    await buttonByText(wrapper, "选择 iCloud").trigger("click");
+    await flushPromises();
+    expect(bridgeRequest.mock.calls.some(([method]) => method === "host.storage.select")).toBe(false);
+  });
+});

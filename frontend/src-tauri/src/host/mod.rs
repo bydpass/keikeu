@@ -1,6 +1,8 @@
 pub mod apple;
+mod conflicts;
 mod private;
-#[cfg(all(target_os = "ios", debug_assertions))]
+pub mod router;
+#[cfg(debug_assertions)]
 pub mod smoke;
 use crate::paper::{self, Error, Page, Paper, Reconcile, Result, Snapshot, Vault};
 use private::Private;
@@ -26,7 +28,60 @@ const METHODS: &[&str] = &[
     "host.locale.set",
 ];
 
-pub struct Host(pub Mutex<Result<Session>>);
+pub struct Host(pub Mutex<Result<router::Router>>);
+
+// The lease travels with the blocking result, so cancellation also releases the switch guard.
+pub struct PythonLease(tauri::AppHandle);
+impl Drop for PythonLease {
+    fn drop(&mut self) {
+        use tauri::Manager;
+        let state = self.0.state::<Host>();
+        if let Ok(mut router) = state.0.lock() {
+            if let Ok(router) = router.as_mut() {
+                router.python_requests = router.python_requests.saturating_sub(1);
+            }
+        };
+    }
+}
+pub enum Dispatch {
+    Native(Value),
+    Python(PythonLease),
+}
+pub async fn dispatch(app: tauri::AppHandle, method: String, params: Value) -> Result<Dispatch> {
+    use tauri::Manager;
+    tauri::async_runtime::spawn_blocking(move || {
+        let state = app.state::<Host>();
+        let result = {
+            let mut state = state
+                .0
+                .lock()
+                .map_err(|_| Error::new("host_unavailable", "restart_to_recover"))?;
+            state
+                .as_mut()
+                .map_err(|e| e.clone())?
+                .request(&method, params)?
+        };
+        match result {
+            None => Ok(Dispatch::Python(PythonLease(app.clone()))),
+            Some(value) => {
+                // System panels must not hold the storage queue needed by background drafts.
+                let value = match value.get("native_export") {
+                    Some(request) => {
+                        let result = apple::call(request.clone())?;
+                        if !matches!(result["state"].as_str(), Some("exported" | "cancelled")) {
+                            return Err(Error::new("export_failed", "system_export_failed"));
+                        }
+                        result
+                    }
+                    None => value,
+                };
+                Ok(Dispatch::Native(value))
+            }
+        }
+    })
+    .await
+    .map_err(|_| Error::new("commit_unknown", "worker_result_unknown"))?
+}
 
 #[derive(Clone)]
 struct Edit {
@@ -41,6 +96,12 @@ struct Journal {
     storage_id: String,
     locale: String,
     drafts: HashMap<String, Draft>,
+    #[serde(default)]
+    conflicts: HashMap<String, conflicts::ConflictCopy>,
+    #[serde(default)]
+    acknowledged: HashMap<String, String>,
+    #[serde(default)]
+    pending_promotion: Option<conflicts::Promotion>,
 }
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -63,9 +124,11 @@ struct Editable {
 pub struct Session {
     private: Private,
     journal: Journal,
-    vault: Vault,
+    vault: Option<Vault>,
     edits: HashMap<String, Edit>,
     repairs: HashMap<String, Vec<u8>>,
+    reconciled: HashMap<String, String>,
+    promotions: HashMap<String, conflicts::Promotion>,
     generation: u64,
     recovery_writable: bool,
 }
@@ -95,6 +158,11 @@ fn apply(p: &Paper, value: Value) -> Result<Paper> {
 
 impl Session {
     pub fn open(root: &Path, private_path: &Path, system_locale: &str) -> Result<Self> {
+        Private::open(&root.join("cache"))?;
+        Self::with_vault(Some(Vault::open(root)?), private_path, system_locale)
+    }
+
+    fn with_vault(vault: Option<Vault>, private_path: &Path, system_locale: &str) -> Result<Self> {
         let private = Private::open(private_path)?;
         #[cfg(target_os = "ios")]
         if apple::call(json!({"method":"exclude_backup","path":private_path}))?["state"]
@@ -120,6 +188,9 @@ impl Session {
                     }
                     .into(),
                     drafts: HashMap::new(),
+                    conflicts: HashMap::new(),
+                    acknowledged: HashMap::new(),
+                    pending_promotion: None,
                 };
                 private.write(&serde_json::to_value(&j).map_err(|_| invalid())?)?;
                 j
@@ -131,17 +202,23 @@ impl Session {
         {
             return Err(invalid());
         }
-        // These are app-owned directories, never a selected author Vault.
-        Private::open(&root.join("cache"))?;
         Ok(Self {
             private,
             journal,
-            vault: Vault::open(root)?,
+            vault,
             edits: HashMap::new(),
             repairs: HashMap::new(),
+            reconciled: HashMap::new(),
+            promotions: HashMap::new(),
             generation: 1,
             recovery_writable: true,
         })
+    }
+
+    fn vault(&self) -> Result<&Vault> {
+        self.vault
+            .as_ref()
+            .ok_or_else(|| Error::new("storage_unavailable", "connect_storage_before_file_access"))
     }
 
     fn persist(&mut self, next: Journal) -> Result<()> {
@@ -245,7 +322,7 @@ impl Session {
                 Ok(json!({"locale":self.journal.locale}))
             }
             "paper.create_draft" => {
-                let (papers, errors) = self.vault.list()?;
+                let (papers, errors) = self.vault()?.list()?;
                 let prefix = format!("K-{}-", chrono::Local::now().format("%Y%m%d"));
                 let mut used = std::collections::HashSet::new();
                 let mut reserve = |code: &str| {
@@ -262,7 +339,7 @@ impl Session {
                     if let Some(stem) = Path::new(path).file_stem().and_then(|s| s.to_str()) {
                         reserve(stem);
                     }
-                    if let Ok(bytes) = self.vault.read_raw(path) {
+                    if let Ok(bytes) = self.vault()?.read_raw(path) {
                         if let Ok(paper) = paper::parse(&bytes) {
                             reserve(&paper.code);
                         }
@@ -297,12 +374,12 @@ impl Session {
                     baseline: None,
                 }))
             }
-            "paper.open" => match self.vault.read(text(&p, "path")?) {
+            "paper.open" => match self.vault()?.read(text(&p, "path")?) {
                 Ok(s) => Ok(json!({"state":"opened","paper":self.opened(s)})),
                 Err(e) if e.code == "repair_required" => {
                     let token = uuid::Uuid::new_v4().to_string();
                     self.repairs
-                        .insert(token.clone(), self.vault.read_raw(text(&p, "path")?)?);
+                        .insert(token.clone(), self.vault()?.read_raw(text(&p, "path")?)?);
                     Ok(
                         json!({"state":"repair_required","repair":{"origin":"open","path":text(&p,"path")?,
                         "reason":e.reason,"page_number":e.page_number,"export_token":token}}),
@@ -314,7 +391,8 @@ impl Session {
                 if p.get("scope").is_some_and(|s| s != "active") {
                     return Err(invalid());
                 }
-                let (mut papers, errors) = self.vault.search(p["query"].as_str().unwrap_or(""))?;
+                let (mut papers, errors) =
+                    self.vault()?.search(p["query"].as_str().unwrap_or(""))?;
                 papers.sort_by(|a, b| {
                     b.paper
                         .updated
@@ -379,18 +457,13 @@ impl Session {
                         return Ok(json!({"token":token,"revision":revision}));
                     }
                     if let Some(submitted) = &old.submitted {
-                        let settled = match self.vault.reconcile(
-                            &old.target_path,
-                            old.source_digest.as_deref(),
-                            submitted,
-                        ) {
-                            Ok(Reconcile::Committed(current)) => edit
-                                .baseline
-                                .as_ref()
-                                .is_some_and(|b| b.digest() == current.digest()),
-                            Ok(Reconcile::NotCommitted(_)) => p["settle"] == true,
-                            Ok(Reconcile::Stale) | Err(_) => false,
-                        };
+                        // A host-issued snapshot proves the observed outcome. Future saves still CAS it.
+                        // Raw protection must never wait on provider discovery or file coordination.
+                        let settled = edit.baseline.as_ref().is_some_and(|snapshot| {
+                            paper::render(submitted).is_ok_and(|bytes| bytes == snapshot.bytes)
+                        }) || (p["settle"] == true
+                            && self.reconciled.get(&token).map(String::as_str)
+                                == p["edit_token"].as_str());
                         if !settled {
                             pending = Some(submitted.clone());
                         }
@@ -440,7 +513,7 @@ impl Session {
                     );
                 }
                 let baseline = if d.source_digest.is_some() {
-                    match self.vault.read(&d.target_path) {
+                    match self.vault().and_then(|v| v.read(&d.target_path)) {
                         Ok(s) if Some(s.digest()) == d.source_digest => Some(s),
                         _ => {
                             return Ok(
@@ -474,6 +547,9 @@ impl Session {
                 self.persist(next)?;
                 Ok(json!({"state":"removed"}))
             }
+            "host.conflict.inspect" | "host.conflict.promote" | "host.conflict.reconcile" => {
+                self.promote_request(method, &p)
+            }
             "paper.save" => self.save(&p),
             "paper.reconcile_save" => self.reconcile(&p),
             _ => Err(invalid()),
@@ -481,6 +557,9 @@ impl Session {
     }
 
     fn save(&mut self, p: &Value) -> Result<Value> {
+        if self.journal.pending_promotion.is_some() {
+            return Err(Error::new("commit_unknown", "reconcile_promotion_first"));
+        }
         let token = id(p, "draft_id")?;
         let d = self.journal.drafts.get(&token).ok_or_else(invalid)?.clone();
         let edit = self
@@ -509,7 +588,7 @@ impl Session {
         next.drafts.get_mut(&token).unwrap().submitted = Some(submitted.clone());
         self.persist(next)?;
         match self
-            .vault
+            .vault()?
             .save(&edit.path, &submitted, edit.baseline.as_ref())
         {
             Ok(s) => {
@@ -531,7 +610,7 @@ impl Session {
         let d = self.journal.drafts.get(&token).ok_or_else(invalid)?.clone();
         let submitted = d.submitted.as_ref().ok_or_else(invalid)?;
         let outcome =
-            self.vault
+            self.vault()?
                 .reconcile(&d.target_path, d.source_digest.as_deref(), submitted)?;
         let (state, dto) = match outcome {
             Reconcile::Committed(s) => ("committed", self.opened(s)),
@@ -549,6 +628,10 @@ impl Session {
                 )
             }
         };
+        if state == "not_committed" {
+            self.reconciled
+                .insert(token, text(&dto, "edit_token")?.to_owned());
+        }
         Ok(json!({"state":state,"paper":dto,"index_state":"not_applicable"}))
     }
 }
