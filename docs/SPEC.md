@@ -257,8 +257,10 @@ software checkpoint, migration, or Alpha result. Current implementation: [CP2](a
   draft and reconcile read-only, never replay an unknown write. Preserve and verify every conflict's
   raw bytes before marking it handled, and preserve the displaced current version before promotion.
   Interrupted recovery must not overwrite copies; no automatic merge, deletion or clock-based winner.
-  Same-code creation covers both native version conflicts and provider-renamed sibling files: discover,
-  preserve, export and offer explicit recovery without silently renaming files or rewriting codes.
+  Both native version conflicts and provider-renamed sibling files must support discovery, preservation,
+  export and explicit recovery without silently renaming files or rewriting codes. Under the developer-approved
+  2026-09-07 B10 revision, same-code creation is accepted against the actual provider outcome; native conflict
+  preservation is independently evidenced by B09/B11. This does not prove native conflicts from same-code creation.
 - Independent post-candidate convergence must preserve all desktop Index, folder, Trash, migration,
   recovery, device-state and system-action behavior on fixtures/copies. Only parity, safe switching
   and developer acceptance permit removing sidecar, product JSONL calls and Python packaging.
