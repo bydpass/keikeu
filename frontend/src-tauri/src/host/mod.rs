@@ -26,6 +26,9 @@ const METHODS: &[&str] = &[
     "host.draft.discard",
     "host.locale.get",
     "host.locale.set",
+    "host.conflict.inspect",
+    "host.conflict.promote",
+    "host.conflict.reconcile",
 ];
 
 pub struct Host(pub Mutex<Result<router::Router>>);

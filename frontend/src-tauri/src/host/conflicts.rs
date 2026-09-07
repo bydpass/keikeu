@@ -297,7 +297,9 @@ mod promotion_tests {
         let root = base.join("vault");
         let mut session = Session::open(&root, &base.join("private"), "en").unwrap();
         let params = json!({"storage_id":session.journal.storage_id,"generation":1});
-        let draft = session.request("paper.create_draft", params).unwrap();
+        let draft = session
+            .request("paper.create_draft", params.clone())
+            .unwrap();
         let mut paper = session.edits[draft["edit_token"].as_str().unwrap()]
             .paper
             .clone();
@@ -315,11 +317,15 @@ mod promotion_tests {
             )])
             .unwrap();
         let token = session.journal.conflicts.keys().next().unwrap().clone();
-        let inspect = session
-            .promote_request("host.conflict.inspect", &json!({"token":token}))
+        let mut inspect_params = params.clone();
+        inspect_params["token"] = json!(token);
+        let mut inspect = session
+            .request("host.conflict.inspect", inspect_params)
             .unwrap();
+        inspect["storage_id"] = params["storage_id"].clone();
+        inspect["generation"] = params["generation"].clone();
         let result = session
-            .promote_request("host.conflict.promote", &inspect)
+            .request("host.conflict.promote", inspect.clone())
             .unwrap();
         assert_eq!(result["state"], "submitted");
         assert!(session
@@ -331,15 +337,13 @@ mod promotion_tests {
         assert_eq!(std::fs::read(root.join(&path)).unwrap(), bytes);
         assert_eq!(
             session
-                .promote_request("host.conflict.promote", &inspect)
+                .request("host.conflict.promote", inspect.clone())
                 .unwrap_err()
                 .code,
             "commit_unknown"
         );
         assert_eq!(
-            session
-                .promote_request("host.conflict.reconcile", &json!({}))
-                .unwrap()["state"],
+            session.request("host.conflict.reconcile", params).unwrap()["state"],
             "committed"
         );
         let snapshot = session.vault().unwrap().read(&path).unwrap();
