@@ -506,11 +506,12 @@ impl Worker {
             },
         )?;
         if response.get("ok").and_then(Value::as_bool) == Some(false) {
-            return response
+            let error = response
                 .get("error")
                 .cloned()
-                .and_then(|error| serde_json::from_value(error).ok())
-                .ok_or_else(|| self.protocol_block("Sidecar error envelope 无效。"));
+                .and_then(|error| serde_json::from_value::<BridgeError>(error).ok())
+                .ok_or_else(|| self.protocol_block("Sidecar error envelope 无效。"))?;
+            return Err(error);
         }
         response
             .get("result")
@@ -975,6 +976,43 @@ mod tests {
         assert_eq!(writes[1]["params"]["relative_target"], "drafts/P-001.md");
         drop(writes);
         handle.shutdown();
+    }
+
+    #[test]
+    fn system_target_rejection_keeps_bridge_ready_for_both_actions() {
+        for action in ["open", "reveal"] {
+            let expected =
+                BridgeError::host("invalid_request", "unsupported target", "correct_input");
+            let spawner = Arc::new(FakeSpawner::new(vec![FakePlan {
+                events: vec![
+                    hello(1, "session-a"),
+                    ChildEvent::Stdout(
+                        serde_json::to_vec(&json!({
+                            "v": PROTOCOL_VERSION, "id": 2, "ok": false, "error": expected,
+                        }))
+                        .unwrap(),
+                    ),
+                    success(3, json!({"path": "/tmp/test-vault/P-001.md"})),
+                ],
+                write_fails: false,
+            }]));
+            let handle = BridgeHandle::with_spawner(spawner, short_timeouts());
+            wait_ready(&handle);
+            let rejected = tauri::async_runtime::block_on(
+                handle.resolve_target(action.into(), "cache/nested/directory".into()),
+            )
+            .unwrap_err();
+            assert_eq!(rejected, expected);
+            assert!(matches!(handle.status(), RuntimeStatus::Ready { .. }));
+            assert_eq!(
+                tauri::async_runtime::block_on(
+                    handle.resolve_target(action.into(), "cache/P-001.md".into()),
+                )
+                .unwrap(),
+                "/tmp/test-vault/P-001.md"
+            );
+            handle.shutdown();
+        }
     }
 
     #[test]

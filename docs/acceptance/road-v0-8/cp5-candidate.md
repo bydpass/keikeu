@@ -216,6 +216,18 @@ CP0–CP4 已完成工程提交；CP4 为 `ee7d488`。本阶段不启动外部 A
   `trash-restore-receipt.json`、`move-branch-receipt.json`、`external-editor-receipt.json`。
   以上是本轮实际完成的本机路径；文件夹完整生命周期、其余本地阻塞／交互矩阵仍待验。
 
+## 完整目录保留与系统目标错误处理
+
+- 在已备份的本机合成目录内加入嵌套未知二进制文件，再备份完整三文件树。
+  原生确认整目录移入废纸篓、随后恢复，三份文件的相对路径和摘要均与操作前一致。
+  回执 `promotion-fix/local-lifecycle/folder-trash-restore-receipt.json`，完整副本保留在同级 `folder-backup/`。
+- Library 对嵌套目录明确提示仅支持一级 Paper 文件夹；点击该修复项的 Finder 定位后，
+  旧候选却进入 `protocol_mismatch` 阻塞页。定位发现 Rust 系统目标解析把合法错误对象按成功路径字符串解析，
+  导致普通路径拒绝误升级为协议故障；打开与 Finder 定位共用此入口。
+- 已改为解析并返回 `BridgeError`，没有放宽路径限制。新增回归覆盖两种系统动作拒绝后连接仍可用、
+  后续合法目标仍可解析；修复前重现现场错误，修复后 Rust 全量 `21 passed`。
+  本修复尚待双端候选重建及原生复测，现有 `promotion-fix/` 包仍为旧源码。
+
 ## 手动测试顺序
 
 镜像本人验证已完成；后续离线步骤由本人操作手机网络，重连后代理继续核对。不要通过真实作者稿件完成下面的检查。
