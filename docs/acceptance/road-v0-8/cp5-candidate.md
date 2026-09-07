@@ -226,7 +226,10 @@ CP0–CP4 已完成工程提交；CP4 为 `ee7d488`。本阶段不启动外部 A
   导致普通路径拒绝误升级为协议故障；打开与 Finder 定位共用此入口。
 - 已改为解析并返回 `BridgeError`，没有放宽路径限制。新增回归覆盖两种系统动作拒绝后连接仍可用、
   后续合法目标仍可解析；修复前重现现场错误，修复后 Rust 全量 `21 passed`。
-  本修复尚待双端候选重建及原生复测，现有 `promotion-fix/` 包仍为旧源码。
+  两端已从 `83c4f60` 重建，现交付 `system-target-fix/`；Mac 普通启动后复测返回具体路径错误，
+  Library 保持可用，随后合法合成稿仍成功交给 Xcode，文件和云端恢复记录均未变。
+  原生回执为 `system-target-fix/native-system-target-receipt.json`。iPhone 新包已签名、解包校验，
+  尚未安装，以保留仍待用户反馈的手机触屏输入现场；手机当前仍运行 `304ba06` 旧候选。
 
 ## 手动测试顺序
 
@@ -264,16 +267,16 @@ CP0–CP4 已完成工程提交；CP4 为 `ee7d488`。本阶段不启动外部 A
 
 ## 交付文件与核验
 
-当前候选目录：`tests/test-vault/cp5/promotion-fix/`。以下两个包已实际解包并重新验证签名、bundle identifier 和可执行文件摘要。
+当前候选目录：`tests/test-vault/cp5/system-target-fix/`。以下两个包已实际解包并重新验证签名、bundle identifier 和可执行文件摘要。
 两端源码相同；平台配置分别包含对应 Sidecar／原生薄层。最后一轮构建后未再改变产品源码。
 此前 `search-fix/` iPhone 可执行文件取得 seed／recover 宿主通过回执，`save-fix/` 验证普通界面连续保存，`promotion-fix/` 验证 Mac 原生恢复；Mac 普通原生界面取得上述有限流程证据，尚非整个产品接受。
 
 | 平台 | 安装归档 | SHA-256 |
 | --- | --- | --- |
-| macos | `keikeu-v08-mac-development.zip` | `4a62939d937bef706b69ed98575d7715ffda5750c13df9213e0f4bdf5867d9e4` |
-| ios | `keikeu-v08-iphone-development.ipa` | `b8e060bd4e46d8068a4b2cfb6cc5ea06906abe16744018ed648fb61be7395ff7` |
+| macos | `keikeu-v08-mac-development.zip` | `0e11dd8a3c29e85483cd09f99322d429f24811c8b7fe1abe2433cd10c1698da0` |
+| ios | `keikeu-v08-iphone-development.ipa` | `9e6ae414a55c8cf99d49487131a025da5f63131043dd64944481b36ff9c8165e` |
 
-Mac ZIP 解开后可打开其中的 app；iPhone 最终 app 已通过设备文件服务安装。
+Mac ZIP 解开后可打开其中的 app；本轮 iPhone 新包尚未安装，设备仍保留上一候选及其输入现场。
 安装包含现有本机开发签名，不适用于任意设备或外部分发。精确可执行文件摘要见候选清单。
 本阶段既有 `compileall`、前端全量检查通过；恢复修复本轮 Rust 格式、文档与 diff 检查通过。
 恢复入口修复后 Rust 全量 20 项通过；Python 和前端源码未改，本次未重复其全量回归。
