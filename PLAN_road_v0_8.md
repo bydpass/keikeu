@@ -19,11 +19,11 @@
 | 离线或同时写稿 | 尚无跨设备处理 | 明确显示未就绪、冲突及恢复版本 | 发现、下载、保全、只读对账；CP4 |
 | 交给你测试 | 只有 Mac 本地基线 | 同一源码的两个安装包与一份测试单 | CP5 |
 
-**当前游标：CP1 平台可行性。** 每次交付只更新下面这一行，不能用“代码已写”冒充设备验收。
+**当前游标：CP2 共享 Rust Paper Core。** 每次交付只更新下面这一行，不能用“代码已写”冒充设备验收。
 
 | 本轮状态 | 当前修改 | 已确认 | 下一可见成果 | 待人工 |
 | --- | --- | --- | --- | --- |
-| 已验收 | [CP1 Apple 探针与证据](docs/acceptance/road-v0-8/cp1-apple.md) | 双端实体往返、原字节保全、Tauri iOS 构建、桌面回归 | CP2 Rust Paper Core 与 golden | 批次 A 已完成；批次 B 尚未执行 |
+| 已验收 | [CP2 共享 Core 与证据](docs/acceptance/road-v0-8/cp2-core.md) | 54 项 golden、CAS／路径安全、全量回归、iOS 编译 | CP3 iPhone 本机创作与恢复 | 批次 B 尚未执行 |
 
 施工过程中沿用此表，状态只用“未开始／实现中／机器检查通过／待设备证据／已验收”。
 进度报告说明当前 CP、具体改动、实际检查及下一步；不用测试数量代替用户能看到的成果。
@@ -328,3 +328,4 @@ Archify architecture 的 validate／deliver 为 showcase 9/9，0 错误、0 警�
 - CP0（2026-09-07）：[宿主合同](docs/design/road-v0-8-host-contract.md)冻结，逐项核对前端入口、Rust 分派、Python 白名单与 DTO；每个新增写操作均有所有者及未知结果处理。
 - `scripts/check_docs.py` 与 `git diff --check` 通过；CP0 为文档合同阶段，未运行应用测试、构建或设备验收。提前 YOLO 覆盖 CP0 工程退出决定，下一阶段为 CP1。
 - CP0 提交：`e84d0c5`。CP1：[本轮 Apple 平台证据](docs/acceptance/road-v0-8/cp1-apple.md)记录实际双端往返、保全、终止重开和构建兼容修复；平台可行性通过，提前 YOLO 覆盖工程退出，允许进入 CP2。
+- CP1 提交：`69fb2f2`。CP2：[共享 Core 证据](docs/acceptance/road-v0-8/cp2-core.md)记录两端 corpus、文件安全、Unicode 选择、只读对账及本轮检查；提前 YOLO 覆盖工程退出，允许进入 CP3。

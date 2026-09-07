@@ -1,3 +1,5 @@
+pub mod paper;
+
 #[cfg(not(target_os = "ios"))]
 mod bridge;
 #[cfg(not(target_os = "ios"))]

@@ -1,0 +1,1223 @@
+{
+  "version": 1,
+  "source": "Paper v4 design section 8 plus reviewed Python parser semantics",
+  "cases": [
+    {
+      "name": "canonical",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "paper": {
+        "code": "K-20260907-001",
+        "pages": [
+          {
+            "content": "合成测试\n\n",
+            "name": "第一页--",
+            "type": "summary"
+          },
+          {
+            "content": "second page Straße é",
+            "name": null,
+            "type": "snapshot"
+          }
+        ],
+        "display_name": "合成稿 -- café",
+        "tags": [
+          "中文",
+          "a,b",
+          "A",
+          "a"
+        ],
+        "created": "2026-09-07T01:02:03",
+        "updated": "2026-09-07T01:02:03",
+        "legacy_title": "",
+        "extra_frontmatter": [
+          [
+            "unknown",
+            "a\\b\nline\rreturn"
+          ],
+          [
+            "empty",
+            ""
+          ],
+          [
+            "colon",
+            "x:y"
+          ]
+        ]
+      },
+      "canonical": "---\ntype: paper\nschema_version: 4\ncode: K-20260907-001\ncreated: 2026-09-07T01:02:03\nupdated: 2026-09-07T01:02:03\ndisplay_name: 合成稿 -- café\nlegacy_title: \nunknown: a\\\\b\\nline\\rreturn\nempty: \ncolon: x:y\n---\n# K-20260907-001\n\n<!-- keikeu:page {\"name\":\"第一页\\u002d\\u002d\",\"type\":\"summary\"} -->\n合成测试\n\n\n<!-- /keikeu:page -->\n\n<!-- keikeu:page {\"name\":null,\"type\":\"snapshot\"} -->\nsecond page Straße é\n<!-- /keikeu:page -->\n\n## Tags\n\n- 中文\n- a,b\n- A\n- a\n"
+    },
+    {
+      "name": "crlf",
+      "hex": "2d2d2d0d0a747970653a2070617065720d0a736368656d615f76657273696f6e3a20340d0a636f64653a204b2d32303236303930372d3030310d0a637265617465643a20323032362d30392d30375430313a30323a30330d0a757064617465643a20323032362d30392d30375430313a30323a30330d0a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90d0a6c65676163795f7469746c653a200d0a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0d0a656d7074793a200d0a636f6c6f6e3a20783a790d0a2d2d2d0d0a23204b2d32303236303930372d3030310d0a0d0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0d0ae59088e68890e6b58be8af950d0a0d0a0d0a3c212d2d202f6b65696b65753a70616765202d2d3e0d0a0d0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0d0a7365636f6e6420706167652053747261c39f652065cc810d0a3c212d2d202f6b65696b65753a70616765202d2d3e0d0a0d0a232320546167730d0a0d0a2d20e4b8ade696870d0a2d20612c620d0a2d20410d0a2d20610d0a",
+      "paper": {
+        "code": "K-20260907-001",
+        "pages": [
+          {
+            "content": "合成测试\n\n",
+            "name": "第一页--",
+            "type": "summary"
+          },
+          {
+            "content": "second page Straße é",
+            "name": null,
+            "type": "snapshot"
+          }
+        ],
+        "display_name": "合成稿 -- café",
+        "tags": [
+          "中文",
+          "a,b",
+          "A",
+          "a"
+        ],
+        "created": "2026-09-07T01:02:03",
+        "updated": "2026-09-07T01:02:03",
+        "legacy_title": "",
+        "extra_frontmatter": [
+          [
+            "unknown",
+            "a\\b\nline\rreturn"
+          ],
+          [
+            "empty",
+            ""
+          ],
+          [
+            "colon",
+            "x:y"
+          ]
+        ]
+      },
+      "canonical": "---\ntype: paper\nschema_version: 4\ncode: K-20260907-001\ncreated: 2026-09-07T01:02:03\nupdated: 2026-09-07T01:02:03\ndisplay_name: 合成稿 -- café\nlegacy_title: \nunknown: a\\\\b\\nline\\rreturn\nempty: \ncolon: x:y\n---\n# K-20260907-001\n\n<!-- keikeu:page {\"name\":\"第一页\\u002d\\u002d\",\"type\":\"summary\"} -->\n合成测试\n\n\n<!-- /keikeu:page -->\n\n<!-- keikeu:page {\"name\":null,\"type\":\"snapshot\"} -->\nsecond page Straße é\n<!-- /keikeu:page -->\n\n## Tags\n\n- 中文\n- a,b\n- A\n- a\n"
+    },
+    {
+      "name": "no_final_newline",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d2061",
+      "paper": {
+        "code": "K-20260907-001",
+        "pages": [
+          {
+            "content": "合成测试\n\n",
+            "name": "第一页--",
+            "type": "summary"
+          },
+          {
+            "content": "second page Straße é",
+            "name": null,
+            "type": "snapshot"
+          }
+        ],
+        "display_name": "合成稿 -- café",
+        "tags": [
+          "中文",
+          "a,b",
+          "A",
+          "a"
+        ],
+        "created": "2026-09-07T01:02:03",
+        "updated": "2026-09-07T01:02:03",
+        "legacy_title": "",
+        "extra_frontmatter": [
+          [
+            "unknown",
+            "a\\b\nline\rreturn"
+          ],
+          [
+            "empty",
+            ""
+          ],
+          [
+            "colon",
+            "x:y"
+          ]
+        ]
+      },
+      "canonical": "---\ntype: paper\nschema_version: 4\ncode: K-20260907-001\ncreated: 2026-09-07T01:02:03\nupdated: 2026-09-07T01:02:03\ndisplay_name: 合成稿 -- café\nlegacy_title: \nunknown: a\\\\b\\nline\\rreturn\nempty: \ncolon: x:y\n---\n# K-20260907-001\n\n<!-- keikeu:page {\"name\":\"第一页\\u002d\\u002d\",\"type\":\"summary\"} -->\n合成测试\n\n\n<!-- /keikeu:page -->\n\n<!-- keikeu:page {\"name\":null,\"type\":\"snapshot\"} -->\nsecond page Straße é\n<!-- /keikeu:page -->\n\n## Tags\n\n- 中文\n- a,b\n- A\n- a\n"
+    },
+    {
+      "name": "body_3",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e69c89e6a087e9a298222c2274797065223a6e756c6c7d202d2d3e0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a",
+      "paper": {
+        "code": "K-20260907-001",
+        "pages": [
+          {
+            "content": "",
+            "name": "有标题",
+            "type": null
+          }
+        ],
+        "display_name": null,
+        "tags": [],
+        "created": "2026-09-07T01:02:03",
+        "updated": "2026-09-07T01:02:03",
+        "legacy_title": null,
+        "extra_frontmatter": []
+      },
+      "canonical": "---\ntype: paper\nschema_version: 4\ncode: K-20260907-001\ncreated: 2026-09-07T01:02:03\nupdated: 2026-09-07T01:02:03\n---\n# K-20260907-001\n\n<!-- keikeu:page {\"name\":\"有标题\",\"type\":null} -->\n<!-- /keikeu:page -->\n\n## Tags\n"
+    },
+    {
+      "name": "body_4",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e69c89e6a087e9a298222c2274797065223a6e756c6c7d202d2d3e0a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a",
+      "paper": {
+        "code": "K-20260907-001",
+        "pages": [
+          {
+            "content": "\n",
+            "name": "有标题",
+            "type": null
+          }
+        ],
+        "display_name": null,
+        "tags": [],
+        "created": "2026-09-07T01:02:03",
+        "updated": "2026-09-07T01:02:03",
+        "legacy_title": null,
+        "extra_frontmatter": []
+      },
+      "canonical": "---\ntype: paper\nschema_version: 4\ncode: K-20260907-001\ncreated: 2026-09-07T01:02:03\nupdated: 2026-09-07T01:02:03\n---\n# K-20260907-001\n\n<!-- keikeu:page {\"name\":\"有标题\",\"type\":null} -->\n\n\n<!-- /keikeu:page -->\n\n## Tags\n"
+    },
+    {
+      "name": "body_5",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e69c89e6a087e9a298222c2274797065223a6e756c6c7d202d2d3e0a0a626f64790a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a",
+      "paper": {
+        "code": "K-20260907-001",
+        "pages": [
+          {
+            "content": "\nbody\n",
+            "name": "有标题",
+            "type": null
+          }
+        ],
+        "display_name": null,
+        "tags": [],
+        "created": "2026-09-07T01:02:03",
+        "updated": "2026-09-07T01:02:03",
+        "legacy_title": null,
+        "extra_frontmatter": []
+      },
+      "canonical": "---\ntype: paper\nschema_version: 4\ncode: K-20260907-001\ncreated: 2026-09-07T01:02:03\nupdated: 2026-09-07T01:02:03\n---\n# K-20260907-001\n\n<!-- keikeu:page {\"name\":\"有标题\",\"type\":null} -->\n\nbody\n\n<!-- /keikeu:page -->\n\n## Tags\n"
+    },
+    {
+      "name": "body_6",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e69c89e6a087e9a298222c2274797065223a6e756c6c7d202d2d3e0a5c3c212d2d202f6b65696b65753a70616765202d2d3e0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a",
+      "paper": {
+        "code": "K-20260907-001",
+        "pages": [
+          {
+            "content": "<!-- /keikeu:page -->",
+            "name": "有标题",
+            "type": null
+          }
+        ],
+        "display_name": null,
+        "tags": [],
+        "created": "2026-09-07T01:02:03",
+        "updated": "2026-09-07T01:02:03",
+        "legacy_title": null,
+        "extra_frontmatter": []
+      },
+      "canonical": "---\ntype: paper\nschema_version: 4\ncode: K-20260907-001\ncreated: 2026-09-07T01:02:03\nupdated: 2026-09-07T01:02:03\n---\n# K-20260907-001\n\n<!-- keikeu:page {\"name\":\"有标题\",\"type\":null} -->\n\\<!-- /keikeu:page -->\n<!-- /keikeu:page -->\n\n## Tags\n"
+    },
+    {
+      "name": "body_7",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e69c89e6a087e9a298222c2274797065223a6e756c6c7d202d2d3e0a5c5c3c212d2d202f6b65696b65753a70616765202d2d3e0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a",
+      "paper": {
+        "code": "K-20260907-001",
+        "pages": [
+          {
+            "content": "\\<!-- /keikeu:page -->",
+            "name": "有标题",
+            "type": null
+          }
+        ],
+        "display_name": null,
+        "tags": [],
+        "created": "2026-09-07T01:02:03",
+        "updated": "2026-09-07T01:02:03",
+        "legacy_title": null,
+        "extra_frontmatter": []
+      },
+      "canonical": "---\ntype: paper\nschema_version: 4\ncode: K-20260907-001\ncreated: 2026-09-07T01:02:03\nupdated: 2026-09-07T01:02:03\n---\n# K-20260907-001\n\n<!-- keikeu:page {\"name\":\"有标题\",\"type\":null} -->\n\\\\<!-- /keikeu:page -->\n<!-- /keikeu:page -->\n\n## Tags\n"
+    },
+    {
+      "name": "body_8",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e69c89e6a087e9a298222c2274797065223a6e756c6c7d202d2d3e0a5c5c5c3c212d2d206b65696b65753a7061676520617262697472617279202d2d3e0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a",
+      "paper": {
+        "code": "K-20260907-001",
+        "pages": [
+          {
+            "content": "\\\\<!-- keikeu:page arbitrary -->",
+            "name": "有标题",
+            "type": null
+          }
+        ],
+        "display_name": null,
+        "tags": [],
+        "created": "2026-09-07T01:02:03",
+        "updated": "2026-09-07T01:02:03",
+        "legacy_title": null,
+        "extra_frontmatter": []
+      },
+      "canonical": "---\ntype: paper\nschema_version: 4\ncode: K-20260907-001\ncreated: 2026-09-07T01:02:03\nupdated: 2026-09-07T01:02:03\n---\n# K-20260907-001\n\n<!-- keikeu:page {\"name\":\"有标题\",\"type\":null} -->\n\\\\\\<!-- keikeu:page arbitrary -->\n<!-- /keikeu:page -->\n\n## Tags\n"
+    },
+    {
+      "name": "body_9",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e69c89e6a087e9a298222c2274797065223a6e756c6c7d202d2d3e0a232068656164696e670a232320546167730a2d20626f64790a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a",
+      "paper": {
+        "code": "K-20260907-001",
+        "pages": [
+          {
+            "content": "# heading\n## Tags\n- body",
+            "name": "有标题",
+            "type": null
+          }
+        ],
+        "display_name": null,
+        "tags": [],
+        "created": "2026-09-07T01:02:03",
+        "updated": "2026-09-07T01:02:03",
+        "legacy_title": null,
+        "extra_frontmatter": []
+      },
+      "canonical": "---\ntype: paper\nschema_version: 4\ncode: K-20260907-001\ncreated: 2026-09-07T01:02:03\nupdated: 2026-09-07T01:02:03\n---\n# K-20260907-001\n\n<!-- keikeu:page {\"name\":\"有标题\",\"type\":null} -->\n# heading\n## Tags\n- body\n<!-- /keikeu:page -->\n\n## Tags\n"
+    },
+    {
+      "name": "body_10",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e69c89e6a087e9a298222c2274797065223a6e756c6c7d202d2d3e0af09f988000e280a80a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a",
+      "paper": {
+        "code": "K-20260907-001",
+        "pages": [
+          {
+            "content": "😀\u0000 ",
+            "name": "有标题",
+            "type": null
+          }
+        ],
+        "display_name": null,
+        "tags": [],
+        "created": "2026-09-07T01:02:03",
+        "updated": "2026-09-07T01:02:03",
+        "legacy_title": null,
+        "extra_frontmatter": []
+      },
+      "canonical": "---\ntype: paper\nschema_version: 4\ncode: K-20260907-001\ncreated: 2026-09-07T01:02:03\nupdated: 2026-09-07T01:02:03\n---\n# K-20260907-001\n\n<!-- keikeu:page {\"name\":\"有标题\",\"type\":null} -->\n😀\u0000 \n<!-- /keikeu:page -->\n\n## Tags\n"
+    },
+    {
+      "name": "datetime_2026-09-07",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30370a757064617465643a20323032362d30392d30370a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "paper": {
+        "code": "K-20260907-001",
+        "pages": [
+          {
+            "content": "合成测试\n\n",
+            "name": "第一页--",
+            "type": "summary"
+          },
+          {
+            "content": "second page Straße é",
+            "name": null,
+            "type": "snapshot"
+          }
+        ],
+        "display_name": "合成稿 -- café",
+        "tags": [
+          "中文",
+          "a,b",
+          "A",
+          "a"
+        ],
+        "created": "2026-09-07T00:00:00",
+        "updated": "2026-09-07T00:00:00",
+        "legacy_title": "",
+        "extra_frontmatter": [
+          [
+            "unknown",
+            "a\\b\nline\rreturn"
+          ],
+          [
+            "empty",
+            ""
+          ],
+          [
+            "colon",
+            "x:y"
+          ]
+        ]
+      },
+      "canonical": "---\ntype: paper\nschema_version: 4\ncode: K-20260907-001\ncreated: 2026-09-07T00:00:00\nupdated: 2026-09-07T00:00:00\ndisplay_name: 合成稿 -- café\nlegacy_title: \nunknown: a\\\\b\\nline\\rreturn\nempty: \ncolon: x:y\n---\n# K-20260907-001\n\n<!-- keikeu:page {\"name\":\"第一页\\u002d\\u002d\",\"type\":\"summary\"} -->\n合成测试\n\n\n<!-- /keikeu:page -->\n\n<!-- keikeu:page {\"name\":null,\"type\":\"snapshot\"} -->\nsecond page Straße é\n<!-- /keikeu:page -->\n\n## Tags\n\n- 中文\n- a,b\n- A\n- a\n"
+    },
+    {
+      "name": "datetime_20260907T010203",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a203230323630393037543031303230330a757064617465643a203230323630393037543031303230330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "paper": {
+        "code": "K-20260907-001",
+        "pages": [
+          {
+            "content": "合成测试\n\n",
+            "name": "第一页--",
+            "type": "summary"
+          },
+          {
+            "content": "second page Straße é",
+            "name": null,
+            "type": "snapshot"
+          }
+        ],
+        "display_name": "合成稿 -- café",
+        "tags": [
+          "中文",
+          "a,b",
+          "A",
+          "a"
+        ],
+        "created": "2026-09-07T01:02:03",
+        "updated": "2026-09-07T01:02:03",
+        "legacy_title": "",
+        "extra_frontmatter": [
+          [
+            "unknown",
+            "a\\b\nline\rreturn"
+          ],
+          [
+            "empty",
+            ""
+          ],
+          [
+            "colon",
+            "x:y"
+          ]
+        ]
+      },
+      "canonical": "---\ntype: paper\nschema_version: 4\ncode: K-20260907-001\ncreated: 2026-09-07T01:02:03\nupdated: 2026-09-07T01:02:03\ndisplay_name: 合成稿 -- café\nlegacy_title: \nunknown: a\\\\b\\nline\\rreturn\nempty: \ncolon: x:y\n---\n# K-20260907-001\n\n<!-- keikeu:page {\"name\":\"第一页\\u002d\\u002d\",\"type\":\"summary\"} -->\n合成测试\n\n\n<!-- /keikeu:page -->\n\n<!-- keikeu:page {\"name\":null,\"type\":\"snapshot\"} -->\nsecond page Straße é\n<!-- /keikeu:page -->\n\n## Tags\n\n- 中文\n- a,b\n- A\n- a\n"
+    },
+    {
+      "name": "datetime_2026-W37-1T01:02:03",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d5733372d315430313a30323a30330a757064617465643a20323032362d5733372d315430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "paper": {
+        "code": "K-20260907-001",
+        "pages": [
+          {
+            "content": "合成测试\n\n",
+            "name": "第一页--",
+            "type": "summary"
+          },
+          {
+            "content": "second page Straße é",
+            "name": null,
+            "type": "snapshot"
+          }
+        ],
+        "display_name": "合成稿 -- café",
+        "tags": [
+          "中文",
+          "a,b",
+          "A",
+          "a"
+        ],
+        "created": "2026-09-07T01:02:03",
+        "updated": "2026-09-07T01:02:03",
+        "legacy_title": "",
+        "extra_frontmatter": [
+          [
+            "unknown",
+            "a\\b\nline\rreturn"
+          ],
+          [
+            "empty",
+            ""
+          ],
+          [
+            "colon",
+            "x:y"
+          ]
+        ]
+      },
+      "canonical": "---\ntype: paper\nschema_version: 4\ncode: K-20260907-001\ncreated: 2026-09-07T01:02:03\nupdated: 2026-09-07T01:02:03\ndisplay_name: 合成稿 -- café\nlegacy_title: \nunknown: a\\\\b\\nline\\rreturn\nempty: \ncolon: x:y\n---\n# K-20260907-001\n\n<!-- keikeu:page {\"name\":\"第一页\\u002d\\u002d\",\"type\":\"summary\"} -->\n合成测试\n\n\n<!-- /keikeu:page -->\n\n<!-- keikeu:page {\"name\":null,\"type\":\"snapshot\"} -->\nsecond page Straße é\n<!-- /keikeu:page -->\n\n## Tags\n\n- 中文\n- a,b\n- A\n- a\n"
+    },
+    {
+      "name": "datetime_2026-09-07 01:02",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30372030313a30320a757064617465643a20323032362d30392d30372030313a30320a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "paper": {
+        "code": "K-20260907-001",
+        "pages": [
+          {
+            "content": "合成测试\n\n",
+            "name": "第一页--",
+            "type": "summary"
+          },
+          {
+            "content": "second page Straße é",
+            "name": null,
+            "type": "snapshot"
+          }
+        ],
+        "display_name": "合成稿 -- café",
+        "tags": [
+          "中文",
+          "a,b",
+          "A",
+          "a"
+        ],
+        "created": "2026-09-07T01:02:00",
+        "updated": "2026-09-07T01:02:00",
+        "legacy_title": "",
+        "extra_frontmatter": [
+          [
+            "unknown",
+            "a\\b\nline\rreturn"
+          ],
+          [
+            "empty",
+            ""
+          ],
+          [
+            "colon",
+            "x:y"
+          ]
+        ]
+      },
+      "canonical": "---\ntype: paper\nschema_version: 4\ncode: K-20260907-001\ncreated: 2026-09-07T01:02:00\nupdated: 2026-09-07T01:02:00\ndisplay_name: 合成稿 -- café\nlegacy_title: \nunknown: a\\\\b\\nline\\rreturn\nempty: \ncolon: x:y\n---\n# K-20260907-001\n\n<!-- keikeu:page {\"name\":\"第一页\\u002d\\u002d\",\"type\":\"summary\"} -->\n合成测试\n\n\n<!-- /keikeu:page -->\n\n<!-- keikeu:page {\"name\":null,\"type\":\"snapshot\"} -->\nsecond page Straße é\n<!-- /keikeu:page -->\n\n## Tags\n\n- 中文\n- a,b\n- A\n- a\n"
+    },
+    {
+      "name": "datetime_2026-09-07T01:02:03.123456",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30332e3132333435360a757064617465643a20323032362d30392d30375430313a30323a30332e3132333435360a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "paper": {
+        "code": "K-20260907-001",
+        "pages": [
+          {
+            "content": "合成测试\n\n",
+            "name": "第一页--",
+            "type": "summary"
+          },
+          {
+            "content": "second page Straße é",
+            "name": null,
+            "type": "snapshot"
+          }
+        ],
+        "display_name": "合成稿 -- café",
+        "tags": [
+          "中文",
+          "a,b",
+          "A",
+          "a"
+        ],
+        "created": "2026-09-07T01:02:03.123456",
+        "updated": "2026-09-07T01:02:03.123456",
+        "legacy_title": "",
+        "extra_frontmatter": [
+          [
+            "unknown",
+            "a\\b\nline\rreturn"
+          ],
+          [
+            "empty",
+            ""
+          ],
+          [
+            "colon",
+            "x:y"
+          ]
+        ]
+      },
+      "canonical": "---\ntype: paper\nschema_version: 4\ncode: K-20260907-001\ncreated: 2026-09-07T01:02:03.123456\nupdated: 2026-09-07T01:02:03.123456\ndisplay_name: 合成稿 -- café\nlegacy_title: \nunknown: a\\\\b\\nline\\rreturn\nempty: \ncolon: x:y\n---\n# K-20260907-001\n\n<!-- keikeu:page {\"name\":\"第一页\\u002d\\u002d\",\"type\":\"summary\"} -->\n合成测试\n\n\n<!-- /keikeu:page -->\n\n<!-- keikeu:page {\"name\":null,\"type\":\"snapshot\"} -->\nsecond page Straße é\n<!-- /keikeu:page -->\n\n## Tags\n\n- 中文\n- a,b\n- A\n- a\n"
+    },
+    {
+      "name": "datetime_2026-09-07T01:02:03Z",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30335a0a757064617465643a20323032362d30392d30375430313a30323a30335a0a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "paper": {
+        "code": "K-20260907-001",
+        "pages": [
+          {
+            "content": "合成测试\n\n",
+            "name": "第一页--",
+            "type": "summary"
+          },
+          {
+            "content": "second page Straße é",
+            "name": null,
+            "type": "snapshot"
+          }
+        ],
+        "display_name": "合成稿 -- café",
+        "tags": [
+          "中文",
+          "a,b",
+          "A",
+          "a"
+        ],
+        "created": "2026-09-07T01:02:03+00:00",
+        "updated": "2026-09-07T01:02:03+00:00",
+        "legacy_title": "",
+        "extra_frontmatter": [
+          [
+            "unknown",
+            "a\\b\nline\rreturn"
+          ],
+          [
+            "empty",
+            ""
+          ],
+          [
+            "colon",
+            "x:y"
+          ]
+        ]
+      },
+      "canonical": "---\ntype: paper\nschema_version: 4\ncode: K-20260907-001\ncreated: 2026-09-07T01:02:03+00:00\nupdated: 2026-09-07T01:02:03+00:00\ndisplay_name: 合成稿 -- café\nlegacy_title: \nunknown: a\\\\b\\nline\\rreturn\nempty: \ncolon: x:y\n---\n# K-20260907-001\n\n<!-- keikeu:page {\"name\":\"第一页\\u002d\\u002d\",\"type\":\"summary\"} -->\n合成测试\n\n\n<!-- /keikeu:page -->\n\n<!-- keikeu:page {\"name\":null,\"type\":\"snapshot\"} -->\nsecond page Straße é\n<!-- /keikeu:page -->\n\n## Tags\n\n- 中文\n- a,b\n- A\n- a\n"
+    },
+    {
+      "name": "datetime_2026-09-07T01:02:03+05:30",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30332b30353a33300a757064617465643a20323032362d30392d30375430313a30323a30332b30353a33300a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "paper": {
+        "code": "K-20260907-001",
+        "pages": [
+          {
+            "content": "合成测试\n\n",
+            "name": "第一页--",
+            "type": "summary"
+          },
+          {
+            "content": "second page Straße é",
+            "name": null,
+            "type": "snapshot"
+          }
+        ],
+        "display_name": "合成稿 -- café",
+        "tags": [
+          "中文",
+          "a,b",
+          "A",
+          "a"
+        ],
+        "created": "2026-09-07T01:02:03+05:30",
+        "updated": "2026-09-07T01:02:03+05:30",
+        "legacy_title": "",
+        "extra_frontmatter": [
+          [
+            "unknown",
+            "a\\b\nline\rreturn"
+          ],
+          [
+            "empty",
+            ""
+          ],
+          [
+            "colon",
+            "x:y"
+          ]
+        ]
+      },
+      "canonical": "---\ntype: paper\nschema_version: 4\ncode: K-20260907-001\ncreated: 2026-09-07T01:02:03+05:30\nupdated: 2026-09-07T01:02:03+05:30\ndisplay_name: 合成稿 -- café\nlegacy_title: \nunknown: a\\\\b\\nline\\rreturn\nempty: \ncolon: x:y\n---\n# K-20260907-001\n\n<!-- keikeu:page {\"name\":\"第一页\\u002d\\u002d\",\"type\":\"summary\"} -->\n合成测试\n\n\n<!-- /keikeu:page -->\n\n<!-- keikeu:page {\"name\":null,\"type\":\"snapshot\"} -->\nsecond page Straße é\n<!-- /keikeu:page -->\n\n## Tags\n\n- 中文\n- a,b\n- A\n- a\n"
+    },
+    {
+      "name": "datetime_2026-09-07T01:02:03-04:00",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30332d30343a30300a757064617465643a20323032362d30392d30375430313a30323a30332d30343a30300a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "paper": {
+        "code": "K-20260907-001",
+        "pages": [
+          {
+            "content": "合成测试\n\n",
+            "name": "第一页--",
+            "type": "summary"
+          },
+          {
+            "content": "second page Straße é",
+            "name": null,
+            "type": "snapshot"
+          }
+        ],
+        "display_name": "合成稿 -- café",
+        "tags": [
+          "中文",
+          "a,b",
+          "A",
+          "a"
+        ],
+        "created": "2026-09-07T01:02:03-04:00",
+        "updated": "2026-09-07T01:02:03-04:00",
+        "legacy_title": "",
+        "extra_frontmatter": [
+          [
+            "unknown",
+            "a\\b\nline\rreturn"
+          ],
+          [
+            "empty",
+            ""
+          ],
+          [
+            "colon",
+            "x:y"
+          ]
+        ]
+      },
+      "canonical": "---\ntype: paper\nschema_version: 4\ncode: K-20260907-001\ncreated: 2026-09-07T01:02:03-04:00\nupdated: 2026-09-07T01:02:03-04:00\ndisplay_name: 合成稿 -- café\nlegacy_title: \nunknown: a\\\\b\\nline\\rreturn\nempty: \ncolon: x:y\n---\n# K-20260907-001\n\n<!-- keikeu:page {\"name\":\"第一页\\u002d\\u002d\",\"type\":\"summary\"} -->\n合成测试\n\n\n<!-- /keikeu:page -->\n\n<!-- keikeu:page {\"name\":null,\"type\":\"snapshot\"} -->\nsecond page Straße é\n<!-- /keikeu:page -->\n\n## Tags\n\n- 中文\n- a,b\n- A\n- a\n"
+    },
+    {
+      "name": "datetime_2026-09-07T01:02:03.123456789",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30332e3132333435363738390a757064617465643a20323032362d30392d30375430313a30323a30332e3132333435363738390a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "paper": {
+        "code": "K-20260907-001",
+        "pages": [
+          {
+            "content": "合成测试\n\n",
+            "name": "第一页--",
+            "type": "summary"
+          },
+          {
+            "content": "second page Straße é",
+            "name": null,
+            "type": "snapshot"
+          }
+        ],
+        "display_name": "合成稿 -- café",
+        "tags": [
+          "中文",
+          "a,b",
+          "A",
+          "a"
+        ],
+        "created": "2026-09-07T01:02:03.123456",
+        "updated": "2026-09-07T01:02:03.123456",
+        "legacy_title": "",
+        "extra_frontmatter": [
+          [
+            "unknown",
+            "a\\b\nline\rreturn"
+          ],
+          [
+            "empty",
+            ""
+          ],
+          [
+            "colon",
+            "x:y"
+          ]
+        ]
+      },
+      "canonical": "---\ntype: paper\nschema_version: 4\ncode: K-20260907-001\ncreated: 2026-09-07T01:02:03.123456\nupdated: 2026-09-07T01:02:03.123456\ndisplay_name: 合成稿 -- café\nlegacy_title: \nunknown: a\\\\b\\nline\\rreturn\nempty: \ncolon: x:y\n---\n# K-20260907-001\n\n<!-- keikeu:page {\"name\":\"第一页\\u002d\\u002d\",\"type\":\"summary\"} -->\n合成测试\n\n\n<!-- /keikeu:page -->\n\n<!-- keikeu:page {\"name\":null,\"type\":\"snapshot\"} -->\nsecond page Straße é\n<!-- /keikeu:page -->\n\n## Tags\n\n- 中文\n- a,b\n- A\n- a\n"
+    },
+    {
+      "name": "datetime_2026-W37",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d5733370a757064617465643a20323032362d5733370a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "paper": {
+        "code": "K-20260907-001",
+        "pages": [
+          {
+            "content": "合成测试\n\n",
+            "name": "第一页--",
+            "type": "summary"
+          },
+          {
+            "content": "second page Straße é",
+            "name": null,
+            "type": "snapshot"
+          }
+        ],
+        "display_name": "合成稿 -- café",
+        "tags": [
+          "中文",
+          "a,b",
+          "A",
+          "a"
+        ],
+        "created": "2026-09-07T00:00:00",
+        "updated": "2026-09-07T00:00:00",
+        "legacy_title": "",
+        "extra_frontmatter": [
+          [
+            "unknown",
+            "a\\b\nline\rreturn"
+          ],
+          [
+            "empty",
+            ""
+          ],
+          [
+            "colon",
+            "x:y"
+          ]
+        ]
+      },
+      "canonical": "---\ntype: paper\nschema_version: 4\ncode: K-20260907-001\ncreated: 2026-09-07T00:00:00\nupdated: 2026-09-07T00:00:00\ndisplay_name: 合成稿 -- café\nlegacy_title: \nunknown: a\\\\b\\nline\\rreturn\nempty: \ncolon: x:y\n---\n# K-20260907-001\n\n<!-- keikeu:page {\"name\":\"第一页\\u002d\\u002d\",\"type\":\"summary\"} -->\n合成测试\n\n\n<!-- /keikeu:page -->\n\n<!-- keikeu:page {\"name\":null,\"type\":\"snapshot\"} -->\nsecond page Straße é\n<!-- /keikeu:page -->\n\n## Tags\n\n- 中文\n- a,b\n- A\n- a\n"
+    },
+    {
+      "name": "datetime_2026W37",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032365733370a757064617465643a20323032365733370a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "paper": {
+        "code": "K-20260907-001",
+        "pages": [
+          {
+            "content": "合成测试\n\n",
+            "name": "第一页--",
+            "type": "summary"
+          },
+          {
+            "content": "second page Straße é",
+            "name": null,
+            "type": "snapshot"
+          }
+        ],
+        "display_name": "合成稿 -- café",
+        "tags": [
+          "中文",
+          "a,b",
+          "A",
+          "a"
+        ],
+        "created": "2026-09-07T00:00:00",
+        "updated": "2026-09-07T00:00:00",
+        "legacy_title": "",
+        "extra_frontmatter": [
+          [
+            "unknown",
+            "a\\b\nline\rreturn"
+          ],
+          [
+            "empty",
+            ""
+          ],
+          [
+            "colon",
+            "x:y"
+          ]
+        ]
+      },
+      "canonical": "---\ntype: paper\nschema_version: 4\ncode: K-20260907-001\ncreated: 2026-09-07T00:00:00\nupdated: 2026-09-07T00:00:00\ndisplay_name: 合成稿 -- café\nlegacy_title: \nunknown: a\\\\b\\nline\\rreturn\nempty: \ncolon: x:y\n---\n# K-20260907-001\n\n<!-- keikeu:page {\"name\":\"第一页\\u002d\\u002d\",\"type\":\"summary\"} -->\n合成测试\n\n\n<!-- /keikeu:page -->\n\n<!-- keikeu:page {\"name\":null,\"type\":\"snapshot\"} -->\nsecond page Straße é\n<!-- /keikeu:page -->\n\n## Tags\n\n- 中文\n- a,b\n- A\n- a\n"
+    },
+    {
+      "name": "datetime_2026W371",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a2032303236573337310a757064617465643a2032303236573337310a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "paper": {
+        "code": "K-20260907-001",
+        "pages": [
+          {
+            "content": "合成测试\n\n",
+            "name": "第一页--",
+            "type": "summary"
+          },
+          {
+            "content": "second page Straße é",
+            "name": null,
+            "type": "snapshot"
+          }
+        ],
+        "display_name": "合成稿 -- café",
+        "tags": [
+          "中文",
+          "a,b",
+          "A",
+          "a"
+        ],
+        "created": "2026-09-07T00:00:00",
+        "updated": "2026-09-07T00:00:00",
+        "legacy_title": "",
+        "extra_frontmatter": [
+          [
+            "unknown",
+            "a\\b\nline\rreturn"
+          ],
+          [
+            "empty",
+            ""
+          ],
+          [
+            "colon",
+            "x:y"
+          ]
+        ]
+      },
+      "canonical": "---\ntype: paper\nschema_version: 4\ncode: K-20260907-001\ncreated: 2026-09-07T00:00:00\nupdated: 2026-09-07T00:00:00\ndisplay_name: 合成稿 -- café\nlegacy_title: \nunknown: a\\\\b\\nline\\rreturn\nempty: \ncolon: x:y\n---\n# K-20260907-001\n\n<!-- keikeu:page {\"name\":\"第一页\\u002d\\u002d\",\"type\":\"summary\"} -->\n合成测试\n\n\n<!-- /keikeu:page -->\n\n<!-- keikeu:page {\"name\":null,\"type\":\"snapshot\"} -->\nsecond page Straße é\n<!-- /keikeu:page -->\n\n## Tags\n\n- 中文\n- a,b\n- A\n- a\n"
+    },
+    {
+      "name": "datetime_2026-09-07T01",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430310a757064617465643a20323032362d30392d30375430310a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "paper": {
+        "code": "K-20260907-001",
+        "pages": [
+          {
+            "content": "合成测试\n\n",
+            "name": "第一页--",
+            "type": "summary"
+          },
+          {
+            "content": "second page Straße é",
+            "name": null,
+            "type": "snapshot"
+          }
+        ],
+        "display_name": "合成稿 -- café",
+        "tags": [
+          "中文",
+          "a,b",
+          "A",
+          "a"
+        ],
+        "created": "2026-09-07T01:00:00",
+        "updated": "2026-09-07T01:00:00",
+        "legacy_title": "",
+        "extra_frontmatter": [
+          [
+            "unknown",
+            "a\\b\nline\rreturn"
+          ],
+          [
+            "empty",
+            ""
+          ],
+          [
+            "colon",
+            "x:y"
+          ]
+        ]
+      },
+      "canonical": "---\ntype: paper\nschema_version: 4\ncode: K-20260907-001\ncreated: 2026-09-07T01:00:00\nupdated: 2026-09-07T01:00:00\ndisplay_name: 合成稿 -- café\nlegacy_title: \nunknown: a\\\\b\\nline\\rreturn\nempty: \ncolon: x:y\n---\n# K-20260907-001\n\n<!-- keikeu:page {\"name\":\"第一页\\u002d\\u002d\",\"type\":\"summary\"} -->\n合成测试\n\n\n<!-- /keikeu:page -->\n\n<!-- keikeu:page {\"name\":null,\"type\":\"snapshot\"} -->\nsecond page Straße é\n<!-- /keikeu:page -->\n\n## Tags\n\n- 中文\n- a,b\n- A\n- a\n"
+    },
+    {
+      "name": "datetime_2026-09-07T01:02:03+00:00:00.5",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30332b30303a30303a30302e350a757064617465643a20323032362d30392d30375430313a30323a30332b30303a30303a30302e350a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "paper": {
+        "code": "K-20260907-001",
+        "pages": [
+          {
+            "content": "合成测试\n\n",
+            "name": "第一页--",
+            "type": "summary"
+          },
+          {
+            "content": "second page Straße é",
+            "name": null,
+            "type": "snapshot"
+          }
+        ],
+        "display_name": "合成稿 -- café",
+        "tags": [
+          "中文",
+          "a,b",
+          "A",
+          "a"
+        ],
+        "created": "2026-09-07T01:02:03+00:00:00.500000",
+        "updated": "2026-09-07T01:02:03+00:00:00.500000",
+        "legacy_title": "",
+        "extra_frontmatter": [
+          [
+            "unknown",
+            "a\\b\nline\rreturn"
+          ],
+          [
+            "empty",
+            ""
+          ],
+          [
+            "colon",
+            "x:y"
+          ]
+        ]
+      },
+      "canonical": "---\ntype: paper\nschema_version: 4\ncode: K-20260907-001\ncreated: 2026-09-07T01:02:03+00:00:00.500000\nupdated: 2026-09-07T01:02:03+00:00:00.500000\ndisplay_name: 合成稿 -- café\nlegacy_title: \nunknown: a\\\\b\\nline\\rreturn\nempty: \ncolon: x:y\n---\n# K-20260907-001\n\n<!-- keikeu:page {\"name\":\"第一页\\u002d\\u002d\",\"type\":\"summary\"} -->\n合成测试\n\n\n<!-- /keikeu:page -->\n\n<!-- keikeu:page {\"name\":null,\"type\":\"snapshot\"} -->\nsecond page Straße é\n<!-- /keikeu:page -->\n\n## Tags\n\n- 中文\n- a,b\n- A\n- a\n"
+    },
+    {
+      "name": "datetime_2026-09-07T01:02:03+01:60",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30332b30313a36300a757064617465643a20323032362d30392d30375430313a30323a30332b30313a36300a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "paper": {
+        "code": "K-20260907-001",
+        "pages": [
+          {
+            "content": "合成测试\n\n",
+            "name": "第一页--",
+            "type": "summary"
+          },
+          {
+            "content": "second page Straße é",
+            "name": null,
+            "type": "snapshot"
+          }
+        ],
+        "display_name": "合成稿 -- café",
+        "tags": [
+          "中文",
+          "a,b",
+          "A",
+          "a"
+        ],
+        "created": "2026-09-07T01:02:03+02:00",
+        "updated": "2026-09-07T01:02:03+02:00",
+        "legacy_title": "",
+        "extra_frontmatter": [
+          [
+            "unknown",
+            "a\\b\nline\rreturn"
+          ],
+          [
+            "empty",
+            ""
+          ],
+          [
+            "colon",
+            "x:y"
+          ]
+        ]
+      },
+      "canonical": "---\ntype: paper\nschema_version: 4\ncode: K-20260907-001\ncreated: 2026-09-07T01:02:03+02:00\nupdated: 2026-09-07T01:02:03+02:00\ndisplay_name: 合成稿 -- café\nlegacy_title: \nunknown: a\\\\b\\nline\\rreturn\nempty: \ncolon: x:y\n---\n# K-20260907-001\n\n<!-- keikeu:page {\"name\":\"第一页\\u002d\\u002d\",\"type\":\"summary\"} -->\n合成测试\n\n\n<!-- /keikeu:page -->\n\n<!-- keikeu:page {\"name\":null,\"type\":\"snapshot\"} -->\nsecond page Straße é\n<!-- /keikeu:page -->\n\n## Tags\n\n- 中文\n- a,b\n- A\n- a\n"
+    },
+    {
+      "name": "tags_trim_deduplicate",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d202020e4b8ade6968720200a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "paper": {
+        "code": "K-20260907-001",
+        "pages": [
+          {
+            "content": "合成测试\n\n",
+            "name": "第一页--",
+            "type": "summary"
+          },
+          {
+            "content": "second page Straße é",
+            "name": null,
+            "type": "snapshot"
+          }
+        ],
+        "display_name": "合成稿 -- café",
+        "tags": [
+          "中文",
+          "a,b",
+          "A",
+          "a"
+        ],
+        "created": "2026-09-07T01:02:03",
+        "updated": "2026-09-07T01:02:03",
+        "legacy_title": "",
+        "extra_frontmatter": [
+          [
+            "unknown",
+            "a\\b\nline\rreturn"
+          ],
+          [
+            "empty",
+            ""
+          ],
+          [
+            "colon",
+            "x:y"
+          ]
+        ]
+      },
+      "canonical": "---\ntype: paper\nschema_version: 4\ncode: K-20260907-001\ncreated: 2026-09-07T01:02:03\nupdated: 2026-09-07T01:02:03\ndisplay_name: 合成稿 -- café\nlegacy_title: \nunknown: a\\\\b\\nline\\rreturn\nempty: \ncolon: x:y\n---\n# K-20260907-001\n\n<!-- keikeu:page {\"name\":\"第一页\\u002d\\u002d\",\"type\":\"summary\"} -->\n合成测试\n\n\n<!-- /keikeu:page -->\n\n<!-- keikeu:page {\"name\":null,\"type\":\"snapshot\"} -->\nsecond page Straße é\n<!-- /keikeu:page -->\n\n## Tags\n\n- 中文\n- a,b\n- A\n- a\n"
+    },
+    {
+      "name": "unknown_scalar_escape",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a205c715c615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "paper": {
+        "code": "K-20260907-001",
+        "pages": [
+          {
+            "content": "合成测试\n\n",
+            "name": "第一页--",
+            "type": "summary"
+          },
+          {
+            "content": "second page Straße é",
+            "name": null,
+            "type": "snapshot"
+          }
+        ],
+        "display_name": "合成稿 -- café",
+        "tags": [
+          "中文",
+          "a,b",
+          "A",
+          "a"
+        ],
+        "created": "2026-09-07T01:02:03",
+        "updated": "2026-09-07T01:02:03",
+        "legacy_title": "",
+        "extra_frontmatter": [
+          [
+            "unknown",
+            "\\q\\a\\b\nline\rreturn"
+          ],
+          [
+            "empty",
+            ""
+          ],
+          [
+            "colon",
+            "x:y"
+          ]
+        ]
+      },
+      "canonical": "---\ntype: paper\nschema_version: 4\ncode: K-20260907-001\ncreated: 2026-09-07T01:02:03\nupdated: 2026-09-07T01:02:03\ndisplay_name: 合成稿 -- café\nlegacy_title: \nunknown: \\\\q\\\\a\\\\b\\nline\\rreturn\nempty: \ncolon: x:y\n---\n# K-20260907-001\n\n<!-- keikeu:page {\"name\":\"第一页\\u002d\\u002d\",\"type\":\"summary\"} -->\n合成测试\n\n\n<!-- /keikeu:page -->\n\n<!-- keikeu:page {\"name\":null,\"type\":\"snapshot\"} -->\nsecond page Straße é\n<!-- /keikeu:page -->\n\n## Tags\n\n- 中文\n- a,b\n- A\n- a\n"
+    },
+    {
+      "name": "unicode_sequence",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372dd9a0d9a0d9a10a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372dd9a0d9a0d9a10a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "paper": {
+        "code": "K-20260907-٠٠١",
+        "pages": [
+          {
+            "content": "合成测试\n\n",
+            "name": "第一页--",
+            "type": "summary"
+          },
+          {
+            "content": "second page Straße é",
+            "name": null,
+            "type": "snapshot"
+          }
+        ],
+        "display_name": "合成稿 -- café",
+        "tags": [
+          "中文",
+          "a,b",
+          "A",
+          "a"
+        ],
+        "created": "2026-09-07T01:02:03",
+        "updated": "2026-09-07T01:02:03",
+        "legacy_title": "",
+        "extra_frontmatter": [
+          [
+            "unknown",
+            "a\\b\nline\rreturn"
+          ],
+          [
+            "empty",
+            ""
+          ],
+          [
+            "colon",
+            "x:y"
+          ]
+        ]
+      },
+      "canonical": "---\ntype: paper\nschema_version: 4\ncode: K-20260907-٠٠١\ncreated: 2026-09-07T01:02:03\nupdated: 2026-09-07T01:02:03\ndisplay_name: 合成稿 -- café\nlegacy_title: \nunknown: a\\\\b\\nline\\rreturn\nempty: \ncolon: x:y\n---\n# K-20260907-٠٠١\n\n<!-- keikeu:page {\"name\":\"第一页\\u002d\\u002d\",\"type\":\"summary\"} -->\n合成测试\n\n\n<!-- /keikeu:page -->\n\n<!-- keikeu:page {\"name\":null,\"type\":\"snapshot\"} -->\nsecond page Straße é\n<!-- /keikeu:page -->\n\n## Tags\n\n- 中文\n- a,b\n- A\n- a\n"
+    },
+    {
+      "name": "duplicate_frontmatter",
+      "hex": "2d2d2d0a747970653a2070617065720a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "error": "repair_required"
+    },
+    {
+      "name": "missing_code",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "error": "repair_required"
+    },
+    {
+      "name": "bad_date",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30322d33305430303a30303a30300a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "error": "repair_required"
+    },
+    {
+      "name": "zero_sequence",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030300a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "error": "repair_required"
+    },
+    {
+      "name": "bare_cr",
+      "hex": "2d2d2d0d747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "error": "repair_required"
+    },
+    {
+      "name": "mixed_newlines",
+      "hex": "2d2d2d0d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "error": "repair_required"
+    },
+    {
+      "name": "heading_mismatch",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030320a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "error": "repair_required"
+    },
+    {
+      "name": "extra_blank",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "error": "repair_required"
+    },
+    {
+      "name": "second_summary",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a2273756d6d617279227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "error": "repair_required"
+    },
+    {
+      "name": "unknown_page_type",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a226f75746c696e65227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "error": "repair_required"
+    },
+    {
+      "name": "duplicate_json",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "error": "repair_required"
+    },
+    {
+      "name": "missing_json_key",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "error": "repair_required"
+    },
+    {
+      "name": "extra_json_key",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c226f74686572223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "error": "repair_required"
+    },
+    {
+      "name": "json_wrong_type",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a352c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "error": "repair_required"
+    },
+    {
+      "name": "raw_hyphens",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b52d2d222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "error": "repair_required"
+    },
+    {
+      "name": "missing_end",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "error": "repair_required"
+    },
+    {
+      "name": "nested_start",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a6e756c6c7d202d2d3e0a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "error": "repair_required"
+    },
+    {
+      "name": "missing_tags",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a2323204f746865720a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "error": "repair_required"
+    },
+    {
+      "name": "empty_tag",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d200a2d20612c620a2d20410a2d20610a",
+      "error": "repair_required"
+    },
+    {
+      "name": "control_tag",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d206100620a2d20612c620a2d20410a2d20610a",
+      "error": "repair_required"
+    },
+    {
+      "name": "name_control",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22615c7530303030625c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "error": "repair_required"
+    },
+    {
+      "name": "bom",
+      "hex": "efbbbf2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "error": "repair_required"
+    },
+    {
+      "name": "invalid_utf8",
+      "hex": "ff2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a",
+      "error": "repair_required"
+    },
+    {
+      "name": "trailing_text",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a6261640a",
+      "error": "repair_required"
+    },
+    {
+      "name": "trailing_blank",
+      "hex": "2d2d2d0a747970653a2070617065720a736368656d615f76657273696f6e3a20340a636f64653a204b2d32303236303930372d3030310a637265617465643a20323032362d30392d30375430313a30323a30330a757064617465643a20323032362d30392d30375430313a30323a30330a646973706c61795f6e616d653a20e59088e68890e7a8bf202d2d20636166c3a90a6c65676163795f7469746c653a200a756e6b6e6f776e3a20615c5c625c6e6c696e655c7272657475726e0a656d7074793a200a636f6c6f6e3a20783a790a2d2d2d0a23204b2d32303236303930372d3030310a0a3c212d2d206b65696b65753a70616765207b226e616d65223a22e7acace4b880e9a1b55c75303032645c7530303264222c2274797065223a2273756d6d617279227d202d2d3e0ae59088e68890e6b58be8af950a0a0a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a3c212d2d206b65696b65753a70616765207b226e616d65223a6e756c6c2c2274797065223a22736e617073686f74227d202d2d3e0a7365636f6e6420706167652053747261c39f652065cc810a3c212d2d202f6b65696b65753a70616765202d2d3e0a0a232320546167730a0a2d20e4b8ade696870a2d20612c620a2d20410a2d20610a0a",
+      "error": "repair_required"
+    }
+  ]
+}
