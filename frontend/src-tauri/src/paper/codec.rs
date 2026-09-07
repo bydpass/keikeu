@@ -67,6 +67,13 @@ fn decimal(c: char) -> Option<u32> {
         .find_map(|zero| (c as u32).checked_sub(*zero).filter(|n| *n < 10))
 }
 
+pub(crate) fn code_sequence(code: &str) -> Option<u32> {
+    validate_code(code).ok()?;
+    code.chars()
+        .skip(11)
+        .try_fold(0, |n, c| decimal(c).map(|digit| n * 10 + digit))
+}
+
 pub fn validate_code(code: &str) -> Result<()> {
     let chars: Vec<_> = code.chars().collect();
     if chars.len() != 14 || !code.starts_with("K-") || chars[10] != '-' {

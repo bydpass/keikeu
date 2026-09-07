@@ -1,0 +1,22 @@
+const english = {
+  "总结": "Summary", "高光": "Snapshot", "碎碎念": "Whisper",
+  "Paper 名称": "Paper name", "Tags（逗号分隔）": "Tags (comma separated)",
+  "夜车, 重逢, 旧友": "night train, reunion, old friends", "页": "pages", "正在保存": "Saving",
+  "详情": "Details", "Paper 详情": "Paper details", "关闭 Paper 详情": "Close Paper details", "关闭": "Close",
+  "路径": "Path", "尚未写盘": "Not saved yet", "创建时间": "Created", "更新时间": "Updated",
+  "整份移入废纸篓": "Move Paper to Trash", "Paper 页面": "Paper pages", "未命名": "Untitled",
+  "当前页": "Current page", "未标记": "Unmarked", "页面标题": "Page title",
+  "给这一页一个名字（可空）": "Name this page (optional)", "正文 · Markdown": "Body · Markdown",
+  "收起": "Less", "进一步": "More", "进一步模式": "More options", "页面类型": "Page type", "不标记": "Unmarked",
+  "已有一页标为总结；本页的“总结”选项保持可见但不可选。": "Another page is already the summary; this option is unavailable here.",
+  "写下任何你想留下的文字……": "Write anything you want to keep…", "删除本页": "Delete page", "加一页": "Add page", "保存": "Save",
+  "删除当前页？": "Delete this page?", "只有下一次整体保存成功后，这次删除才会写入 Paper。": "This deletion takes effect only after the next successful Paper save.",
+  "取消": "Cancel", "确认删除": "Delete", "Tags 必须是单行文字。": "Tags must be single-line text.",
+  "Tags 引号未闭合。": "A tag quote is not closed.", "Tags 中的双引号位置无效。": "A tag quote is in an invalid position.",
+  "一份 Paper 最多一页标为总结。": "A Paper can have only one summary page.",
+  "磁盘内容已变化：草稿保留，但禁止覆盖。": "The file changed. Your draft is retained; overwriting is blocked.",
+  "Paper 结构需要人工修复；app 不会自动改写损坏文件。": "This Paper needs manual repair. The app will not rewrite it.",
+  "Paper 可继续编辑，但 Library 列表可能过期。": "Editing is available, but the Library may be out of date.",
+  "保存结果未知：草稿与旧基线均已保留，禁止重发保存。": "Save result unknown. Draft and baseline are retained; resending is blocked.",
+};
+export function translate(locale, text) { return locale === "en" ? english[text] ?? text : text; }

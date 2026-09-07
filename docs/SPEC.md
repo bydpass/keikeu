@@ -1,4 +1,4 @@
-# keikeu Product Boundary (Road v0.7 accepted; v0.8 CP0 authorized from 3c387c5)
+# keikeu Product Boundary (Road v0.7 accepted; v0.8 local candidate engineering underway)
 
 > Authority: §§1–7 define the accepted product, author-asset, and data-safety boundary inherited from Road v0.6; §8 defines shared exclusions and platform scope; §9 records the Road v0.7 App Shell composition accepted at CP6; §10 defines the CP7 continuous-flow override accepted by developer Gate D on 2026-08-25; §11 defines the CP8 responsive-navigation override accepted by developer Gate D on 2026-08-26 and records the developer's Road v0.7 completion judgment; §13 records the approved cross-platform target; CP0–CP5 engineering and local commits were explicitly authorized on 2026-09-07, without implying implementation or device acceptance. Detailed Paper v4 grammar, DTOs, migration, recovery, and protocol remain in the approved [Paper v4 design](design/road-v0-6-paper-v4-design.md); the current interface and acceptance matrix live in the [App Shell design](design/road-v0-7-app-shell-design.md). Current checkpoint and runtime facts live in [PROJECT](PROJECT.md), source, and tests.
 
@@ -216,14 +216,14 @@ release remain separate and unperformed.
 4. **Product acceptance:** CP7 separately requires the first author's real workflow. It is not part of CP6 engineering completion and needs separate real-Vault authorization.
 5. **Road closeout:** CP7 acceptance, snapshot, tag, push, signing, packaging, and release are separate decisions.
 
-## 13. Documented unified-core target (CP0 authorized; runtime not yet implemented)
+## 13. Documented unified-core target
 
 The 2026-09-04 plan refactor retains Vue/Tauri and chooses progressive Rust Core unification.
 [ADR-0009](architecture/decisions/0009-unified-rust-core-transition.md) records the decision and its
 conditional replacement of ADR-0004. The 2026-09-07 rollback to `5ff26fe` restarted planning, followed by explicit CP0–CP5 engineering authorization; the revised
 [plan and change map](../PLAN_road_v0_8.md#0-先看我们正在改什么) distinguish engineering checkpoints from device acceptance.
 Documentation approval proves no mobile build, Apple capability,
-software checkpoint, migration, or Alpha result; current runtime ownership above remains in force.
+software checkpoint, migration, or Alpha result. Current implementation: [CP2](acceptance/road-v0-8/cp2-core.md) provides the shared Rust Paper Core; [CP3](acceptance/road-v0-8/cp3-local.md) integrates the iPhone local candidate with raw draft recovery and native export. Desktop-local ownership remains unchanged; cloud implementation and mandatory candidate device acceptance remain pending.
 
 | Stage / environment | Target backend and boundary |
 | --- | --- |

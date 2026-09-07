@@ -1,7 +1,7 @@
 # Road v0.8 CP0：宿主与共享 Paper 合同
 
 状态：2026-09-07 合同冻结；开发者已授权本轮 CP0–CP5 工程与本地提交，并提前声明 YOLO。
-来源：[施工计划](../../PLAN_road_v0_8.md)、[SPEC §13](../SPEC.md#13-documented-unified-core-target-cp0-authorized-runtime-not-yet-implemented)。
+来源：[施工计划](../../PLAN_road_v0_8.md)、[SPEC §13](../SPEC.md#13-documented-unified-core-target)。
 本文件定义待实现增量，不宣称 Apple、Rust Core 或实体设备已经通过。
 
 ## 1. 路由与身份
@@ -103,3 +103,16 @@ CP0 不新增运行时依赖；Apple 薄层使用系统框架，CP1 按当前安
 Core 所需依赖先检查现有可用项；确有新增需求时明确说明用途、打包影响与风险，再按授权处理。
 
 本阶段机器检查及提交结果记录在施工计划；应用、构建和设备检查不属于 CP0 文档通过证据。
+
+## 6. CP3 宿主投影补充
+
+Rust `host.draft.put` 使用 `draft_id/revision/edit_token/raw`；宿主绑定完整 Paper 基线和源摘要，
+不接受 UI 删除未知 frontmatter。`paper.save` 在 Rust 路由额外携带 `draft_id/revision`，
+宿主先保护精确 submitted，再执行正式写入；Python 保存参数保持不变。
+Rust `paper.reconcile_save` 使用该恢复 `draft_id` 读取宿主保护的完整 submitted（含时间），
+以避免由 UI 重建不同字节。恢复区版本为 1，后续改动必须显式兼容。
+
+损坏 open 的 repair 投影附加 `export_token`，`host.export(source: paper)` 按该令牌交付原字节。
+恢复区不可写时，`host.export(source: raw, raw: ...)` 可将当前编辑原文交给系统导出；
+此入口不写正式稿、不清恢复稿，不把未通过 Paper 校验的输入伪装成 Markdown Paper。
+只读核对后，`host.draft.put(settle: true)` 新修订可确认未提交结果；宿主会重新核对，绝不重放保存。

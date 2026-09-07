@@ -15,6 +15,18 @@ pub async fn bridge_request(
     params: Value,
     bridge: State<'_, BridgeHandle>,
 ) -> Result<Value, BridgeError> {
+    if method == "host.capabilities" {
+        return Ok(
+            serde_json::json!({"ok":true,"result":{"platform":"macos","backend":"python",
+            "storage_id":"desktop-local","generation":1,"methods":["host.capabilities"]}}),
+        );
+    }
+    if method.starts_with("host.") {
+        return Ok(crate::host::envelope(Err(crate::paper::Error::new(
+            "unsupported_method",
+            "method_unavailable",
+        ))));
+    }
     bridge.request(method, params).await
 }
 

@@ -15,6 +15,7 @@ import {
   registerWindowCloseGuard,
   restartSidecar,
 } from "./bridge.js";
+import CoreWorkspace from "./CoreWorkspace.vue";
 import LibraryView from "./LibraryView.vue";
 import PaperView from "./PaperView.vue";
 import VaultView from "./VaultView.vue";
@@ -25,6 +26,11 @@ const PrototypeView = import.meta.env.DEV
 const showPrototype =
   import.meta.env.DEV &&
   new URLSearchParams(window.location.search).get("prototype") === "1";
+const capabilities = ref(null);
+const hostError = ref(null);
+const retryHost = () => window.location.reload();
+const hostZh = (navigator.language ?? "").startsWith("zh");
+const coreWorkspace = ref(null);
 const status = ref({ state: "starting" });
 const restarting = ref(false);
 const destination = ref("paper");
@@ -130,6 +136,7 @@ async function appRequest(method, params = {}, intent = null) {
 }
 
 async function requestWindowClose() {
+  if (capabilities.value?.backend === "rust") return coreWorkspace.value ? coreWorkspace.value.confirmDeparture() : false;
   closeError.value = "";
   if (appUnmounted || durableRequests || restarting.value || shellNavigating.value) return false;
   const intent = pendingIntent.value;
@@ -334,7 +341,11 @@ function showVault() {
 
 onMounted(async () => {
   if (!showPrototype && await installCloseGuard()) {
-    refreshStatus();
+    try {
+      capabilities.value = await bridgeRequest("host.capabilities");
+      if (capabilities.value?.backend === "rust") status.value = { state: "ready" };
+      else await refreshStatus();
+    } catch (error) { hostError.value = error; blockRuntime(error); }
   }
 });
 onUnmounted(() => {
@@ -346,6 +357,17 @@ onUnmounted(() => {
 
 <template>
   <PrototypeView v-if="showPrototype" />
+
+  <main v-else-if="hostError" class="runtime-gate" role="alert">
+    <section class="runtime-panel runtime-error">
+      <h1>{{ hostZh ? '本机存储未能打开' : 'Local storage could not open' }}</h1>
+      <p>{{ hostZh ? '现有稿件和恢复记录保持原样。请退出并重新打开 app，再检查本机存储状态。' : 'Existing Papers and recovery records remain unchanged. Quit and reopen the app to check local storage again.' }}</p>
+      <p>{{ hostError.code ?? 'host_unavailable' }}</p>
+      <button @click="retryHost">{{ hostZh ? '重新检查' : 'Check again' }}</button>
+    </section>
+  </main>
+
+  <CoreWorkspace v-else-if="capabilities?.backend === 'rust'" ref="coreWorkspace" :capabilities="capabilities" />
 
   <div v-else-if="status.state === 'ready'" class="app-shell">
     <header class="app-shellbar">

@@ -2,6 +2,7 @@
 
 > Supporting evidence only. Current conclusions live in [`PROJECT.md`](../PROJECT.md); archived Road evidence never defines a new active Road.
 
+- [`road-v0-8/cp3-local.md`](road-v0-8/cp3-local.md) — iPhone local host engineering, raw draft protection, native save/relaunch, Scene fix, and explicit batch B omissions.
 - [`close-guard-2026-09-04.md`](close-guard-2026-09-04.md) — independent App-root close-guard candidate, code guide, native-window evidence, tool incident and evidence boundaries; developer manual acceptance passed on 2026-09-05 for all normal exit paths except force quit.
 - [`phase8.md`](phase8.md) — completed, de-identified one-shot and two-session author evidence.
 - [`../archive/road-v0-3/acceptance/road_v0_3.md`](../archive/road-v0-3/acceptance/road_v0_3.md): read-only Road v0.3 CP5 evidence and completed CP6 result.

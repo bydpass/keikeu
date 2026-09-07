@@ -1,7 +1,8 @@
 //! Shared Paper v4 rules. No GUI, transport, Index or desktop management.
 mod codec;
-mod store;
+pub(crate) mod store;
 mod unicode_data;
+pub(crate) use codec::code_sequence;
 pub use codec::{parse, render, validate_code, Page, Paper};
 pub use store::{Reconcile, Snapshot, Vault};
 

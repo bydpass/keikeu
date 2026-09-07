@@ -1,24 +1,29 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from "vue";
 
+import { translate } from "./locale.js";
 import { formatTagsCsv, parseTagsCsv } from "./tagsCsv.js";
 
 const props = defineProps({
   paper: { type: Object, required: true },
+  rawDraft: { type: Object, default: null },
+  locale: { type: String, default: "zh-CN" },
   baselineEditable: { type: Object, default: undefined },
   state: { type: String, default: "ready" },
   saving: { type: Boolean, default: false },
+  allowInputDuringSave: { type: Boolean, default: false },
   canDeleteWholePaper: { type: Boolean, default: false },
 });
-const emit = defineEmits(["dirty-change", "save", "whole-delete"]);
+const emit = defineEmits(["dirty-change", "raw-change", "save", "whole-delete"]);
 
-const typeLabels = { summary: "总结", snapshot: "高光", whisper: "碎碎念" };
-const stateMessages = {
-  stale: "磁盘内容已变化：草稿保留，但禁止覆盖。",
-  repair_required: "Paper 结构需要人工修复；app 不会自动改写损坏文件。",
-  index_degraded: "Paper 可继续编辑，但 Library 列表可能过期。",
-  commit_unknown: "保存结果未知：草稿与旧基线均已保留，禁止重发保存。",
-};
+const t = (text) => translate(props.locale, text);
+const typeLabels = computed(() => ({ summary: t("总结"), snapshot: t("高光"), whisper: t("碎碎念") }));
+const stateMessages = computed(() => ({
+  stale: t("磁盘内容已变化：草稿保留，但禁止覆盖。"),
+  repair_required: t("Paper 结构需要人工修复；app 不会自动改写损坏文件。"),
+  index_degraded: t("Paper 可继续编辑，但 Library 列表可能过期。"),
+  commit_unknown: t("保存结果未知：草稿与旧基线均已保留，禁止重发保存。"),
+}));
 const invalidNameCharacter = /[\p{Cc}\p{Cs}\p{Zl}\p{Zp}]/u;
 
 const draft = ref(null);
@@ -62,6 +67,10 @@ function loadPaper() {
     : props.baselineEditable === null
       ? "__missing_paper__"
       : JSON.stringify(props.baselineEditable);
+  if (props.rawDraft) {
+    draft.value = JSON.parse(JSON.stringify(props.rawDraft));
+    draft.value.pages = draft.value.pages.map((page) => ({ ...page, ui_key: nextUiKey++ }));
+  }
   activeIndex.value = 0;
   cursorKnown.value = false;
   fieldErrors.value = {};
@@ -77,9 +86,9 @@ watch(
 const activePage = computed(() => draft.value.pages[activeIndex.value]);
 const parsedTags = computed(() => parseTagsCsv(draft.value.tags_text));
 const tagInputError = computed(() => {
-  if (!parsedTags.value.ok) return parsedTags.value.error;
+  if (!parsedTags.value.ok) return t(parsedTags.value.error);
   return parsedTags.value.tags.some((tag) => invalidNameCharacter.test(tag))
-    ? "Tags 必须是单行文字。"
+    ? t("Tags 必须是单行文字。")
     : null;
 });
 const dirty = computed(() => (
@@ -95,6 +104,8 @@ const saveBlocked = computed(() =>
   || ["stale", "repair_required", "commit_unknown"].includes(props.state),
 );
 
+watch(draft, (value) => emit("raw-change", JSON.parse(JSON.stringify(value))), { deep: true, immediate: true });
+
 watch(dirty, (value) => emit("dirty-change", value), { immediate: true });
 
 function codePointLength(value) {
@@ -104,17 +115,17 @@ function codePointLength(value) {
 function validateName(value, label) {
   const normalized = value.trim();
   if (codePointLength(normalized) > 200) {
-    return `${label}最多 200 个 Unicode 字符。`;
+    return props.locale === "en" ? `${label}: at most 200 Unicode characters.` : `${label}最多 200 个 Unicode 字符。`;
   }
   if (invalidNameCharacter.test(normalized)) {
-    return `${label}不能包含控制或分行字符。`;
+    return props.locale === "en" ? `${label}: control and line-separator characters are not allowed.` : `${label}不能包含控制或分行字符。`;
   }
   return null;
 }
 
 function validate() {
   const errors = { pages: {} };
-  const displayNameError = validateName(draft.value.display_name, "Paper 名称");
+  const displayNameError = validateName(draft.value.display_name, t("Paper 名称"));
   if (displayNameError) {
     errors.display_name = displayNameError;
   }
@@ -122,12 +133,12 @@ function validate() {
   let summaries = 0;
   draft.value.pages.forEach((page, index) => {
     const pageErrors = {};
-    const nameError = validateName(page.name ?? "", `第 ${index + 1} 页标题`);
+    const nameError = validateName(page.name ?? "", props.locale === "en" ? `Page ${index + 1} title` : `第 ${index + 1} 页标题`);
     if (nameError) {
       pageErrors.name = nameError;
     }
     if (!(page.name?.trim() || page.content.trim())) {
-      pageErrors.content = `第 ${index + 1} 页需要标题或正文。`;
+      pageErrors.content = props.locale === "en" ? `Page ${index + 1} needs a title or body.` : `第 ${index + 1} 页需要标题或正文。`;
     }
     if (page.type === "summary") {
       summaries += 1;
@@ -137,7 +148,7 @@ function validate() {
     }
   });
   if (summaries > 1) {
-    errors.summary = "一份 Paper 最多一页标为总结。";
+    errors.summary = t("一份 Paper 最多一页标为总结。");
   }
   fieldErrors.value = errors;
   return !errors.display_name && !errors.tags && !errors.summary && !Object.keys(errors.pages).length;
@@ -259,7 +270,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section class="paper-v4-workbench" @keydown="handleShortcut">
+  <section class="paper-v4-workbench" :lang="locale" @keydown="handleShortcut">
     <p v-if="stateMessages[state]" :class="['workbench-state', `state-${state}`]" role="status">
       {{ stateMessages[state] }}
     </p>
@@ -267,13 +278,13 @@ onBeforeUnmount(() => {
     <header class="paper-meta-bar" aria-label="Paper context">
       <div class="paper-name-row">
         <label class="paper-name-field">
-          <span class="field-label">Paper 名称</span>
+          <span class="field-label">{{ t("Paper 名称") }}</span>
           <input
             v-model="draft.display_name"
             class="paper-name-input"
             aria-describedby="paper-name-help"
             :aria-invalid="fieldErrors.display_name ? 'true' : undefined"
-            :readonly="saving"
+            :readonly="saving && !allowInputDuringSave"
           >
           <small
             id="paper-name-help"
@@ -288,8 +299,8 @@ onBeforeUnmount(() => {
         </label>
 
         <div class="paper-context-tools" aria-live="polite">
-          <span>{{ draft.pages.length }} 页</span>
-          <strong v-if="saving">正在保存</strong>
+          <span>{{ draft.pages.length }} {{ t("页") }}</span>
+          <strong v-if="saving">{{ t("正在保存") }}</strong>
           <button
             type="button"
             class="paper-details-trigger"
@@ -298,13 +309,13 @@ onBeforeUnmount(() => {
             :aria-expanded="detailsOpen"
             :disabled="saving"
           >
-            详情 <span aria-hidden="true">{{ detailsOpen ? "−" : "+" }}</span>
+            {{ t("详情") }} <span aria-hidden="true">{{ detailsOpen ? "−" : "+" }}</span>
           </button>
         </div>
       </div>
 
       <label class="paper-tags-field">
-        <span class="field-label">Tags（逗号分隔）</span>
+        <span class="field-label">{{ t("Tags（逗号分隔）") }}</span>
         <input
           v-model="draft.tags_text"
           class="paper-tags-input"
@@ -313,8 +324,8 @@ onBeforeUnmount(() => {
           autocomplete="off"
           autocapitalize="none"
           autocorrect="off"
-          placeholder="夜车, 重逢, 旧友"
-          :readonly="saving"
+          :placeholder="t('夜车, 重逢, 旧友')"
+          :readonly="saving && !allowInputDuringSave"
           spellcheck="false"
         >
         <small
@@ -330,17 +341,17 @@ onBeforeUnmount(() => {
         class="paper-details-popover keikeu-detail-popover"
         popover="auto"
         role="dialog"
-        aria-label="Paper 详情"
+        :aria-label="t('Paper 详情')"
         @toggle="handleDetailsToggle"
       >
         <header>
-          <strong>Paper 详情</strong>
+          <strong>{{ t("Paper 详情") }}</strong>
           <button
             type="button"
             :popovertarget="detailsPopoverId"
             popovertargetaction="hide"
-            aria-label="关闭 Paper 详情"
-          >关闭</button>
+            :aria-label="t('关闭 Paper 详情')"
+          >{{ t("关闭") }}</button>
         </header>
         <dl>
           <div class="paper-code">
@@ -348,15 +359,15 @@ onBeforeUnmount(() => {
             <dd><strong>{{ draft.code }}</strong></dd>
           </div>
           <div>
-            <dt>路径</dt>
-            <dd><code>{{ paper.path || "尚未写盘" }}</code></dd>
+            <dt>{{ t("路径") }}</dt>
+            <dd><code>{{ paper.path || t("尚未写盘") }}</code></dd>
           </div>
           <div>
-            <dt>创建时间</dt>
+            <dt>{{ t("创建时间") }}</dt>
             <dd><time :datetime="paper.created">{{ paper.created }}</time></dd>
           </div>
           <div>
-            <dt>更新时间</dt>
+            <dt>{{ t("更新时间") }}</dt>
             <dd><time :datetime="paper.updated">{{ paper.updated }}</time></dd>
           </div>
         </dl>
@@ -369,39 +380,39 @@ onBeforeUnmount(() => {
           :disabled="saving"
           @click="emit('whole-delete')"
         >
-          整份移入废纸篓
+          {{ t("整份移入废纸篓") }}
         </button>
       </aside>
     </header>
 
-    <nav ref="pageNavigation" class="page-navigation" aria-label="Paper 页面">
+    <nav ref="pageNavigation" class="page-navigation" :aria-label="t('Paper 页面')">
       <button
         v-for="(page, index) in draft.pages"
         :key="page.ui_key"
         type="button"
         :aria-current="index === activeIndex ? 'page' : undefined"
-        :aria-label="`第 ${index + 1} 页：${page.name || typeLabels[page.type] || '未命名'}`"
+        :aria-label="`${locale === 'en' ? `Page ${index + 1}` : `第 ${index + 1} 页`}：${page.name || typeLabels[page.type] || t('未命名')}`"
         :disabled="saving"
         @click="selectPage(index)"
       >
         <span class="page-number">{{ String(index + 1).padStart(2, "0") }}</span>
-        <span class="page-tab-title">{{ page.name || typeLabels[page.type] || "未命名" }}</span>
+        <span class="page-tab-title">{{ page.name || typeLabels[page.type] || t("未命名") }}</span>
       </button>
     </nav>
 
     <article class="card-page">
       <p class="current-page-label">
-        当前页 · {{ typeLabels[activePage.type] || "未标记" }}
+        {{ t("当前页") }} · {{ typeLabels[activePage.type] || t("未标记") }}
       </p>
       <label class="page-title-field">
-        <span class="sr-only">页面标题</span>
+        <span class="sr-only">{{ t("页面标题") }}</span>
         <input
           ref="pageTitleInput"
           v-model="activePage.name"
           aria-describedby="page-title-help"
           :aria-invalid="fieldErrors.pages?.[activeIndex]?.name ? 'true' : undefined"
-          placeholder="给这一页一个名字（可空）"
-          :readonly="saving"
+          :placeholder="t('给这一页一个名字（可空）')"
+          :readonly="saving && !allowInputDuringSave"
         >
         <small
           id="page-title-help"
@@ -418,7 +429,7 @@ onBeforeUnmount(() => {
       </label>
 
       <div class="editor-body-header">
-        <span>正文 · Markdown</span>
+        <span>{{ t("正文 · Markdown") }}</span>
         <button
           type="button"
           class="mode-toggle"
@@ -426,39 +437,39 @@ onBeforeUnmount(() => {
           :disabled="saving"
           @click="advanced = !advanced"
         >
-          {{ advanced ? "收起" : "进一步" }} <span aria-hidden="true">{{ advanced ? "−" : "+" }}</span>
+          {{ advanced ? t("收起") : t("进一步") }} <span aria-hidden="true">{{ advanced ? "−" : "+" }}</span>
         </button>
       </div>
 
-      <section v-if="advanced" class="advanced-panel" aria-label="进一步模式">
+      <section v-if="advanced" class="advanced-panel" :aria-label="t('进一步模式')">
         <label>
-          <span>页面类型</span>
+          <span>{{ t("页面类型") }}</span>
           <select v-model="activePage.type" :disabled="saving">
-            <option :value="null">不标记</option>
+            <option :value="null">{{ t("不标记") }}</option>
             <option
               value="summary"
               :disabled="summaryIndex !== -1 && summaryIndex !== activeIndex"
             >
-              总结
+              {{ t("总结") }}
             </option>
-            <option value="snapshot">高光</option>
-            <option value="whisper">碎碎念</option>
+            <option value="snapshot">{{ t("高光") }}</option>
+            <option value="whisper">{{ t("碎碎念") }}</option>
           </select>
         </label>
         <p v-if="summaryIndex !== -1 && summaryIndex !== activeIndex">
-          已有一页标为总结；本页的“总结”选项保持可见但不可选。
+          {{ t("已有一页标为总结；本页的“总结”选项保持可见但不可选。") }}
         </p>
         <p v-if="fieldErrors.summary">{{ fieldErrors.summary }}</p>
       </section>
 
       <label class="page-content-field">
-        <span class="sr-only">正文 · Markdown</span>
+        <span class="sr-only">{{ t("正文 · Markdown") }}</span>
         <textarea
           ref="contentInput"
           v-model="activePage.content"
           rows="10"
-          placeholder="写下任何你想留下的文字……"
-          :readonly="saving"
+          :placeholder="t('写下任何你想留下的文字……')"
+          :readonly="saving && !allowInputDuringSave"
           @focus="rememberCursor"
           @click="rememberCursor"
           @keyup="rememberCursor"
@@ -472,24 +483,24 @@ onBeforeUnmount(() => {
 
       <footer class="card-actions">
         <button type="button" class="danger-action" :disabled="saving" @click="askDelete">
-          删除本页
+          {{ t("删除本页") }}
         </button>
-        <button type="button" :disabled="saving" @click="addPage">加一页</button>
+        <button type="button" :disabled="saving" @click="addPage">{{ t("加一页") }}</button>
         <button type="button" class="save-action" :disabled="saveBlocked" @click="save">
-          保存
+          {{ t("保存") }}
         </button>
       </footer>
     </article>
 
     <dialog ref="deleteDialog" class="delete-page-dialog" @cancel="closeDelete">
-      <h2>删除当前页？</h2>
-      <p>只有下一次整体保存成功后，这次删除才会写入 Paper。</p>
+      <h2>{{ t("删除当前页？") }}</h2>
+      <p>{{ t("只有下一次整体保存成功后，这次删除才会写入 Paper。") }}</p>
       <div>
         <button ref="cancelDeleteButton" type="button" :disabled="saving" @click="closeDelete">
-          取消
+          {{ t("取消") }}
         </button>
         <button type="button" class="danger-action" :disabled="saving" @click="deletePage">
-          确认删除
+          {{ t("确认删除") }}
         </button>
       </div>
     </dialog>
@@ -970,6 +981,10 @@ select {
 
   .card-actions button {
     padding-inline: 8px;
+  }
+
+  [lang="en"] .card-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

@@ -53,7 +53,7 @@ fn cstring(s: &str) -> Result<CString> {
     CString::new(s).map_err(|_| invalid())
 }
 
-fn open_at(dir: &File, name: &str, flags: i32) -> Result<File> {
+pub(crate) fn open_at(dir: &File, name: &str, flags: i32) -> Result<File> {
     let name = cstring(name)?;
     let fd = unsafe {
         libc::openat(
@@ -69,7 +69,7 @@ fn open_at(dir: &File, name: &str, flags: i32) -> Result<File> {
     Ok(unsafe { File::from_raw_fd(fd) })
 }
 
-fn directory_at(dir: &File, path: &Path) -> Result<File> {
+pub(crate) fn directory_at(dir: &File, path: &Path) -> Result<File> {
     let mut current = open_at(dir, ".", libc::O_RDONLY | libc::O_DIRECTORY)?;
     for component in path.components() {
         let std::path::Component::Normal(name) = component else {
@@ -125,7 +125,7 @@ fn names(dir: &File) -> Result<Vec<String>> {
     Ok(result)
 }
 
-fn read_at(parent: &File, name: &str) -> Result<(Vec<u8>, (u64, u64))> {
+pub(crate) fn read_at(parent: &File, name: &str) -> Result<(Vec<u8>, (u64, u64))> {
     let mut file = open_at(parent, name, libc::O_RDONLY | libc::O_NONBLOCK)?;
     let before = file.metadata()?;
     if !before.is_file() {
@@ -150,7 +150,7 @@ fn read_at(parent: &File, name: &str) -> Result<(Vec<u8>, (u64, u64))> {
     Ok((bytes, identity(&after)))
 }
 
-fn entry_exists(dir: &File, name: &str) -> Result<bool> {
+pub(crate) fn entry_exists(dir: &File, name: &str) -> Result<bool> {
     let name = cstring(name)?;
     let mut stat = std::mem::MaybeUninit::<libc::stat>::uninit();
     if unsafe {
@@ -326,6 +326,16 @@ impl Vault {
             return Err(stale());
         }
         Ok(())
+    }
+
+    /// Read a bounded active-area file verbatim for an explicit repair export.
+    pub fn read_raw(&self, path: &str) -> Result<Vec<u8>> {
+        let (relative, name) = supported(path)?;
+        let parent = directory_at(&self.root, &relative)?;
+        self.guard(&relative, &parent)?;
+        let (bytes, _) = read_at(&parent, name)?;
+        self.guard(&relative, &parent)?;
+        Ok(bytes)
     }
 
     pub fn read(&self, path: &str) -> Result<Snapshot> {

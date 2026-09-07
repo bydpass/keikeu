@@ -1,3 +1,4 @@
+mod host;
 pub mod paper;
 
 #[cfg(not(target_os = "ios"))]
@@ -7,7 +8,6 @@ mod commands;
 
 #[cfg(not(target_os = "ios"))]
 use bridge::BridgeHandle;
-#[cfg(not(target_os = "ios"))]
 use tauri::Manager;
 
 #[cfg(not(target_os = "ios"))]
@@ -80,15 +80,56 @@ pub fn run() {
 
 #[cfg(target_os = "ios")]
 #[tauri::command]
-fn runtime_status() -> serde_json::Value {
-    serde_json::json!({
-        "state": "blocked",
-        "error": {
-            "code": "mobile_core_pending",
-            "layer": "tauri_host",
-            "message": "CP1 移动宿主已接通；Paper Core 尚未启用。",
-            "recovery": "wait_for_cp3"
+fn runtime_status(state: tauri::State<'_, host::Host>) -> serde_json::Value {
+    let response = match state.0.lock() {
+        Ok(session) => match session.as_ref() {
+            Ok(_) => serde_json::json!({"state":"ready"}),
+            Err(e) => {
+                serde_json::json!({"state":"blocked","error":{"code":e.code,"layer":"rust_host","message":e.reason,"recovery":"reopen_app"}})
+            }
+        },
+        Err(_) => {
+            serde_json::json!({"state":"blocked","error":{"code":"host_unavailable","layer":"rust_host","recovery":"reopen_app"}})
         }
+    };
+    response
+}
+
+#[cfg(target_os = "ios")]
+#[tauri::command]
+async fn bridge_request(
+    method: String,
+    params: serde_json::Value,
+    app: tauri::AppHandle,
+) -> serde_json::Value {
+    tauri::async_runtime::spawn_blocking(move || {
+        let state = app.state::<host::Host>();
+        let result = match state.0.lock() {
+            Ok(mut session) => match session.as_mut() {
+                Ok(s) => s.request(&method, params),
+                Err(e) => Err(e.clone()),
+            },
+            Err(_) => Err(paper::Error::new("host_unavailable", "restart_to_recover")),
+        };
+        // Release the storage queue before showing a system panel; background draft writes can proceed.
+        let result = result.and_then(|v| match v.get("native_export") {
+            Some(request) => {
+                let result = host::apple::call(request.clone())?;
+                if !matches!(result["state"].as_str(), Some("exported" | "cancelled")) {
+                    return Err(paper::Error::new("export_failed", "system_export_failed"));
+                }
+                Ok(result)
+            }
+            None => Ok(v),
+        });
+        host::envelope(result)
+    })
+    .await
+    .unwrap_or_else(|_| {
+        host::envelope(Err(paper::Error::new(
+            "commit_unknown",
+            "worker_result_unknown",
+        )))
     })
 }
 
@@ -97,7 +138,26 @@ fn runtime_status() -> serde_json::Value {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![runtime_status])
+        .setup(|app| {
+            let initialized = (|| -> paper::Result<host::Session> {
+                let support = app.path().app_data_dir().map_err(|_| {
+                    paper::Error::new("host_unavailable", "app_directory_unavailable")
+                })?;
+                #[cfg(debug_assertions)]
+                host::smoke::run(&support);
+                let private = support.join("Recovery");
+                let locale = host::apple::call(serde_json::json!({"method":"locale"}))?;
+                let session = host::Session::open(
+                    &support.join("LocalVault"),
+                    &private,
+                    locale["locale"].as_str().unwrap_or("en"),
+                )?;
+                Ok(session)
+            })();
+            app.manage(host::Host(std::sync::Mutex::new(initialized)));
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![runtime_status, bridge_request])
         .run(tauri::generate_context!())
-        .expect("failed to build CP1 mobile host");
+        .expect("failed to build mobile host");
 }

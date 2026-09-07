@@ -84,6 +84,7 @@ function library(overrides = {}) {
 }
 
 function defaultBridge(method) {
+  if (method === "host.capabilities") return Promise.resolve({ backend: "python", platform: "macos" });
   if (method === "startup.load") return startup();
   if (method === "paper.create_draft") return draft;
   if (method === "library.query") return library();
