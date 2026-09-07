@@ -1,0 +1,8 @@
+#!/bin/sh
+# ponytail: swift-rs 1.0.7 expects SwiftPM native paths; remove after upstream
+# supports Xcode 27's swiftbuild cross-compilation. Only opt-in PATH uses this.
+if [ "$1" = build ]; then
+    shift
+    exec /usr/bin/xcrun swift build --build-system native "$@"
+fi
+exec /usr/bin/xcrun swift "$@"

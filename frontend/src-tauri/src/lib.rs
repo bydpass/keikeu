@@ -1,9 +1,14 @@
+#[cfg(not(target_os = "ios"))]
 mod bridge;
+#[cfg(not(target_os = "ios"))]
 mod commands;
 
+#[cfg(not(target_os = "ios"))]
 use bridge::BridgeHandle;
+#[cfg(not(target_os = "ios"))]
 use tauri::Manager;
 
+#[cfg(not(target_os = "ios"))]
 pub fn run() {
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
@@ -69,4 +74,28 @@ pub fn run() {
             app_handle.state::<BridgeHandle>().shutdown();
         }
     });
+}
+
+#[cfg(target_os = "ios")]
+#[tauri::command]
+fn runtime_status() -> serde_json::Value {
+    serde_json::json!({
+        "state": "blocked",
+        "error": {
+            "code": "mobile_core_pending",
+            "layer": "tauri_host",
+            "message": "CP1 移动宿主已接通；Paper Core 尚未启用。",
+            "recovery": "wait_for_cp3"
+        }
+    })
+}
+
+#[cfg(target_os = "ios")]
+#[tauri::mobile_entry_point]
+pub fn run() {
+    tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
+        .invoke_handler(tauri::generate_handler![runtime_status])
+        .run(tauri::generate_context!())
+        .expect("failed to build CP1 mobile host");
 }

@@ -1,0 +1,10 @@
+{
+  "identifier": "app.keikeu.v08candidate",
+  "app": {
+    "windows": [{ "label": "main", "title": "keikeu" }]
+  },
+  "bundle": {
+    "externalBin": [],
+    "iOS": { "minimumSystemVersion": "18.0" }
+  }
+}
