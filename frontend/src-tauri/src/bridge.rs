@@ -3,7 +3,7 @@ use serde_json::{json, Value};
 use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 use tauri_plugin_shell::{
     process::{CommandChild, CommandEvent},
     ShellExt,
@@ -177,7 +177,12 @@ struct TauriSpawner {
 
 impl SidecarSpawner for TauriSpawner {
     fn spawn(&self) -> Result<SpawnedSidecar, ()> {
-        let command = self.app.shell().sidecar(SIDECAR_NAME).map_err(|_| ())?;
+        let mut command = self.app.shell().sidecar(SIDECAR_NAME).map_err(|_| ())?;
+        if self.app.config().identifier == "app.keikeu.v08candidate" {
+            // Candidate startup must never inherit the accepted desktop app's selected author Vault.
+            let directory = self.app.path().app_data_dir().map_err(|_| ())?;
+            command = command.args(["--state-directory", directory.to_str().ok_or(())?]);
+        }
         let (mut receiver, child) = command.spawn().map_err(|_| ())?;
         let (event_sender, events) = mpsc::channel();
         tauri::async_runtime::spawn(async move {

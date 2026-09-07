@@ -337,3 +337,9 @@ Archify architecture 的 validate／deliver 为 showcase 9/9，0 错误、0 警�
 两端存储路由、云发现／下载、协调读写、冲突原字节保全与明确恢复已实现；
 本轮 Mac → iPhone → Mac 合成内容往返通过。详见 [CP4 证据](docs/acceptance/road-v0-8/cp4-cloud.md)。
 工程检查通过，按提前 YOLO 收口本地 checkpoint 并进入 CP5 候选准备。完整 provider 场景和原生界面仍属于 CP5 批次 B，尚未宣称同步验收通过。
+
+### CP5 当前执行记录
+
+CP4 工程提交为 `ee7d488`。CP5 已交付同源码开发候选与 [个人真机测试单](docs/acceptance/road-v0-8/cp5-candidate.md)。
+交付检查补充隔离 Mac 候选的 Sidecar 配置，避免普通启动继承原全局 Vault。
+Mac 仍锁定，必需原生界面及 provider 批次 B 未齐；当前停留在候选已交付／待验，不标记 CP5 或 Goal 完成。
