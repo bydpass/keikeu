@@ -6,6 +6,7 @@
 
 ```text
 manual/
+├─ repository-structure.html 完整文件树与目录架构图
 ├─ keikeu-current-logic.html  系统理解
 ├─ road-v0-8-guide.md         当前计划导读
 ├─ paper-v4-repair.html       Paper v4 离线人工修复
@@ -50,6 +51,8 @@ TUI 只管理自己启动的任务，日志仅驻留内存。
 builder 上传。未跟踪文件不能选入；不得只为刷新而擅自暂存。
 
 ## 第一次接手
+
+先用 [完整仓库结构](repository-structure.html) 逐层展开内部文件、按文件名或完整路径搜索，并打开本地文件。文件树覆盖全部 Git 跟踪文件与本次新增文档，省略被忽略的依赖、缓存、构建产物与私有 Vault。页面可切换到 [Archify 目录概览](repository-structure-overview.html)，连线表示目录包含关系。快照基于 2026-09-07 的 `3c387c5`，不会随目录变化自动同步；[Archify JSON](repository-structure.architecture.json) 与 [交付凭据](repository-structure.receipt.json) 仅对应目录概览。文件树的路径完整性、搜索与视图切换可用 `node docs/manual/repository-structure.check.cjs` 检查（使用现有前端开发依赖）。
 
 1. 先读 [TUI 极简使用手册](forfresh/developer-tui-quickstart.html)，用 `./dev` 启动应用或检视手册。
 2. 再读 [技术栈与组件图鉴](forfresh/stack-component-atlas.html)，确认 Vue、Tauri、JSONL 与 Python 的职责边界。

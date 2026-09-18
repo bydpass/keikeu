@@ -1,0 +1,260 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "keikeu 仓库目录地图",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1160,
+      910
+    ],
+    "legend": {
+      "mode": "hidden"
+    }
+  },
+  "components": [
+    {
+      "id": "repo",
+      "type": "external",
+      "label": "keikeu/",
+      "sublabel": "仓库根目录",
+      "pos": [
+        40,
+        345
+      ],
+      "size": [
+        200,
+        80
+      ]
+    },
+    {
+      "id": "frontend",
+      "type": "frontend",
+      "label": "frontend/",
+      "sublabel": "桌面界面与原生宿主",
+      "pos": [
+        365,
+        70
+      ],
+      "size": [
+        270,
+        80
+      ]
+    },
+    {
+      "id": "python",
+      "type": "backend",
+      "label": "src/",
+      "sublabel": "Python 产品运行时",
+      "pos": [
+        365,
+        245
+      ],
+      "size": [
+        270,
+        80
+      ]
+    },
+    {
+      "id": "docs",
+      "type": "external",
+      "label": "docs/",
+      "sublabel": "合同、设计、手册与历史",
+      "pos": [
+        365,
+        420
+      ],
+      "size": [
+        270,
+        80
+      ]
+    },
+    {
+      "id": "scripts",
+      "type": "external",
+      "label": "scripts/",
+      "sublabel": "构建、文档检查、上下文路由",
+      "pos": [
+        365,
+        595
+      ],
+      "size": [
+        270,
+        80
+      ]
+    },
+    {
+      "id": "tests",
+      "type": "external",
+      "label": "tests/",
+      "sublabel": "Python 测试与 fixtures/",
+      "pos": [
+        365,
+        770
+      ],
+      "size": [
+        270,
+        80
+      ]
+    },
+    {
+      "id": "vue",
+      "type": "frontend",
+      "label": "src/",
+      "sublabel": "Vue 页面、组件与 Vitest 测试",
+      "pos": [
+        800,
+        30
+      ],
+      "size": [
+        310,
+        80
+      ]
+    },
+    {
+      "id": "tauri",
+      "type": "backend",
+      "label": "src-tauri/",
+      "sublabel": "Rust 宿主、配置、权限与图标",
+      "pos": [
+        800,
+        140
+      ],
+      "size": [
+        310,
+        80
+      ]
+    },
+    {
+      "id": "bridge",
+      "type": "backend",
+      "label": "keikeu_bridge/",
+      "sublabel": "协议、DTO、服务编排与本地状态",
+      "pos": [
+        800,
+        250
+      ],
+      "size": [
+        310,
+        80
+      ]
+    },
+    {
+      "id": "core",
+      "type": "backend",
+      "label": "keikeu_core/",
+      "sublabel": "Paper、Markdown、Vault 与迁移",
+      "pos": [
+        800,
+        360
+      ],
+      "size": [
+        310,
+        80
+      ]
+    },
+    {
+      "id": "skills",
+      "type": "external",
+      "label": ".agents/skills/",
+      "sublabel": "项目本地 keikeu-routine",
+      "pos": [
+        800,
+        770
+      ],
+      "size": [
+        310,
+        80
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "repo-frontend",
+      "from": "repo",
+      "to": "frontend",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "repo-python",
+      "from": "repo",
+      "to": "python",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "repo-docs",
+      "from": "repo",
+      "to": "docs",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "repo-scripts",
+      "from": "repo",
+      "to": "scripts",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "repo-tests",
+      "from": "repo",
+      "to": "tests",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "frontend-vue",
+      "from": "frontend",
+      "to": "vue",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "frontend-tauri",
+      "from": "frontend",
+      "to": "tauri",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "python-bridge",
+      "from": "python",
+      "to": "bridge",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "python-core",
+      "from": "python",
+      "to": "core",
+      "fromSide": "right",
+      "toSide": "left"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "slate",
+      "title": "docs/ 内部导航",
+      "items": [
+        "SPEC.md · PROJECT.md · RULES.md：当前权威",
+        "architecture/ · design/：架构决策与设计",
+        "manual/：人工说明；acceptance/：验收证据",
+        "archive/：只读历史，不代表当前实现"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "根目录与阅读边界",
+      "items": [
+        "README.md / README_EN.md：项目入口；dev：开发 TUI",
+        "AGENTS.md / CLAUDE.md：协作指引；PLAN_road_v0_8.md：计划",
+        "pyproject.toml、frontend/package.json 及锁文件：依赖与构建",
+        "2026-09-07 · HEAD 3c387c5；连线表示包含，未穷举文件",
+        "仅映射受版本控制的结构；省略缓存、产物与私有 Vault"
+      ]
+    }
+  ]
+}

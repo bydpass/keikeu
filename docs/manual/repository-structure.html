@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>keikeu · 完整仓库结构</title>
+<style>
+:root{color-scheme:light dark;--bg:#f4f4f1;--panel:#fff;--ink:#202a30;--muted:#66716e;--line:#dce1dc;--accent:#22664a;--hover:#eff5ef}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{max-width:1240px;margin:auto;padding:44px 32px 64px}header{display:flex;justify-content:space-between;align-items:flex-start;gap:20px}.eyebrow{color:var(--accent);font:600 12px/1.5 ui-monospace,monospace;letter-spacing:.12em}h1{font-size:30px;line-height:1.3;margin:10px 0}p{color:var(--muted);margin:8px 0}a{color:var(--accent)}button,input{font:inherit}button{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 14px;cursor:pointer}button:hover{background:var(--hover)}button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:3px}.tabs{display:flex;gap:8px;margin:24px 0 16px}.tabs button[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}.toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:0 0 14px}label{flex:1;min-width:220px}input{width:100%;padding:11px 14px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px}#status{color:var(--muted);font-size:13px;min-width:100px}.tree{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:18px 22px}.root{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:0 0 12px;margin-bottom:8px;font:600 15px/1.6 ui-monospace,monospace}.root small{font:12px/1.8 -apple-system,sans-serif;color:var(--muted)}.branches{list-style:none;padding:0;margin:0}.branches .branches{margin-left:14px;padding-left:18px;border-left:1px solid var(--line)}summary{display:flex;align-items:center;gap:9px;cursor:pointer;padding:8px 10px;border-radius:6px;list-style:none}summary::-webkit-details-marker{display:none}summary:before{content:'›';width:12px;flex-shrink:0;color:var(--muted)}details[open]>summary:before{content:'⌄'}summary:hover,.file a:hover{background:var(--hover)}.name{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere;min-width:0}.folder{color:var(--accent)}.role{color:var(--muted);font-size:12px;margin-left:5px}.count{margin-left:auto;color:var(--muted);font:12px ui-monospace,monospace;padding-left:8px}.file a{display:flex;align-items:baseline;gap:10px;padding:5px 10px 5px 31px;border-radius:6px;color:var(--ink);text-decoration:none}.file-icon{color:var(--muted);flex-shrink:0}.extension{color:var(--muted);font-size:10px;margin-left:auto;padding-left:10px;text-transform:uppercase}.note{font-size:12px;margin-top:16px}.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;clip:rect(0,0,0,0);overflow:hidden}iframe{width:100%;height:900px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}[hidden]{display:none!important}@media(prefers-color-scheme:dark){:root{--bg:#151b1c;--panel:#1c2425;--ink:#e1e9e5;--muted:#9eada7;--line:#35423f;--accent:#7ecda5;--hover:#283733}.tabs button[aria-pressed="true"]{color:#12231c}}@media(max-width:650px){main{padding:24px 14px}header{display:block}.role{display:none}.tree{padding:12px 7px}.branches .branches{margin-left:7px;padding-left:8px}h1{font-size:25px}.extension{display:none}.root small{display:none}iframe{height:780px}}
+</style></head><body><main>
+<header><div><div class="eyebrow">KEIKEU / REPOSITORY</div><h1>目录之下，每一个文件</h1><p>展开文件夹查看内部文件，或按文件名、完整路径搜索。点击文件名可打开本地文件。</p></div><a href="README.md">人工文档地图 ↗</a></header>
+<div class="tabs" aria-label="结构视图"><button id="files-tab" aria-pressed="true" aria-controls="files">完整文件树</button><button id="overview-tab" aria-pressed="false" aria-controls="overview">目录架构图</button></div>
+<section id="files" aria-label="完整仓库文件树"><div class="toolbar"><label><span class="sr">搜索文件名或路径</span><input id="search" type="search" placeholder="搜索文件名或路径，例如 markdown_io、frontend/src" autocomplete="off"></label><button id="expand">全部展开</button><button id="collapse">全部折叠</button><span id="status" role="status">271 个文件</span></div>
+<div class="tree"><div class="root"><span>keikeu/</span><small>计数包含目录内所有层级的文件</small></div>
+<ul class="branches">
+<li class="directory" data-path=".agents"><details open><summary><span class="folder" aria-hidden="true">▰</span><span class="name">.agents/</span><span class="role">项目协作技能</span><span class="count">2</span></summary>
+<ul class="branches">
+<li class="directory" data-path=".agents/skills"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">skills/</span><span class="role"></span><span class="count">2</span></summary>
+<ul class="branches">
+<li class="directory" data-path=".agents/skills/keikeu-routine"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">keikeu-routine/</span><span class="role"></span><span class="count">2</span></summary>
+<ul class="branches">
+<li class="directory" data-path=".agents/skills/keikeu-routine/agents"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">agents/</span><span class="role"></span><span class="count">1</span></summary>
+<ul class="branches">
+<li class="file" data-path=".agents/skills/keikeu-routine/agents/openai.yaml"><a href="../../.agents/skills/keikeu-routine/agents/openai.yaml" target="_blank" rel="noopener" title=".agents/skills/keikeu-routine/agents/openai.yaml"><span class="file-icon" aria-hidden="true">▫</span><span class="name">openai.yaml</span><span class="extension">yaml</span></a></li>
+</ul>
+</details></li>
+<li class="file" data-path=".agents/skills/keikeu-routine/SKILL.md"><a href="../../.agents/skills/keikeu-routine/SKILL.md" target="_blank" rel="noopener" title=".agents/skills/keikeu-routine/SKILL.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">SKILL.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs"><details open><summary><span class="folder" aria-hidden="true">▰</span><span class="name">docs/</span><span class="role">合同、设计、手册与历史</span><span class="count">170</span></summary>
+<ul class="branches">
+<li class="directory" data-path="docs/acceptance"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">acceptance/</span><span class="role">验收证据</span><span class="count">72</span></summary>
+<ul class="branches">
+<li class="directory" data-path="docs/acceptance/road-v0-5"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">road-v0-5/</span><span class="role"></span><span class="count">37</span></summary>
+<ul class="branches">
+<li class="directory" data-path="docs/acceptance/road-v0-5/cp6-dogfood"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">cp6-dogfood/</span><span class="role"></span><span class="count">13</span></summary>
+<ul class="branches">
+<li class="directory" data-path="docs/acceptance/road-v0-5/cp6-dogfood/screenshots"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">screenshots/</span><span class="role"></span><span class="count">11</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/acceptance/road-v0-5/cp6-dogfood/screenshots/p2-divider-paper-920x680.png"><a href="../../docs/acceptance/road-v0-5/cp6-dogfood/screenshots/p2-divider-paper-920x680.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp6-dogfood/screenshots/p2-divider-paper-920x680.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">p2-divider-paper-920x680.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp6-dogfood/screenshots/p2-divider-vault-920x680.png"><a href="../../docs/acceptance/road-v0-5/cp6-dogfood/screenshots/p2-divider-vault-920x680.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp6-dogfood/screenshots/p2-divider-vault-920x680.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">p2-divider-vault-920x680.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp6-dogfood/screenshots/p2-vault-continue-preserves-draft-1220x780.png"><a href="../../docs/acceptance/road-v0-5/cp6-dogfood/screenshots/p2-vault-continue-preserves-draft-1220x780.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp6-dogfood/screenshots/p2-vault-continue-preserves-draft-1220x780.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">p2-vault-continue-preserves-draft-1220x780.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp6-dogfood/screenshots/p2-vault-dirty-confirm-1220x780.png"><a href="../../docs/acceptance/road-v0-5/cp6-dogfood/screenshots/p2-vault-dirty-confirm-1220x780.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp6-dogfood/screenshots/p2-vault-dirty-confirm-1220x780.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">p2-vault-dirty-confirm-1220x780.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp6-dogfood/screenshots/round2-01-summary-validation-1220x780.png"><a href="../../docs/acceptance/road-v0-5/cp6-dogfood/screenshots/round2-01-summary-validation-1220x780.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp6-dogfood/screenshots/round2-01-summary-validation-1220x780.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">round2-01-summary-validation-1220x780.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp6-dogfood/screenshots/round2-02-paper-saved-1220x780.png"><a href="../../docs/acceptance/road-v0-5/cp6-dogfood/screenshots/round2-02-paper-saved-1220x780.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp6-dogfood/screenshots/round2-02-paper-saved-1220x780.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">round2-02-paper-saved-1220x780.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp6-dogfood/screenshots/round2-05-flash-last-boundary-1220x780.png"><a href="../../docs/acceptance/road-v0-5/cp6-dogfood/screenshots/round2-05-flash-last-boundary-1220x780.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp6-dogfood/screenshots/round2-05-flash-last-boundary-1220x780.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">round2-05-flash-last-boundary-1220x780.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp6-dogfood/screenshots/round2-06-library-saved-1220x780.png"><a href="../../docs/acceptance/road-v0-5/cp6-dogfood/screenshots/round2-06-library-saved-1220x780.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp6-dogfood/screenshots/round2-06-library-saved-1220x780.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">round2-06-library-saved-1220x780.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp6-dogfood/screenshots/round2-10-core-blocked-1220x780.png"><a href="../../docs/acceptance/road-v0-5/cp6-dogfood/screenshots/round2-10-core-blocked-1220x780.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp6-dogfood/screenshots/round2-10-core-blocked-1220x780.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">round2-10-core-blocked-1220x780.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp6-dogfood/screenshots/round2-11-core-recovered-1220x780.png"><a href="../../docs/acceptance/road-v0-5/cp6-dogfood/screenshots/round2-11-core-recovered-1220x780.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp6-dogfood/screenshots/round2-11-core-recovered-1220x780.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">round2-11-core-recovered-1220x780.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp6-dogfood/screenshots/round2-15-flashcard-boundary-920x680.png"><a href="../../docs/acceptance/road-v0-5/cp6-dogfood/screenshots/round2-15-flashcard-boundary-920x680.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp6-dogfood/screenshots/round2-15-flashcard-boundary-920x680.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">round2-15-flashcard-boundary-920x680.png</span><span class="extension">png</span></a></li>
+</ul>
+</details></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp6-dogfood/checkpoint.md"><a href="../../docs/acceptance/road-v0-5/cp6-dogfood/checkpoint.md" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp6-dogfood/checkpoint.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">checkpoint.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp6-dogfood/report.md"><a href="../../docs/acceptance/road-v0-5/cp6-dogfood/report.md" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp6-dogfood/report.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">report.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/acceptance/road-v0-5/cp7-fixed-sidebars"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">cp7-fixed-sidebars/</span><span class="role"></span><span class="count">6</span></summary>
+<ul class="branches">
+<li class="directory" data-path="docs/acceptance/road-v0-5/cp7-fixed-sidebars/screenshots"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">screenshots/</span><span class="role"></span><span class="count">5</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/acceptance/road-v0-5/cp7-fixed-sidebars/screenshots/flashcard-1220-card37.png"><a href="../../docs/acceptance/road-v0-5/cp7-fixed-sidebars/screenshots/flashcard-1220-card37.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp7-fixed-sidebars/screenshots/flashcard-1220-card37.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">flashcard-1220-card37.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp7-fixed-sidebars/screenshots/library-920-bottom.png"><a href="../../docs/acceptance/road-v0-5/cp7-fixed-sidebars/screenshots/library-920-bottom.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp7-fixed-sidebars/screenshots/library-920-bottom.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">library-920-bottom.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp7-fixed-sidebars/screenshots/paper-1220-bottom.png"><a href="../../docs/acceptance/road-v0-5/cp7-fixed-sidebars/screenshots/paper-1220-bottom.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp7-fixed-sidebars/screenshots/paper-1220-bottom.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">paper-1220-bottom.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp7-fixed-sidebars/screenshots/paper-1220-top.png"><a href="../../docs/acceptance/road-v0-5/cp7-fixed-sidebars/screenshots/paper-1220-top.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp7-fixed-sidebars/screenshots/paper-1220-top.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">paper-1220-top.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp7-fixed-sidebars/screenshots/paper-920-scrolled.png"><a href="../../docs/acceptance/road-v0-5/cp7-fixed-sidebars/screenshots/paper-920-scrolled.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp7-fixed-sidebars/screenshots/paper-920-scrolled.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">paper-920-scrolled.png</span><span class="extension">png</span></a></li>
+</ul>
+</details></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp7-fixed-sidebars/report.md"><a href="../../docs/acceptance/road-v0-5/cp7-fixed-sidebars/report.md" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp7-fixed-sidebars/report.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">report.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp1-paper-1220x780.png"><a href="../../docs/acceptance/road-v0-5/cp1-paper-1220x780.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp1-paper-1220x780.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">cp1-paper-1220x780.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp1-paper-920x680.png"><a href="../../docs/acceptance/road-v0-5/cp1-paper-920x680.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp1-paper-920x680.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">cp1-paper-920x680.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp2-departure-1220x780.png"><a href="../../docs/acceptance/road-v0-5/cp2-departure-1220x780.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp2-departure-1220x780.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">cp2-departure-1220x780.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp2-departure-920x680.png"><a href="../../docs/acceptance/road-v0-5/cp2-departure-920x680.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp2-departure-920x680.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">cp2-departure-920x680.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp3-flashcard-1220x780.png"><a href="../../docs/acceptance/road-v0-5/cp3-flashcard-1220x780.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp3-flashcard-1220x780.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">cp3-flashcard-1220x780.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp3-flashcard-920x680.png"><a href="../../docs/acceptance/road-v0-5/cp3-flashcard-920x680.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp3-flashcard-920x680.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">cp3-flashcard-920x680.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp4-library-context-1220x780.png"><a href="../../docs/acceptance/road-v0-5/cp4-library-context-1220x780.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp4-library-context-1220x780.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">cp4-library-context-1220x780.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp4-library-context-920x680.png"><a href="../../docs/acceptance/road-v0-5/cp4-library-context-920x680.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp4-library-context-920x680.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">cp4-library-context-920x680.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp5-flashcard-1220x780.png"><a href="../../docs/acceptance/road-v0-5/cp5-flashcard-1220x780.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp5-flashcard-1220x780.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">cp5-flashcard-1220x780.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp5-flashcard-920x680.png"><a href="../../docs/acceptance/road-v0-5/cp5-flashcard-920x680.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp5-flashcard-920x680.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">cp5-flashcard-920x680.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp5-library-1220x780.png"><a href="../../docs/acceptance/road-v0-5/cp5-library-1220x780.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp5-library-1220x780.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">cp5-library-1220x780.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp5-library-920x680.png"><a href="../../docs/acceptance/road-v0-5/cp5-library-920x680.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp5-library-920x680.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">cp5-library-920x680.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp5-paper-1220x780.png"><a href="../../docs/acceptance/road-v0-5/cp5-paper-1220x780.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp5-paper-1220x780.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">cp5-paper-1220x780.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp5-paper-920x680.png"><a href="../../docs/acceptance/road-v0-5/cp5-paper-920x680.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp5-paper-920x680.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">cp5-paper-920x680.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp5-runtime-blocked-1220x780.png"><a href="../../docs/acceptance/road-v0-5/cp5-runtime-blocked-1220x780.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp5-runtime-blocked-1220x780.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">cp5-runtime-blocked-1220x780.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp5-runtime-blocked-920x680.png"><a href="../../docs/acceptance/road-v0-5/cp5-runtime-blocked-920x680.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp5-runtime-blocked-920x680.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">cp5-runtime-blocked-920x680.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp5-vault-migration-1220x780.png"><a href="../../docs/acceptance/road-v0-5/cp5-vault-migration-1220x780.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp5-vault-migration-1220x780.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">cp5-vault-migration-1220x780.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-5/cp5-vault-migration-920x680.png"><a href="../../docs/acceptance/road-v0-5/cp5-vault-migration-920x680.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-5/cp5-vault-migration-920x680.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">cp5-vault-migration-920x680.png</span><span class="extension">png</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/acceptance/road-v0-6"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">road-v0-6/</span><span class="role"></span><span class="count">18</span></summary>
+<ul class="branches">
+<li class="directory" data-path="docs/acceptance/road-v0-6/cp0-contract"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">cp0-contract/</span><span class="role"></span><span class="count">1</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/acceptance/road-v0-6/cp0-contract/report.md"><a href="../../docs/acceptance/road-v0-6/cp0-contract/report.md" target="_blank" rel="noopener" title="docs/acceptance/road-v0-6/cp0-contract/report.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">report.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/acceptance/road-v0-6/cp1-core"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">cp1-core/</span><span class="role"></span><span class="count">1</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/acceptance/road-v0-6/cp1-core/report.md"><a href="../../docs/acceptance/road-v0-6/cp1-core/report.md" target="_blank" rel="noopener" title="docs/acceptance/road-v0-6/cp1-core/report.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">report.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/acceptance/road-v0-6/cp2-migration-index"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">cp2-migration-index/</span><span class="role"></span><span class="count">1</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/acceptance/road-v0-6/cp2-migration-index/report.md"><a href="../../docs/acceptance/road-v0-6/cp2-migration-index/report.md" target="_blank" rel="noopener" title="docs/acceptance/road-v0-6/cp2-migration-index/report.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">report.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/acceptance/road-v0-6/cp3-ui"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">cp3-ui/</span><span class="role"></span><span class="count">6</span></summary>
+<ul class="branches">
+<li class="directory" data-path="docs/acceptance/road-v0-6/cp3-ui/screenshots"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">screenshots/</span><span class="role"></span><span class="count">5</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/acceptance/road-v0-6/cp3-ui/screenshots/library-920x680.png"><a href="../../docs/acceptance/road-v0-6/cp3-ui/screenshots/library-920x680.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-6/cp3-ui/screenshots/library-920x680.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">library-920x680.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-6/cp3-ui/screenshots/paper-1220x780.png"><a href="../../docs/acceptance/road-v0-6/cp3-ui/screenshots/paper-1220x780.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-6/cp3-ui/screenshots/paper-1220x780.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">paper-1220x780.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-6/cp3-ui/screenshots/paper-920x680.png"><a href="../../docs/acceptance/road-v0-6/cp3-ui/screenshots/paper-920x680.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-6/cp3-ui/screenshots/paper-920x680.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">paper-920x680.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-6/cp3-ui/screenshots/paper-text-200.png"><a href="../../docs/acceptance/road-v0-6/cp3-ui/screenshots/paper-text-200.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-6/cp3-ui/screenshots/paper-text-200.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">paper-text-200.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-6/cp3-ui/screenshots/tauri-default-v3.png"><a href="../../docs/acceptance/road-v0-6/cp3-ui/screenshots/tauri-default-v3.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-6/cp3-ui/screenshots/tauri-default-v3.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">tauri-default-v3.png</span><span class="extension">png</span></a></li>
+</ul>
+</details></li>
+<li class="file" data-path="docs/acceptance/road-v0-6/cp3-ui/report.md"><a href="../../docs/acceptance/road-v0-6/cp3-ui/report.md" target="_blank" rel="noopener" title="docs/acceptance/road-v0-6/cp3-ui/report.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">report.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/acceptance/road-v0-6/cp4-runtime"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">cp4-runtime/</span><span class="role"></span><span class="count">1</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/acceptance/road-v0-6/cp4-runtime/report.md"><a href="../../docs/acceptance/road-v0-6/cp4-runtime/report.md" target="_blank" rel="noopener" title="docs/acceptance/road-v0-6/cp4-runtime/report.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">report.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/acceptance/road-v0-6/cp5-cleanup"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">cp5-cleanup/</span><span class="role"></span><span class="count">1</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/acceptance/road-v0-6/cp5-cleanup/report.md"><a href="../../docs/acceptance/road-v0-6/cp5-cleanup/report.md" target="_blank" rel="noopener" title="docs/acceptance/road-v0-6/cp5-cleanup/report.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">report.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/acceptance/road-v0-6/cp6-safety"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">cp6-safety/</span><span class="role"></span><span class="count">6</span></summary>
+<ul class="branches">
+<li class="directory" data-path="docs/acceptance/road-v0-6/cp6-safety/screenshots"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">screenshots/</span><span class="role"></span><span class="count">5</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/acceptance/road-v0-6/cp6-safety/screenshots/branch-commit-unknown-1220x780.png"><a href="../../docs/acceptance/road-v0-6/cp6-safety/screenshots/branch-commit-unknown-1220x780.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-6/cp6-safety/screenshots/branch-commit-unknown-1220x780.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">branch-commit-unknown-1220x780.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-6/cp6-safety/screenshots/library-degraded-1220x780.png"><a href="../../docs/acceptance/road-v0-6/cp6-safety/screenshots/library-degraded-1220x780.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-6/cp6-safety/screenshots/library-degraded-1220x780.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">library-degraded-1220x780.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-6/cp6-safety/screenshots/ordinary-repair-1220x780.png"><a href="../../docs/acceptance/road-v0-6/cp6-safety/screenshots/ordinary-repair-1220x780.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-6/cp6-safety/screenshots/ordinary-repair-1220x780.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">ordinary-repair-1220x780.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-6/cp6-safety/screenshots/paper-920x680.png"><a href="../../docs/acceptance/road-v0-6/cp6-safety/screenshots/paper-920x680.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-6/cp6-safety/screenshots/paper-920x680.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">paper-920x680.png</span><span class="extension">png</span></a></li>
+<li class="file" data-path="docs/acceptance/road-v0-6/cp6-safety/screenshots/tauri-start-1220x780.png"><a href="../../docs/acceptance/road-v0-6/cp6-safety/screenshots/tauri-start-1220x780.png" target="_blank" rel="noopener" title="docs/acceptance/road-v0-6/cp6-safety/screenshots/tauri-start-1220x780.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">tauri-start-1220x780.png</span><span class="extension">png</span></a></li>
+</ul>
+</details></li>
+<li class="file" data-path="docs/acceptance/road-v0-6/cp6-safety/report.md"><a href="../../docs/acceptance/road-v0-6/cp6-safety/report.md" target="_blank" rel="noopener" title="docs/acceptance/road-v0-6/cp6-safety/report.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">report.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/acceptance/road-v0-6/cp7-author"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">cp7-author/</span><span class="role"></span><span class="count">1</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/acceptance/road-v0-6/cp7-author/report.md"><a href="../../docs/acceptance/road-v0-6/cp7-author/report.md" target="_blank" rel="noopener" title="docs/acceptance/road-v0-6/cp7-author/report.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">report.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/acceptance/road-v0-7"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">road-v0-7/</span><span class="role"></span><span class="count">9</span></summary>
+<ul class="branches">
+<li class="directory" data-path="docs/acceptance/road-v0-7/cp0-contract"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">cp0-contract/</span><span class="role"></span><span class="count">1</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/acceptance/road-v0-7/cp0-contract/report.md"><a href="../../docs/acceptance/road-v0-7/cp0-contract/report.md" target="_blank" rel="noopener" title="docs/acceptance/road-v0-7/cp0-contract/report.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">report.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/acceptance/road-v0-7/cp1-grayscale"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">cp1-grayscale/</span><span class="role"></span><span class="count">1</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/acceptance/road-v0-7/cp1-grayscale/report.md"><a href="../../docs/acceptance/road-v0-7/cp1-grayscale/report.md" target="_blank" rel="noopener" title="docs/acceptance/road-v0-7/cp1-grayscale/report.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">report.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/acceptance/road-v0-7/cp2-shell"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">cp2-shell/</span><span class="role"></span><span class="count">1</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/acceptance/road-v0-7/cp2-shell/report.md"><a href="../../docs/acceptance/road-v0-7/cp2-shell/report.md" target="_blank" rel="noopener" title="docs/acceptance/road-v0-7/cp2-shell/report.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">report.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/acceptance/road-v0-7/cp3-paper"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">cp3-paper/</span><span class="role"></span><span class="count">1</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/acceptance/road-v0-7/cp3-paper/report.md"><a href="../../docs/acceptance/road-v0-7/cp3-paper/report.md" target="_blank" rel="noopener" title="docs/acceptance/road-v0-7/cp3-paper/report.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">report.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/acceptance/road-v0-7/cp4-library-vault"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">cp4-library-vault/</span><span class="role"></span><span class="count">1</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/acceptance/road-v0-7/cp4-library-vault/report.md"><a href="../../docs/acceptance/road-v0-7/cp4-library-vault/report.md" target="_blank" rel="noopener" title="docs/acceptance/road-v0-7/cp4-library-vault/report.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">report.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/acceptance/road-v0-7/cp5-integration"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">cp5-integration/</span><span class="role"></span><span class="count">1</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/acceptance/road-v0-7/cp5-integration/report.md"><a href="../../docs/acceptance/road-v0-7/cp5-integration/report.md" target="_blank" rel="noopener" title="docs/acceptance/road-v0-7/cp5-integration/report.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">report.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/acceptance/road-v0-7/cp6-author"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">cp6-author/</span><span class="role"></span><span class="count">1</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/acceptance/road-v0-7/cp6-author/report.md"><a href="../../docs/acceptance/road-v0-7/cp6-author/report.md" target="_blank" rel="noopener" title="docs/acceptance/road-v0-7/cp6-author/report.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">report.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/acceptance/road-v0-7/cp7-continuous-flow"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">cp7-continuous-flow/</span><span class="role"></span><span class="count">1</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/acceptance/road-v0-7/cp7-continuous-flow/report.md"><a href="../../docs/acceptance/road-v0-7/cp7-continuous-flow/report.md" target="_blank" rel="noopener" title="docs/acceptance/road-v0-7/cp7-continuous-flow/report.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">report.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/acceptance/road-v0-7/cp8-responsive-navigation"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">cp8-responsive-navigation/</span><span class="role"></span><span class="count">1</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/acceptance/road-v0-7/cp8-responsive-navigation/report.md"><a href="../../docs/acceptance/road-v0-7/cp8-responsive-navigation/report.md" target="_blank" rel="noopener" title="docs/acceptance/road-v0-7/cp8-responsive-navigation/report.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">report.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="file" data-path="docs/acceptance/close-guard-2026-09-04.md"><a href="../../docs/acceptance/close-guard-2026-09-04.md" target="_blank" rel="noopener" title="docs/acceptance/close-guard-2026-09-04.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">close-guard-2026-09-04.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/acceptance/phase8.md"><a href="../../docs/acceptance/phase8.md" target="_blank" rel="noopener" title="docs/acceptance/phase8.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">phase8.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/acceptance/README.md"><a href="../../docs/acceptance/README.md" target="_blank" rel="noopener" title="docs/acceptance/README.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">README.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/acceptance/road_v0_4_cp10.md"><a href="../../docs/acceptance/road_v0_4_cp10.md" target="_blank" rel="noopener" title="docs/acceptance/road_v0_4_cp10.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">road_v0_4_cp10.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/acceptance/road_v0_4_cp11.md"><a href="../../docs/acceptance/road_v0_4_cp11.md" target="_blank" rel="noopener" title="docs/acceptance/road_v0_4_cp11.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">road_v0_4_cp11.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/acceptance/road_v0_4_cp12.md"><a href="../../docs/acceptance/road_v0_4_cp12.md" target="_blank" rel="noopener" title="docs/acceptance/road_v0_4_cp12.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">road_v0_4_cp12.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/acceptance/road_v0_4_cp13.md"><a href="../../docs/acceptance/road_v0_4_cp13.md" target="_blank" rel="noopener" title="docs/acceptance/road_v0_4_cp13.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">road_v0_4_cp13.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/acceptance/road_v0_4_cp14.md"><a href="../../docs/acceptance/road_v0_4_cp14.md" target="_blank" rel="noopener" title="docs/acceptance/road_v0_4_cp14.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">road_v0_4_cp14.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/architecture"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">architecture/</span><span class="role">架构与决策</span><span class="count">12</span></summary>
+<ul class="branches">
+<li class="directory" data-path="docs/architecture/decisions"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">decisions/</span><span class="role"></span><span class="count">7</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/architecture/decisions/0001-document-authority.md"><a href="../../docs/architecture/decisions/0001-document-authority.md" target="_blank" rel="noopener" title="docs/architecture/decisions/0001-document-authority.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">0001-document-authority.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/architecture/decisions/0004-vue-tauri-python-sidecar.md"><a href="../../docs/architecture/decisions/0004-vue-tauri-python-sidecar.md" target="_blank" rel="noopener" title="docs/architecture/decisions/0004-vue-tauri-python-sidecar.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">0004-vue-tauri-python-sidecar.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/architecture/decisions/0005-beta-toolchain-engineering-exception.md"><a href="../../docs/architecture/decisions/0005-beta-toolchain-engineering-exception.md" target="_blank" rel="noopener" title="docs/architecture/decisions/0005-beta-toolchain-engineering-exception.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">0005-beta-toolchain-engineering-exception.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/architecture/decisions/0006-road-v0-6-beta-engineering-exception.md"><a href="../../docs/architecture/decisions/0006-road-v0-6-beta-engineering-exception.md" target="_blank" rel="noopener" title="docs/architecture/decisions/0006-road-v0-6-beta-engineering-exception.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">0006-road-v0-6-beta-engineering-exception.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/architecture/decisions/0007-paper-v4-schema-migration.md"><a href="../../docs/architecture/decisions/0007-paper-v4-schema-migration.md" target="_blank" rel="noopener" title="docs/architecture/decisions/0007-paper-v4-schema-migration.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">0007-paper-v4-schema-migration.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/architecture/decisions/0008-whole-folder-trash-lifecycle.md"><a href="../../docs/architecture/decisions/0008-whole-folder-trash-lifecycle.md" target="_blank" rel="noopener" title="docs/architecture/decisions/0008-whole-folder-trash-lifecycle.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">0008-whole-folder-trash-lifecycle.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/architecture/decisions/0009-unified-rust-core-transition.md"><a href="../../docs/architecture/decisions/0009-unified-rust-core-transition.md" target="_blank" rel="noopener" title="docs/architecture/decisions/0009-unified-rust-core-transition.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">0009-unified-rust-core-transition.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="file" data-path="docs/architecture/architecture.html"><a href="../../docs/architecture/architecture.html" target="_blank" rel="noopener" title="docs/architecture/architecture.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">architecture.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/architecture/keikeu-current-architecture.archify.json"><a href="../../docs/architecture/keikeu-current-architecture.archify.json" target="_blank" rel="noopener" title="docs/architecture/keikeu-current-architecture.archify.json"><span class="file-icon" aria-hidden="true">▫</span><span class="name">keikeu-current-architecture.archify.json</span><span class="extension">json</span></a></li>
+<li class="file" data-path="docs/architecture/keikeu-current-architecture.html"><a href="../../docs/architecture/keikeu-current-architecture.html" target="_blank" rel="noopener" title="docs/architecture/keikeu-current-architecture.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">keikeu-current-architecture.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/architecture/road-v0-8-changes.archify.json"><a href="../../docs/architecture/road-v0-8-changes.archify.json" target="_blank" rel="noopener" title="docs/architecture/road-v0-8-changes.archify.json"><span class="file-icon" aria-hidden="true">▫</span><span class="name">road-v0-8-changes.archify.json</span><span class="extension">json</span></a></li>
+<li class="file" data-path="docs/architecture/road-v0-8-changes.html"><a href="../../docs/architecture/road-v0-8-changes.html" target="_blank" rel="noopener" title="docs/architecture/road-v0-8-changes.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">road-v0-8-changes.html</span><span class="extension">html</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/archive"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">archive/</span><span class="role">只读历史</span><span class="count">51</span></summary>
+<ul class="branches">
+<li class="directory" data-path="docs/archive/docs-agents-md-update"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">docs-agents-md-update/</span><span class="role"></span><span class="count">8</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/archive/docs-agents-md-update/audit_v01_to_v02_2026-07-13.md"><a href="../../docs/archive/docs-agents-md-update/audit_v01_to_v02_2026-07-13.md" target="_blank" rel="noopener" title="docs/archive/docs-agents-md-update/audit_v01_to_v02_2026-07-13.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">audit_v01_to_v02_2026-07-13.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/archive/docs-agents-md-update/phase8_acceptance_2026-07-15.md"><a href="../../docs/archive/docs-agents-md-update/phase8_acceptance_2026-07-15.md" target="_blank" rel="noopener" title="docs/archive/docs-agents-md-update/phase8_acceptance_2026-07-15.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">phase8_acceptance_2026-07-15.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/archive/docs-agents-md-update/phase8_check_sop_2026-07-15.md"><a href="../../docs/archive/docs-agents-md-update/phase8_check_sop_2026-07-15.md" target="_blank" rel="noopener" title="docs/archive/docs-agents-md-update/phase8_check_sop_2026-07-15.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">phase8_check_sop_2026-07-15.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/archive/docs-agents-md-update/planbook_road_v0_2.md"><a href="../../docs/archive/docs-agents-md-update/planbook_road_v0_2.md" target="_blank" rel="noopener" title="docs/archive/docs-agents-md-update/planbook_road_v0_2.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">planbook_road_v0_2.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/archive/docs-agents-md-update/README.md"><a href="../../docs/archive/docs-agents-md-update/README.md" target="_blank" rel="noopener" title="docs/archive/docs-agents-md-update/README.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">README.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/archive/docs-agents-md-update/requirements_discovery_v0_2.md"><a href="../../docs/archive/docs-agents-md-update/requirements_discovery_v0_2.md" target="_blank" rel="noopener" title="docs/archive/docs-agents-md-update/requirements_discovery_v0_2.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">requirements_discovery_v0_2.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/archive/docs-agents-md-update/road_pre_advance.md"><a href="../../docs/archive/docs-agents-md-update/road_pre_advance.md" target="_blank" rel="noopener" title="docs/archive/docs-agents-md-update/road_pre_advance.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">road_pre_advance.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/archive/docs-agents-md-update/spec_road_v0_2.md"><a href="../../docs/archive/docs-agents-md-update/spec_road_v0_2.md" target="_blank" rel="noopener" title="docs/archive/docs-agents-md-update/spec_road_v0_2.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">spec_road_v0_2.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/archive/docs-archive-documentation-reform-report"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">docs-archive-documentation-reform-report/</span><span class="role"></span><span class="count">3</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/archive/docs-archive-documentation-reform-report/phase8-sop.md"><a href="../../docs/archive/docs-archive-documentation-reform-report/phase8-sop.md" target="_blank" rel="noopener" title="docs/archive/docs-archive-documentation-reform-report/phase8-sop.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">phase8-sop.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/archive/docs-archive-documentation-reform-report/phase8.md"><a href="../../docs/archive/docs-archive-documentation-reform-report/phase8.md" target="_blank" rel="noopener" title="docs/archive/docs-archive-documentation-reform-report/phase8.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">phase8.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/archive/docs-archive-documentation-reform-report/README.md"><a href="../../docs/archive/docs-archive-documentation-reform-report/README.md" target="_blank" rel="noopener" title="docs/archive/docs-archive-documentation-reform-report/README.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">README.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/archive/docs-clarify-export-cancellation-semantics"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">docs-clarify-export-cancellation-semantics/</span><span class="role"></span><span class="count">7</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/archive/docs-clarify-export-cancellation-semantics/audit_review_vs_code_2026-07-04.md"><a href="../../docs/archive/docs-clarify-export-cancellation-semantics/audit_review_vs_code_2026-07-04.md" target="_blank" rel="noopener" title="docs/archive/docs-clarify-export-cancellation-semantics/audit_review_vs_code_2026-07-04.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">audit_review_vs_code_2026-07-04.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/archive/docs-clarify-export-cancellation-semantics/claude_handoff_after_phase2.md"><a href="../../docs/archive/docs-clarify-export-cancellation-semantics/claude_handoff_after_phase2.md" target="_blank" rel="noopener" title="docs/archive/docs-clarify-export-cancellation-semantics/claude_handoff_after_phase2.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">claude_handoff_after_phase2.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/archive/docs-clarify-export-cancellation-semantics/issue_retrospective_v0_1.md"><a href="../../docs/archive/docs-clarify-export-cancellation-semantics/issue_retrospective_v0_1.md" target="_blank" rel="noopener" title="docs/archive/docs-clarify-export-cancellation-semantics/issue_retrospective_v0_1.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">issue_retrospective_v0_1.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/archive/docs-clarify-export-cancellation-semantics/keikeu-ui-prototype.html"><a href="../../docs/archive/docs-clarify-export-cancellation-semantics/keikeu-ui-prototype.html" target="_blank" rel="noopener" title="docs/archive/docs-clarify-export-cancellation-semantics/keikeu-ui-prototype.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">keikeu-ui-prototype.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/archive/docs-clarify-export-cancellation-semantics/keikeu_project_review_v0_1.html"><a href="../../docs/archive/docs-clarify-export-cancellation-semantics/keikeu_project_review_v0_1.html" target="_blank" rel="noopener" title="docs/archive/docs-clarify-export-cancellation-semantics/keikeu_project_review_v0_1.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">keikeu_project_review_v0_1.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/archive/docs-clarify-export-cancellation-semantics/planbook_road_v0_1.md"><a href="../../docs/archive/docs-clarify-export-cancellation-semantics/planbook_road_v0_1.md" target="_blank" rel="noopener" title="docs/archive/docs-clarify-export-cancellation-semantics/planbook_road_v0_1.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">planbook_road_v0_1.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/archive/docs-clarify-export-cancellation-semantics/spec_road_v0_1.md"><a href="../../docs/archive/docs-clarify-export-cancellation-semantics/spec_road_v0_1.md" target="_blank" rel="noopener" title="docs/archive/docs-clarify-export-cancellation-semantics/spec_road_v0_1.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">spec_road_v0_1.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/archive/planning"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">planning/</span><span class="role"></span><span class="count">1</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/archive/planning/doc_reform.html"><a href="../../docs/archive/planning/doc_reform.html" target="_blank" rel="noopener" title="docs/archive/planning/doc_reform.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">doc_reform.html</span><span class="extension">html</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/archive/road-v0-3"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">road-v0-3/</span><span class="role"></span><span class="count">12</span></summary>
+<ul class="branches">
+<li class="directory" data-path="docs/archive/road-v0-3/acceptance"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">acceptance/</span><span class="role"></span><span class="count">1</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/archive/road-v0-3/acceptance/road_v0_3.md"><a href="../../docs/archive/road-v0-3/acceptance/road_v0_3.md" target="_blank" rel="noopener" title="docs/archive/road-v0-3/acceptance/road_v0_3.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">road_v0_3.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/archive/road-v0-3/architecture"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">architecture/</span><span class="role"></span><span class="count">3</span></summary>
+<ul class="branches">
+<li class="directory" data-path="docs/archive/road-v0-3/architecture/decisions"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">decisions/</span><span class="role"></span><span class="count">2</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/archive/road-v0-3/architecture/decisions/0002-home-write-boundary.md"><a href="../../docs/archive/road-v0-3/architecture/decisions/0002-home-write-boundary.md" target="_blank" rel="noopener" title="docs/archive/road-v0-3/architecture/decisions/0002-home-write-boundary.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">0002-home-write-boundary.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/archive/road-v0-3/architecture/decisions/0003-paper-v3-one-level-folders.md"><a href="../../docs/archive/road-v0-3/architecture/decisions/0003-paper-v3-one-level-folders.md" target="_blank" rel="noopener" title="docs/archive/road-v0-3/architecture/decisions/0003-paper-v3-one-level-folders.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">0003-paper-v3-one-level-folders.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="file" data-path="docs/archive/road-v0-3/architecture/architecture.html"><a href="../../docs/archive/road-v0-3/architecture/architecture.html" target="_blank" rel="noopener" title="docs/archive/road-v0-3/architecture/architecture.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">architecture.html</span><span class="extension">html</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/archive/road-v0-3/assets"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">assets/</span><span class="role"></span><span class="count">2</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/archive/road-v0-3/assets/map.css"><a href="../../docs/archive/road-v0-3/assets/map.css" target="_blank" rel="noopener" title="docs/archive/road-v0-3/assets/map.css"><span class="file-icon" aria-hidden="true">▫</span><span class="name">map.css</span><span class="extension">css</span></a></li>
+<li class="file" data-path="docs/archive/road-v0-3/assets/map.js"><a href="../../docs/archive/road-v0-3/assets/map.js" target="_blank" rel="noopener" title="docs/archive/road-v0-3/assets/map.js"><span class="file-icon" aria-hidden="true">▫</span><span class="name">map.js</span><span class="extension">js</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/archive/road-v0-3/design"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">design/</span><span class="role"></span><span class="count">2</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/archive/road-v0-3/design/design.html"><a href="../../docs/archive/road-v0-3/design/design.html" target="_blank" rel="noopener" title="docs/archive/road-v0-3/design/design.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">design.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/archive/road-v0-3/design/interaction.html"><a href="../../docs/archive/road-v0-3/design/interaction.html" target="_blank" rel="noopener" title="docs/archive/road-v0-3/design/interaction.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">interaction.html</span><span class="extension">html</span></a></li>
+</ul>
+</details></li>
+<li class="file" data-path="docs/archive/road-v0-3/cold_start_report.md"><a href="../../docs/archive/road-v0-3/cold_start_report.md" target="_blank" rel="noopener" title="docs/archive/road-v0-3/cold_start_report.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">cold_start_report.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/archive/road-v0-3/planbook_road_v0_3.md"><a href="../../docs/archive/road-v0-3/planbook_road_v0_3.md" target="_blank" rel="noopener" title="docs/archive/road-v0-3/planbook_road_v0_3.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">planbook_road_v0_3.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/archive/road-v0-3/README.md"><a href="../../docs/archive/road-v0-3/README.md" target="_blank" rel="noopener" title="docs/archive/road-v0-3/README.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">README.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/archive/road-v0-3/SPEC.md"><a href="../../docs/archive/road-v0-3/SPEC.md" target="_blank" rel="noopener" title="docs/archive/road-v0-3/SPEC.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">SPEC.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/archive/road-v0-4"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">road-v0-4/</span><span class="role"></span><span class="count">4</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/archive/road-v0-4/PLAN_revised.md"><a href="../../docs/archive/road-v0-4/PLAN_revised.md" target="_blank" rel="noopener" title="docs/archive/road-v0-4/PLAN_revised.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">PLAN_revised.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/archive/road-v0-4/protocol.md"><a href="../../docs/archive/road-v0-4/protocol.md" target="_blank" rel="noopener" title="docs/archive/road-v0-4/protocol.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">protocol.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/archive/road-v0-4/README.md"><a href="../../docs/archive/road-v0-4/README.md" target="_blank" rel="noopener" title="docs/archive/road-v0-4/README.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">README.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/archive/road-v0-4/RULE_FOR_UNDERSTANDING.md"><a href="../../docs/archive/road-v0-4/RULE_FOR_UNDERSTANDING.md" target="_blank" rel="noopener" title="docs/archive/road-v0-4/RULE_FOR_UNDERSTANDING.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">RULE_FOR_UNDERSTANDING.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/archive/road-v0-5"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">road-v0-5/</span><span class="role"></span><span class="count">4</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/archive/road-v0-5/PLAN_revised.md"><a href="../../docs/archive/road-v0-5/PLAN_revised.md" target="_blank" rel="noopener" title="docs/archive/road-v0-5/PLAN_revised.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">PLAN_revised.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/archive/road-v0-5/road-v0-5-planbook.content.json"><a href="../../docs/archive/road-v0-5/road-v0-5-planbook.content.json" target="_blank" rel="noopener" title="docs/archive/road-v0-5/road-v0-5-planbook.content.json"><span class="file-icon" aria-hidden="true">▫</span><span class="name">road-v0-5-planbook.content.json</span><span class="extension">json</span></a></li>
+<li class="file" data-path="docs/archive/road-v0-5/road-v0-5-planbook.html"><a href="../../docs/archive/road-v0-5/road-v0-5-planbook.html" target="_blank" rel="noopener" title="docs/archive/road-v0-5/road-v0-5-planbook.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">road-v0-5-planbook.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/archive/road-v0-5/road-v0-5-planbook.pdf"><a href="../../docs/archive/road-v0-5/road-v0-5-planbook.pdf" target="_blank" rel="noopener" title="docs/archive/road-v0-5/road-v0-5-planbook.pdf"><span class="file-icon" aria-hidden="true">▫</span><span class="name">road-v0-5-planbook.pdf</span><span class="extension">pdf</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/archive/road-v0-6"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">road-v0-6/</span><span class="role"></span><span class="count">1</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/archive/road-v0-6/PLAN_road_v0_6.md"><a href="../../docs/archive/road-v0-6/PLAN_road_v0_6.md" target="_blank" rel="noopener" title="docs/archive/road-v0-6/PLAN_road_v0_6.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">PLAN_road_v0_6.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/archive/road-v0-7"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">road-v0-7/</span><span class="role"></span><span class="count">1</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/archive/road-v0-7/PLAN_road_v0_7.md"><a href="../../docs/archive/road-v0-7/PLAN_road_v0_7.md" target="_blank" rel="noopener" title="docs/archive/road-v0-7/PLAN_road_v0_7.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">PLAN_road_v0_7.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/archive/snapshots"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">snapshots/</span><span class="role"></span><span class="count">9</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/archive/snapshots/docs-finalize-documentation-reform.html"><a href="../../docs/archive/snapshots/docs-finalize-documentation-reform.html" target="_blank" rel="noopener" title="docs/archive/snapshots/docs-finalize-documentation-reform.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">docs-finalize-documentation-reform.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/archive/snapshots/docs-stop-at-phase-8.html"><a href="../../docs/archive/snapshots/docs-stop-at-phase-8.html" target="_blank" rel="noopener" title="docs/archive/snapshots/docs-stop-at-phase-8.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">docs-stop-at-phase-8.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/archive/snapshots/feat-complete-road-v0-3-candidate.html"><a href="../../docs/archive/snapshots/feat-complete-road-v0-3-candidate.html" target="_blank" rel="noopener" title="docs/archive/snapshots/feat-complete-road-v0-3-candidate.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">feat-complete-road-v0-3-candidate.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/archive/snapshots/fix-ios-create-sandbox-vault-on-device.html"><a href="../../docs/archive/snapshots/fix-ios-create-sandbox-vault-on-device.html" target="_blank" rel="noopener" title="docs/archive/snapshots/fix-ios-create-sandbox-vault-on-device.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">fix-ios-create-sandbox-vault-on-device.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/archive/snapshots/fix-support-ios-simulator-deployment.html"><a href="../../docs/archive/snapshots/fix-support-ios-simulator-deployment.html" target="_blank" rel="noopener" title="docs/archive/snapshots/fix-support-ios-simulator-deployment.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">fix-support-ios-simulator-deployment.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/archive/snapshots/refactor-retire-flet-after-road-v0-4-acceptance.html"><a href="../../docs/archive/snapshots/refactor-retire-flet-after-road-v0-4-acceptance.html" target="_blank" rel="noopener" title="docs/archive/snapshots/refactor-retire-flet-after-road-v0-4-acceptance.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">refactor-retire-flet-after-road-v0-4-acceptance.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/archive/snapshots/road-v0-5.html"><a href="../../docs/archive/snapshots/road-v0-5.html" target="_blank" rel="noopener" title="docs/archive/snapshots/road-v0-5.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">road-v0-5.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/archive/snapshots/road-v0-6.html"><a href="../../docs/archive/snapshots/road-v0-6.html" target="_blank" rel="noopener" title="docs/archive/snapshots/road-v0-6.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">road-v0-6.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/archive/snapshots/road-v0-7.html"><a href="../../docs/archive/snapshots/road-v0-7.html" target="_blank" rel="noopener" title="docs/archive/snapshots/road-v0-7.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">road-v0-7.html</span><span class="extension">html</span></a></li>
+</ul>
+</details></li>
+<li class="file" data-path="docs/archive/README.md"><a href="../../docs/archive/README.md" target="_blank" rel="noopener" title="docs/archive/README.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">README.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/design"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">design/</span><span class="role">产品与交互设计</span><span class="count">7</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/design/boh_design.html"><a href="../../docs/design/boh_design.html" target="_blank" rel="noopener" title="docs/design/boh_design.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">boh_design.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/design/design.html"><a href="../../docs/design/design.html" target="_blank" rel="noopener" title="docs/design/design.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">design.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/design/interaction.html"><a href="../../docs/design/interaction.html" target="_blank" rel="noopener" title="docs/design/interaction.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">interaction.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/design/road-v0-6-paper-v4-design.md"><a href="../../docs/design/road-v0-6-paper-v4-design.md" target="_blank" rel="noopener" title="docs/design/road-v0-6-paper-v4-design.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">road-v0-6-paper-v4-design.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/design/road-v0-7-app-shell-design.md"><a href="../../docs/design/road-v0-7-app-shell-design.md" target="_blank" rel="noopener" title="docs/design/road-v0-7-app-shell-design.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">road-v0-7-app-shell-design.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/design/road-v0-7-planbook.html"><a href="../../docs/design/road-v0-7-planbook.html" target="_blank" rel="noopener" title="docs/design/road-v0-7-planbook.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">road-v0-7-planbook.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/design/working-materials.md"><a href="../../docs/design/working-materials.md" target="_blank" rel="noopener" title="docs/design/working-materials.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">working-materials.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/manual"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">manual/</span><span class="role">人工阅读说明</span><span class="count">25</span></summary>
+<ul class="branches">
+<li class="directory" data-path="docs/manual/forfresh"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">forfresh/</span><span class="role"></span><span class="count">13</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/manual/forfresh/build-and-packaging-guide.html"><a href="../../docs/manual/forfresh/build-and-packaging-guide.html" target="_blank" rel="noopener" title="docs/manual/forfresh/build-and-packaging-guide.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">build-and-packaging-guide.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/manual/forfresh/developer-tui-quickstart.html"><a href="../../docs/manual/forfresh/developer-tui-quickstart.html" target="_blank" rel="noopener" title="docs/manual/forfresh/developer-tui-quickstart.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">developer-tui-quickstart.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/manual/forfresh/git-interactive.html"><a href="../../docs/manual/forfresh/git-interactive.html" target="_blank" rel="noopener" title="docs/manual/forfresh/git-interactive.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">git-interactive.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/manual/forfresh/gitspec.md"><a href="../../docs/manual/forfresh/gitspec.md" target="_blank" rel="noopener" title="docs/manual/forfresh/gitspec.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">gitspec.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/manual/forfresh/kami-manual.css"><a href="../../docs/manual/forfresh/kami-manual.css" target="_blank" rel="noopener" title="docs/manual/forfresh/kami-manual.css"><span class="file-icon" aria-hidden="true">▫</span><span class="name">kami-manual.css</span><span class="extension">css</span></a></li>
+<li class="file" data-path="docs/manual/forfresh/macos-developer-beginner-guide.html"><a href="../../docs/manual/forfresh/macos-developer-beginner-guide.html" target="_blank" rel="noopener" title="docs/manual/forfresh/macos-developer-beginner-guide.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">macos-developer-beginner-guide.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/manual/forfresh/macos-developer-id-release.md"><a href="../../docs/manual/forfresh/macos-developer-id-release.md" target="_blank" rel="noopener" title="docs/manual/forfresh/macos-developer-id-release.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">macos-developer-id-release.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/manual/forfresh/npm-beginner-guide.html"><a href="../../docs/manual/forfresh/npm-beginner-guide.html" target="_blank" rel="noopener" title="docs/manual/forfresh/npm-beginner-guide.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">npm-beginner-guide.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/manual/forfresh/python-caveman-guide.html"><a href="../../docs/manual/forfresh/python-caveman-guide.html" target="_blank" rel="noopener" title="docs/manual/forfresh/python-caveman-guide.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">python-caveman-guide.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/manual/forfresh/rust-beginner-guide.html"><a href="../../docs/manual/forfresh/rust-beginner-guide.html" target="_blank" rel="noopener" title="docs/manual/forfresh/rust-beginner-guide.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">rust-beginner-guide.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/manual/forfresh/stack-component-atlas.html"><a href="../../docs/manual/forfresh/stack-component-atlas.html" target="_blank" rel="noopener" title="docs/manual/forfresh/stack-component-atlas.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">stack-component-atlas.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/manual/forfresh/tauri-vue-beginner-guide.html"><a href="../../docs/manual/forfresh/tauri-vue-beginner-guide.html" target="_blank" rel="noopener" title="docs/manual/forfresh/tauri-vue-beginner-guide.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">tauri-vue-beginner-guide.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/manual/forfresh/testing-and-evidence-guide.html"><a href="../../docs/manual/forfresh/testing-and-evidence-guide.html" target="_blank" rel="noopener" title="docs/manual/forfresh/testing-and-evidence-guide.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">testing-and-evidence-guide.html</span><span class="extension">html</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="docs/manual/prospect"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">prospect/</span><span class="role"></span><span class="count">3</span></summary>
+<ul class="branches">
+<li class="file" data-path="docs/manual/prospect/alpha-audience-research.md"><a href="../../docs/manual/prospect/alpha-audience-research.md" target="_blank" rel="noopener" title="docs/manual/prospect/alpha-audience-research.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">alpha-audience-research.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/manual/prospect/appdesign.md"><a href="../../docs/manual/prospect/appdesign.md" target="_blank" rel="noopener" title="docs/manual/prospect/appdesign.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">appdesign.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/manual/prospect/ethics.md"><a href="../../docs/manual/prospect/ethics.md" target="_blank" rel="noopener" title="docs/manual/prospect/ethics.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">ethics.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="file" data-path="docs/manual/keikeu-current-logic.html"><a href="../../docs/manual/keikeu-current-logic.html" target="_blank" rel="noopener" title="docs/manual/keikeu-current-logic.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">keikeu-current-logic.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/manual/paper-v4-repair.html"><a href="../../docs/manual/paper-v4-repair.html" target="_blank" rel="noopener" title="docs/manual/paper-v4-repair.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">paper-v4-repair.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/manual/README.md"><a href="../../docs/manual/README.md" target="_blank" rel="noopener" title="docs/manual/README.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">README.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/manual/repository-structure-overview.html"><a href="../../docs/manual/repository-structure-overview.html" target="_blank" rel="noopener" title="docs/manual/repository-structure-overview.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">repository-structure-overview.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/manual/repository-structure.architecture.json"><a href="../../docs/manual/repository-structure.architecture.json" target="_blank" rel="noopener" title="docs/manual/repository-structure.architecture.json"><span class="file-icon" aria-hidden="true">▫</span><span class="name">repository-structure.architecture.json</span><span class="extension">json</span></a></li>
+<li class="file" data-path="docs/manual/repository-structure.check.cjs"><a href="../../docs/manual/repository-structure.check.cjs" target="_blank" rel="noopener" title="docs/manual/repository-structure.check.cjs"><span class="file-icon" aria-hidden="true">▫</span><span class="name">repository-structure.check.cjs</span><span class="extension">cjs</span></a></li>
+<li class="file" data-path="docs/manual/repository-structure.html"><a href="../../docs/manual/repository-structure.html" target="_blank" rel="noopener" title="docs/manual/repository-structure.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">repository-structure.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="docs/manual/repository-structure.receipt.json"><a href="../../docs/manual/repository-structure.receipt.json" target="_blank" rel="noopener" title="docs/manual/repository-structure.receipt.json"><span class="file-icon" aria-hidden="true">▫</span><span class="name">repository-structure.receipt.json</span><span class="extension">json</span></a></li>
+<li class="file" data-path="docs/manual/road-v0-8-guide.md"><a href="../../docs/manual/road-v0-8-guide.md" target="_blank" rel="noopener" title="docs/manual/road-v0-8-guide.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">road-v0-8-guide.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="file" data-path="docs/PROJECT.md"><a href="../../docs/PROJECT.md" target="_blank" rel="noopener" title="docs/PROJECT.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">PROJECT.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/RULES.md"><a href="../../docs/RULES.md" target="_blank" rel="noopener" title="docs/RULES.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">RULES.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="docs/SPEC.md"><a href="../../docs/SPEC.md" target="_blank" rel="noopener" title="docs/SPEC.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">SPEC.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="frontend"><details open><summary><span class="folder" aria-hidden="true">▰</span><span class="name">frontend/</span><span class="role">桌面界面与原生宿主</span><span class="count">34</span></summary>
+<ul class="branches">
+<li class="directory" data-path="frontend/src"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">src/</span><span class="role">Vue 界面与同目录测试</span><span class="count">20</span></summary>
+<ul class="branches">
+<li class="file" data-path="frontend/src/App.test.js"><a href="../../frontend/src/App.test.js" target="_blank" rel="noopener" title="frontend/src/App.test.js"><span class="file-icon" aria-hidden="true">▫</span><span class="name">App.test.js</span><span class="extension">js</span></a></li>
+<li class="file" data-path="frontend/src/App.vue"><a href="../../frontend/src/App.vue" target="_blank" rel="noopener" title="frontend/src/App.vue"><span class="file-icon" aria-hidden="true">▫</span><span class="name">App.vue</span><span class="extension">vue</span></a></li>
+<li class="file" data-path="frontend/src/bridge.js"><a href="../../frontend/src/bridge.js" target="_blank" rel="noopener" title="frontend/src/bridge.js"><span class="file-icon" aria-hidden="true">▫</span><span class="name">bridge.js</span><span class="extension">js</span></a></li>
+<li class="file" data-path="frontend/src/bridge.test.js"><a href="../../frontend/src/bridge.test.js" target="_blank" rel="noopener" title="frontend/src/bridge.test.js"><span class="file-icon" aria-hidden="true">▫</span><span class="name">bridge.test.js</span><span class="extension">js</span></a></li>
+<li class="file" data-path="frontend/src/LibraryV4Projection.test.js"><a href="../../frontend/src/LibraryV4Projection.test.js" target="_blank" rel="noopener" title="frontend/src/LibraryV4Projection.test.js"><span class="file-icon" aria-hidden="true">▫</span><span class="name">LibraryV4Projection.test.js</span><span class="extension">js</span></a></li>
+<li class="file" data-path="frontend/src/LibraryV4Projection.vue"><a href="../../frontend/src/LibraryV4Projection.vue" target="_blank" rel="noopener" title="frontend/src/LibraryV4Projection.vue"><span class="file-icon" aria-hidden="true">▫</span><span class="name">LibraryV4Projection.vue</span><span class="extension">vue</span></a></li>
+<li class="file" data-path="frontend/src/LibraryView.test.js"><a href="../../frontend/src/LibraryView.test.js" target="_blank" rel="noopener" title="frontend/src/LibraryView.test.js"><span class="file-icon" aria-hidden="true">▫</span><span class="name">LibraryView.test.js</span><span class="extension">js</span></a></li>
+<li class="file" data-path="frontend/src/LibraryView.vue"><a href="../../frontend/src/LibraryView.vue" target="_blank" rel="noopener" title="frontend/src/LibraryView.vue"><span class="file-icon" aria-hidden="true">▫</span><span class="name">LibraryView.vue</span><span class="extension">vue</span></a></li>
+<li class="file" data-path="frontend/src/main.js"><a href="../../frontend/src/main.js" target="_blank" rel="noopener" title="frontend/src/main.js"><span class="file-icon" aria-hidden="true">▫</span><span class="name">main.js</span><span class="extension">js</span></a></li>
+<li class="file" data-path="frontend/src/PaperV4Workbench.test.js"><a href="../../frontend/src/PaperV4Workbench.test.js" target="_blank" rel="noopener" title="frontend/src/PaperV4Workbench.test.js"><span class="file-icon" aria-hidden="true">▫</span><span class="name">PaperV4Workbench.test.js</span><span class="extension">js</span></a></li>
+<li class="file" data-path="frontend/src/PaperV4Workbench.vue"><a href="../../frontend/src/PaperV4Workbench.vue" target="_blank" rel="noopener" title="frontend/src/PaperV4Workbench.vue"><span class="file-icon" aria-hidden="true">▫</span><span class="name">PaperV4Workbench.vue</span><span class="extension">vue</span></a></li>
+<li class="file" data-path="frontend/src/PaperView.test.js"><a href="../../frontend/src/PaperView.test.js" target="_blank" rel="noopener" title="frontend/src/PaperView.test.js"><span class="file-icon" aria-hidden="true">▫</span><span class="name">PaperView.test.js</span><span class="extension">js</span></a></li>
+<li class="file" data-path="frontend/src/PaperView.vue"><a href="../../frontend/src/PaperView.vue" target="_blank" rel="noopener" title="frontend/src/PaperView.vue"><span class="file-icon" aria-hidden="true">▫</span><span class="name">PaperView.vue</span><span class="extension">vue</span></a></li>
+<li class="file" data-path="frontend/src/PrototypeView.test.js"><a href="../../frontend/src/PrototypeView.test.js" target="_blank" rel="noopener" title="frontend/src/PrototypeView.test.js"><span class="file-icon" aria-hidden="true">▫</span><span class="name">PrototypeView.test.js</span><span class="extension">js</span></a></li>
+<li class="file" data-path="frontend/src/PrototypeView.vue"><a href="../../frontend/src/PrototypeView.vue" target="_blank" rel="noopener" title="frontend/src/PrototypeView.vue"><span class="file-icon" aria-hidden="true">▫</span><span class="name">PrototypeView.vue</span><span class="extension">vue</span></a></li>
+<li class="file" data-path="frontend/src/style.css"><a href="../../frontend/src/style.css" target="_blank" rel="noopener" title="frontend/src/style.css"><span class="file-icon" aria-hidden="true">▫</span><span class="name">style.css</span><span class="extension">css</span></a></li>
+<li class="file" data-path="frontend/src/tagsCsv.js"><a href="../../frontend/src/tagsCsv.js" target="_blank" rel="noopener" title="frontend/src/tagsCsv.js"><span class="file-icon" aria-hidden="true">▫</span><span class="name">tagsCsv.js</span><span class="extension">js</span></a></li>
+<li class="file" data-path="frontend/src/tagsCsv.test.js"><a href="../../frontend/src/tagsCsv.test.js" target="_blank" rel="noopener" title="frontend/src/tagsCsv.test.js"><span class="file-icon" aria-hidden="true">▫</span><span class="name">tagsCsv.test.js</span><span class="extension">js</span></a></li>
+<li class="file" data-path="frontend/src/VaultView.test.js"><a href="../../frontend/src/VaultView.test.js" target="_blank" rel="noopener" title="frontend/src/VaultView.test.js"><span class="file-icon" aria-hidden="true">▫</span><span class="name">VaultView.test.js</span><span class="extension">js</span></a></li>
+<li class="file" data-path="frontend/src/VaultView.vue"><a href="../../frontend/src/VaultView.vue" target="_blank" rel="noopener" title="frontend/src/VaultView.vue"><span class="file-icon" aria-hidden="true">▫</span><span class="name">VaultView.vue</span><span class="extension">vue</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="frontend/src-tauri"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">src-tauri/</span><span class="role">Tauri / Rust 原生宿主</span><span class="count">10</span></summary>
+<ul class="branches">
+<li class="directory" data-path="frontend/src-tauri/capabilities"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">capabilities/</span><span class="role"></span><span class="count">1</span></summary>
+<ul class="branches">
+<li class="file" data-path="frontend/src-tauri/capabilities/main.json"><a href="../../frontend/src-tauri/capabilities/main.json" target="_blank" rel="noopener" title="frontend/src-tauri/capabilities/main.json"><span class="file-icon" aria-hidden="true">▫</span><span class="name">main.json</span><span class="extension">json</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="frontend/src-tauri/icons"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">icons/</span><span class="role"></span><span class="count">1</span></summary>
+<ul class="branches">
+<li class="file" data-path="frontend/src-tauri/icons/icon.png"><a href="../../frontend/src-tauri/icons/icon.png" target="_blank" rel="noopener" title="frontend/src-tauri/icons/icon.png"><span class="file-icon" aria-hidden="true">▫</span><span class="name">icon.png</span><span class="extension">png</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="frontend/src-tauri/src"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">src/</span><span class="role"></span><span class="count">4</span></summary>
+<ul class="branches">
+<li class="file" data-path="frontend/src-tauri/src/bridge.rs"><a href="../../frontend/src-tauri/src/bridge.rs" target="_blank" rel="noopener" title="frontend/src-tauri/src/bridge.rs"><span class="file-icon" aria-hidden="true">▫</span><span class="name">bridge.rs</span><span class="extension">rs</span></a></li>
+<li class="file" data-path="frontend/src-tauri/src/commands.rs"><a href="../../frontend/src-tauri/src/commands.rs" target="_blank" rel="noopener" title="frontend/src-tauri/src/commands.rs"><span class="file-icon" aria-hidden="true">▫</span><span class="name">commands.rs</span><span class="extension">rs</span></a></li>
+<li class="file" data-path="frontend/src-tauri/src/lib.rs"><a href="../../frontend/src-tauri/src/lib.rs" target="_blank" rel="noopener" title="frontend/src-tauri/src/lib.rs"><span class="file-icon" aria-hidden="true">▫</span><span class="name">lib.rs</span><span class="extension">rs</span></a></li>
+<li class="file" data-path="frontend/src-tauri/src/main.rs"><a href="../../frontend/src-tauri/src/main.rs" target="_blank" rel="noopener" title="frontend/src-tauri/src/main.rs"><span class="file-icon" aria-hidden="true">▫</span><span class="name">main.rs</span><span class="extension">rs</span></a></li>
+</ul>
+</details></li>
+<li class="file" data-path="frontend/src-tauri/build.rs"><a href="../../frontend/src-tauri/build.rs" target="_blank" rel="noopener" title="frontend/src-tauri/build.rs"><span class="file-icon" aria-hidden="true">▫</span><span class="name">build.rs</span><span class="extension">rs</span></a></li>
+<li class="file" data-path="frontend/src-tauri/Cargo.lock"><a href="../../frontend/src-tauri/Cargo.lock" target="_blank" rel="noopener" title="frontend/src-tauri/Cargo.lock"><span class="file-icon" aria-hidden="true">▫</span><span class="name">Cargo.lock</span><span class="extension">lock</span></a></li>
+<li class="file" data-path="frontend/src-tauri/Cargo.toml"><a href="../../frontend/src-tauri/Cargo.toml" target="_blank" rel="noopener" title="frontend/src-tauri/Cargo.toml"><span class="file-icon" aria-hidden="true">▫</span><span class="name">Cargo.toml</span><span class="extension">toml</span></a></li>
+<li class="file" data-path="frontend/src-tauri/tauri.conf.json"><a href="../../frontend/src-tauri/tauri.conf.json" target="_blank" rel="noopener" title="frontend/src-tauri/tauri.conf.json"><span class="file-icon" aria-hidden="true">▫</span><span class="name">tauri.conf.json</span><span class="extension">json</span></a></li>
+</ul>
+</details></li>
+<li class="file" data-path="frontend/index.html"><a href="../../frontend/index.html" target="_blank" rel="noopener" title="frontend/index.html"><span class="file-icon" aria-hidden="true">▫</span><span class="name">index.html</span><span class="extension">html</span></a></li>
+<li class="file" data-path="frontend/package-lock.json"><a href="../../frontend/package-lock.json" target="_blank" rel="noopener" title="frontend/package-lock.json"><span class="file-icon" aria-hidden="true">▫</span><span class="name">package-lock.json</span><span class="extension">json</span></a></li>
+<li class="file" data-path="frontend/package.json"><a href="../../frontend/package.json" target="_blank" rel="noopener" title="frontend/package.json"><span class="file-icon" aria-hidden="true">▫</span><span class="name">package.json</span><span class="extension">json</span></a></li>
+<li class="file" data-path="frontend/vite.config.js"><a href="../../frontend/vite.config.js" target="_blank" rel="noopener" title="frontend/vite.config.js"><span class="file-icon" aria-hidden="true">▫</span><span class="name">vite.config.js</span><span class="extension">js</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="scripts"><details open><summary><span class="folder" aria-hidden="true">▰</span><span class="name">scripts/</span><span class="role">构建与开发工具</span><span class="count">4</span></summary>
+<ul class="branches">
+<li class="file" data-path="scripts/build_context_pack.py"><a href="../../scripts/build_context_pack.py" target="_blank" rel="noopener" title="scripts/build_context_pack.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">build_context_pack.py</span><span class="extension">py</span></a></li>
+<li class="file" data-path="scripts/build_sidecar.py"><a href="../../scripts/build_sidecar.py" target="_blank" rel="noopener" title="scripts/build_sidecar.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">build_sidecar.py</span><span class="extension">py</span></a></li>
+<li class="file" data-path="scripts/check_docs.py"><a href="../../scripts/check_docs.py" target="_blank" rel="noopener" title="scripts/check_docs.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">check_docs.py</span><span class="extension">py</span></a></li>
+<li class="file" data-path="scripts/sidecar_entry.py"><a href="../../scripts/sidecar_entry.py" target="_blank" rel="noopener" title="scripts/sidecar_entry.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">sidecar_entry.py</span><span class="extension">py</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="src"><details open><summary><span class="folder" aria-hidden="true">▰</span><span class="name">src/</span><span class="role">Python 产品运行时</span><span class="count">15</span></summary>
+<ul class="branches">
+<li class="directory" data-path="src/keikeu_bridge"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">keikeu_bridge/</span><span class="role">协议与服务编排</span><span class="count">6</span></summary>
+<ul class="branches">
+<li class="file" data-path="src/keikeu_bridge/__init__.py"><a href="../../src/keikeu_bridge/__init__.py" target="_blank" rel="noopener" title="src/keikeu_bridge/__init__.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">__init__.py</span><span class="extension">py</span></a></li>
+<li class="file" data-path="src/keikeu_bridge/dto.py"><a href="../../src/keikeu_bridge/dto.py" target="_blank" rel="noopener" title="src/keikeu_bridge/dto.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">dto.py</span><span class="extension">py</span></a></li>
+<li class="file" data-path="src/keikeu_bridge/local_state.py"><a href="../../src/keikeu_bridge/local_state.py" target="_blank" rel="noopener" title="src/keikeu_bridge/local_state.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">local_state.py</span><span class="extension">py</span></a></li>
+<li class="file" data-path="src/keikeu_bridge/protocol.py"><a href="../../src/keikeu_bridge/protocol.py" target="_blank" rel="noopener" title="src/keikeu_bridge/protocol.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">protocol.py</span><span class="extension">py</span></a></li>
+<li class="file" data-path="src/keikeu_bridge/service.py"><a href="../../src/keikeu_bridge/service.py" target="_blank" rel="noopener" title="src/keikeu_bridge/service.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">service.py</span><span class="extension">py</span></a></li>
+<li class="file" data-path="src/keikeu_bridge/sidecar.py"><a href="../../src/keikeu_bridge/sidecar.py" target="_blank" rel="noopener" title="src/keikeu_bridge/sidecar.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">sidecar.py</span><span class="extension">py</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="src/keikeu_core"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">keikeu_core/</span><span class="role">领域模型与文件规则</span><span class="count">9</span></summary>
+<ul class="branches">
+<li class="file" data-path="src/keikeu_core/__init__.py"><a href="../../src/keikeu_core/__init__.py" target="_blank" rel="noopener" title="src/keikeu_core/__init__.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">__init__.py</span><span class="extension">py</span></a></li>
+<li class="file" data-path="src/keikeu_core/indexer.py"><a href="../../src/keikeu_core/indexer.py" target="_blank" rel="noopener" title="src/keikeu_core/indexer.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">indexer.py</span><span class="extension">py</span></a></li>
+<li class="file" data-path="src/keikeu_core/legacy_v01.py"><a href="../../src/keikeu_core/legacy_v01.py" target="_blank" rel="noopener" title="src/keikeu_core/legacy_v01.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">legacy_v01.py</span><span class="extension">py</span></a></li>
+<li class="file" data-path="src/keikeu_core/legacy_v3.py"><a href="../../src/keikeu_core/legacy_v3.py" target="_blank" rel="noopener" title="src/keikeu_core/legacy_v3.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">legacy_v3.py</span><span class="extension">py</span></a></li>
+<li class="file" data-path="src/keikeu_core/markdown_io.py"><a href="../../src/keikeu_core/markdown_io.py" target="_blank" rel="noopener" title="src/keikeu_core/markdown_io.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">markdown_io.py</span><span class="extension">py</span></a></li>
+<li class="file" data-path="src/keikeu_core/migration_v01.py"><a href="../../src/keikeu_core/migration_v01.py" target="_blank" rel="noopener" title="src/keikeu_core/migration_v01.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">migration_v01.py</span><span class="extension">py</span></a></li>
+<li class="file" data-path="src/keikeu_core/migration_v4.py"><a href="../../src/keikeu_core/migration_v4.py" target="_blank" rel="noopener" title="src/keikeu_core/migration_v4.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">migration_v4.py</span><span class="extension">py</span></a></li>
+<li class="file" data-path="src/keikeu_core/models.py"><a href="../../src/keikeu_core/models.py" target="_blank" rel="noopener" title="src/keikeu_core/models.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">models.py</span><span class="extension">py</span></a></li>
+<li class="file" data-path="src/keikeu_core/vault.py"><a href="../../src/keikeu_core/vault.py" target="_blank" rel="noopener" title="src/keikeu_core/vault.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">vault.py</span><span class="extension">py</span></a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="directory" data-path="tests"><details open><summary><span class="folder" aria-hidden="true">▰</span><span class="name">tests/</span><span class="role">Python 测试与固定样本</span><span class="count">33</span></summary>
+<ul class="branches">
+<li class="directory" data-path="tests/fixtures"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">fixtures/</span><span class="role"></span><span class="count">19</span></summary>
+<ul class="branches">
+<li class="directory" data-path="tests/fixtures/v01-vault"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">v01-vault/</span><span class="role"></span><span class="count">8</span></summary>
+<ul class="branches">
+<li class="directory" data-path="tests/fixtures/v01-vault/.trash"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">.trash/</span><span class="role"></span><span class="count">1</span></summary>
+<ul class="branches">
+<li class="directory" data-path="tests/fixtures/v01-vault/.trash/outlines"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">outlines/</span><span class="role"></span><span class="count">1</span></summary>
+<ul class="branches">
+<li class="file" data-path="tests/fixtures/v01-vault/.trash/outlines/2026-06-30-080000-b100-old-outline.md"><a href="../../tests/fixtures/v01-vault/.trash/outlines/2026-06-30-080000-b100-old-outline.md" target="_blank" rel="noopener" title="tests/fixtures/v01-vault/.trash/outlines/2026-06-30-080000-b100-old-outline.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">2026-06-30-080000-b100-old-outline.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="directory" data-path="tests/fixtures/v01-vault/cache"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">cache/</span><span class="role"></span><span class="count">4</span></summary>
+<ul class="branches">
+<li class="file" data-path="tests/fixtures/v01-vault/cache/2026-07-01-090000-a101-rain-platform.md"><a href="../../tests/fixtures/v01-vault/cache/2026-07-01-090000-a101-rain-platform.md" target="_blank" rel="noopener" title="tests/fixtures/v01-vault/cache/2026-07-01-090000-a101-rain-platform.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">2026-07-01-090000-a101-rain-platform.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="tests/fixtures/v01-vault/cache/2026-07-02-090000-a102-blank-optional.md"><a href="../../tests/fixtures/v01-vault/cache/2026-07-02-090000-a102-blank-optional.md" target="_blank" rel="noopener" title="tests/fixtures/v01-vault/cache/2026-07-02-090000-a102-blank-optional.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">2026-07-02-090000-a102-blank-optional.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="tests/fixtures/v01-vault/cache/2026-07-03-090000-a103-empty-raw.md"><a href="../../tests/fixtures/v01-vault/cache/2026-07-03-090000-a103-empty-raw.md" target="_blank" rel="noopener" title="tests/fixtures/v01-vault/cache/2026-07-03-090000-a103-empty-raw.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">2026-07-03-090000-a103-empty-raw.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="tests/fixtures/v01-vault/cache/2026-07-04-090000-a104-corrupt-status.md"><a href="../../tests/fixtures/v01-vault/cache/2026-07-04-090000-a104-corrupt-status.md" target="_blank" rel="noopener" title="tests/fixtures/v01-vault/cache/2026-07-04-090000-a104-corrupt-status.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">2026-07-04-090000-a104-corrupt-status.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="tests/fixtures/v01-vault/outlines"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">outlines/</span><span class="role"></span><span class="count">1</span></summary>
+<ul class="branches">
+<li class="file" data-path="tests/fixtures/v01-vault/outlines/2026-07-01-091000-b101-rain-platform-outline.md"><a href="../../tests/fixtures/v01-vault/outlines/2026-07-01-091000-b101-rain-platform-outline.md" target="_blank" rel="noopener" title="tests/fixtures/v01-vault/outlines/2026-07-01-091000-b101-rain-platform-outline.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">2026-07-01-091000-b101-rain-platform-outline.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="file" data-path="tests/fixtures/v01-vault/keikeu_index.json"><a href="../../tests/fixtures/v01-vault/keikeu_index.json" target="_blank" rel="noopener" title="tests/fixtures/v01-vault/keikeu_index.json"><span class="file-icon" aria-hidden="true">▫</span><span class="name">keikeu_index.json</span><span class="extension">json</span></a></li>
+<li class="file" data-path="tests/fixtures/v01-vault/README.md"><a href="../../tests/fixtures/v01-vault/README.md" target="_blank" rel="noopener" title="tests/fixtures/v01-vault/README.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">README.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="tests/fixtures/v03-vault"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">v03-vault/</span><span class="role"></span><span class="count">11</span></summary>
+<ul class="branches">
+<li class="directory" data-path="tests/fixtures/v03-vault/mixed-vault"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">mixed-vault/</span><span class="role"></span><span class="count">7</span></summary>
+<ul class="branches">
+<li class="directory" data-path="tests/fixtures/v03-vault/mixed-vault/.trash"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">.trash/</span><span class="role"></span><span class="count">2</span></summary>
+<ul class="branches">
+<li class="directory" data-path="tests/fixtures/v03-vault/mixed-vault/.trash/cache"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">cache/</span><span class="role"></span><span class="count">2</span></summary>
+<ul class="branches">
+<li class="directory" data-path="tests/fixtures/v03-vault/mixed-vault/.trash/cache/旧车站"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">旧车站/</span><span class="role"></span><span class="count">1</span></summary>
+<ul class="branches">
+<li class="file" data-path="tests/fixtures/v03-vault/mixed-vault/.trash/cache/旧车站/K-20260719-006.md"><a href="../../tests/fixtures/v03-vault/mixed-vault/.trash/cache/%E6%97%A7%E8%BD%A6%E7%AB%99/K-20260719-006.md" target="_blank" rel="noopener" title="tests/fixtures/v03-vault/mixed-vault/.trash/cache/旧车站/K-20260719-006.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">K-20260719-006.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="file" data-path="tests/fixtures/v03-vault/mixed-vault/.trash/cache/K-20260719-005.md"><a href="../../tests/fixtures/v03-vault/mixed-vault/.trash/cache/K-20260719-005.md" target="_blank" rel="noopener" title="tests/fixtures/v03-vault/mixed-vault/.trash/cache/K-20260719-005.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">K-20260719-005.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="directory" data-path="tests/fixtures/v03-vault/mixed-vault/cache"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">cache/</span><span class="role"></span><span class="count">4</span></summary>
+<ul class="branches">
+<li class="directory" data-path="tests/fixtures/v03-vault/mixed-vault/cache/夜行列车"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">夜行列车/</span><span class="role"></span><span class="count">2</span></summary>
+<ul class="branches">
+<li class="directory" data-path="tests/fixtures/v03-vault/mixed-vault/cache/夜行列车/深层"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">深层/</span><span class="role"></span><span class="count">1</span></summary>
+<ul class="branches">
+<li class="file" data-path="tests/fixtures/v03-vault/mixed-vault/cache/夜行列车/深层/K-20260720-004.md"><a href="../../tests/fixtures/v03-vault/mixed-vault/cache/%E5%A4%9C%E8%A1%8C%E5%88%97%E8%BD%A6/%E6%B7%B1%E5%B1%82/K-20260720-004.md" target="_blank" rel="noopener" title="tests/fixtures/v03-vault/mixed-vault/cache/夜行列车/深层/K-20260720-004.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">K-20260720-004.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="file" data-path="tests/fixtures/v03-vault/mixed-vault/cache/夜行列车/K-20260720-003.md"><a href="../../tests/fixtures/v03-vault/mixed-vault/cache/%E5%A4%9C%E8%A1%8C%E5%88%97%E8%BD%A6/K-20260720-003.md" target="_blank" rel="noopener" title="tests/fixtures/v03-vault/mixed-vault/cache/夜行列车/K-20260720-003.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">K-20260720-003.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="file" data-path="tests/fixtures/v03-vault/mixed-vault/cache/K-20260720-001.md"><a href="../../tests/fixtures/v03-vault/mixed-vault/cache/K-20260720-001.md" target="_blank" rel="noopener" title="tests/fixtures/v03-vault/mixed-vault/cache/K-20260720-001.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">K-20260720-001.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="tests/fixtures/v03-vault/mixed-vault/cache/K-20260720-002.md"><a href="../../tests/fixtures/v03-vault/mixed-vault/cache/K-20260720-002.md" target="_blank" rel="noopener" title="tests/fixtures/v03-vault/mixed-vault/cache/K-20260720-002.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">K-20260720-002.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="file" data-path="tests/fixtures/v03-vault/mixed-vault/keikeu_index.json"><a href="../../tests/fixtures/v03-vault/mixed-vault/keikeu_index.json" target="_blank" rel="noopener" title="tests/fixtures/v03-vault/mixed-vault/keikeu_index.json"><span class="file-icon" aria-hidden="true">▫</span><span class="name">keikeu_index.json</span><span class="extension">json</span></a></li>
+</ul>
+</details></li>
+<li class="directory" data-path="tests/fixtures/v03-vault/unsafe-vault"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">unsafe-vault/</span><span class="role"></span><span class="count">2</span></summary>
+<ul class="branches">
+<li class="directory" data-path="tests/fixtures/v03-vault/unsafe-vault/cache"><details><summary><span class="folder" aria-hidden="true">▰</span><span class="name">cache/</span><span class="role"></span><span class="count">1</span></summary>
+<ul class="branches">
+<li class="file" data-path="tests/fixtures/v03-vault/unsafe-vault/cache/K-20260718-001.md"><a href="../../tests/fixtures/v03-vault/unsafe-vault/cache/K-20260718-001.md" target="_blank" rel="noopener" title="tests/fixtures/v03-vault/unsafe-vault/cache/K-20260718-001.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">K-20260718-001.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+<li class="file" data-path="tests/fixtures/v03-vault/unsafe-vault/keikeu_index.json"><a href="../../tests/fixtures/v03-vault/unsafe-vault/keikeu_index.json" target="_blank" rel="noopener" title="tests/fixtures/v03-vault/unsafe-vault/keikeu_index.json"><span class="file-icon" aria-hidden="true">▫</span><span class="name">keikeu_index.json</span><span class="extension">json</span></a></li>
+</ul>
+</details></li>
+<li class="file" data-path="tests/fixtures/v03-vault/manifest.json"><a href="../../tests/fixtures/v03-vault/manifest.json" target="_blank" rel="noopener" title="tests/fixtures/v03-vault/manifest.json"><span class="file-icon" aria-hidden="true">▫</span><span class="name">manifest.json</span><span class="extension">json</span></a></li>
+<li class="file" data-path="tests/fixtures/v03-vault/README.md"><a href="../../tests/fixtures/v03-vault/README.md" target="_blank" rel="noopener" title="tests/fixtures/v03-vault/README.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">README.md</span><span class="extension">md</span></a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="file" data-path="tests/__init__.py"><a href="../../tests/__init__.py" target="_blank" rel="noopener" title="tests/__init__.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">__init__.py</span><span class="extension">py</span></a></li>
+<li class="file" data-path="tests/test_bridge_protocol.py"><a href="../../tests/test_bridge_protocol.py" target="_blank" rel="noopener" title="tests/test_bridge_protocol.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">test_bridge_protocol.py</span><span class="extension">py</span></a></li>
+<li class="file" data-path="tests/test_bridge_service.py"><a href="../../tests/test_bridge_service.py" target="_blank" rel="noopener" title="tests/test_bridge_service.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">test_bridge_service.py</span><span class="extension">py</span></a></li>
+<li class="file" data-path="tests/test_build_context_pack.py"><a href="../../tests/test_build_context_pack.py" target="_blank" rel="noopener" title="tests/test_build_context_pack.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">test_build_context_pack.py</span><span class="extension">py</span></a></li>
+<li class="file" data-path="tests/test_dev_tui.py"><a href="../../tests/test_dev_tui.py" target="_blank" rel="noopener" title="tests/test_dev_tui.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">test_dev_tui.py</span><span class="extension">py</span></a></li>
+<li class="file" data-path="tests/test_indexer_v4.py"><a href="../../tests/test_indexer_v4.py" target="_blank" rel="noopener" title="tests/test_indexer_v4.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">test_indexer_v4.py</span><span class="extension">py</span></a></li>
+<li class="file" data-path="tests/test_local_state.py"><a href="../../tests/test_local_state.py" target="_blank" rel="noopener" title="tests/test_local_state.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">test_local_state.py</span><span class="extension">py</span></a></li>
+<li class="file" data-path="tests/test_markdown_v4.py"><a href="../../tests/test_markdown_v4.py" target="_blank" rel="noopener" title="tests/test_markdown_v4.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">test_markdown_v4.py</span><span class="extension">py</span></a></li>
+<li class="file" data-path="tests/test_migration_v01.py"><a href="../../tests/test_migration_v01.py" target="_blank" rel="noopener" title="tests/test_migration_v01.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">test_migration_v01.py</span><span class="extension">py</span></a></li>
+<li class="file" data-path="tests/test_migration_v4.py"><a href="../../tests/test_migration_v4.py" target="_blank" rel="noopener" title="tests/test_migration_v4.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">test_migration_v4.py</span><span class="extension">py</span></a></li>
+<li class="file" data-path="tests/test_models_v4.py"><a href="../../tests/test_models_v4.py" target="_blank" rel="noopener" title="tests/test_models_v4.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">test_models_v4.py</span><span class="extension">py</span></a></li>
+<li class="file" data-path="tests/test_road_v03_fixture.py"><a href="../../tests/test_road_v03_fixture.py" target="_blank" rel="noopener" title="tests/test_road_v03_fixture.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">test_road_v03_fixture.py</span><span class="extension">py</span></a></li>
+<li class="file" data-path="tests/test_v01_fixture.py"><a href="../../tests/test_v01_fixture.py" target="_blank" rel="noopener" title="tests/test_v01_fixture.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">test_v01_fixture.py</span><span class="extension">py</span></a></li>
+<li class="file" data-path="tests/test_vault.py"><a href="../../tests/test_vault.py" target="_blank" rel="noopener" title="tests/test_vault.py"><span class="file-icon" aria-hidden="true">▫</span><span class="name">test_vault.py</span><span class="extension">py</span></a></li>
+</ul>
+</details></li>
+<li class="file" data-path=".gitignore"><a href="../../.gitignore" target="_blank" rel="noopener" title=".gitignore"><span class="file-icon" aria-hidden="true">▫</span><span class="name">.gitignore</span><span class="extension">file</span></a></li>
+<li class="file" data-path=".node-version"><a href="../../.node-version" target="_blank" rel="noopener" title=".node-version"><span class="file-icon" aria-hidden="true">▫</span><span class="name">.node-version</span><span class="extension">file</span></a></li>
+<li class="file" data-path=".python-version"><a href="../../.python-version" target="_blank" rel="noopener" title=".python-version"><span class="file-icon" aria-hidden="true">▫</span><span class="name">.python-version</span><span class="extension">file</span></a></li>
+<li class="file" data-path="AGENTS.md"><a href="../../AGENTS.md" target="_blank" rel="noopener" title="AGENTS.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">AGENTS.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="CLAUDE.md"><a href="../../CLAUDE.md" target="_blank" rel="noopener" title="CLAUDE.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">CLAUDE.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="dev"><a href="../../dev" target="_blank" rel="noopener" title="dev"><span class="file-icon" aria-hidden="true">▫</span><span class="name">dev</span><span class="extension">file</span></a></li>
+<li class="file" data-path="LICENSE"><a href="../../LICENSE" target="_blank" rel="noopener" title="LICENSE"><span class="file-icon" aria-hidden="true">▫</span><span class="name">LICENSE</span><span class="extension">file</span></a></li>
+<li class="file" data-path="PLAN_road_v0_8.md"><a href="../../PLAN_road_v0_8.md" target="_blank" rel="noopener" title="PLAN_road_v0_8.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">PLAN_road_v0_8.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="pyproject.toml"><a href="../../pyproject.toml" target="_blank" rel="noopener" title="pyproject.toml"><span class="file-icon" aria-hidden="true">▫</span><span class="name">pyproject.toml</span><span class="extension">toml</span></a></li>
+<li class="file" data-path="README.md"><a href="../../README.md" target="_blank" rel="noopener" title="README.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">README.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="README_EN.md"><a href="../../README_EN.md" target="_blank" rel="noopener" title="README_EN.md"><span class="file-icon" aria-hidden="true">▫</span><span class="name">README_EN.md</span><span class="extension">md</span></a></li>
+<li class="file" data-path="requirements-build.lock"><a href="../../requirements-build.lock" target="_blank" rel="noopener" title="requirements-build.lock"><span class="file-icon" aria-hidden="true">▫</span><span class="name">requirements-build.lock</span><span class="extension">lock</span></a></li>
+<li class="file" data-path="rust-toolchain.toml"><a href="../../rust-toolchain.toml" target="_blank" rel="noopener" title="rust-toolchain.toml"><span class="file-icon" aria-hidden="true">▫</span><span class="name">rust-toolchain.toml</span><span class="extension">toml</span></a></li>
+</ul>
+<p id="empty" hidden>没有匹配文件。</p></div>
+<p class="note">2026-09-07 · 源码基准 3c387c5 · 271 个文件。包含全部 Git 跟踪文件及本次新增文档；这是路径快照，不读取文件正文。省略被忽略的依赖、缓存、构建产物、Git 内部数据与私有 Vault。目录变化后需重新生成。</p></section>
+<section id="overview" hidden aria-label="目录架构图"><p>连线表示目录包含关系；完整文件列表见“完整文件树”。<a href="repository-structure-overview.html" target="_blank" rel="noopener">独立打开 Archify 图 ↗</a></p><iframe title="keikeu 目录架构图" data-src="repository-structure-overview.html"></iframe><p class="note">Archify <a href="repository-structure.architecture.json">可编辑源</a> · <a href="repository-structure.receipt.json">9/9 showcase 交付凭据</a>。该凭据仅对应独立架构图。</p></section>
+</main><script>
+const fileRows = [...document.querySelectorAll('.file')];
+const directories = [...document.querySelectorAll('.directory')];
+const details = [...document.querySelectorAll('details')];
+const input = document.querySelector('#search');
+const status = document.querySelector('#status');
+let savedOpen = null;
+function filterTree() {
+  const query = input.value.trim().toLocaleLowerCase();
+  if (query && savedOpen === null) savedOpen = details.map(node => node.open);
+  let matches = 0;
+  for (const row of fileRows) {
+    row.hidden = !row.dataset.path.toLocaleLowerCase().includes(query);
+    if (!row.hidden) matches++;
+  }
+  for (const row of [...directories].reverse()) {
+    row.hidden = ![...row.querySelectorAll('.file')].some(file => !file.hidden);
+    if (query && !row.hidden) row.querySelector('details').open = true;
+  }
+  if (!query && savedOpen !== null) {
+    details.forEach((node, index) => node.open = savedOpen[index]);
+    savedOpen = null;
+  }
+  status.textContent = query ? `${matches} / ${fileRows.length} 个文件` : `${fileRows.length} 个文件`;
+  document.querySelector('#empty').hidden = matches !== 0;
+}
+input.addEventListener('input', filterTree);
+document.querySelector('#expand').addEventListener('click', () => details.forEach(node => node.open = true));
+document.querySelector('#collapse').addEventListener('click', () => details.forEach(node => node.open = false));
+for (const name of ['files', 'overview']) {
+  document.querySelector(`#${name}-tab`).addEventListener('click', () => {
+    for (const view of ['files', 'overview']) {
+      document.querySelector(`#${view}`).hidden = view !== name;
+      document.querySelector(`#${view}-tab`).setAttribute('aria-pressed', String(view === name));
+    }
+    if (name === 'overview') {
+      const frame = document.querySelector('iframe');
+      if (!frame.getAttribute('src')) frame.src = frame.dataset.src;
+    }
+  });
+}
+</script></body></html>
