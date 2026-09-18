@@ -1,28 +1,29 @@
 :root {
+  /* Approved cold conceptual default; docs/design/cool-fold-theme.md. */
   color-scheme: light;
-  --canvas: #e4e8ea;
-  --paper: #f2f4f4;
-  --field: #f7f8f8;
-  --ink: #13191c;
-  --ink-soft: #283137;
-  --muted: #404b51;
-  --meta: #5c6a71;
-  --accent: #173a5b;
-  --signal: #173a5b;
-  --focus: #2b638f;
-  --rule: #aeb9be;
-  --rule-soft: #ccd4d7;
-  --soft: #e4e8ea;
-  --warm: #dbe1e3;
-  --rail: #22211f;
-  --rail-active: #292f3a;
-  --rail-muted: #b8b4aa;
+  --canvas: #eaf0f3;
+  --paper: #f5f8fa;
+  --field: #f9fbfc;
+  --ink: #304659;
+  --ink-soft: #3b5367;
+  --muted: #526979;
+  --meta: #526979;
+  --accent: #365b76;
+  --signal: #365b76;
+  --focus: #426f91;
+  --rule: #bacbd5;
+  --rule-soft: #d3dfe6;
+  --soft: #e3edf3;
+  --warm: #dce7ee;
+  --rail: #18232d;
+  --rail-active: #2b4052;
+  --rail-muted: #b4c5d2;
   --danger: #7b312d;
   --danger-soft: #f1e5e4;
   --success: #395943;
   --radius-xs: 2px;
   --radius-sm: 4px;
-  --font-display: "Songti SC", "STSong", Georgia, serif;
+  --font-display: var(--font-body);
   --font-opus: "New York", "Iowan Old Style", "Noto Serif CJK SC",
     "Songti SC", "STSong", serif;
   --font-body: -apple-system, BlinkMacSystemFont, "PingFang SC",
