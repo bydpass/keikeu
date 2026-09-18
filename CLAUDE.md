@@ -1,12 +1,5 @@
 # Claude Code Entry
 
-Read and follow [AGENTS.md](AGENTS.md) before working in this repository. `AGENTS.md` is the sole authority for agent procedure; this file adds no separate rules or exceptions.
+本仓库的 Agent 工作入口是 [AGENTS.md](AGENTS.md)。从其读取路径开始，按 [PROJECT](docs/PROJECT.md) 核对当前阶段，按 [SPEC](docs/SPEC.md) 和 [RULES](docs/RULES.md) 执行本次任务。
 
-Use its authority map:
-
-- product contract and acceptance → [docs/SPEC.md](docs/SPEC.md)
-- current coordinates and next gate → [docs/PROJECT.md](docs/PROJECT.md)
-- engineering, data, Git, and evidence rules → [docs/RULES.md](docs/RULES.md)
-- runtime facts → `src/` and `tests/`
-
-`docs/manual/` is supplementary human explanation. `docs/archive/` is read-only history. Neither overrides active authorities or drives a cold start.
+沿用会话中已明确的授权，完成可独立执行的工作；关键动作缺少必要信息时，说明具体阻点。代码、测试及对应验收记录提供事实，手册与归档按需查阅。

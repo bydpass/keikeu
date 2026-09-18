@@ -1,4 +1,4 @@
 interface:
   display_name: "keikeu Routine"
-  short_description: "Apply keikeu safe reviewable coding checkpoints"
-  default_prompt: "Use $keikeu-routine to make a small, reviewable change in the keikeu repository."
+  short_description: "完成当前授权的 keikeu 修改、验证与交接"
+  default_prompt: "使用 $keikeu-routine 完成当前 keikeu 任务：核对工作区和现行契约，实施最小有效修改，验证受影响行为，交付实际结果与剩余证据。"

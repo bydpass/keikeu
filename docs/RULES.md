@@ -1,125 +1,97 @@
 # keikeu Rules
 
-> Authority: reviewable stack, engineering, interaction, data, Git, and evidence constraints. Product definitions live in [SPEC](SPEC.md); agent operating procedure lives in [AGENTS](../AGENTS.md).
+> 本文件负责工程、数据、Git 与证据规则。产品契约见 [SPEC](SPEC.md)，任务流程见 [AGENTS](../AGENTS.md)，当前实现与下一 Gate 见 [PROJECT](PROJECT.md)。
 
 ## 1. Authority order
 
-1. Author assets and observed disk state.
-2. `src/` plus passing tests for runtime facts.
-3. [SPEC](SPEC.md) for intended product behavior.
-4. This file for implementation discipline.
-5. [PROJECT](PROJECT.md) for current coordinates.
-6. Generated observations and archive history, which never override active sources.
+先遵守宿主指令层级，再执行用户在当前范围内的授权。仓库材料按问题分工：
 
-When intent and runtime differ, change code, change the active specification, or record a temporary deviation in an ADR. Never let two answers remain active.
+| 问题 | 依据 |
+| --- | --- |
+| 作者资产及磁盘现状 | 实际文件与只读观察；保留原字节 |
+| 当前运行行为 | `frontend/`、`src/` 与相应测试 |
+| 预期产品行为 | SPEC 与其引用的现行契约 |
+| 工程与 Git 方法 | 本文件；AGENTS 串联流程 |
+| 当前阶段与证据入口 | PROJECT 与对应验收记录 |
+| 历史原因与辅助说明 | ADR、手册、归档及生成物，按标注日期和用途使用 |
 
-During a staged Road, SPEC and the HTML maps may describe the approved target while `PROJECT.md`, `src/`, and `tests/` identify the current implementation Phase. The target/current label and next convergence gate must remain explicit until the final architecture calibration.
+意图与实现不一致时，明确差异并在用户授权内修代码或修契约；临时架构偏差用 ADR 记录。分阶段实施期间，分别标注“已实现”“待验证”“后续目标”。资料中的命令示例仅说明方法，动作权限由会话和宿主提供。
 
 ## 2. Architecture
 
-- The current accepted desktop runtime is Vue/Vite JavaScript through a narrow Tauri/Rust host and one JSONL Python sidecar, with Python `>=3.11,<3.14`, Paper v4 author-owned Markdown, rebuildable Index v4 metadata, and protocol v2. Legacy Paper models/codecs are frozen inside the migration boundary and are not normal-runtime APIs.
-- Flet was the accepted parity baseline through Gate A and product acceptance; CP14 removes it only after those gates and the macOS 15.7+ compatibility gate passed.
-- In the current desktop runtime, the Python application service is transport-agnostic and owns orchestration behind JSONL. Rust and Vue do not duplicate product rules.
-- The developer owns architecture, dependencies, data models, build commands, and release artifacts; agent output must remain explainable and reviewable.
-- `keikeu_core` is pure Python and never imports Flet, Vue, Tauri, Rust, JSONL transport, or another GUI toolkit.
-- In the current accepted desktop runtime, `markdown_io.py` exclusively owns Paper Markdown parsing and serialization; the Road v0.8 Rust target remains unaccepted until the shared Paper v4 golden Gate passes.
-- In the current desktop runtime, `vault.py` exclusively owns Home containment, supported Paper-path validation, active/Trash enumeration, code allocation across those paths, and destructive filesystem moves. During v0.8, Rust may own app-sandbox/shared-iCloud containment and the bounded Paper loop after its contract and golden Gates pass; desktop-local ownership remains Python until the independently accepted post-candidate parity and switch gates in SPEC §13.
-- GUI code calls the application service; it never renders Markdown or edits index JSON.
-- App pages pass validated Vault-relative Paper paths; they never recover a path by guessing `cache/<code>.md`.
-- Markdown is canonical author content. Index and device state are disposable.
-- Keep explicit files and control flow. Add abstractions only after a second real use exists.
-- Prefer existing code, Python stdlib, platform features, then already-installed dependencies.
-- New runtime dependencies require a concrete MVP need, packaging impact, maintenance risk, and developer approval.
-- No app-managed localhost, HTTP, WebSocket, telemetry, updater, cloud backend, or remote API is authorized. A future opt-in operating-system iCloud Documents provider does not authorize a keikeu network client.
-- In the current desktop runtime, Rust is limited to Tauri lifecycle, sidecar ownership, JSONL request matching, native directory selection and confirmation, and Python-validated open/reveal.
-- The revised v0.8 target remains non-executable until its software seed Gate passes: CP0 freezes contracts, CP1 proves Apple feasibility. Retain Vue/Tauri and `bridgeRequest`, freeze host capabilities separately from Python protocol v2, and compare Rust against reviewed Paper v4 golden samples. Never fake Index state where no Index exists. [ADR-0009](architecture/decisions/0009-unified-rust-core-transition.md) bounds the transition: v0.8 keeps desktop-local Python, then independent full desktop parity and safe switching must precede sidecar/product-JSONL/Python-packaging removal and the first external Alpha; Python may remain a development tool only.
+- 当前候选按选定存储路由：Mac 本地由 Vue → Tauri/Rust → JSONL v2 → Python service/core；Mac iCloud 与 iPhone 本地／iCloud 由宿主调用 Rust Paper Core，云模式使用 Apple 原生文件协调。源码入口见 PROJECT；CP0–CP4 工程已完成，CP5 待验边界见验收单。
+- `keikeu_core` 保持纯 Python 领域与文件逻辑，应用服务负责编排和 DTO，JSONL 负责传输。Mac 本地 `markdown_io.py` 拥有 Paper 编解码，`vault.py` 拥有 Home 边界、路径、枚举、编号及生命周期；迁移模块拥有预检、备份、暂存和替换。
+- Rust Paper Core 拥有已批准的移动／共享云端 Paper 流程；旧模型／编解码仅用于迁移。Python 产品运行时的退役以独立桌面功能对等和安全切换验收为前提，详见 [ADR-0009](architecture/decisions/0009-unified-rust-core-transition.md)。
+- Vue 管可见状态，通过 `bridgeRequest` 调用当前后端；作者文件和 Index 的读写由后端完成。页面使用已验证的 Vault 相对路径。每个选定 Vault 对应一个写入后端，失败后保留原路由并报告状态。
+- Markdown 是权威作者资产，Index 是可重建投影。按后端实际能力返回状态；Rust 线性搜索按无 Index 的契约工作。设备辅助状态可重建，私有恢复草稿按 §4 单独保护。
+- 架构、模型、依赖、构建方式及发行物的变更沿用用户的明确决定。新增运行依赖先说明当前需求、打包影响与维护风险，取得批准后实施。
+- 优先复用现有实现、标准库、平台能力和已安装依赖；抽象以实际重复需求为依据。保留清楚的文件归属与控制流。
+- 当前产品服务范围是本地文件与用户主动启用的系统 iCloud Documents。应用自建网络服务、远端 API、账号、遥测和更新服务属于需另行批准的产品扩展。
 
 ## 3. Author text and privacy
 
-- Never silently delete, overwrite, normalize, auto-correct, summarize, rewrite, merge, score, train on, upload, or expose author text.
-- 文件夹树只有在界面明确说明“全部内容”并获得确认后才能移入 Trash；不可恢复的整树删除必须在 Trash 中再次明确确认。
-- Preserve Paper display names, ordered page titles/content/types, ordered Tags, intentionally blank optional fields, and feasible unknown frontmatter. During legacy migration preserve every mapped field; `initial_summary` is the only approved discard and remains in the verified backup.
-- Paper v4 save requires at least one page and, for every page, a non-empty title or content containing a non-whitespace character. It permits at most one `summary`; failure occurs before disk write.
-- Name validation trims only outer whitespace, rejects line breaks/control characters and overlength input, and stores the remaining author text unchanged. NFC+casefold is a comparison key, never a disk rewrite.
-- Never ask for prose, inspirations, names, relationships, Vault paths, secrets, or private drafts in chat or acceptance records.
-- No telemetry, analytics, account, remote API, hidden background service, or external corpus without explicit product authorization.
+- 将作者输入按已批准的保存契约持久化，保留显示名、页面顺序、标题／正文／类型、Tags 顺序、刻意留空的可选字段及可行的未知 frontmatter；内容变换需要明确产品契约和作者操作。
+- Paper 至少一页，每页的标题或正文至少一项含非空白字符，最多一个 `summary`。校验失败在文件写入前返回，输入保留。
+- 名称仅裁去外侧空白，再验证长度和控制字符，剩余文字原样存储。NFC＋Unicode casefold 仅用于比较键。旧格式迁移逐字段保留，唯一批准舍弃的 `initial_summary` 留在完整备份中。
+- 聊天、测试及验收使用合成内容和去标识回执；真实正文、草稿、账号身份、凭据和私有路径保留在本机授权位置。外部工具只接收当前任务明确授权且已审查的数据。
+- 文件夹移入 Trash 前，界面明确说明“全部内容”并取得确认；永久删除在 Trash 中再次确认精确对象及不可撤销后果。
 
 ## 4. Persistent operations
 
-- Save through same-directory temporary files and safe replacement; never expose a partially written Paper.
-- Reject silent overwrite after external modification, deletion, movement, or code collision.
-- Resolve every durable-write target and require it to be the current user's Home or a descendant; reject symlink escape before writing.
-- Validate a Vault candidate completely before atomically replacing selected-Vault config.
-- Delete means soft-delete for current Paper unless an explicitly specified migration contract says otherwise.
-- Recovery never overwrites another asset or rewrites a historical Paper code. A conflict stays in Trash and is reported.
-- Migration, delete, restore, conflict, and provider-folder changes start on fixtures or copied Vaults.
-- Classify an unsafe configured Vault read-only before copying. Copy only ordinary directories and regular files into a new Home-contained destination without following symlinks; any symlink or unsupported/special entry aborts with source and config untouched. Verify the regular-file manifest and bytes.
-- Parse Papers and classify schema readiness only on a verified v2/v3/v4 safe copy before config switch. A v2/v3 copy enters the existing migration gate. For v4, strictly parse each Paper but isolate and report path-local invalid Papers without blocking an otherwise-ready Vault; after selection, use the existing rebuildable-Index `current/degraded` contract. For v0.1, run the existing read-only preflight/manifest validation on the safe copy, switch config atomically to it, then enter the existing migration gate there; cancellation or failure leaves that unmodified safe copy selected. Never parse v0.1 as v2/v3/v4 or write the unsafe source.
-- Preserve and report externally created duplicate codes; block mutations involving them rather than renaming either asset.
-- 单份 Paper 的活动区/Trash 操作只接受显式受验证路径，永久删除逐文件 `unlink`，并且只 `rmdir` 已验证为空的目录。
-- 经明确确认的顶层文件夹删除与恢复把精确命名的完整目录树在 `cache/` 与 `.trash/cache/` 之间原子移动；不解析、不重写、不跟随其中内容。目标存在完全同名或 NFC+casefold 等价名称时，整次操作在写入前拒绝，不做部分合并。
-- 废纸篓文件夹的永久删除需要单独的不可撤销确认。Core 必须固定精确目录身份、随机隔离、预检同设备目录树并使用 symlink-safe 递归删除；平台不支持安全递归或出现挂载子树时拒绝且恢复隔离目录。符号链接只删除链接本身，绝不跟随到 Vault 外部。详见 [ADR-0008](architecture/decisions/0008-whole-folder-trash-lifecycle.md)。
-- A destructive migration requires a full backup outside the active Vault but still under Home, staging validation, a readable report, and safe failure behavior.
-- Disclose changes to selected Vault, device state, persistent config, signing, or generated platform projects before execution and report the result.
-- Planned storage remains local by default, with explicit iCloud opt-in. Resolve dirty drafts and pending writes, then validate the target before changing selection; failed switches keep the previous selection, and old results cannot affect the new storage identity. Never silently migrate or fall back. Each client uses one controlled backend per selected Vault; no dual writes or automatic backend fallback after failure.
-- Planned iCloud reads, writes, discovery, downloads, and conflicts must use Apple-native file coordination. Never choose a winner from unsynchronized device clocks, automatically merge author text, or delete a provider conflict version. Preserve and verify every losing version before marking it handled, and the displaced current version before promotion; interruptions must not overwrite recovery copies.
-- A planned mobile recovery draft is private unsynced device state keyed by storage, Paper/draft identity and revision. Clear only the corresponding known-successful save revision or explicit discard; newer and failed/unknown drafts remain. Surface recovery-write failures and offer recovery/export/discard after relaunch. Guarantee only the last successfully persisted draft, not arbitrary forced-termination zero-loss.
+- 持久写入先验证目标、身份和旧版本，再使用同目录临时文件与安全替换；外部修改、删除、移动或编号冲突使旧写入失效，保留双方内容供核对。
+- 普通本地 Vault 的持久目标解析到当前用户 Home 或其后代，阻止符号链接逃逸。Apple app sandbox／iCloud 容器使用已批准的原生根目录和边界检查。
+- 完整验证新 Vault 后原子替换选择配置。切换前处理脏草稿和未决写入；失败保留旧选择，异步结果只适用于发起时的存储身份与代次。原本地 Vault 内容留在原处。
+- 单份 Paper 删除默认为移入 Trash。恢复保留历史 code；目标冲突时保留 Trash 原件并报告。活动区／Trash 使用显式验证的路径；永久删除逐文件 `unlink`，只对已确认空目录执行 `rmdir`。
+- 经确认的顶层文件夹回收／恢复，在 `cache/` 和 `.trash/cache/` 间原子移动精确命名的整树，内部内容按原字节搬移。目标同名或 NFC＋casefold 等价时，在写入前拒绝整次操作。
+- 整树永久删除固定目录身份、随机隔离、预检同设备目录树，使用 symlink-safe 递归。平台能力不足或存在挂载子树时拒绝并恢复隔离目录；符号链接只处理链接本身。不可逆删除开始后若失败，将剩余树恢复至可见 Trash 名称并报告已发生的部分删除。详见 [ADR-0008](architecture/decisions/0008-whole-folder-trash-lifecycle.md)。
+- 迁移、删除、恢复、冲突及 provider 故障实验从合成 Vault 或完整副本开始。真实 Vault 操作使用单独授权的精确范围。
+- 不安全配置的 Vault 先只读分类，再复制普通目录和常规文件到新的 Home 内目标；发现 symlink 或特殊条目即中止，保留源及配置。核对常规文件清单和字节后再做格式预检。
+- 安全副本按格式进入对应路径：v2/v3 进入迁移 Gate；v4 严格解析每份 Paper，将坏文件隔离报告并按 `current/degraded` Index 契约选库；v0.1 先只读预检和清单验证，再原子选中副本并运行旧迁移 Gate。取消／失败保留未修改的安全副本选择。
+- 外部重复 code 保留并报告，相关变更在冲突解决前阻止。破坏性迁移先取得 Home 内、活动 Vault 外的完整备份，验证暂存、逐文件安全替换、可读报告和混合格式恢复。
+- 云端发现、下载、读取、写入和冲突处理使用 Apple 原生 API。先持久化并读回校验所有冲突原字节，再标记已处理；显式恢复为活动稿前也保全当时活动版本。保留已有恢复副本，通过用户选择决定恢复内容。
+- 私有恢复草稿按存储、Paper／草稿身份和修订隔离，保存在本机。清理只针对已知成功保存的对应修订或用户明确丢弃；较新、失败及结果未知的草稿继续保留。恢复写入失败明确报告，重启提供恢复／导出／丢弃，持久性承诺限最后成功落盘的修订。
+- 写入结果未知时先冻结对应意图并只读核对；核对确认状态后再由用户决定下一次写入。已成功的作者文件变更在 Index 降级时保持成功。
+- 改变选定 Vault、设备状态、持久配置、签名或生成的平台工程前说明范围，完成后报告实际状态。
 
 ## 5. Interaction
 
-- Keep the author in control: destructive, migration, rename, and recovery actions are explicit and explain consequences.
-- Required-field errors block only the unsafe action; optional-field guidance never blocks.
-- Every core flow covers default, empty, error, disabled/in-progress, and recovery states where applicable.
-- The production route has no separate rendered-card path: the editable Paper itself is the ordered card-page artifact.
-- Use responsive layouts, safe areas, keyboard reachability, readable contrast, visible focus, and text wrapping.
-- Every drag operation has a keyboard-reachable menu equivalent. Paper v4 has no page reordering; the v0.5 Highlight-reordering path retired at the completed Road v0.6 CP4 cutover.
-- Motion may clarify state but cannot be required to understand or complete a task.
-- In the current desktop runtime, system file services are ordinary paths. Future iCloud Documents work must use the native coordination boundary above and must not pretend to manage provider accounts, sync timing, or conflict merges.
+- 作者明确发起删除、迁移、改名和恢复，界面说明实际后果。必填校验只阻止受影响的操作，可选建议保持可继续。
+- 主要流程覆盖默认、空、错误、忙碌／禁用和恢复状态。Paper 的可编辑页面就是产物；页面按钮按既定顺序切页。
+- 使用响应式布局、安全区、文本换行、可读对比、可见焦点和键盘路径。拖拽能力同时提供键盘可达的菜单入口；动画之外也能理解状态和完成动作。
+- 桌面系统动作交接后端验证过的普通路径；iCloud 动作走原生协调。界面区分本机保存、系统同步状态及另一端实际读回，provider 时序按真实观察报告。
 
 ## 6. Scope and classification
 
-| Level | Meaning | Response |
+| 级别 | 情况 | 动作 |
 | --- | --- | --- |
-| P0 | data loss, silent text change, unsafe continuation, migration/delete damage | stop writes and repeated experiments; preserve the original Vault; record de-identified steps only |
-| P1 | common primary flow cannot complete or is frequently blocked | record shortest reproduction and frequency; fix and reverify before acceptance |
-| P2 | usable but inefficient, unclear, or awkward | put in the next-Road candidate pool; do not widen the active Phase |
-| P3 | preference, wording, visual polish | record only if useful; it does not affect acceptance |
+| P0 | 数据丢失、静默改文、不安全继续、迁移／删除损坏 | 停止写入和重复试验，保留原件与现场，记录去标识步骤 |
+| P1 | 常见主流程无法完成或频繁受阻 | 记录最短复现与频率，修复并复验后接受 |
+| P2 | 可用但低效、含糊或不顺手 | 记录到后续 Road 候选，当前范围按已批准任务执行 |
+| P3 | 偏好、措辞或视觉微调 | 有用时记录，验收按当前判据判断 |
 
-No feature enters an acceptance or bug-fix Phase by being adjacent, attractive, or convenient.
-
-- Platform direction is v0.8 iPhone core creation with mandatory Mac iCloud synchronization, independent desktop parity and Python product-runtime retirement, v0.9 iOS/macOS first external Alpha plus the promotion Gate, then v0.10 Android plus the second Alpha. Windows is scheduled only after both Alpha rounds provide a decision basis. Intel Mac is unsupported; Linux and watchOS have no scheduled work. Optional Outline work never blocks the core.
-- Before MVP, do not add a plugin architecture, complex graph system, AI-required workflow, social system, external fandom database, or premature Windows/Linux parity.
+新功能、架构扩展和产品范围变更由用户决定。当前顺序为 v0.8 双端候选 → 独立桌面对等与 Python 退役 → v0.9 首轮外部 Alpha／推广 Gate → v0.10 Android／第二轮 Alpha → Windows 决策。Apple Silicon 为 Mac 支持目标；Intel Mac 不受支持，Linux／watchOS 待未来排期。可选 Outline 按独立范围处理。
 
 ## 7. Git
 
-- The human owns the diff and repository history. Agent speed never replaces human review or grants architecture or remote authority.
-- Before editing, run `git status --short --branch` and `git branch --show-current`. Dirty work requires every dirty file, overlap, and mixing risk to be named, then human confirmation.
-- Start implementation from a clean tree unless the human explicitly accepts named existing changes. Each Road checkpoint uses one branch and one focused capability group.
-- Before a Road checkpoint starts, branch from the previous checkpoint commit that the developer explicitly passed or covered with advance YOLO. Name the branch `<content-type>/cp<N>-<slug>`; an unpassed checkpoint never seeds the next branch.
-- After editing, inspect status and both unstaged and staged diffs. Stage exact files only; never use broad staging before reviewing every included path.
-- Never stage secrets, environments, caches, `.DS_Store`, logs, build outputs, generated app bundles, or signing data.
-- Do not commit unless explicitly asked. A commit has one purpose, an accurate message, and remains safe to review or revert.
-- When a commit is explicitly authorized, stage exact files, inspect `git diff --cached`, verify the index is non-empty and contains no secret or author content, then use `aic` to create the commit. Never run `aic` with an empty index because it may stage and batch the worktree.
-- Before remote-provider `aic` use, name the provider. DeepSeek `aic` has standing developer authorization in this repository for an explicitly authorized commit after the exact staged diff is reviewed, non-empty, and free of secrets and author content; report that boundary but do not ask for provider approval again. A different provider, a sensitive or unexpected diff, or explicit revocation requires a new developer decision. If `aic` is unavailable or fails, stop; do not silently fall back to `git commit`. Inspect the resulting commit before reporting success.
-- Never push or change remotes without explicit approval. Fetch is inspection; pull, merge, and rebase change local history or files and require a clean tree plus explicit task authority.
-- Never rebase shared or public history. Force-push requires explicit approval and `--force-with-lease`; plain `--force` is forbidden.
-- Resolve conflicts by reading both sides, preserving intent, limiting edits to the conflict, inspecting the result, and rerunning relevant checks. Never blindly choose ours or theirs.
-- Hard reset, clean, forced branch deletion, branch deletion, destructive restore, and history overwrite require explicit approval and exact targets. Prefer revert or other recoverable operations when they fit.
-- Before handoff, report branch, HEAD, worktree, staged/committed/pushed state, checks, risks, and the safest next command.
+- 修改前运行 `git status --short --branch`、`git branch --show-current`，核对当前任务的 worktree。存在已有改动时，先核对文件及其与本次任务的关系。无关改动保持原样，已授权范围内的工作继续；只有存在覆盖、混合提交或归属不明的风险时，才确认受影响部分。已有确认在对应范围内沿用。需要隔离时使用 Git worktree，保留原目录状态。
+- 每个 Road checkpoint 使用一个分支和一个聚焦能力组；下一 CP 从已由开发者通过或提前 YOLO 覆盖的前一 CP 提交起步，命名 `<content-type>/cp<N>-<slug>`。
+- 完成后检查 unstaged、staged diff 及状态。暂存仅使用逐一审查的精确路径，内容限本次交付的源码、测试或文档；环境、凭据、作者内容及运行产物留在原位置。
+- 提交依据明确的本地提交授权，一次提交表达一个可解释、可回退的目的。已有 Road 提交授权按原范围沿用。
+- 提交前验证暂存区非空且只含已审查内容，然后使用 `aic`。失败或不可用时保留暂存结果并报告工具阻点。
+- DeepSeek `aic` 已有仓库级 provider 授权：在本次提交本身已获授权、暂存 diff 非空且审查通过后，说明 provider 与文件范围，调用并检查生成提交。改用其他 provider、内容敏感／意外或授权已撤回时，先取得对应决定。
+- 远程写入、推送和修改 remote 使用明确授权。fetch 属于读取；pull、merge、rebase 需要干净工作区与明确任务授权。共享／公开历史保持追加式变更；明确批准的强推使用 `--force-with-lease`。
+- hard reset、clean、分支删除、破坏性 restore 与历史覆盖按明确授权的精确目标执行；常规回退优先采用可恢复方式。冲突处理读取双方意图，局部修改并验证受影响行为。
+- 交付报告 worktree、分支、HEAD、暂存／提交／推送状态及下一步。
 
 ## 8. Evidence
 
-- In the revised Road v0.8 plan, distinguish an authorized engineering checkpoint from device/provider acceptance. CP3/CP4 engineering checks may qualify the next engineering branch while explicitly listed device checks remain pending for candidate batch B; this never declares those checks passed. CP1 platform feasibility remains an early gate, and CP5 acceptance requires every mandatory device/provider result. Do not repeatedly seek the same approval or block independent work while awaiting a device action.
-
-- A focused test proves only the behavior it exercises.
-- Automated test temporary files stay under the ignored repository path `tests/test-vault/`; tests never select or mutate a real Vault.
-- A synthetic-Vault smoke does not prove a real provider service or real-author workflow.
-- A platform build does not prove launch, relaunch, persistence, file access, or product acceptance unless each was observed.
-- “Engineering complete,” “file-service smoke complete,” “product accepted,” and “Road archived” are separate conclusions.
-- Never copy an old pass count forward as a current result. Record command, state, date when material, and known omissions.
-- Docs-only changes run `scripts/check_docs.py` and `git diff --check`; application tests are reported as not run.
-- After the final accepted checkpoint commit, create `docs/archive/snapshots/road-v<version>.html` in a separate closeout change. Record each checkpoint branch, commit, scope, material changes, checks, developer QA or advance-YOLO result, omissions, and risks; include neither full diffs, author content, nor sensitive paths.
+- 将工程完成、文件服务 smoke、产品接受和 Road 归档分别判定；每项结论注明对应源码／包、操作、结果、日期及缺项。历史检查以历史日期引用，本轮检查只列实际执行结果。
+- 工程 Gate 可按既有提前 YOLO 收口；真实设备和 provider 判据由对应实际观察满足。CP5 按批准的 B01–B16 矩阵及最终接受判断，当前状态从验收单读取。
+- 自动测试及故障实验生成的合成 Vault、临时数据和运行产物放在忽略的 `tests/test-vault/`。测试源码及受版本控制的 fixtures 沿用项目现有目录和 Git 跟踪方式。合成 smoke 证明所测合成路径，构建证明产物可构建；设备运行、真实同步、原生交互和作者接受分别取得证据。
+- 数据丢失与安全边界保留直接回归测试。按受影响模块及项目必需 Gate 选检查；检查通过后，新改动、失败或未解决的问题才触发追加验证。
+- 文档修改默认执行 `scripts/check_docs.py` 与 `git diff --check`；其他检查按变更风险、项目 Gate 或用户要求选择。报告本轮实际执行的命令和结果，并明确未执行的相关检查。指令的静态检查和独立模型任务回放分别标注。
+- 最后一个 checkpoint 获得接受并提交后，另做 Road 收口变更，生成 `docs/archive/snapshots/road-v<version>.html`，记录各 checkpoint 分支／提交、范围、变化、检查、开发者 QA 或 YOLO、缺项与风险。快照使用摘要与去标识证据。
 
 ## 9. Exceptions
 
-A deliberate exception must be narrow, reversible, named in the relevant diff, and recorded as an ADR when it changes architecture or durable policy. The ADR states context, decision, consequences, expiry or revisit condition, and current status.
+例外以用户已授权范围为依据，明确影响、可逆方式及适用期限。涉及架构或持久策略时，用 ADR 记录背景、决定、后果、复查条件和状态；普通实现选择按现行契约自主完成。
