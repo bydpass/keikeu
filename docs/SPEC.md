@@ -1,5 +1,7 @@
 # keikeu Product Boundary (Road v0.7 accepted; v0.8 replanning from 5ff26fe)
 
+> 2026-09-20 当前决定：v08 已中断并转交，未获最终接受；v09 整顿工作目录与执行体系，v09.01 直接替换为 iOS SwiftUI。移动端采用原生组件并尽可能复用 Rust 内核；Mac 日后重构，Windows 保留现有技术结构。本轮 v09 CP0–CP4 已获全计划 YOLO，先重排目录并独立纯规则核心。当前方向与转交清单见 [Road v09 规划](road-v09.md)；下文 v08 目标和候选门槛保留作历史对照，不再驱动旧 iOS 路线开工或收尾。外部 Alpha 移出 v09，后续版本编号待定。
+
 > Authority: §§1–7 define the accepted product, author-asset, and data-safety boundary inherited from Road v0.6; §8 defines shared exclusions and platform scope; §9 records the Road v0.7 App Shell composition accepted at CP6; §10 defines the CP7 continuous-flow override accepted by developer Gate D on 2026-08-25; §11 defines the CP8 responsive-navigation override accepted by developer Gate D on 2026-08-26 and records the developer's Road v0.7 completion judgment; §13 records the documented but unimplemented cross-platform target and does not authorize CP0. Detailed Paper v4 grammar, DTOs, migration, recovery, and protocol remain in the approved [Paper v4 design](design/road-v0-6-paper-v4-design.md); the current interface and acceptance matrix live in the [App Shell design](design/road-v0-7-app-shell-design.md). Current checkpoint and runtime facts live in [PROJECT](PROJECT.md), source, and tests.
 
 ## 1. Definition

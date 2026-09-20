@@ -1,6 +1,6 @@
 # keikeu Project Map
 
-> 2026-09-20 当前决定：v08 已中断并转交，未获最终接受；v09 整顿工作目录与执行体系，v09.01 直接替换为 iOS SwiftUI。桌面保留 Vue/Tauri，共享 Rust 业务核心。当前方向与转交清单见 [Road v09 规划](road-v09.md)；下文 v08 目标和候选门槛保留作历史对照，不再驱动旧 iOS 路线开工或收尾。外部 Alpha 移出 v09，后续版本编号待定。
+> 2026-09-20 当前决定：v08 已中断并转交，未获最终接受；v09 整顿工作目录与执行体系，v09.01 直接替换为 iOS SwiftUI。移动端采用原生组件并尽可能复用 Rust 内核；Mac 日后重构，Windows 保留现有技术结构。本轮 v09 CP0–CP4 已获全计划 YOLO，先重排目录并独立纯规则核心。当前方向与转交清单见 [Road v09 规划](road-v09.md)；下文 v08 目标和候选门槛保留作历史对照，不再驱动旧 iOS 路线开工或收尾。外部 Alpha 移出 v09，后续版本编号待定。
 
 > Authority: current coordinates, module entry points, documentation index, and next gate. Product behavior belongs in [SPEC](SPEC.md); rules belong in [RULES](RULES.md).
 Updated: 2026-09-07 (rolled back to 5ff26fe; visible Road v0.8 plan draft; new engineering not started)
