@@ -289,7 +289,7 @@ Python · keikeu_bridge → keikeu_core
                 <td><strong>Cargo</strong><br><code>1.88.0</code></td>
                 <td>Rust package manager 与 compiler driver；解析 Cargo manifest/lock 并构建 host。</td>
                 <td>不安装 npm/Python 包；<code>cargo test</code> 只覆盖 Rust 层。</td>
-                <td><a href="../../../apps/desktop/src-tauri/Cargo.toml"><span class="path">Cargo.toml</span></a> 与 <a href="../../../apps/desktop/src-tauri/Cargo.lock"><span class="path">Cargo.lock</span></a>。</td>
+                <td><a href="../../../apps/desktop/src-tauri/Cargo.toml"><span class="path">Cargo.toml</span></a> 与 <a href="../../../Cargo.lock"><span class="path">Cargo.lock</span></a>。</td>
                 <td><code class="keep">cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml</code></td>
               </tr>
               <tr>
@@ -545,7 +545,7 @@ Python · keikeu_bridge → keikeu_core
         <h2 id="sources-title">项目事实来源</h2>
         <ol>
           <li><a href="../../../apps/desktop/package.json"><code>apps/desktop/package.json</code></a> 与 <a href="../../../apps/desktop/vite.config.js"><code>vite.config.js</code></a>：Node/npm、Vue、Vite 与测试工具。</li>
-          <li><a href="../../../apps/desktop/src-tauri/Cargo.toml"><code>Cargo.toml</code></a>、<a href="../../../apps/desktop/src-tauri/Cargo.lock"><code>Cargo.lock</code></a> 与 <a href="../../../apps/desktop/src-tauri/tauri.conf.json"><code>tauri.conf.json</code></a>：Rust/Tauri 直接依赖、解析结果与桌面构建。</li>
+          <li><a href="../../../apps/desktop/src-tauri/Cargo.toml"><code>Cargo.toml</code></a>、<a href="../../../Cargo.lock"><code>Cargo.lock</code></a> 与 <a href="../../../apps/desktop/src-tauri/tauri.conf.json"><code>tauri.conf.json</code></a>：Rust/Tauri 直接依赖、解析结果与桌面构建。</li>
           <li><a href="../../../pyproject.toml"><code>pyproject.toml</code></a> 与 <a href="../../../requirements-build.lock"><code>requirements-build.lock</code></a>：Python 契约、packaging、pytest 与 Sidecar 构建工具。</li>
           <li><a href="../../../dev"><code>dev</code></a>、<a href="../../../scripts/build_sidecar.py"><code>scripts/build_sidecar.py</code></a> 与 <a href="../../../scripts/sidecar_entry.py"><code>sidecar_entry.py</code></a>：开发 TUI 和 Sidecar build 入口。</li>
           <li><a href="../../SPEC.md">SPEC</a>、<a href="../../RULES.md">RULES</a>、<a href="../../PROJECT.md">PROJECT</a> 与 <a href="../../architecture/architecture.html">Architecture</a>：范围、纪律、当前坐标和模块边界。</li>

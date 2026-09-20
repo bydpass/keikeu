@@ -67,7 +67,7 @@ fn decimal(c: char) -> Option<u32> {
         .find_map(|zero| (c as u32).checked_sub(*zero).filter(|n| *n < 10))
 }
 
-pub(crate) fn code_sequence(code: &str) -> Option<u32> {
+pub fn code_sequence(code: &str) -> Option<u32> {
     validate_code(code).ok()?;
     code.chars()
         .skip(11)
@@ -513,10 +513,9 @@ mod tests {
     use super::*;
     #[test]
     fn shared_python_golden() {
-        let corpus: Value = serde_json::from_str(include_str!(
-            "../../../../../tests/fixtures/paper-v4-golden.json"
-        ))
-        .unwrap();
+        let corpus: Value =
+            serde_json::from_str(include_str!("../../../tests/fixtures/paper-v4-golden.json"))
+                .unwrap();
         for case in corpus["cases"].as_array().unwrap() {
             let hex = case["hex"].as_str().unwrap();
             let bytes: Vec<u8> = (0..hex.len())

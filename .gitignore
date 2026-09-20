@@ -36,3 +36,6 @@ apps/desktop/src-tauri/target/
 apps/desktop/src-tauri/gen/
 apps/desktop/src-tauri/binaries/*
 .gstack/
+
+# Shared Cargo workspace build outputs
+/target/

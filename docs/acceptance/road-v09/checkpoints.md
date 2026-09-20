@@ -19,3 +19,11 @@ CP1 检查：前端 Vitest 142/10 通过、Vite 生产构建通过、Cargo 21 �
 独立环境最终 Python 全量：300 通过、1 已知归档引用失败；compileall 通过。CP1 按已批准转交 CP3 的边界完成。
 
 首次 CP1 提交被本机凭据钩子误报旧测试占位值阻止；将该占位值改为 `test-fresh`，保留迁移重启不重放场景，定向复验后重试 aic；未禁用钩子。
+
+## CP2：独立纯规则核心
+
+从 CP1 `32001ef` 建立 `codex/road-v09-cp2-core`。独立 Paper codec、Unicode 比较及错误类型，宿主薄重新导出保持调用链。根 Cargo workspace 统一锁文件，保存／恢复／云端运行代码未改。仅将宿主需要的 `code_sequence` 和错误构造器公开；JSON 字段及错误语义不变。黄金样本及 Unicode 表按原字节搬迁，不重生成。
+
+独立核心测试 2 项通过、Python 黄金样本测试通过；依赖树不含 Tauri/Apple。逐项核对 Cargo 注册表依赖版本与校验和完全未变；黄金样本和 Unicode 表与 `deaece8` 字节一致。
+
+完整 Cargo workspace 22 项通过（独立核心 2、宿主 20）；格式检查在新路径换行调整后通过，文档 86/14 和目录树 291 路径检查通过。CP2 工程完成，不证明新原生客户端或新 provider 验收。

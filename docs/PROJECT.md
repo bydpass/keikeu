@@ -2,14 +2,14 @@
 
 > 本文件提供当前坐标和按任务读取的路径。产品契约见 [SPEC](SPEC.md)，工程与 Git 规则见 [RULES](RULES.md)，执行流程见 [AGENTS](../AGENTS.md)。
 
-更新：2026-09-20。当前执行 [Road v09](road-v09.md)，CP1 目录重排；全计划 YOLO 覆盖 CP0–CP4、本地集成与提交。v08 已中断转交，未获最终接受。
+更新：2026-09-20。当前执行 [Road v09](road-v09.md)，CP2 纯规则核心独立；全计划 YOLO 覆盖 CP0–CP4、本地集成与提交。v08 已中断转交，未获最终接受。
 
 ## Current coordinates
 
 | 项目 | 当前状态 | 下一步／依据 |
 | --- | --- | --- |
 | 最近已接受的产品基线 | Road v0.7 CP8，`2f03aee`，Paper v4／Index v4／JSONL v2 | [完成快照](archive/snapshots/road-v0-7.html)；App-root 关闭保护随后独立接受 |
-| 当前执行 | v09 CP1：目录与构建入口已重排，下一步独立纯规则核心 | [批准计划](road-v09.md)；v09.01 原生 iOS 替换后续单独执行 |
+| 当前执行 | v09 CP2：纯规则 crate 已提取，正在验证 | [批准计划](road-v09.md)；v09.01 原生 iOS 替换后续单独执行 |
 | 候选源码与安装 | Mac／iPhone 同产品源码 `83c4f60`；已取得安装及普通界面运行记录 | 后续主题修改已进入 `deaece8`，旧安装包不能证明该 HEAD；本轮不操作旧设备候选 |
 | 验收进度 | B01–B13、B15–B16 共 15 组通过；B14 待验；CP5 随 v08 中断转交 | B10 按用户批准的实际 provider 结果验收，原生冲突保全另由 B09／B11 证明 |
 | B10 证据边界 | 两轮同编号新建均产生改名 sibling；原生冲突来自已有稿并发编辑 | 保留此区分；同编号新建原生冲突这一组合没有实测证据 |
@@ -24,6 +24,10 @@
 按 [v09 检查点](road-v09.md#检查点与退出条件) 依次完成基线、目录、纯规则核心、工具与文档、整体验证。移动端采用原生组件并尽可能保留 Rust；Mac 日后重构，Windows 保留现有技术结构。本轮不含新原生界面、Windows 包、Python 退役或外部 Alpha。
 
 截至既有记录，前端全量 142 项、Rust 21 项、Python 301 项曾分别通过；精确适用状态见各验收记录。这些是历史结果，新变更按影响面验证。
+
+## 共享纯规则
+
+`crates/keikeu-core/` 独立提供 Paper/Page、解析、渲染、校验、编号、Unicode 比较和错误类型。没有 Tauri、Apple SDK 或文件访问依赖；宿主 `paper::store` 继续负责文件，保存恢复及云协调仍在宿主。Rust crate 与 Python `keikeu_core` 是不同语言的包，桌面对等退役尚未实施。根 `Cargo.lock` 统一锁定，`cargo test -p keikeu-core --locked` 可单独验证规则。
 
 ## 当前后端路由
 

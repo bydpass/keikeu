@@ -1837,10 +1837,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "keikeu-core"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+ "unicode-normalization",
+]
+
+[[package]]
 name = "keikeu-desktop"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "keikeu-core",
  "libc",
  "serde",
  "serde_json",
@@ -1850,7 +1861,6 @@ dependencies = [
  "tauri-plugin-dialog",
  "tauri-plugin-opener",
  "tauri-plugin-shell",
- "unicode-normalization",
  "uuid",
 ]
 
