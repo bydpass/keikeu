@@ -1,5 +1,7 @@
 > **HUMAN MANUAL — NON-NORMATIVE.** 本文用人话解释 Road v0.6 建立、已归档 Road v0.7 继续使用的 Paper v4 产品模型。当前产品边界以 [`docs/SPEC.md`](../../SPEC.md) 为准，当前坐标以 [`docs/PROJECT.md`](../../PROJECT.md) 为准；Road v0.7 accepted baseline 见 [Road v0.7 书面设计](../../design/road-v0-7-app-shell-design.md)。
 
+> 2026-09-20 历史说明：本文保留旧路线的设计背景，旧 v0.9／v0.10 与“当前计划”措辞不再代表排期。v08 已中断；当前按 [Road v09](../../road-v09.md) 重整工程，v09.01 再实施原生 iOS，发布及其他平台另排。
+
 # keikeu APPDESIGN.md
 
 > slogan：存住一瞬的灵光

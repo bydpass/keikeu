@@ -8,11 +8,11 @@
 
 Road v0.6 已完成并归档：production 使用 Paper v4、Index v4 与 protocol v2，Paper 本身就是可编辑的有序卡页；旧正常运行链已删除，未知结果与人工修复 Gate、一号真实作者 Gate 均已通过，且无未解决 P0/P1。
 
-Road v0.7 的 App Shell 与信息层级已通过 CP0–CP8。开发者于 2026-08-26 通过 CP8 原生 IME Gate D，并明确判定整个 Road v0.7 的产品与实施工作正式完工；底层 Paper v4 / Index v4 / protocol v2 不变。最终 checkpoint 为 `2f03aee`，[Road snapshot](docs/archive/snapshots/road-v0-7.html) 已独立归档。CP6 的一次有界真实 v4 Vault 作者 Gate 已完成且授权已耗尽；后续独立修复的实际测试边界见下述报告，未推送或发布。2026-09-04 已批准重构 [Road v0.8 计划](PLAN_road_v0_8.md)：复用 Vue/Tauri，逐步统一 Rust Core，交付 iPhone 核心创作与 Mac iCloud 同步候选；候选后独立完成桌面对等和 Python 产品运行时退役，双后端不进入首轮外部 Alpha。2026-09-07 已回滚至 `5ff26fe`，正在按[双端改动图](docs/architecture/road-v0-8-changes.html)重写施工计划；旧 CP0–CP4 不作为本轮进度，新工程未启动；独立关闭保护已完成聚焦／原生窗口检查，并于 2026-09-05 通过开发者人工验收：除强制退出外，所有常规退出入口受到保护。
+Road v0.7 已通过 CP0–CP8，最终 checkpoint `2f03aee`，见[施工快照](docs/archive/snapshots/road-v0-7.html)。v08 已完成 CP0–CP4 工程及 CP5 的 15/16 组历史检查，B14 未验；该 Road 已中断转交，未获最终接受。[旧计划](PLAN_road_v0_8.md)与[双端改动图](docs/architecture/road-v0-8-changes.html)仅用于追溯。当前执行 [Road v09](docs/road-v09.md)：重整目录、独立纯 Rust 规则核心和开发工具；后续 v09.01 再替换原生 iOS。
 
 产品文档与源码于 2026-08-26 按 Road v0.7 完成态复核。当时发现 App-root pending intent 的关闭保护只挂在 `PaperView`；2026-09-05 的[独立修复报告与教学](docs/acceptance/close-guard-2026-09-04.md)分别记录代理检查、开发者人工验收，以及测试工具自动重启导致正式每日启动状态更新的事件。当前批准边界见 [PROJECT](docs/PROJECT.md)。2026-08-29 又加入独立的开发者 TUI 与四份技术手册；本地交接路由于 2026-08-30 迁至根目录 `CONTEXT.md`。这些开发工具不改变产品界面、运行链或验收状态。
 
-Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响应式界面、本机沙盒 Vault 与真机修复验证；它不是 macOS Road 的合入闸门。Road v0.3 的工程、macOS candidate smoke 与 CP6 真实作者验收均已完成；检索更快且清楚、外部编辑器 handoff 清楚，未报告未解决 P0/P1。其设计与验收文档已只读归档（Git 历史：`78eb755:docs/archive/road-v0-3/README.md`），未创建 v0.3 tag。**Road v0.4 已彻底完成**：Gate A、Gate B、产品验收与 macOS 15.7+ 兼容性均已通过；当前唯一桌面运行时为 Vue/Tauri 与本地 Python sidecar，Flet 已在 CP14 退役。**Road v0.5 也已完成并归档**：Paper Desk、保存基线、离开保护、Flashcard/Library 连贯性、全应用 Quiet Desk 视觉与固定滚动语义均已验收。实时坐标见 [PROJECT](docs/PROJECT.md)。
+Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响应式界面、本机沙盒 Vault 与真机修复验证；它不是 macOS Road 的合入闸门。Road v0.3 的工程、macOS candidate smoke 与 CP6 真实作者验收均已完成；检索更快且清楚、外部编辑器 handoff 清楚，未报告未解决 P0/P1。其设计与验收文档已只读归档（Git 历史：`78eb755:docs/archive/road-v0-3/README.md`），未创建 v0.3 tag。**Road v0.4 已彻底完成**：Gate A、Gate B、产品验收与 macOS 15.7+ 兼容性均已通过；该桌面基线使用 Vue/Tauri 与本地 Python sidecar，Flet 已在 CP14 退役。**Road v0.5 也已完成并归档**：Paper Desk、保存基线、离开保护、Flashcard/Library 连贯性、全应用 Quiet Desk 视觉与固定滚动语义均已验收。实时坐标见 [PROJECT](docs/PROJECT.md)。
 
 ## 当前运行时核心流程
 
@@ -22,7 +22,7 @@ Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响�
 
 - **Paper**：至少一张有序卡页；页标题始终可编辑，正文为作者 Markdown，类型可为总结/高光/碎碎念或空；保存一次提交整份 Paper。
 - **Library**：搜索整份 Paper，按全部/未归类/一层文件夹检索和排序，并提供单份移动、分支、Trash 与恢复；当前没有拖放、多选或批量移动。
-- **Vault**：只选择当前用户 Home 内路径；切换前验证，unsafe 旧 Vault 先复制并核对；尚未启用 Apple App Sandbox。
+- **Vault**：普通本地路径限当前用户 Home 内，切换前验证；Apple 沙盒／iCloud 使用原生受控根目录，当前路由见 PROJECT。
 - **外部编辑器**：正式正文始终在 keikeu 之外完成。
 
 当前已接受的 CP8 composition、证据层级与 Road 收口边界见 [PROJECT](docs/PROJECT.md)。
@@ -52,7 +52,7 @@ Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响�
 - 本地优先；Markdown 是作者资产，JSON 索引可重建。
 - 不静默改写、覆盖、上传或评价作者文字。
 - 不做 keikeu 账号、云后端、遥测或 keikeu 管理的后台同步。
-- 当前桌面运行时可选择 iCloud Drive 等操作系统暴露的普通文件目录；计划中的共享 iCloud Documents Vault 仍未实现。
+- v08 已实现原生 iCloud Documents 候选；历史同步证据与未验 B14 分开保留，不能据此声称新版本已验收。
 - 不接入 fandom 数据库，不做 AI 代写、社区或内置正文编辑器。
 
 稳定产品边界见 [SPEC](docs/SPEC.md)，可判定纪律见 [RULES](docs/RULES.md)。
@@ -83,7 +83,7 @@ README.md                 外部入口与运行命令
 dev                       开发者 TUI：启动、进程日志与本地文档
 AGENTS.md                 Agent 操作纪律与读图顺序
 docs/PROJECT.md           当前坐标、模块入口、下一闸门
-docs/SPEC.md              accepted CP8 产品边界与未实施跨端目标
+docs/SPEC.md              已接受桌面边界与 v08 存储契约
 docs/RULES.md             工程、交互、数据与证据规则
 docs/design/              CP8 accepted 视觉、交互 map 与详细设计
 docs/architecture/        current/target 架构 map 与 ADR
@@ -94,11 +94,13 @@ CONTEXT.md                ignored 本地 Agent 路由；不定义权威
 apps/desktop/python/keikeu_core/          纯 Python 领域与文件逻辑
 apps/desktop/python/keikeu_bridge/        Application Service、JSONL 协议与 sidecar
 apps/desktop/                 Vue/Vite 界面与 Tauri/Rust 宿主
+crates/keikeu-core/        不含文件访问的 Rust Paper 规则
+platforms/apple/          Apple 原生宿主与文件协调
 tests/                    可验证的实现事实
 ```
 
 硬约束：`keikeu_core` 不得依赖任何 GUI 或 transport。Markdown 读写只由
-core 层负责。
+后端负责；纯 Rust 规则 crate 不访问文件。
 
 ## 文档入口
 
@@ -119,19 +121,18 @@ core 层负责。
 ```text
 v0.1        已归档的 macOS Cache / Outline pre-alpha
 v0.2        macOS Paper / Flashcard Core；产品验收完成，本地 annotated tag v0.2.0，归档另行决定
-Phase 7.5   独立轻量 iOS 快速测试版
-Phase 8.5   Road v0.3 准备；下一版 Mac 端前体
 Road v0.3   macOS Paper Library；CP6 product accepted，设计与验收文档已归档
 Road v0.4   Vue/Tauri 前端替换完成；CP14 已验收
 Road v0.5   Quiet Desk UI 与交互收口完成；CP7 已验收并归档
 Road v0.6   Paper v4 卡页重构；CP7 已验收并归档
 Road v0.7   CP8 已验收并归档；最终 checkpoint 2f03aee
-Road v0.8   iPhone 核心创作 + Mac iCloud 同步候选；回滚后重规划，关闭保护前置验收已通过
-独立收口    候选后完成桌面对等与 Python 产品运行时退役；首轮外部 Alpha 前必须通过
-Road v0.9   iOS/macOS 首轮 Alpha + 正式宣发 Gate；须先通过统一核心收口，未启动
-Road v0.10  Android 开发 + 二轮 Alpha；未启动
-Pre-Advance 可选 Markdown Outline；Road v0.7 之外且未排期，不阻塞核心流程
-之后        根据两轮 Alpha 数据决定 Windows Road；Linux、watchOS 未排期
+Road v0.8   中断／转交；CP5 未获最终接受，B14 未验
+Road v09    工程目录、纯 Rust 规则核心、文档与开发工具重整
+Road v09.01 原生 SwiftUI iOS 替换；另行实施与设备验收
+后续        桌面对等、Python 退役、Alpha、Android 原生实施各自排期
+Mac         保留当前实现，日后重构
+Windows     保留 Vue/Tauri/Python 路线，适配另排；v09 不要求可运行包
+Pre-Advance 可选 Markdown Outline；未排期，不阻塞核心流程
 ```
 
 ## 许可

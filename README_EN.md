@@ -8,11 +8,11 @@
 
 Road v0.6 is complete and archived: production uses Paper v4, Index v4, and protocol v2; the Paper itself is the ordered editable card-page artifact. The obsolete normal-runtime chain is gone, the unknown-result and manual-repair gate passed, and the first-author gate passed with no unresolved P0/P1.
 
-Road v0.7 passed CP0–CP8. On 2026-08-26 the developer completed the physical-keyboard macOS native-candidate-window check, passed CP8 Gate D, and explicitly declared Road v0.7 product and implementation work complete. Paper v4, Index v4, and protocol v2 remain unchanged. Final checkpoint `2f03aee` is bound by the independent [Road snapshot](docs/archive/snapshots/road-v0-7.html). CP6 completed one bounded real-v4-Vault author gate and consumed that authorization; later close-guard test boundaries and a tool-induced startup incident are disclosed below; no push or release was performed. On 2026-09-04 the developer approved the [Road v0.8 plan refactor](PLAN_road_v0_8.md): retain Vue/Tauri, progressively unify the Rust Core, and deliver iPhone core creation with Mac iCloud synchronization. An independent stage after that candidate must achieve desktop parity and retire the Python product runtime before the first external Alpha. On 2026-09-07 the worktree was rolled back to `5ff26fe`; the [change map](docs/architecture/road-v0-8-changes.html) accompanies a revised construction plan. Prior CP0–CP4 attempts are not this iteration’s progress, and new engineering has not started; the independent close guard has focused/native-window evidence and passed developer manual acceptance on 2026-09-05: all normal exit paths are protected except force quit.
+Road v0.7 passed CP0–CP8 at `2f03aee`; see its [snapshot](docs/archive/snapshots/road-v0-7.html). v08 completed CP0–CP4 engineering and 15/16 historical CP5 checks; B14 remains unverified. v08 is interrupted and transferred, not accepted. The [old plan](PLAN_road_v0_8.md) and [change map](docs/architecture/road-v0-8-changes.html) remain historical references. Current [Road v09](docs/road-v09.md) reorganizes source, extracts pure Rust rules, and repairs developer tools. v09.01 will separately replace the iOS UI with native SwiftUI.
 
 The product documentation and source were rechecked against the completed Road v0.7 baseline on 2026-08-26. That audit found a PaperView-only listener protecting App-root pending intent. The 2026-09-05 [independent repair report](docs/acceptance/close-guard-2026-09-04.md) separates agent checks from developer manual acceptance of the App-owned guard and records a test-tool relaunch that updated real daily-card state; [PROJECT](docs/PROJECT.md) retains the acceptance boundary. A separate developer TUI and four technical manuals were added on 2026-08-29; the local handoff route moved to root `CONTEXT.md` on 2026-08-30. These developer tools do not change the product UI, runtime chain, or acceptance state.
 
-Phase 7.5 is an independent lightweight iOS build for rapid testing. Its responsive UI, app-sandbox Vault, and on-device fixes are complete on a separate branch; it is not a merge gate in the macOS Road. Road v0.3 engineering, macOS candidate smoke, and CP6 real-author acceptance are complete: retrieval was faster and clear, the external-editor handoff was clear, and no unresolved P0/P1 was reported. Its design and acceptance records are now read-only history (Git history: `78eb755:docs/archive/road-v0-3/README.md`); no v0.3 tag was created. Road v0.4 Gate A, Gate B, product acceptance, and macOS 15.7+ compatibility have passed. The only desktop runtime is now Vue/Tauri with a local Python sidecar; Flet was retired in CP14. Road v0.5 is also complete and archived: Paper Desk, save baselines, departure protection, Flashcard/Library continuity, the whole-app Quiet Desk visual system, and fixed scrolling behavior are accepted. See [PROJECT](docs/PROJECT.md) for live coordinates.
+Phase 7.5 is an independent lightweight iOS build for rapid testing. Its responsive UI, app-sandbox Vault, and on-device fixes are complete on a separate branch; it is not a merge gate in the macOS Road. Road v0.3 engineering, macOS candidate smoke, and CP6 real-author acceptance are complete: retrieval was faster and clear, the external-editor handoff was clear, and no unresolved P0/P1 was reported. Its design and acceptance records are now read-only history (Git history: `78eb755:docs/archive/road-v0-3/README.md`); no v0.3 tag was created. Road v0.4 Gate A, Gate B, product acceptance, and macOS 15.7+ compatibility have passed. That desktop baseline uses Vue/Tauri with a local Python sidecar; Flet was retired in CP14. Road v0.5 is also complete and archived: Paper Desk, save baselines, departure protection, Flashcard/Library continuity, the whole-app Quiet Desk visual system, and fixed scrolling behavior are accepted. See [PROJECT](docs/PROJECT.md) for live coordinates.
 
 ## Current runtime flow
 
@@ -22,7 +22,7 @@ existing inspiration → edit and save a card-page Paper → external prose edit
 
 - **Paper:** at least one ordered card page; the page title is always editable, content is author Markdown, and type is Summary/Snapshot/Whisper or empty; save commits the whole Paper once.
 - **Library:** searches the whole Paper and sorts by all/unfiled/one-level-folder scope, with single-Paper move, branching, Trash, and restore; drag, multi-select, and batch move are not implemented.
-- **Vault:** selects paths only under the current user's Home, validates before switching, and byte-verifies copied unsafe legacy Vaults; Apple App Sandbox is not enabled yet.
+- **Vault:** ordinary local paths stay under the user's Home and are validated before switching; Apple sandbox/iCloud modes use native controlled roots. See PROJECT for current routing.
 - **External editor:** prose always remains outside keikeu.
 
 See [PROJECT](docs/PROJECT.md) for the accepted CP8 composition, evidence layers, and Road closeout boundary.
@@ -52,7 +52,7 @@ The [Road v0.7 construction snapshot](docs/archive/snapshots/road-v0-7.html) bin
 - Local-first; Markdown is the author asset and the JSON index is rebuildable.
 - Never silently rewrite, overwrite, upload, or judge author text.
 - No keikeu accounts, cloud backend, telemetry, or keikeu-managed background sync.
-- The current desktop runtime may select OS-exposed folders such as iCloud Drive as ordinary paths; the planned shared iCloud Documents Vault is not implemented.
+- The v08 candidate implements native iCloud Documents. Historical sync checks and unverified B14 remain separate from new-version acceptance.
 - No fandom database, AI ghostwriting, community, or built-in prose editor.
 
 Stable product boundaries live in [SPEC](docs/SPEC.md); reviewable constraints live in [RULES](docs/RULES.md).
@@ -84,7 +84,7 @@ README.md                 public entry and real commands
 dev                       developer TUI for launch, process logs, and local docs
 AGENTS.md                 agent operating discipline and read order
 docs/PROJECT.md           current coordinates, module entry points, next gate
-docs/SPEC.md              accepted CP8 boundary and unimplemented cross-platform target
+docs/SPEC.md              accepted desktop boundary and v08 storage contract
 docs/RULES.md             engineering, interaction, data, and evidence rules
 docs/design/              CP8-accepted visual and interaction maps and design
 docs/architecture/        current/target architecture map and ADRs
@@ -95,11 +95,12 @@ CONTEXT.md                ignored local agent route; never authoritative
 apps/desktop/python/keikeu_core/          pure-Python domain and file logic
 apps/desktop/python/keikeu_bridge/        application service, JSONL protocol, and sidecar
 apps/desktop/                 Vue/Vite UI and Tauri/Rust host
+crates/keikeu-core/        pure Rust Paper rules without file access
+platforms/apple/          Apple native host and file coordination
 tests/                    verifiable implementation facts
 ```
 
-Hard rule: `keikeu_core` must not depend on any GUI or transport. Only the core
-layer owns Markdown I/O.
+Hard rule: `keikeu_core` must not depend on any GUI or transport. Backends own Markdown I/O; the pure Rust rules crate does not access files.
 
 ## Documentation entry points
 
@@ -120,18 +121,18 @@ layer owns Markdown I/O.
 ```text
 v0.1        archived macOS Cache / Outline pre-alpha
 v0.2        macOS Paper / Flashcard Core; product accepted, local annotated tag v0.2.0, archive separate
-Phase 7.5   independent lightweight iOS rapid-test build
-Phase 8.5   Road v0.3 preparation; precursor to the next Mac version
 Road v0.3   macOS Paper Library; CP6 product accepted, design and acceptance records archived
 Road v0.4   Vue/Tauri frontend replacement complete; CP14 accepted
 Road v0.5   Quiet Desk UI and interaction closeout complete; CP7 accepted and archived
 Road v0.6   Paper v4 card-page reconstruction; CP7 accepted and archived
 Road v0.7   CP8 accepted and archived; final checkpoint 2f03aee
-Road v0.8   iPhone core creation + Mac iCloud sync candidate; replanning from 5ff26fe; independent close-guard prerequisite retained
-Road v0.9   iOS/macOS first Alpha + promotion; independent desktop parity/Python retirement must pass first, not started
-Road v0.10  Android development + second Alpha; not started
-Pre-Advance optional Markdown Outline; outside Road v0.7 and unscheduled, never blocks the core flow
-later       decide the Windows Road from both Alpha rounds; Linux and watchOS unscheduled
+Road v0.8   interrupted/transferred; CP5 not accepted and B14 unverified
+Road v09    source layout, pure Rust rules, documentation and developer tools
+Road v09.01 native SwiftUI iOS replacement; separate implementation and device checks
+later       desktop parity, Python retirement, Alpha and native Android separately scheduled
+Mac         retain current implementation; reconstruct later
+Windows     retain Vue/Tauri/Python; adaptation later, no runnable package required in v09
+Pre-Advance optional Markdown Outline; unscheduled, never blocks the core flow
 ```
 
 ## License

@@ -180,7 +180,8 @@ def discover_documents(root: Path = ROOT) -> list[Document]:
                 candidates.append((path, "manual"))
 
     for path in root.glob("*.md"):
-        candidates.append((path, "active"))
+        if path.name != "CONTEXT.md":
+            candidates.append((path, "active"))
 
     if docs_root.is_dir():
         for path in docs_root.rglob("*"):

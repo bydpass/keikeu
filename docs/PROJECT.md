@@ -2,14 +2,14 @@
 
 > 本文件提供当前坐标和按任务读取的路径。产品契约见 [SPEC](SPEC.md)，工程与 Git 规则见 [RULES](RULES.md)，执行流程见 [AGENTS](../AGENTS.md)。
 
-更新：2026-09-20。当前执行 [Road v09](road-v09.md)，CP2 纯规则核心独立；全计划 YOLO 覆盖 CP0–CP4、本地集成与提交。v08 已中断转交，未获最终接受。
+更新：2026-09-20。当前执行 [Road v09](road-v09.md)，CP3 文档与开发工具整顿；全计划 YOLO 覆盖 CP0–CP4、本地集成与提交。v08 已中断转交，未获最终接受。
 
 ## Current coordinates
 
 | 项目 | 当前状态 | 下一步／依据 |
 | --- | --- | --- |
 | 最近已接受的产品基线 | Road v0.7 CP8，`2f03aee`，Paper v4／Index v4／JSONL v2 | [完成快照](archive/snapshots/road-v0-7.html)；App-root 关闭保护随后独立接受 |
-| 当前执行 | v09 CP2：纯规则 crate 已提取，正在验证 | [批准计划](road-v09.md)；v09.01 原生 iOS 替换后续单独执行 |
+| 当前执行 | v09 CP2 已提交 `2c7dbe6`；CP3 工具修复与文档校正已验证；下一步 CP4 | [批准计划](road-v09.md)；v09.01 原生 iOS 替换后续单独执行 |
 | 候选源码与安装 | Mac／iPhone 同产品源码 `83c4f60`；已取得安装及普通界面运行记录 | 后续主题修改已进入 `deaece8`，旧安装包不能证明该 HEAD；本轮不操作旧设备候选 |
 | 验收进度 | B01–B13、B15–B16 共 15 组通过；B14 待验；CP5 随 v08 中断转交 | B10 按用户批准的实际 provider 结果验收，原生冲突保全另由 B09／B11 证明 |
 | B10 证据边界 | 两轮同编号新建均产生改名 sibling；原生冲突来自已有稿并发编辑 | 保留此区分；同编号新建原生冲突这一组合没有实测证据 |
@@ -66,7 +66,7 @@
 ## Documentation map
 
 - 产品与格式：[SPEC](SPEC.md)、[Paper v4 设计](design/road-v0-6-paper-v4-design.md)、[v0.8 宿主契约](design/road-v0-8-host-contract.md)。
-- 当前工程：[Road v0.8](../PLAN_road_v0_8.md)、[变更图](architecture/road-v0-8-changes.html)、[CP0 宿主契约](design/road-v0-8-host-contract.md)、[CP1](acceptance/road-v0-8/cp1-apple.md)、[CP2](acceptance/road-v0-8/cp2-core.md)、[CP3](acceptance/road-v0-8/cp3-local.md)、[CP4](acceptance/road-v0-8/cp4-cloud.md)、[CP5](acceptance/road-v0-8/cp5-candidate.md)。
+- 历史 v08 工程：[Road v0.8](../PLAN_road_v0_8.md)、[变更图](architecture/road-v0-8-changes.html)、[CP0 宿主契约](design/road-v0-8-host-contract.md)、[CP1](acceptance/road-v0-8/cp1-apple.md)、[CP2](acceptance/road-v0-8/cp2-core.md)、[CP3](acceptance/road-v0-8/cp3-local.md)、[CP4](acceptance/road-v0-8/cp4-cloud.md)、[CP5](acceptance/road-v0-8/cp5-candidate.md)。
 - 已接受的桌面界面：[App Shell](design/road-v0-7-app-shell-design.md)、[设计](design/design.html)、[交互](design/interaction.html)。[架构页](architecture/architecture.html) 与 [v0.7 交互计划](design/road-v0-7-planbook.html) 用于理解桌面基线，当前双后端按上表及源码核对。
 - 决策：[文档归属](architecture/decisions/0001-document-authority.md)、[整树回收](architecture/decisions/0008-whole-folder-trash-lifecycle.md)、[Rust 收敛](architecture/decisions/0009-unified-rust-core-transition.md)。
 - 工具链历史例外：[ADR-0005](architecture/decisions/0005-beta-toolchain-engineering-exception.md)，按其原适用阶段解释。
@@ -76,7 +76,7 @@
 
 ## Commands
 
-从当前 worktree 根目录运行；先使用现有兼容环境。Python 范围为 `>=3.11,<3.14`。隔离 worktree 若缺少 `.venv`，使用已核验的共享项目解释器。
+从当前 worktree 根目录运行；先使用现有兼容环境。Python 范围为 `>=3.11,<3.14`。隔离 worktree 使用独立 `.venv` 并安装当前目录的 editable 包；打包不能混入旧工作区模块。
 
 ```bash
 ./dev

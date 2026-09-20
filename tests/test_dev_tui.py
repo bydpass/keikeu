@@ -37,6 +37,7 @@ def test_document_discovery_preview_search_and_containment(tmp_path: Path) -> No
         directory.mkdir(parents=True, exist_ok=True)
 
     (repository / "README.md").write_text("# Root readme\n", encoding="utf-8")
+    (repository / "CONTEXT.md").write_text("# Generated route\n", encoding="utf-8")
     (manual / "README.md").write_text("# Manual map\n", encoding="utf-8")
     guide = manual / "guide.html"
     guide.write_text(

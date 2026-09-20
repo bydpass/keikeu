@@ -64,5 +64,5 @@ Vue/Tauri → JSONL protocol v2 → Python service/core。Paper v4 Markdown、In
 候选后收口的完整桌面对等、安全切换及无 Python 产品依赖 Gate 通过后，才完成对 ADR-0004
 运行架构的替代。旧 ADR 与历史验收记录保留原文，不把未来目标改写为过去事实。
 
-施工顺序、收口条件和当前批准边界以 [活动计划](../../../PLAN_road_v0_8.md)、
+施工顺序、收口条件和当前批准边界以 [当前 v09 计划](../../road-v09.md)、
 [SPEC](../../SPEC.md)、[RULES](../../RULES.md) 与 [PROJECT](../../PROJECT.md) 为准。

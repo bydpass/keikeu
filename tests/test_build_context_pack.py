@@ -63,9 +63,9 @@ def test_directory_expansion_skips_cold_context_but_exact_history_is_allowed() -
     )
 
     _, exact_paths, _ = CONTEXT_PACK.build_context_pack(
-        ["docs/archive/road-v0-3/cold_start_report.md"]
+        ["docs/archive/snapshots/road-v0-7.html"]
     )
-    assert "docs/archive/road-v0-3/cold_start_report.md" in exact_paths
+    assert "docs/archive/snapshots/road-v0-7.html" in exact_paths
 
 
 def test_context_pack_rejects_binary_escape_and_oversize_requests() -> None:

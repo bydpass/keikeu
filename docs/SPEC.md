@@ -18,7 +18,7 @@ keikeu 为单个同人作者提供私密、本地优先的写作前整理与专�
 
 ## 3. Current runtime and accepted composition
 
-已接受的 Mac 本地流程为 `Vue → Tauri/Rust → JSONL v2 → Python service/core → Paper v4 / Index v4 / Vault`。当前 v0.8 候选在此基础上按存储选择路由：Mac iCloud 和 iPhone 本地／iCloud 使用 Rust Paper Core，云端增加 Apple 原生协调；Mac 本地全功能继续由 Python 承担。
+已接受的 Mac 本地流程为 `Vue → Tauri/Rust → JSONL v2 → Python service/core → Paper v4 / Index v4 / Vault`。当前工程继承的 v0.8 候选在此基础上按存储选择路由：Mac iCloud 和 iPhone 本地／iCloud 使用 Rust Paper Core，云端增加 Apple 原生协调；Mac 本地全功能继续由 Python 承担。
 
 桌面界面继承 Road v0.7 CP8：紧凑 App Shell → Paper／Library 日常位置 → Vault 环境或阻塞恢复入口。CP7 的整树生命周期见 §10，CP8 的响应式和原生输入要求见 §11。候选实现与产品接受分别由当前验收记录判定。
 
@@ -62,9 +62,9 @@ keikeu 为单个同人作者提供私密、本地优先的写作前整理与专�
 ## 8. Explicit exclusions and platforms
 
 - Road v0.7 的验收平台为 Apple Silicon Mac，交付范围是既有桌面能力上的 App Shell 与响应式呈现。Flashcard 独立产出步骤及旧页面重排路径已随先前 Road 退役；当前页面操作以 §4–5 为准。
-- 当前 v0.8 范围为 iPhone 核心创作与 Mac iCloud 同步候选。后续顺序为独立桌面对等／Python 产品运行时退役 → v0.9 首轮 iOS/macOS 外部 Alpha 与推广 Gate → v0.10 Android 和第二轮 Alpha → 基于两轮结果决定 Windows。Intel Mac 不受支持；Linux、watchOS 待后续排期。
+- v08 已中断转交。当前 v09 重整工程并独立纯 Rust 规则核心，v09.01 再实施原生 SwiftUI iOS。移动端采用原生语言与组件，尽可能复用 Rust；Mac 重构延后，Windows 保留 Vue/Tauri/Python 路线且适配另排。桌面对等、Python 退役、外部 Alpha 与 Android 原生实施独立排期，不占用旧草案编号。Intel Mac 不受支持；Linux、watchOS 未排期。
 - 新增 AI 生成、正文编辑器、社区、数据库、应用自建服务、自动保存、页面重排或技术栈替换属于产品扩展，使用单独提案和明确批准。
-- 2026-09-07 从 `3c387c5` 在独立 worktree 重新实施，用户授权 CP0–CP5 工程、提前 YOLO 和本地 checkpoint 提交；本轮证据以此次实施记录为准。
+- 2026-09-07 从 `3c387c5` 在独立 worktree 重新实施，用户授权 CP0–CP5 工程、提前 YOLO 和本地 checkpoint 提交；该 v08 历史证据以当次实施记录为准。
 - [App-root 关闭保护](acceptance/close-guard-2026-09-04.md) 在 2026-09-05 独立获得开发者普通退出接受；强制退出按最后成功落盘修订恢复。
 - Mac／iPhone 个人 debug 候选已经本地签名、打包和安装。对外 Developer ID、公证、staple、DMG、TestFlight、发布与推广使用独立 Gate。旧 Phase 7.5 iOS 分支保留为历史试验。
 - `./dev`、人工手册和 `CONTEXT.md` 服务开发工作流，其结果按各自用途解释。
@@ -108,7 +108,7 @@ CP8 保留产品能力及数据／后端契约，调整呈现和导航；工程�
 
 ## 13. Documented unified-core target
 
-[ADR-0009](architecture/decisions/0009-unified-rust-core-transition.md) 定义逐步 Rust 收敛及 ADR-0004 的条件替代。[当前计划](../PLAN_road_v0_8.md#0-先看我们正在改什么) 将工程、真实设备和 provider 验收分开。
+[ADR-0009](architecture/decisions/0009-unified-rust-core-transition.md) 定义逐步 Rust 收敛及 ADR-0004 的条件替代。[历史 v08 计划](../PLAN_road_v0_8.md#0-先看我们正在改什么) 将工程、真实设备和 provider 验收分开。
 
 | 环境／阶段 | 后端与边界 |
 | --- | --- |

@@ -127,7 +127,12 @@ def main() -> int:
             if lines > limit:
                 errors.append(f"{path.relative_to(ROOT)}: {lines} lines exceeds {limit}")
 
-    documents = active_documents()
+    documents = []
+    for path in active_documents():
+        if path.is_file():
+            documents.append(path)
+        elif path not in REQUIRED:
+            errors.append(f"missing active file: {path.relative_to(ROOT)}")
     for path in documents:
         if path.suffix == ".md":
             links = [("href", target) for target in markdown_links(path)]

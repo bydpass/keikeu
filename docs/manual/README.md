@@ -2,23 +2,23 @@
 
 > 这里解释“为什么”和“如何理解”，不回答“现在必须怎么做”。当前答案回到 [PROJECT](../PROJECT.md)、[SPEC](../SPEC.md)、[RULES](../RULES.md) 与 [AGENTS](../../AGENTS.md)。
 
-> 2026-09-04：同步 [v0.8 计划](../../PLAN_road_v0_8.md) 的未来路线：iPhone 创作与 Mac iCloud 同步候选之后，独立完成桌面对等及 Python 产品运行时退役，首轮外部 Alpha 前必须通过。当前桌面链、手册命令与根目录 `CONTEXT.md` 路由不变。
+> 2026-09-20：当前 [v09](../road-v09.md) 重整工程，后续 v09.01 替换原生 iOS。v08 已中断转交；下列旧手册中的 Alpha／平台编号属于历史草案，不能作为当前排期。
 
 ```text
 manual/
 ├─ repository-structure.html 完整文件树与目录架构图
 ├─ keikeu-current-logic.html  系统理解
-├─ road-v0-8-guide.md         当前计划导读
+├─ road-v0-8-guide.md         历史 v08 计划导读
 ├─ paper-v4-repair.html       Paper v4 离线人工修复
 ├─ forfresh/                  项目开发技术手册
 └─ prospect/                  产品、用户研究与价值
 ```
 
-## 理解本次 Road v0.8
+## 理解历史 Road v0.8
 
 先读 [Road v0.8 导读](road-v0-8-guide.md)：交付范围、当前与未来架构、CP0–CP5 的顺序、
 保存和恢复的具体例子，以及候选验收、统一核心收口和外部 Alpha 的区别。
-它解释 [活动计划](../../PLAN_road_v0_8.md) 与
+它解释 [历史计划](../../PLAN_road_v0_8.md) 与
 [ADR-0009](../architecture/decisions/0009-unified-rust-core-transition.md)，不增加合同或证明阶段通过。
 
 ## 开发者 TUI
@@ -52,7 +52,7 @@ builder 上传。未跟踪文件不能选入；不得只为刷新而擅自暂存
 
 ## 第一次接手
 
-先用 [完整仓库结构](repository-structure.html) 逐层展开内部文件、按文件名或完整路径搜索，并打开本地文件。文件树覆盖当前存在的 Git 跟踪文件，省略被忽略的依赖、缓存、构建产物与私有 Vault。页面可切换到 [Archify 目录概览](repository-structure-overview.html)，连线表示目录包含关系。文件树于 2026-09-18 按 `78eb755` 工作区的归档清理更新为 229 个文件；目录概览仍为 2026-09-07 的 `3c387c5` 快照，两者均不会随目录变化自动同步；[Archify JSON](repository-structure.architecture.json) 与 [交付凭据](repository-structure.receipt.json) 仅对应目录概览。文件树的路径完整性、搜索与视图切换可用 `node docs/manual/repository-structure.check.cjs` 检查（使用现有前端开发依赖）。
+先用 [完整仓库结构](repository-structure.html) 逐层展开内部文件、按文件名或完整路径搜索，并打开本地文件。文件树覆盖当前存在的 Git 跟踪文件，省略被忽略的依赖、缓存、构建产物与私有 Vault。页面可切换到 [Archify 目录概览](repository-structure-overview.html)，连线表示目录包含关系。文件树随 v09 路径迁移刷新，数量与校验状态见页面；目录概览仍为 2026-09-07 的 `3c387c5` 快照，两者均不会随目录变化自动同步；[Archify JSON](repository-structure.architecture.json) 与 [交付凭据](repository-structure.receipt.json) 仅对应目录概览。文件树的路径完整性、搜索与视图切换可用 `node docs/manual/repository-structure.check.cjs` 检查（使用现有前端开发依赖）。
 
 1. 先读 [TUI 极简使用手册](forfresh/developer-tui-quickstart.html)，用 `./dev` 启动应用或检视手册。
 2. 再读 [技术栈与组件图鉴](forfresh/stack-component-atlas.html)，确认 Vue、Tauri、JSONL 与 Python 的职责边界。
@@ -92,14 +92,14 @@ builder 上传。未跟踪文件不能选入；不得只为刷新而擅自暂存
 | [Python Caveman 诠释](forfresh/python-caveman-guide.html) | Python 对象、core/bridge 分层、Markdown 权威与安全追代码 | [SPEC](../SPEC.md)、[RULES](../RULES.md) 与当前 `apps/desktop/python/` / `tests/` |
 | [Rust 简易入门](forfresh/rust-beginner-guide.html) | Tauri 宿主、Option/Result、所有权、单 worker 与 Sidecar 生命周期 | [architecture](../architecture/architecture.html)、[RULES](../RULES.md) 与当前 `apps/desktop/src-tauri/` |
 | [Git 状态地图](forfresh/git-interactive.html) → [Git 手册](forfresh/gitspec.md) | 工作区、暂存区、本地历史、远端与最短安全路径 | [RULES §7](../RULES.md#7-git) |
-| [macOS 开发者入门](forfresh/macos-developer-beginner-guide.html) → [Developer ID 发布手册](forfresh/macos-developer-id-release.md) | 签名、公证、staple、Gatekeeper 与尚未批准的 Road v0.9 发布骨架 | [Road v0.8 跨端基础计划](../../PLAN_road_v0_8.md)、[PROJECT](../PROJECT.md) 与 [RULES](../RULES.md) |
+| [macOS 开发者入门](forfresh/macos-developer-beginner-guide.html) → [Developer ID 发布手册](forfresh/macos-developer-id-release.md) | 签名、公证、staple、Gatekeeper 与尚未排期的分发草案 | [Road v0.8 跨端基础计划](../../PLAN_road_v0_8.md)、[PROJECT](../PROJECT.md) 与 [RULES](../RULES.md) |
 
 ## `prospect/`：产品与价值
 
 | 阅读路径 | 读到什么 | 最终核对 |
 | --- | --- | --- |
-| [产品设计](prospect/appdesign.md) | 已接受的 Paper v4 产品模型，以及明确标作“未实现”的 Road v0.8+ 用户与平台方向 | [Road v0.6 Paper v4 设计](../design/road-v0-6-paper-v4-design.md)、[Road v0.7 App Shell / CP8 accepted override](../design/road-v0-7-app-shell-design.md)、[活动 Road v0.8](../../PLAN_road_v0_8.md) |
-| [Alpha 用户画像与宣发渠道研究](prospect/alpha-audience-research.md) | 2026-08-30 六平台新证据、四端待实测口径、18+ 准入、样本与正式宣发 Gate | [活动 Road v0.8](../../PLAN_road_v0_8.md)、[PROJECT](../PROJECT.md) 与 [SPEC](../SPEC.md) |
+| [产品设计](prospect/appdesign.md) | 已接受的 Paper v4 产品模型，以及明确标作“未实现”的 Road v0.8+ 用户与平台方向 | [Road v0.6 Paper v4 设计](../design/road-v0-6-paper-v4-design.md)、[Road v0.7 App Shell / CP8 accepted override](../design/road-v0-7-app-shell-design.md)、[历史 Road v0.8](../../PLAN_road_v0_8.md) |
+| [Alpha 用户画像与宣发渠道研究](prospect/alpha-audience-research.md) | 2026-08-30 六平台新证据、四端待实测口径、18+ 准入、样本与正式宣发 Gate | [历史 Road v0.8](../../PLAN_road_v0_8.md)、[PROJECT](../PROJECT.md) 与 [SPEC](../SPEC.md) |
 | [技术伦理](prospect/ethics.md) | 作者控制、数据边界与功能评审方法 | [SPEC](../SPEC.md) 与 [RULES](../RULES.md) |
 
 若 manual 与 truth 冲突，manual 错；修 manual，不复制一份新规则。

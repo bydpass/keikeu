@@ -27,3 +27,11 @@ CP1 检查：前端 Vitest 142/10 通过、Vite 生产构建通过、Cargo 21 �
 独立核心测试 2 项通过、Python 黄金样本测试通过；依赖树不含 Tauri/Apple。逐项核对 Cargo 注册表依赖版本与校验和完全未变；黄金样本和 Unicode 表与 `deaece8` 字节一致。
 
 完整 Cargo workspace 22 项通过（独立核心 2、宿主 20）；格式检查在新路径换行调整后通过，文档 86/14 和目录树 291 路径检查通过。CP2 工程完成，不证明新原生客户端或新 provider 验收。
+
+## CP3：文档与开发工具
+
+分支 `codex/road-v09-cp3-harness`，从 `2c7dbe6` 开始。三项工具问题均按原定范围修复：历史引用改用保留快照；缺失根文档汇总报告后继续检查其他链接；TUI 排除生成的根 `CONTEXT.md`。README、SPEC、RULES、PROJECT 与手册入口统一 v08 中断、v09 工程重整及 v09.01 原生 iOS 的顺序；旧手册保留历史说明。
+
+CLI 试点使用 `dsh headless`，独立工作区 `keikeu-v09-cli`，会话 `session-7a656ed7-dba6-4ca0-bac9-5b218607d22f`。输入仅限测试修复说明及指定仓库文件，禁止提交、安装依赖、私有数据与进一步委派。返回只改 `tests/test_build_context_pack.py` 两个路径字符串；主代理核对完整差异和工作区状态后集成。CLI 报告 6 项通过，主代理实际复测三组工具测试 20 项通过、全 Python 302 项通过。回执未提供可核实的具体模型版本，不能声称验证了 DeepSeek v4.1 Flash。
+
+文档检查 86 active／14 required 通过；目录树 292 个路径、搜索／展开／切换校验通过；`git diff --check` 通过。未改产品行为；原生 Mac 冒烟留给 CP4，旧 iCloud／设备记录未重跑。

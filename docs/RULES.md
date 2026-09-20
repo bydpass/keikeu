@@ -9,7 +9,7 @@
 | 问题 | 依据 |
 | --- | --- |
 | 作者资产及磁盘现状 | 实际文件与只读观察；保留原字节 |
-| 当前运行行为 | `apps/desktop/`、`apps/desktop/python/` 与相应测试 |
+| 当前运行行为 | `apps/desktop/`、`crates/keikeu-core/`、`platforms/apple/` 与相应测试 |
 | 预期产品行为 | SPEC 与其引用的现行契约 |
 | 工程与 Git 方法 | 本文件；AGENTS 串联流程 |
 | 当前阶段与证据入口 | PROJECT 与对应验收记录 |
@@ -19,7 +19,7 @@
 
 ## 2. Architecture
 
-- 当前候选按选定存储路由：Mac 本地由 Vue → Tauri/Rust → JSONL v2 → Python service/core；Mac iCloud 与 iPhone 本地／iCloud 由宿主调用 Rust Paper Core，云模式使用 Apple 原生文件协调。源码入口见 PROJECT；CP0–CP4 工程已完成，CP5 待验边界见验收单。
+- 当前候选按选定存储路由：Mac 本地由 Vue → Tauri/Rust → JSONL v2 → Python service/core；Mac iCloud 与 iPhone 本地／iCloud 由宿主调用 Rust Paper Core，云模式使用 Apple 原生文件协调。源码入口见 PROJECT。这些是中断 v08 的实现；v09 保持路由行为并独立纯规则 crate，旧 CP5 证据不代表 v09 验收。
 - `keikeu_core` 保持纯 Python 领域与文件逻辑，应用服务负责编排和 DTO，JSONL 负责传输。Mac 本地 `markdown_io.py` 拥有 Paper 编解码，`vault.py` 拥有 Home 边界、路径、枚举、编号及生命周期；迁移模块拥有预检、备份、暂存和替换。
 - Rust Paper Core 拥有已批准的移动／共享云端 Paper 流程；旧模型／编解码仅用于迁移。Python 产品运行时的退役以独立桌面功能对等和安全切换验收为前提，详见 [ADR-0009](architecture/decisions/0009-unified-rust-core-transition.md)。
 - Vue 管可见状态，通过 `bridgeRequest` 调用当前后端；作者文件和 Index 的读写由后端完成。页面使用已验证的 Vault 相对路径。每个选定 Vault 对应一个写入后端，失败后保留原路由并报告状态。
