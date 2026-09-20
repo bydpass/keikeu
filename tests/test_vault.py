@@ -2563,7 +2563,7 @@ def test_folder_tree_moves_refuse_nfc_casefold_target_collisions(tmp_path):
 
 
 def test_module_imports_only_stdlib_dependencies():
-    src = Path(__file__).resolve().parent.parent / "src"
+    src = Path(__file__).resolve().parent.parent / "apps/desktop/python"
     probe = (
         "import keikeu_core.vault, sys\n"
         "forbidden = {'flet', 'pydantic', 'attr', 'attrs', 'yaml'}\n"

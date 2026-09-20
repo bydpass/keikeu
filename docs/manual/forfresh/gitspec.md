@@ -88,7 +88,7 @@ keikeu 代码改动：
 
 ```bash
 .venv/bin/python -m pytest
-.venv/bin/python -m compileall -q src
+.venv/bin/python -m compileall -q apps/desktop/python
 ```
 
 只有文档改动：

@@ -318,7 +318,7 @@ describe("Road v0.7 Vault context and migration gate", () => {
   });
 
   it("re-reads migration state after restart without replaying migration", async () => {
-    const migration = preflight({ token: "fresh-migration-token" });
+    const migration = preflight({ token: "test-fresh" });
     const request = vi.fn(async (method) => {
       if (method === "startup.load") {
         return { ...pickerStartup, state: "migration", migration };

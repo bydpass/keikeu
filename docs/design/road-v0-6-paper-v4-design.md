@@ -47,7 +47,7 @@ Road v0.6 保留本地优先、Markdown 权威、作者控制和现有桌面进�
 | Library | Summary 预览与 Highlight 名称 | Paper 名称、第一页预览、页数、页标题与全页搜索 |
 
 CP4 完成表中纵切换，CP5 删除不可达旧链，CP6 完成故障与修复 Gate，CP7 完成一号
-真实作者接受；[SPEC](../SPEC.md)、[RULES](../RULES.md)、`src/` 与 `tests/` 共同描述
+真实作者接受；[SPEC](../SPEC.md)、[RULES](../RULES.md)、`apps/desktop/python/` 与 `tests/` 共同描述
 Paper v4/protocol v2。各层证据仍不得互相冒充。
 
 ## 3. 范围与明确排除

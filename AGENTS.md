@@ -22,7 +22,7 @@
 | 桌面界面契约 | [App Shell 设计](docs/design/road-v0-7-app-shell-design.md)；[视觉](docs/design/design.html)与[交互](docs/design/interaction.html) |
 | 架构与决策原因 | [架构图](docs/architecture/architecture.html)、[ADR](docs/architecture/decisions/)；结合 PROJECT 区分旧桌面基线和当前双后端 |
 
-运行事实由 `frontend/`、`src/` 和对应测试确定。验收报告按待回答的问题读取；手册用于人类说明，归档用于历史追溯。上下文只纳入当前任务所需材料。
+运行事实由 `apps/desktop/`、`apps/desktop/python/` 和对应测试确定。验收报告按待回答的问题读取；手册用于人类说明，归档用于历史追溯。上下文只纳入当前任务所需材料。
 
 ## 执行
 

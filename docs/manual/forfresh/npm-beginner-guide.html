@@ -56,11 +56,11 @@
       <section class="summary" aria-labelledby="summary-title">
         <h2 id="summary-title">先记住三件事</h2>
         <p class="lead">
-          在 keikeu 里，npm 只管理 <code>frontend/</code> 的 JavaScript 依赖与脚本。
+          在 keikeu 里，npm 只管理 <code>apps/desktop/</code> 的 JavaScript 依赖与脚本。
           它不是 Python 后端，也不会替你完成 Rust、Sidecar 或产品验收。
         </p>
         <ol class="takeaways">
-          <li><span>从仓库根目录运行命令时，始终带上 <span class="inline-code">--prefix frontend</span>。</span></li>
+          <li><span>从仓库根目录运行命令时，始终带上 <span class="inline-code">--prefix apps/desktop</span>。</span></li>
           <li><span><span class="inline-code">package.json</span> 写直接需求，lockfile 锁完整依赖树，<span class="inline-code">node_modules</span> 可以重建。</span></li>
           <li><span>网页能打开只证明 Vite 在工作；完整桌面链路还需要 Tauri、Rust 和 Python Sidecar。</span></li>
         </ol>
@@ -157,28 +157,28 @@
         </p>
 
         <dl>
-          <dt><span class="path">frontend/package.json</span></dt>
+          <dt><span class="path">apps/desktop/package.json</span></dt>
           <dd>
             直接依赖、精确工具版本和脚本入口。<code>private: true</code> 防止误发布，
             <code>type: module</code> 表示前端 JavaScript 使用 ESM。
           </dd>
 
-          <dt><span class="path">frontend/package-lock.json</span></dt>
+          <dt><span class="path">apps/desktop/package-lock.json</span></dt>
           <dd>
             npm 解析后的完整依赖树，当前格式为 lockfile v3。它必须进入 Git，团队与 CI 才能重建同一棵树。
           </dd>
 
-          <dt><span class="path">frontend/node_modules/</span></dt>
+          <dt><span class="path">apps/desktop/node_modules/</span></dt>
           <dd>
             本机安装结果，体积大、可重建、已被 Git 忽略。不要手改，也不要提交。
           </dd>
 
-          <dt><span class="path">frontend/dist/</span></dt>
+          <dt><span class="path">apps/desktop/dist/</span></dt>
           <dd>
             Vite 的构建输出，运行 <code>npm run build</code> 后生成，同样不进入 Git。
           </dd>
 
-          <dt><span class="path">frontend/vite.config.js</span></dt>
+          <dt><span class="path">apps/desktop/vite.config.js</span></dt>
           <dd>
             当前开发服务器固定在 <code>127.0.0.1:1420</code>，并启用 <code>strictPort</code>；
             Vitest 使用 <code>jsdom</code> 环境。
@@ -215,14 +215,14 @@ npm --version</code></pre>
         <pre><code>v22.23.2
 10.9.8</code></pre>
         <p>
-          <code>frontend/package.json</code> 的 <code>engines</code> 同样写着这两个精确值，
+          <code>apps/desktop/package.json</code> 的 <code>engines</code> 同样写着这两个精确值，
           但 <code>engines</code> 不一定是硬失败闸门；命令输出才是你此刻真正使用的工具。
         </p>
 
         <aside class="callout">
           <span class="mini-label">已知漂移 · 不要藏起来</span>
           <p>
-            当前 <code>frontend/package.json</code>、lockfile、README 与 PROJECT 都写
+            当前 <code>apps/desktop/package.json</code>、lockfile、README 与 PROJECT 都写
             Node <code>22.23.2</code>，但仓库根目录 <code>.node-version</code> 仍是旧值
             <code>22.23.1</code>；已完成的 Road v0.6 工具链记录也是 <code>22.23.2</code>。新人以当前 manifest 与 PROJECT 为准；校准该文件应当是独立、可审阅的任务，
             不在安装时偷偷改。
@@ -230,11 +230,11 @@ npm --version</code></pre>
         </aside>
 
         <h3>第二步：按 lockfile 安装</h3>
-        <pre><code>npm --prefix frontend ci</code></pre>
+        <pre><code>npm --prefix apps/desktop ci</code></pre>
         <p><code>npm ci</code> 会：</p>
         <ul>
           <li>要求 <code>package.json</code> 与 lockfile 一致；</li>
-          <li>先删除现有 <code>frontend/node_modules/</code>，再重建；</li>
+          <li>先删除现有 <code>apps/desktop/node_modules/</code>，再重建；</li>
           <li>按 lockfile 安装，不更新两个声明文件；</li>
           <li>首次安装或缓存未命中时访问 npm registry。</li>
         </ul>
@@ -244,7 +244,7 @@ npm --version</code></pre>
         </p>
 
         <h3>第三步：只读核对顶层依赖</h3>
-        <pre><code>npm --prefix frontend ls --depth=0</code></pre>
+        <pre><code>npm --prefix apps/desktop ls --depth=0</code></pre>
         <p>
           成功时应看到本手册第一章列出的直接依赖；缺包或版本不符时，先保留完整错误输出。
         </p>
@@ -268,37 +268,37 @@ npm --version</code></pre>
             </thead>
             <tbody>
               <tr>
-                <td><code>npm --prefix frontend run dev</code></td>
+                <td><code>npm --prefix apps/desktop run dev</code></td>
                 <td><code>vite</code></td>
                 <td>启动本机 Vite 页面；进程持续运行，<kbd>Control</kbd> + <kbd>C</kbd> 停止。</td>
               </tr>
               <tr>
-                <td><code>npm --prefix frontend run test</code></td>
+                <td><code>npm --prefix apps/desktop run test</code></td>
                 <td><code>vitest run</code></td>
                 <td>单次运行全部前端测试，结束后退出。</td>
               </tr>
               <tr>
-                <td><code>npm --prefix frontend run test -- App.test.js</code></td>
+                <td><code>npm --prefix apps/desktop run test -- App.test.js</code></td>
                 <td><code>vitest run App.test.js</code></td>
                 <td>把 <code>--</code> 后面的文件名交给 Vitest，只跑相关测试。</td>
               </tr>
               <tr>
-                <td><code>npm --prefix frontend run build</code></td>
+                <td><code>npm --prefix apps/desktop run build</code></td>
                 <td><code>vite build</code></td>
-                <td>检查生产构建并写入 <code>frontend/dist/</code>。</td>
+                <td>检查生产构建并写入 <code>apps/desktop/dist/</code>。</td>
               </tr>
             </tbody>
           </table>
         </div>
 
         <h3>拆开命令语法</h3>
-        <pre><code>npm  --prefix frontend  run  test  --  App.test.js
+        <pre><code>npm  --prefix apps/desktop  run  test  --  App.test.js
 │          │             │     │    │        │
 工具    npm 项目目录     跑脚本  脚本名 分隔符  交给 Vitest</code></pre>
         <p>
           <code>npm run</code> 会把本地 <code>node_modules/.bin</code> 加入 PATH，所以本项目不需要
           全局安装 Vite、Vitest 或 Tauri CLI。脚本清单的唯一事实源是
-          <code>frontend/package.json</code>；<span class="keep">仓库没有定义 <code>npm start</code>。</span>
+          <code>apps/desktop/package.json</code>；<span class="keep">仓库没有定义 <code>npm start</code>。</span>
         </p>
 
         <aside class="callout">
@@ -320,18 +320,18 @@ npm --version</code></pre>
         <h3>最短开发启动路径</h3>
         <ol class="flow">
           <li>
-            <span><strong>安装前端依赖</strong><br><code>npm --prefix frontend ci</code></span>
+            <span><strong>安装前端依赖</strong><br><code>npm --prefix apps/desktop ci</code></span>
           </li>
           <li>
             <span><strong>构建 Python Sidecar</strong><br><code>.venv/bin/python scripts/build_sidecar.py</code></span>
           </li>
           <li>
-            <span><strong>启动桌面应用</strong><br><code>npm --prefix frontend run tauri:dev</code></span>
+            <span><strong>启动桌面应用</strong><br><code>npm --prefix apps/desktop run tauri:dev</code></span>
           </li>
         </ol>
         <p>
           第三步展开为 <code>tauri dev</code>。Tauri 读取
-          <code>frontend/src-tauri/tauri.conf.json</code>，先执行 <code>npm run dev</code>，
+          <code>apps/desktop/src-tauri/tauri.conf.json</code>，先执行 <code>npm run dev</code>，
           再让 Rust 宿主连接 <code>http://127.0.0.1:1420</code>，并启动已存在的 Sidecar 二进制。
         </p>
 
@@ -344,7 +344,7 @@ npm --version</code></pre>
 
         <h3>生产构建入口</h3>
         <pre><code>.venv/bin/python scripts/build_sidecar.py
-npm --prefix frontend run tauri:build</code></pre>
+npm --prefix apps/desktop run tauri:build</code></pre>
         <p>
           <code>tauri:build</code> 会自动执行 Vite build，再调用 Cargo/Tauri 组装桌面产物。
           它比 <code>npm run build</code> 多，但仍不自动证明签名、公证、真实 Vault smoke 或产品验收通过。
@@ -381,20 +381,20 @@ npm --prefix frontend run tauri:build</code></pre>
 
         <h3>任务明确批准增加依赖时</h3>
         <pre><code># 运行时依赖
-npm --prefix frontend install --save-exact &lt;package&gt;@&lt;exact-version&gt;
+npm --prefix apps/desktop install --save-exact &lt;package&gt;@&lt;exact-version&gt;
 
 # 只用于构建或测试
-npm --prefix frontend install --save-dev --save-exact &lt;package&gt;@&lt;exact-version&gt;</code></pre>
+npm --prefix apps/desktop install --save-dev --save-exact &lt;package&gt;@&lt;exact-version&gt;</code></pre>
         <ol>
           <li>先说明为什么现有代码、浏览器/Tauri 原生能力和当前依赖不够。</li>
           <li>确认它属于 <code>dependencies</code> 还是 <code>devDependencies</code>。</li>
-          <li>只审阅 <code>frontend/package.json</code> 与 lockfile 的预期差异。</li>
+          <li>只审阅 <code>apps/desktop/package.json</code> 与 lockfile 的预期差异。</li>
           <li>重新运行前端测试与构建；跨桌面边界时再跑相应 Cargo/Tauri 检查。</li>
         </ol>
 
         <h3>安全报告不是自动改动授权</h3>
         <p>
-          <code>npm --prefix frontend audit --omit=dev</code> 可以查询生产依赖报告，但它访问 registry，
+          <code>npm --prefix apps/desktop audit --omit=dev</code> 可以查询生产依赖报告，但它访问 registry，
           结果只代表查询时刻。发现告警后先确认受影响路径和升级范围；不要把
           <code>npm audit fix</code> 当成无害清理。
         </p>
@@ -420,7 +420,7 @@ npm --prefix frontend install --save-dev --save-exact &lt;package&gt;@&lt;exact-
             <tbody>
               <tr>
                 <td>找不到 <code>package.json</code></td>
-                <td>在仓库根目录漏了 <code>--prefix frontend</code></td>
+                <td>在仓库根目录漏了 <code>--prefix apps/desktop</code></td>
                 <td>回到根目录，使用本手册中的完整命令。</td>
               </tr>
               <tr>
@@ -488,8 +488,8 @@ npm --prefix frontend install --save-dev --save-exact &lt;package&gt;@&lt;exact-
         </div>
 
         <h3>新人完成一次前端改动的最短检查</h3>
-        <pre><code>npm --prefix frontend run test
-npm --prefix frontend run build
+        <pre><code>npm --prefix apps/desktop run test
+npm --prefix apps/desktop run build
 git diff --check</code></pre>
         <p>
           UI 行为变化还需要聚焦的 Vitest 与适当的 Tauri smoke；文档检查不能替代应用检查。
@@ -501,10 +501,10 @@ git diff --check</code></pre>
         <p class="kicker">Sources</p>
         <h2 id="sources-title">事实来源</h2>
         <ol>
-          <li><a href="../../../frontend/package.json"><code>frontend/package.json</code></a>：版本、直接依赖与脚本。</li>
-          <li><a href="../../../frontend/package-lock.json"><code>frontend/package-lock.json</code></a>：lockfile v3 与完整依赖树。</li>
-          <li><a href="../../../frontend/vite.config.js"><code>frontend/vite.config.js</code></a>：端口、strictPort 与 jsdom。</li>
-          <li><a href="../../../frontend/src-tauri/tauri.conf.json"><code>frontend/src-tauri/tauri.conf.json</code></a>：Vite 前置命令与 Sidecar 声明。</li>
+          <li><a href="../../../apps/desktop/package.json"><code>apps/desktop/package.json</code></a>：版本、直接依赖与脚本。</li>
+          <li><a href="../../../apps/desktop/package-lock.json"><code>apps/desktop/package-lock.json</code></a>：lockfile v3 与完整依赖树。</li>
+          <li><a href="../../../apps/desktop/vite.config.js"><code>apps/desktop/vite.config.js</code></a>：端口、strictPort 与 jsdom。</li>
+          <li><a href="../../../apps/desktop/src-tauri/tauri.conf.json"><code>apps/desktop/src-tauri/tauri.conf.json</code></a>：Vite 前置命令与 Sidecar 声明。</li>
           <li><a href="../../../scripts/build_sidecar.py"><code>scripts/build_sidecar.py</code></a>：Sidecar 构建与 target 命名。</li>
           <li><a href="../../../.gitignore"><code>.gitignore</code></a>：前端与桌面生成物边界。</li>
           <li><a href="../../../README.md">README</a>、<a href="../../PROJECT.md">PROJECT</a>、<a href="../../RULES.md">RULES</a> 与 Road v0.7 计划书（Git 历史：<code>78eb755:docs/archive/road-v0-7/PLAN_road_v0_7.md</code>）：当前坐标、工具链边界与检查命令；Road v0.6 计划书（Git 历史：<code>78eb755:docs/archive/road-v0-6/PLAN_road_v0_6.md</code>）只保留已完成的历史工具链记录。</li>

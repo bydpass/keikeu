@@ -2,14 +2,14 @@
 
 > 本文件提供当前坐标和按任务读取的路径。产品契约见 [SPEC](SPEC.md)，工程与 Git 规则见 [RULES](RULES.md)，执行流程见 [AGENTS](../AGENTS.md)。
 
-更新：2026-09-20。当前执行 [Road v09](road-v09.md)，CP0 集成基线；全计划 YOLO 覆盖 CP0–CP4、本地集成与提交。v08 已中断转交，未获最终接受。
+更新：2026-09-20。当前执行 [Road v09](road-v09.md)，CP1 目录重排；全计划 YOLO 覆盖 CP0–CP4、本地集成与提交。v08 已中断转交，未获最终接受。
 
 ## Current coordinates
 
 | 项目 | 当前状态 | 下一步／依据 |
 | --- | --- | --- |
 | 最近已接受的产品基线 | Road v0.7 CP8，`2f03aee`，Paper v4／Index v4／JSONL v2 | [完成快照](archive/snapshots/road-v0-7.html)；App-root 关闭保护随后独立接受 |
-| 当前执行 | v09 CP0：接续 v08 工程代码，整顿目录并独立纯规则核心 | [批准计划](road-v09.md)；v09.01 原生 iOS 替换后续单独执行 |
+| 当前执行 | v09 CP1：目录与构建入口已重排，下一步独立纯规则核心 | [批准计划](road-v09.md)；v09.01 原生 iOS 替换后续单独执行 |
 | 候选源码与安装 | Mac／iPhone 同产品源码 `83c4f60`；已取得安装及普通界面运行记录 | 后续主题修改已进入 `deaece8`，旧安装包不能证明该 HEAD；本轮不操作旧设备候选 |
 | 验收进度 | B01–B13、B15–B16 共 15 组通过；B14 待验；CP5 随 v08 中断转交 | B10 按用户批准的实际 provider 结果验收，原生冲突保全另由 B09／B11 证明 |
 | B10 证据边界 | 两轮同编号新建均产生改名 sibling；原生冲突来自已有稿并发编辑 | 保留此区分；同编号新建原生冲突这一组合没有实测证据 |
@@ -29,12 +29,12 @@
 
 | 环境 | 实际后端 | 入口 |
 | --- | --- | --- |
-| Mac 本地 Vault | Python service/core，经 JSONL v2 | `PaperView.vue`、`src/keikeu_bridge/` |
-| Mac iCloud Vault | 进程内 Rust Paper Core＋Apple 原生协调 | `CoreWorkspace.vue`、`frontend/src-tauri/src/host/` |
+| Mac 本地 Vault | Python service/core，经 JSONL v2 | `PaperView.vue`、`apps/desktop/python/keikeu_bridge/` |
+| Mac iCloud Vault | 进程内 Rust Paper Core＋Apple 原生协调 | `CoreWorkspace.vue`、`apps/desktop/src-tauri/src/host/` |
 | iPhone 本地 Vault | 同一 Rust Paper Core | `CoreWorkspace.vue`、宿主私有状态与 app sandbox |
-| iPhone iCloud Vault | Rust Paper Core＋Apple 原生协调 | `frontend/src-tauri/apple/Cloud.swift` |
+| iPhone iCloud Vault | Rust Paper Core＋Apple 原生协调 | `platforms/apple/Cloud.swift` |
 
-桌面本地保留 Index、文件夹、Trash、迁移及外部编辑器能力。移动／云端候选按较窄的 Paper 能力集工作。当前路由由 [`router.rs`](../frontend/src-tauri/src/host/router.rs) 与 [`bridge.rs`](../frontend/src-tauri/src/bridge.rs) 确定。
+桌面本地保留 Index、文件夹、Trash、迁移及外部编辑器能力。移动／云端候选按较窄的 Paper 能力集工作。当前路由由 [`router.rs`](../apps/desktop/src-tauri/src/host/router.rs) 与 [`bridge.rs`](../apps/desktop/src-tauri/src/bridge.rs) 确定。
 
 ## Current runtime map (Paper v4 + protocol v2)
 
@@ -42,22 +42,22 @@
 
 | Area | Responsibility | Source | Direct evidence |
 | --- | --- | --- | --- |
-| Domain model | Paper v4/CardPage validation; frozen legacy model exists only in the migration module | [`models.py`](../src/keikeu_core/models.py), [`legacy_v3.py`](../src/keikeu_core/legacy_v3.py) | [`test_models_v4.py`](../tests/test_models_v4.py), [`test_migration_v4.py`](../tests/test_migration_v4.py) |
-| Markdown | Strict Paper v4 parse/render, exact create/CAS/Branch, plus frozen legacy readers for migration | [`markdown_io.py`](../src/keikeu_core/markdown_io.py), [`legacy_v3.py`](../src/keikeu_core/legacy_v3.py) | [`test_markdown_v4.py`](../tests/test_markdown_v4.py) |
-| Vault | Home/path validation, one-level active/Trash enumeration, global code allocation, per-Paper lifecycle, crash-visible whole-folder atomic Trash/restore, identity-pinned fd-relative permanent folder deletion, copy verification, atomic config | [`vault.py`](../src/keikeu_core/vault.py) | [`test_vault.py`](../tests/test_vault.py) |
-| Index | rebuildable Index v4, all-page search, first-page preview, page titles, folder/Trash projection and isolated errors | [`indexer.py`](../src/keikeu_core/indexer.py) | [`test_indexer_v4.py`](../tests/test_indexer_v4.py) |
-| Migration | explicit v0.1→v3 then v2/v3→v4 preflight, verified backup, loss audit, safe replacement and resume | [`migration_v01.py`](../src/keikeu_core/migration_v01.py), [`migration_v4.py`](../src/keikeu_core/migration_v4.py) | [`test_migration_v01.py`](../tests/test_migration_v01.py), [`test_migration_v4.py`](../tests/test_migration_v4.py) |
-| Application service | startup schema Gate, Paper v4 save/reconcile, locator, Library v4, migration, structured errors and validated system targets | [`service.py`](../src/keikeu_bridge/service.py), [`dto.py`](../src/keikeu_bridge/dto.py) | [`test_bridge_service.py`](../tests/test_bridge_service.py) |
-| JSONL sidecar | protocol v2 strict DTO/method classification, session-bound tokens, stdin/stdout isolation and one-shot mutations | [`protocol.py`](../src/keikeu_bridge/protocol.py), [`sidecar.py`](../src/keikeu_bridge/sidecar.py) | [`test_bridge_protocol.py`](../tests/test_bridge_protocol.py) |
-| Tauri/Rust host | one sidecar, serialized requests, lifecycle cleanup, native directory picker/confirmation, and validated open/reveal | [`lib.rs`](../frontend/src-tauri/src/lib.rs), [`commands.rs`](../frontend/src-tauri/src/commands.rs), [`bridge.rs`](../frontend/src-tauri/src/bridge.rs) | Cargo tests in `bridge.rs`; cargo build checks host/command wiring |
-| Vue app shell | startup/Vault/migration gates, App-root pending durable intent and restart ownership; accepted CP8 one-row `56px` Shell. App owns the accepted Tauri close guard; Paper retains dirty/departure checks; see the independent evidence above | [`App.vue`](../frontend/src/App.vue), [`bridge.js`](../frontend/src/bridge.js), [`PaperView.vue`](../frontend/src/PaperView.vue) | [`App.test.js`](../frontend/src/App.test.js), [`bridge.test.js`](../frontend/src/bridge.test.js), [`PaperView.test.js`](../frontend/src/PaperView.test.js) |
-| Vue Paper slice | accepted CP7 continuous Paper flow plus accepted CP8 all-page horizontal roller, portrait bounded Markdown field and bottom action Anchor; CSV-style Tags, native details, whole-Paper save, saving lock and dirty departure remain unchanged | [`PaperView.vue`](../frontend/src/PaperView.vue), [`PaperV4Workbench.vue`](../frontend/src/PaperV4Workbench.vue), [`tagsCsv.js`](../frontend/src/tagsCsv.js) | [`PaperView.test.js`](../frontend/src/PaperView.test.js), [`PaperV4Workbench.test.js`](../frontend/src/PaperV4Workbench.test.js), [`tagsCsv.test.js`](../frontend/src/tagsCsv.test.js) |
-| Vue Library slice | CP7 composition-safe query/top-layer Paper preview plus accepted CP8 portrait `范围 / 排序` and `新文件夹` sticky Anchors with native Popovers; landscape sidebar, sort and inline creation remain | [`LibraryView.vue`](../frontend/src/LibraryView.vue), [`LibraryV4Projection.vue`](../frontend/src/LibraryV4Projection.vue) | [`LibraryView.test.js`](../frontend/src/LibraryView.test.js), [`LibraryV4Projection.test.js`](../frontend/src/LibraryV4Projection.test.js) |
-| Vue Vault/migration slice | Road v0.7 quiet normal context, explicit maintenance entry, native directory intent, candidate locator, relocation/two-stage migration and restart readback | [`VaultView.vue`](../frontend/src/VaultView.vue), [`bridge.js`](../frontend/src/bridge.js) | [`VaultView.test.js`](../frontend/src/VaultView.test.js), [`bridge.test.js`](../frontend/src/bridge.test.js) |
-| Device state | disposable once-per-local-day start-card claim; no page position | [`local_state.py`](../src/keikeu_bridge/local_state.py) | [`test_local_state.py`](../tests/test_local_state.py) |
-| 双端宿主及恢复 | 存储路由、私有草稿、冲突原字节保全、未知结果核对 | [`host/router.rs`](../frontend/src-tauri/src/host/router.rs)、[`host/mod.rs`](../frontend/src-tauri/src/host/mod.rs)、[`host/conflicts.rs`](../frontend/src-tauri/src/host/conflicts.rs) | 同模块 Rust 测试及 CP3–CP5 验收 |
-| Apple 云文件适配 | 身份、容器、下载、协调和原生版本 | [`Cloud.swift`](../frontend/src-tauri/apple/Cloud.swift)、[`AppleFiles.swift`](../frontend/src-tauri/apple/AppleFiles.swift) | CP1、CP4 和 CP5 真实 provider 记录 |
-| 移动／云端工作面 | Paper 编辑、草稿、恢复与导出 | [`CoreWorkspace.vue`](../frontend/src/CoreWorkspace.vue) | [`CoreWorkspace.test.js`](../frontend/src/CoreWorkspace.test.js) 和候选原生检查 |
+| Domain model | Paper v4/CardPage validation; frozen legacy model exists only in the migration module | [`models.py`](../apps/desktop/python/keikeu_core/models.py), [`legacy_v3.py`](../apps/desktop/python/keikeu_core/legacy_v3.py) | [`test_models_v4.py`](../tests/test_models_v4.py), [`test_migration_v4.py`](../tests/test_migration_v4.py) |
+| Markdown | Strict Paper v4 parse/render, exact create/CAS/Branch, plus frozen legacy readers for migration | [`markdown_io.py`](../apps/desktop/python/keikeu_core/markdown_io.py), [`legacy_v3.py`](../apps/desktop/python/keikeu_core/legacy_v3.py) | [`test_markdown_v4.py`](../tests/test_markdown_v4.py) |
+| Vault | Home/path validation, one-level active/Trash enumeration, global code allocation, per-Paper lifecycle, crash-visible whole-folder atomic Trash/restore, identity-pinned fd-relative permanent folder deletion, copy verification, atomic config | [`vault.py`](../apps/desktop/python/keikeu_core/vault.py) | [`test_vault.py`](../tests/test_vault.py) |
+| Index | rebuildable Index v4, all-page search, first-page preview, page titles, folder/Trash projection and isolated errors | [`indexer.py`](../apps/desktop/python/keikeu_core/indexer.py) | [`test_indexer_v4.py`](../tests/test_indexer_v4.py) |
+| Migration | explicit v0.1→v3 then v2/v3→v4 preflight, verified backup, loss audit, safe replacement and resume | [`migration_v01.py`](../apps/desktop/python/keikeu_core/migration_v01.py), [`migration_v4.py`](../apps/desktop/python/keikeu_core/migration_v4.py) | [`test_migration_v01.py`](../tests/test_migration_v01.py), [`test_migration_v4.py`](../tests/test_migration_v4.py) |
+| Application service | startup schema Gate, Paper v4 save/reconcile, locator, Library v4, migration, structured errors and validated system targets | [`service.py`](../apps/desktop/python/keikeu_bridge/service.py), [`dto.py`](../apps/desktop/python/keikeu_bridge/dto.py) | [`test_bridge_service.py`](../tests/test_bridge_service.py) |
+| JSONL sidecar | protocol v2 strict DTO/method classification, session-bound tokens, stdin/stdout isolation and one-shot mutations | [`protocol.py`](../apps/desktop/python/keikeu_bridge/protocol.py), [`sidecar.py`](../apps/desktop/python/keikeu_bridge/sidecar.py) | [`test_bridge_protocol.py`](../tests/test_bridge_protocol.py) |
+| Tauri/Rust host | one sidecar, serialized requests, lifecycle cleanup, native directory picker/confirmation, and validated open/reveal | [`lib.rs`](../apps/desktop/src-tauri/src/lib.rs), [`commands.rs`](../apps/desktop/src-tauri/src/commands.rs), [`bridge.rs`](../apps/desktop/src-tauri/src/bridge.rs) | Cargo tests in `bridge.rs`; cargo build checks host/command wiring |
+| Vue app shell | startup/Vault/migration gates, App-root pending durable intent and restart ownership; accepted CP8 one-row `56px` Shell. App owns the accepted Tauri close guard; Paper retains dirty/departure checks; see the independent evidence above | [`App.vue`](../apps/desktop/src/App.vue), [`bridge.js`](../apps/desktop/src/bridge.js), [`PaperView.vue`](../apps/desktop/src/PaperView.vue) | [`App.test.js`](../apps/desktop/src/App.test.js), [`bridge.test.js`](../apps/desktop/src/bridge.test.js), [`PaperView.test.js`](../apps/desktop/src/PaperView.test.js) |
+| Vue Paper slice | accepted CP7 continuous Paper flow plus accepted CP8 all-page horizontal roller, portrait bounded Markdown field and bottom action Anchor; CSV-style Tags, native details, whole-Paper save, saving lock and dirty departure remain unchanged | [`PaperView.vue`](../apps/desktop/src/PaperView.vue), [`PaperV4Workbench.vue`](../apps/desktop/src/PaperV4Workbench.vue), [`tagsCsv.js`](../apps/desktop/src/tagsCsv.js) | [`PaperView.test.js`](../apps/desktop/src/PaperView.test.js), [`PaperV4Workbench.test.js`](../apps/desktop/src/PaperV4Workbench.test.js), [`tagsCsv.test.js`](../apps/desktop/src/tagsCsv.test.js) |
+| Vue Library slice | CP7 composition-safe query/top-layer Paper preview plus accepted CP8 portrait `范围 / 排序` and `新文件夹` sticky Anchors with native Popovers; landscape sidebar, sort and inline creation remain | [`LibraryView.vue`](../apps/desktop/src/LibraryView.vue), [`LibraryV4Projection.vue`](../apps/desktop/src/LibraryV4Projection.vue) | [`LibraryView.test.js`](../apps/desktop/src/LibraryView.test.js), [`LibraryV4Projection.test.js`](../apps/desktop/src/LibraryV4Projection.test.js) |
+| Vue Vault/migration slice | Road v0.7 quiet normal context, explicit maintenance entry, native directory intent, candidate locator, relocation/two-stage migration and restart readback | [`VaultView.vue`](../apps/desktop/src/VaultView.vue), [`bridge.js`](../apps/desktop/src/bridge.js) | [`VaultView.test.js`](../apps/desktop/src/VaultView.test.js), [`bridge.test.js`](../apps/desktop/src/bridge.test.js) |
+| Device state | disposable once-per-local-day start-card claim; no page position | [`local_state.py`](../apps/desktop/python/keikeu_bridge/local_state.py) | [`test_local_state.py`](../tests/test_local_state.py) |
+| 双端宿主及恢复 | 存储路由、私有草稿、冲突原字节保全、未知结果核对 | [`host/router.rs`](../apps/desktop/src-tauri/src/host/router.rs)、[`host/mod.rs`](../apps/desktop/src-tauri/src/host/mod.rs)、[`host/conflicts.rs`](../apps/desktop/src-tauri/src/host/conflicts.rs) | 同模块 Rust 测试及 CP3–CP5 验收 |
+| Apple 云文件适配 | 身份、容器、下载、协调和原生版本 | [`Cloud.swift`](../platforms/apple/Cloud.swift)、[`AppleFiles.swift`](../platforms/apple/AppleFiles.swift) | CP1、CP4 和 CP5 真实 provider 记录 |
+| 移动／云端工作面 | Paper 编辑、草稿、恢复与导出 | [`CoreWorkspace.vue`](../apps/desktop/src/CoreWorkspace.vue) | [`CoreWorkspace.test.js`](../apps/desktop/src/CoreWorkspace.test.js) 和候选原生检查 |
 
 ## Documentation map
 
@@ -77,12 +77,12 @@
 ```bash
 ./dev
 .venv/bin/python -m pytest
-.venv/bin/python -m compileall -q src
+.venv/bin/python -m compileall -q apps/desktop/python
 .venv/bin/python scripts/build_sidecar.py
-npm --prefix frontend run test
-npm --prefix frontend run build
-cargo test --manifest-path frontend/src-tauri/Cargo.toml
-npm --prefix frontend run tauri:build
+npm --prefix apps/desktop run test
+npm --prefix apps/desktop run build
+cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+npm --prefix apps/desktop run tauri:build
 .venv/bin/python scripts/check_docs.py
 git diff --check
 ```

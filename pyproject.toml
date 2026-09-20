@@ -16,13 +16,13 @@ dev = ["pytest>=8"]
 [tool.hatch.build.targets.wheel]
 # Required: project name "keikeu" has no matching dir, so hatchling cannot
 # auto-detect packages. List them explicitly. The sources remap drops the
-# leading "src/" so they import as top-level packages.
-packages = ["src/keikeu_core", "src/keikeu_bridge"]
+# leading "apps/desktop/python/" so they import as top-level packages.
+packages = ["apps/desktop/python/keikeu_core", "apps/desktop/python/keikeu_bridge"]
 
 [tool.hatch.build.targets.wheel.sources]
-"src" = ""
+"apps/desktop/python" = ""
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["apps/desktop/python"]
 addopts = "--basetemp=tests/test-vault/pytest --ignore=tests/test-vault"

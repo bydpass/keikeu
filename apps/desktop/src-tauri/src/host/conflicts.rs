@@ -93,7 +93,7 @@ mod tests {
     #[test]
     fn invalid_conflict_bytes_survive_restart_and_corruption_blocks_export() {
         let base = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../tests/test-vault")
+            .join("../../../tests/test-vault")
             .canonicalize()
             .unwrap()
             .join(format!("conflicts-{}", uuid::Uuid::new_v4()));
@@ -290,7 +290,7 @@ mod promotion_tests {
     #[test]
     fn promotion_preserves_active_bytes_and_requires_fresh_sibling_proof() {
         let base = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../tests/test-vault")
+            .join("../../../tests/test-vault")
             .canonicalize()
             .unwrap()
             .join(format!("promotion-{}", uuid::Uuid::new_v4()));

@@ -78,7 +78,7 @@ mod tests {
     #[test]
     fn native_batch_encloses_single_rust_accessor() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../tests/test-vault")
+            .join("../../../tests/test-vault")
             .join(format!("coordinate-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(root.join("cache")).unwrap();
         let mut count = 0;

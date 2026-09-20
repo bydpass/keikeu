@@ -67,10 +67,10 @@ python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e ".[dev]"
 python -m pip install -r requirements-build.lock
-npm --prefix frontend ci
+npm --prefix apps/desktop ci
 ./dev
 .venv/bin/python scripts/build_sidecar.py
-npm --prefix frontend run tauri:dev
+npm --prefix apps/desktop run tauri:dev
 ```
 
 Use `./dev` for daily work: press `a` to reuse the sidecar or `b` to rebuild
@@ -92,9 +92,9 @@ docs/acceptance/          supporting evidence; not an independent status source
 docs/manual/              supplementary human guides; never normative
 docs/archive/snapshots/   retained read-only snapshots; other archives remain in Git history
 CONTEXT.md                ignored local agent route; never authoritative
-src/keikeu_core/          pure-Python domain and file logic
-src/keikeu_bridge/        application service, JSONL protocol, and sidecar
-frontend/                 Vue/Vite UI and Tauri/Rust host
+apps/desktop/python/keikeu_core/          pure-Python domain and file logic
+apps/desktop/python/keikeu_bridge/        application service, JSONL protocol, and sidecar
+apps/desktop/                 Vue/Vite UI and Tauri/Rust host
 tests/                    verifiable implementation facts
 ```
 

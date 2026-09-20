@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-TAURI_DIR = ROOT / "frontend" / "src-tauri"
+TAURI_DIR = ROOT / "apps/desktop" / "src-tauri"
 BUILD_DIR = ROOT / "build" / "pyinstaller"
 
 
@@ -37,7 +37,7 @@ def main() -> int:
         "--name",
         output_name,
         "--paths",
-        str(ROOT / "src"),
+        str(ROOT / "apps/desktop/python"),
         "--distpath",
         str(TAURI_DIR / "binaries"),
         "--workpath",

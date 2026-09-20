@@ -126,7 +126,7 @@ def test_spawn_task_uses_fixed_process_group_and_no_shell(tmp_path: Path) -> Non
     assert spawned is process
     assert pgid == process.pid
     command, kwargs = calls[0]
-    assert command == ["npm", "--prefix", "frontend", "run", "tauri:dev"]
+    assert command == ["npm", "--prefix", "apps/desktop", "run", "tauri:dev"]
     assert kwargs["cwd"] == tmp_path.resolve()
     assert kwargs["shell"] is False
     assert kwargs["start_new_session"] is True
@@ -354,7 +354,7 @@ def test_terminal_width_log_cleaning_and_memory_limit() -> None:
 
 
 def test_fixed_commands_keep_sidecar_build_explicit() -> None:
-    assert DEV.APP_COMMAND == ("npm", "--prefix", "frontend", "run", "tauri:dev")
+    assert DEV.APP_COMMAND == ("npm", "--prefix", "apps/desktop", "run", "tauri:dev")
     assert DEV.BUILD_COMMAND == (
         str(ROOT / ".venv" / "bin" / "python"),
         "scripts/build_sidecar.py",

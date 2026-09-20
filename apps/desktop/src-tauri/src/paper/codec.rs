@@ -514,7 +514,7 @@ mod tests {
     #[test]
     fn shared_python_golden() {
         let corpus: Value = serde_json::from_str(include_str!(
-            "../../../../tests/fixtures/paper-v4-golden.json"
+            "../../../../../tests/fixtures/paper-v4-golden.json"
         ))
         .unwrap();
         for case in corpus["cases"].as_array().unwrap() {

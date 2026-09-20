@@ -44,9 +44,9 @@ Paper 只需要继续负责自身的 dirty／baseline 判断，不必知道 Libr
 Tauri 的 [`close()` 与 `destroy()`](https://v2.tauri.app/reference/javascript/api/namespacewindow/)
 分别对应可拦截的关闭请求与实际销毁；本次复用既有边界，不自动保存或重发业务请求。
 
-阅读顺序：[App](../../frontend/src/App.vue) → [PaperView](../../frontend/src/PaperView.vue) →
-[bridge](../../frontend/src/bridge.js) → [Rust 菜单](../../frontend/src-tauri/src/lib.rs) →
-[App 回归测试](../../frontend/src/App.test.js)。
+阅读顺序：[App](../../apps/desktop/src/App.vue) → [PaperView](../../apps/desktop/src/PaperView.vue) →
+[bridge](../../apps/desktop/src/bridge.js) → [Rust 菜单](../../apps/desktop/src-tauri/src/lib.rs) →
+[App 回归测试](../../apps/desktop/src/App.test.js)。
 
 ## 3. 自动检查
 

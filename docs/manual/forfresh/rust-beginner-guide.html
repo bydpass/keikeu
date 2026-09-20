@@ -55,7 +55,7 @@
           <li><span>单 worker 串行化是协议正确性；写请求丢响应时返回 <span class="inline-code">commit_unknown</span>，绝不自动重试。</span></li>
         </ol>
         <div class="truth-boundary">
-          <strong>权威边界：</strong>本页是给人的非规范说明。运行时事实以 <code>frontend/src-tauri/</code> 与通过的测试为准；产品与工程边界最终核对 <a href="../../SPEC.md">SPEC</a>、<a href="../../RULES.md">RULES</a> 和 <a href="../../PROJECT.md">PROJECT</a>。若手册与它们冲突，手册错。
+          <strong>权威边界：</strong>本页是给人的非规范说明。运行时事实以 <code>apps/desktop/src-tauri/</code> 与通过的测试为准；产品与工程边界最终核对 <a href="../../SPEC.md">SPEC</a>、<a href="../../RULES.md">RULES</a> 和 <a href="../../PROJECT.md">PROJECT</a>。若手册与它们冲突，手册错。
         </div>
       </section>
 
@@ -116,7 +116,7 @@ Paper Markdown / Index / Vault</code></pre>
 
         <h3>当前工具坐标</h3>
         <ul>
-          <li><code>frontend/src-tauri/Cargo.toml</code> 使用 Rust <code>1.88</code>、edition <code>2021</code>。</li>
+          <li><code>apps/desktop/src-tauri/Cargo.toml</code> 使用 Rust <code>1.88</code>、edition <code>2021</code>。</li>
           <li>直接依赖只有 Tauri、Serde、<code>serde_json</code> 与 shell/dialog/opener 三个 Tauri 插件。</li>
           <li>版本均精确锁定；不要为了“学 Rust”运行 <code>cargo update</code> 或引入新 crate。</li>
           <li>项目没有直接依赖 Tokio；需要的异步运行时由 Tauri 暴露。</li>
@@ -166,7 +166,7 @@ Paper Markdown / Index / Vault</code></pre>
             </tbody>
           </table>
         </div>
-        <p class="meta">以上路径都相对于 <code>frontend/src-tauri/</code>。</p>
+        <p class="meta">以上路径都相对于 <code>apps/desktop/src-tauri/</code>。</p>
 
         <h3>启动顺序</h3>
         <ol class="flow">
@@ -184,7 +184,7 @@ Paper Markdown / Index / Vault</code></pre>
         <p><code>build.rs</code> 只是 Cargo 构建脚本，调用 <code>tauri_build::build()</code> 生成 Tauri 需要的构建信息；它不是应用启动后的第五个业务模块。</p>
 
         <h3>推荐阅读顺序</h3>
-        <p>第一次读时走 <code>main.rs → lib.rs → commands.rs → frontend/src/bridge.js → bridge.rs</code>。这样先知道谁调用谁，再看并发细节。倒过来读只会在 trait、channel 和状态机里迷路。</p>
+        <p>第一次读时走 <code>main.rs → lib.rs → commands.rs → apps/desktop/src/bridge.js → bridge.rs</code>。这样先知道谁调用谁，再看并发细节。倒过来读只会在 trait、channel 和状态机里迷路。</p>
       </section>
 
       <section class="chapter" id="chapter-3">
@@ -394,10 +394,10 @@ tauri::async_runtime::spawn_blocking(move || {
         </div>
 
         <h3>从 JavaScript 到 Rust</h3>
-        <pre><code>// frontend/src/bridge.js
+        <pre><code>// apps/desktop/src/bridge.js
 invoke("open_system_target", { action, relativeTarget })
 
-// frontend/src-tauri/src/commands.rs
+// apps/desktop/src-tauri/src/commands.rs
 pub async fn open_system_target(
     action: String,
     relative_target: String,
@@ -516,13 +516,13 @@ git branch --show-current</code></pre>
         <p>至少要同步检查四处：Python method 分类与 dispatcher、Rust <code>public_policy</code>、Vue 调用者、两边测试。内部 <code>system.hello</code> 与 <code>system.resolve_target</code> 仍不能从公开 <code>bridge_request</code> 直达。</p>
 
         <h3>最小命令集</h3>
-        <pre><code>cargo fmt --manifest-path frontend/src-tauri/Cargo.toml --check
-cargo check --manifest-path frontend/src-tauri/Cargo.toml
-cargo test --manifest-path frontend/src-tauri/Cargo.toml</code></pre>
+        <pre><code>cargo fmt --manifest-path apps/desktop/src-tauri/Cargo.toml --check
+cargo check --manifest-path apps/desktop/src-tauri/Cargo.toml
+cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml</code></pre>
 
         <p>完整桌面联调还要准备 Python Sidecar 和 Vue：</p>
         <pre><code>.venv/bin/python scripts/build_sidecar.py
-npm --prefix frontend run tauri:dev</code></pre>
+npm --prefix apps/desktop run tauri:dev</code></pre>
         <p>不要把 <code>cargo run</code> 当成 keikeu 的完整启动方式；它不能替代 Vue 构建和打包 Sidecar。</p>
 
         <h3>现有 12 个测试守住什么</h3>
@@ -550,16 +550,16 @@ npm --prefix frontend run tauri:dev</code></pre>
 
         <div class="callout">
           <span class="mini-label">第一个练习</span>
-          <p>先从 <code>frontend/src/bridge.js</code> 的 <code>getRuntimeStatus()</code> 追到 <code>commands::runtime_status</code>，再追到 <code>BridgeHandle::status()</code>。这条链没有 Python 和磁盘 mutation，最适合练习模块、State、借用、Mutex 与 Serde。</p>
+          <p>先从 <code>apps/desktop/src/bridge.js</code> 的 <code>getRuntimeStatus()</code> 追到 <code>commands::runtime_status</code>，再追到 <code>BridgeHandle::status()</code>。这条链没有 Python 和磁盘 mutation，最适合练习模块、State、借用、Mutex 与 Serde。</p>
         </div>
       </section>
 
       <section class="sources" aria-labelledby="sources-title">
         <h2 id="sources-title">来源与继续阅读</h2>
         <ol>
-          <li>项目源码：<a href="../../../frontend/src-tauri/src/main.rs"><code>main.rs</code></a>、<a href="../../../frontend/src-tauri/src/lib.rs"><code>lib.rs</code></a>、<a href="../../../frontend/src-tauri/src/commands.rs"><code>commands.rs</code></a>、<a href="../../../frontend/src-tauri/src/bridge.rs"><code>bridge.rs</code></a>。</li>
-          <li>构建坐标：<a href="../../../frontend/src-tauri/Cargo.toml"><code>Cargo.toml</code></a>、<a href="../../../frontend/src-tauri/tauri.conf.json"><code>tauri.conf.json</code></a>、<a href="../../../frontend/src-tauri/capabilities/main.json"><code>capabilities/main.json</code></a>。</li>
-          <li>相邻边界：<a href="../../../frontend/src/bridge.js"><code>frontend/src/bridge.js</code></a>、<a href="../../../src/keikeu_bridge/sidecar.py"><code>sidecar.py</code></a>、<a href="../../../src/keikeu_bridge/protocol.py"><code>protocol.py</code></a>。</li>
+          <li>项目源码：<a href="../../../apps/desktop/src-tauri/src/main.rs"><code>main.rs</code></a>、<a href="../../../apps/desktop/src-tauri/src/lib.rs"><code>lib.rs</code></a>、<a href="../../../apps/desktop/src-tauri/src/commands.rs"><code>commands.rs</code></a>、<a href="../../../apps/desktop/src-tauri/src/bridge.rs"><code>bridge.rs</code></a>。</li>
+          <li>构建坐标：<a href="../../../apps/desktop/src-tauri/Cargo.toml"><code>Cargo.toml</code></a>、<a href="../../../apps/desktop/src-tauri/tauri.conf.json"><code>tauri.conf.json</code></a>、<a href="../../../apps/desktop/src-tauri/capabilities/main.json"><code>capabilities/main.json</code></a>。</li>
+          <li>相邻边界：<a href="../../../apps/desktop/src/bridge.js"><code>apps/desktop/src/bridge.js</code></a>、<a href="../../../apps/desktop/python/keikeu_bridge/sidecar.py"><code>sidecar.py</code></a>、<a href="../../../apps/desktop/python/keikeu_bridge/protocol.py"><code>protocol.py</code></a>。</li>
           <li><a href="https://doc.rust-lang.org/book/ch04-00-understanding-ownership.html">The Rust Programming Language：所有权与借用</a>。</li>
           <li><a href="https://doc.rust-lang.org/book/ch06-00-enums.html">Rust Book：枚举、Option 与模式匹配</a>；<a href="https://doc.rust-lang.org/book/ch09-00-error-handling.html">错误处理</a>。</li>
           <li><a href="https://doc.rust-lang.org/book/ch16-00-concurrency.html">Rust Book：并发</a>；标准库 <a href="https://doc.rust-lang.org/std/sync/mpsc/">mpsc</a>、<a href="https://doc.rust-lang.org/std/sync/struct.Arc.html">Arc</a>、<a href="https://doc.rust-lang.org/std/sync/struct.Mutex.html">Mutex</a>。</li>

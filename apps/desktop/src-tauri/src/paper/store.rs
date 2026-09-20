@@ -749,7 +749,7 @@ mod tests {
     #[test]
     fn apple_anchor_and_enlisted_paths_reject_escape_and_replacement() {
         let base = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../tests/test-vault")
+            .join("../../../tests/test-vault")
             .canonicalize()
             .unwrap()
             .join(format!("apple-anchor-{}", uuid::Uuid::new_v4()));
@@ -762,7 +762,7 @@ mod tests {
         let mut vault =
             Vault::open_apple_container(&container, Path::new("Documents/keikeu"), true).unwrap();
         let corpus: serde_json::Value = serde_json::from_str(include_str!(
-            "../../../../tests/fixtures/paper-v4-golden.json"
+            "../../../../../tests/fixtures/paper-v4-golden.json"
         ))
         .unwrap();
         let paper: Paper = serde_json::from_value(corpus["cases"][0]["paper"].clone()).unwrap();
@@ -814,7 +814,7 @@ mod tests {
     #[test]
     fn save_reopen_search_cas_and_escape() {
         let base = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../tests/test-vault")
+            .join("../../../tests/test-vault")
             .canonicalize()
             .unwrap();
         let root = base.join(format!("rust-core-{}", uuid::Uuid::new_v4()));
@@ -824,7 +824,7 @@ mod tests {
         assert!(Vault::open(&alias).is_err());
         let vault = Vault::open(&root).unwrap();
         let corpus: serde_json::Value = serde_json::from_str(include_str!(
-            "../../../../tests/fixtures/paper-v4-golden.json"
+            "../../../../../tests/fixtures/paper-v4-golden.json"
         ))
         .unwrap();
         let paper: Paper = serde_json::from_value(corpus["cases"][0]["paper"].clone()).unwrap();

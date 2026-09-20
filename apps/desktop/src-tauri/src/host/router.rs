@@ -626,7 +626,7 @@ mod tests {
     #[test]
     fn selection_is_persistent_and_rejects_stale_or_inflight_switches() {
         let base = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../tests/test-vault")
+            .join("../../../tests/test-vault")
             .canonicalize()
             .unwrap()
             .join(format!("router-{}", uuid::Uuid::new_v4()));

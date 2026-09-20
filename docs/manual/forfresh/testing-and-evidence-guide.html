@@ -159,28 +159,28 @@
               </tr>
               <tr>
                 <td>Python 公共行为或共享文件边界</td>
-                <td><code class="keep">.venv/bin/python -m pytest</code><br><code class="keep">.venv/bin/python -m compileall -q src</code></td>
+                <td><code class="keep">.venv/bin/python -m pytest</code><br><code class="keep">.venv/bin/python -m compileall -q apps/desktop/python</code></td>
                 <td><code>testpaths</code> 下的当前测试，排除 <code>tests/test-vault</code></td>
                 <td>当前 Python 回归套件与源码可编译。</td>
                 <td>桌面 app 能启动或作者流程被接受。</td>
               </tr>
               <tr>
                 <td>单个 Vue 组件或 bridge helper</td>
-                <td><code class="keep">npm --prefix frontend run test -- src/目标.test.js</code></td>
+                <td><code class="keep">npm --prefix apps/desktop run test -- src/目标.test.js</code></td>
                 <td>Vue Test Utils、jsdom、<code>vi.mock</code> bridge</td>
                 <td>组件状态、事件、DOM 语义和 IPC 参数。</td>
                 <td>真实 WebView、Rust command 或原生对话框。</td>
               </tr>
               <tr>
                 <td>Vue 共享行为或生产前端</td>
-                <td><code class="keep">npm --prefix frontend run test</code><br><code class="keep">npm --prefix frontend run build</code></td>
+                <td><code class="keep">npm --prefix apps/desktop run test</code><br><code class="keep">npm --prefix apps/desktop run build</code></td>
                 <td>jsdom 测试；Vite 生产构建</td>
                 <td>当前前端回归与 Vite bundle 可生成。</td>
                 <td>Tauri 生命周期、Sidecar 或平台视觉 QA。</td>
               </tr>
               <tr>
                 <td>Rust host / command / worker</td>
-                <td><code class="keep">cargo test --manifest-path frontend/src-tauri/Cargo.toml</code></td>
+                <td><code class="keep">cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml</code></td>
                 <td>Rust fake child / spawner 与内存队列</td>
                 <td>测试覆盖的 policy、请求排序、timeout 与失败分类。</td>
                 <td>真实 Python binary、窗口或系统服务。</td>
@@ -244,7 +244,7 @@
 
 # 共享契约改变后再跑全部 Python 回归
 .venv/bin/python -m pytest
-.venv/bin/python -m compileall -q src</code></pre>
+.venv/bin/python -m compileall -q apps/desktop/python</code></pre>
         <p>不要从历史文档复制旧 pass count。测试增删、选择器和环境都会改变结果；只有当前 working tree 上实际运行的输出才是当前证据。</p>
       </article>
 
@@ -255,24 +255,24 @@
 
         <dl>
           <dt>Vitest</dt>
-          <dd>发现和运行 <code>*.test.js</code>，提供 assertion、spy、mock 与异步测试控制。项目脚本是 <code>npm --prefix frontend run test</code>。</dd>
+          <dd>发现和运行 <code>*.test.js</code>，提供 assertion、spy、mock 与异步测试控制。项目脚本是 <code>npm --prefix apps/desktop run test</code>。</dd>
 
           <dt>Vue Test Utils</dt>
           <dd>用 <code>mount</code> 创建 Vue 组件 wrapper，并触发输入、点击、props 与 emits。它证明组件在测试环境中的可见状态和交互。</dd>
 
           <dt>jsdom</dt>
-          <dd><a href="../../../frontend/vite.config.js"><code>vite.config.js</code></a> 指定的模拟 DOM。它没有 macOS WebView 的渲染、窗口生命周期、原生 picker、IME 或真实尺寸感觉。</dd>
+          <dd><a href="../../../apps/desktop/vite.config.js"><code>vite.config.js</code></a> 指定的模拟 DOM。它没有 macOS WebView 的渲染、窗口生命周期、原生 picker、IME 或真实尺寸感觉。</dd>
 
           <dt>Bridge mock</dt>
           <dd><code>vi.mock</code> 替换 Tauri IPC helper，让组件可稳定测试成功、错误与 pending。它能钉住调用参数，不能证明 Rust 或 Python 收到请求。</dd>
         </dl>
 
         <pre><code># 单文件反馈
-npm --prefix frontend run test -- src/PaperView.test.js
+npm --prefix apps/desktop run test -- src/PaperView.test.js
 
 # 共享行为与生产前端
-npm --prefix frontend run test
-npm --prefix frontend run build</code></pre>
+npm --prefix apps/desktop run test
+npm --prefix apps/desktop run build</code></pre>
 
         <div class="callout">
           <span class="mini-label">什么时候升级证据</span>
@@ -286,17 +286,17 @@ npm --prefix frontend run build</code></pre>
         <p class="claim">Cargo test、Vite build 和 Tauri smoke 经过不同边界，三者不能互相代签。</p>
 
         <h3>Cargo test</h3>
-        <p>当前 Rust tests 位于 <code>frontend/src-tauri/src/bridge.rs</code>，通过 fake child / spawner 检查单 worker、请求 envelope、timeout、kill 与 shutdown 等行为。命令从仓库根目录显式指定 manifest：</p>
-        <pre><code>cargo test --manifest-path frontend/src-tauri/Cargo.toml</code></pre>
+        <p>当前 Rust tests 位于 <code>apps/desktop/src-tauri/src/bridge.rs</code>，通过 fake child / spawner 检查单 worker、请求 envelope、timeout、kill 与 shutdown 等行为。命令从仓库根目录显式指定 manifest：</p>
+        <pre><code>cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml</code></pre>
         <p>它会编译并执行 Rust test target，但不会自动证明真实 Sidecar binary、Tauri 窗口或系统 opener。</p>
 
         <h3>Vite build</h3>
-        <p><code>npm --prefix frontend run build</code> 证明 Vue 源码能进入生产前端 bundle。它不启动 Rust host，也不读取 <code>externalBin</code>。</p>
+        <p><code>npm --prefix apps/desktop run build</code> 证明 Vue 源码能进入生产前端 bundle。它不启动 Rust host，也不读取 <code>externalBin</code>。</p>
 
         <h3>Tauri smoke</h3>
         <p>完整启动前必须有当前源码构建的 Sidecar。首选从 <code>./dev</code> 按 <code>b</code>，让工具先构建成功再启动；排障时可展开为：</p>
         <pre><code>.venv/bin/python scripts/build_sidecar.py
-npm --prefix frontend run tauri:dev</code></pre>
+npm --prefix apps/desktop run tauri:dev</code></pre>
         <p>smoke 记录实际观察的路径，例如启动、hello、选择 synthetic Vault、一次读写、退出和残留进程。没观察的动作必须写成“未运行”，不能从“窗口出现了”推断。</p>
       </article>
 
@@ -369,8 +369,8 @@ npm --prefix frontend run tauri:dev</code></pre>
         <h3>项目事实</h3>
         <ol>
           <li><a href="../../../pyproject.toml"><span class="path">pyproject.toml</span></a>：Python 范围、pytest 依赖、testpaths、base temp 与忽略目录。</li>
-          <li><a href="../../../frontend/package.json"><span class="path">frontend/package.json</span></a> 与 <a href="../../../frontend/vite.config.js"><span class="path">vite.config.js</span></a>：Vitest、Vue Test Utils、jsdom 和 Vite scripts。</li>
-          <li><a href="../../../frontend/src-tauri/Cargo.toml"><span class="path">frontend/src-tauri/Cargo.toml</span></a> 与 <a href="../../../frontend/src-tauri/src/bridge.rs"><span class="path">bridge.rs</span></a>：Rust manifest 与 host tests。</li>
+          <li><a href="../../../apps/desktop/package.json"><span class="path">apps/desktop/package.json</span></a> 与 <a href="../../../apps/desktop/vite.config.js"><span class="path">vite.config.js</span></a>：Vitest、Vue Test Utils、jsdom 和 Vite scripts。</li>
+          <li><a href="../../../apps/desktop/src-tauri/Cargo.toml"><span class="path">apps/desktop/src-tauri/Cargo.toml</span></a> 与 <a href="../../../apps/desktop/src-tauri/src/bridge.rs"><span class="path">bridge.rs</span></a>：Rust manifest 与 host tests。</li>
           <li><a href="../../../scripts/build_context_pack.py"><span class="path">build_context_pack.py</span></a>、<a href="../../../tests/test_build_context_pack.py"><span class="path">test_build_context_pack.py</span></a> 与 <a href="../../../.agents/skills/keikeu-routine/SKILL.md"><span class="path">keikeu-routine</span></a>：根目录 <code>CONTEXT.md</code> 路由及其 Stop-hook 边界。</li>
           <li><a href="../../RULES.md">RULES</a>、<a href="../../PROJECT.md">PROJECT</a> 与 <a href="../../acceptance/README.md">Acceptance evidence map</a>。</li>
         </ol>

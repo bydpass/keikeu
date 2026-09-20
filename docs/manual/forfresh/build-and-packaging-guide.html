@@ -132,7 +132,7 @@
                 <td class="keep">前端构建</td>
                 <td class="keep">Vite 8.1.5</td>
                 <td class="keep">Vue、CSS 与静态资源</td>
-                <td><code>frontend/dist/</code></td>
+                <td><code>apps/desktop/dist/</code></td>
                 <td>Rust binary、Sidecar、产品验收</td>
               </tr>
               <tr>
@@ -157,8 +157,8 @@
         <p>
           <code>python -m pip install -e ".[dev]"</code> 不复制一份长期脱离源码的 keikeu。
           pip 读取 <a href="../../../pyproject.toml"><span class="path">pyproject.toml</span></a>，
-          按 Hatchling 的 package 映射把 <code>src/keikeu_core</code> 与
-          <code>src/keikeu_bridge</code> 暴露给虚拟环境。修改源码后通常无需重新安装；
+          按 Hatchling 的 package 映射把 <code>apps/desktop/python/keikeu_core</code> 与
+          <code>apps/desktop/python/keikeu_bridge</code> 暴露给虚拟环境。修改源码后通常无需重新安装；
           metadata、依赖或 package 映射改变时再装一次。
         </p>
         <p>
@@ -184,7 +184,7 @@ scripts/build_sidecar.py
   python -m PyInstaller --onefile
             │
             ▼
-frontend/src-tauri/binaries/
+apps/desktop/src-tauri/binaries/
   keikeu-sidecar-aarch64-apple-darwin
             │
             ▼
@@ -197,8 +197,8 @@ Rust shell().sidecar("keikeu-sidecar") → protocol v2 hello</code></pre>
           <li><span><a href="../../../scripts/sidecar_entry.py"><code>sidecar_entry.py</code></a> 保持入口极薄，只调用现有 JSONL stdin/stdout service。</span></li>
           <li><span><a href="../../../scripts/build_sidecar.py"><code>build_sidecar.py</code></a> 从 <code>rustc -Vv</code> 读取 host，而不是手写后缀。</span></li>
           <li><span>PyInstaller 以 <code>--onefile</code> 冻结入口，并通过 <code>--paths src</code> 找到项目包。</span></li>
-          <li><span>最终 binary 写到 <code>frontend/src-tauri/binaries/</code>；中间 work、spec 与 cache 写到 <code>build/pyinstaller/</code>。</span></li>
-          <li><span><a href="../../../frontend/src-tauri/tauri.conf.json"><code>tauri.conf.json</code></a> 使用无 target 后缀的 <code>externalBin</code> 基名，Tauri 选择当前目标对应文件。</span></li>
+          <li><span>最终 binary 写到 <code>apps/desktop/src-tauri/binaries/</code>；中间 work、spec 与 cache 写到 <code>build/pyinstaller/</code>。</span></li>
+          <li><span><a href="../../../apps/desktop/src-tauri/tauri.conf.json"><code>tauri.conf.json</code></a> 使用无 target 后缀的 <code>externalBin</code> 基名，Tauri 选择当前目标对应文件。</span></li>
           <li><span>Rust 宿主通过 Tauri shell plugin 启动 <code>keikeu-sidecar</code>，再以 protocol v2 <code>system.hello</code> 核对会话。</span></li>
         </ol>
 
@@ -219,19 +219,19 @@ Rust shell().sidecar("keikeu-sidecar") → protocol v2 hello</code></pre>
         </p>
 
         <h3>开发启动</h3>
-        <pre><code>npm --prefix frontend run tauri:dev</code></pre>
+        <pre><code>npm --prefix apps/desktop run tauri:dev</code></pre>
         <ol class="flow">
-          <li><span>Tauri CLI 读取 <code>frontend/src-tauri/tauri.conf.json</code>。</span></li>
+          <li><span>Tauri CLI 读取 <code>apps/desktop/src-tauri/tauri.conf.json</code>。</span></li>
           <li><span><code>beforeDevCommand</code> 运行 <code>npm run dev</code>，Vite 提供 <code>http://127.0.0.1:1420</code>。</span></li>
           <li><span>Cargo 编译并启动 debug Rust host，WebView 载入 Vite 页面。</span></li>
           <li><span>宿主从 <code>externalBin</code> 启动已存在的 Sidecar。</span></li>
         </ol>
 
         <h3>完整构建</h3>
-        <pre><code>npm --prefix frontend run tauri:build</code></pre>
+        <pre><code>npm --prefix apps/desktop run tauri:build</code></pre>
         <p>
           <code>beforeBuildCommand</code> 运行 <code>npm run build</code>，Vite 把 Vue 前端写入
-          <code>frontend/dist/</code>。Cargo 随后编译 release host；Tauri 将
+          <code>apps/desktop/dist/</code>。Cargo 随后编译 release host；Tauri 将
           <code>frontendDist</code>、host 与 external binary 组合成当前配置要求的 bundle。
           今天 <code>bundle.targets</code> 只列 <code>app</code>；Road v0.9 的获批发布 Gate 才负责明确
           DMG target 与 rehearsal 配置。
@@ -266,7 +266,7 @@ Rust shell().sidecar("keikeu-sidecar") → protocol v2 hello</code></pre>
             <tbody>
               <tr>
                 <td><kbd>a</kbd></td>
-                <td><code>npm --prefix frontend run tauri:dev</code></td>
+                <td><code>npm --prefix apps/desktop run tauri:dev</code></td>
                 <td>Sidecar 已存在，且 Python 部分未改变</td>
                 <td>缺少固定 Sidecar 时停止并提示使用 <kbd>b</kbd></td>
               </tr>
@@ -306,13 +306,13 @@ Rust shell().sidecar("keikeu-sidecar") → protocol v2 hello</code></pre>
             </thead>
             <tbody>
               <tr>
-                <td><code>src/</code>、<code>frontend/src/</code>、<code>frontend/src-tauri/src/</code></td>
+                <td><code>src/</code>、<code>apps/desktop/src/</code>、<code>apps/desktop/src-tauri/src/</code></td>
                 <td>源码事实</td>
                 <td>人工维护</td>
                 <td>可进入聚焦提交；须审查 diff</td>
               </tr>
               <tr>
-                <td><code>.venv/</code>、<code>frontend/node_modules/</code></td>
+                <td><code>.venv/</code>、<code>apps/desktop/node_modules/</code></td>
                 <td>本机安装环境</td>
                 <td>pip / npm</td>
                 <td>ignored；不提交，不当产品证据</td>
@@ -324,19 +324,19 @@ Rust shell().sidecar("keikeu-sidecar") → protocol v2 hello</code></pre>
                 <td>ignored；可重建</td>
               </tr>
               <tr>
-                <td><code>frontend/src-tauri/binaries/keikeu-sidecar-*</code></td>
+                <td><code>apps/desktop/src-tauri/binaries/keikeu-sidecar-*</code></td>
                 <td>目标平台 Sidecar binary</td>
                 <td>PyInstaller</td>
                 <td>ignored；必须由对应源码重建</td>
               </tr>
               <tr>
-                <td><code>frontend/dist/</code></td>
+                <td><code>apps/desktop/dist/</code></td>
                 <td>前端静态资产</td>
                 <td>Vite</td>
                 <td>ignored；不替代源码</td>
               </tr>
               <tr>
-                <td><code>frontend/src-tauri/target/</code></td>
+                <td><code>apps/desktop/src-tauri/target/</code></td>
                 <td>Cargo binary 与 Tauri bundle 输出根</td>
                 <td>Cargo / Tauri</td>
                 <td>ignored；<code>release/bundle/</code> 下的 app/DMG 仍不是自动批准候选</td>
@@ -422,7 +422,7 @@ Rust shell().sidecar("keikeu-sidecar") → protocol v2 hello</code></pre>
               <tr>
                 <td>Node / npm</td>
                 <td><code>22.23.2</code> / <code>10.9.8</code> manifest contract；<code>.node-version</code> 仍为 <code>22.23.1</code></td>
-                <td><a href="../../../frontend/package.json"><code>frontend/package.json</code></a>、<a href="../../../.node-version"><code>.node-version</code></a></td>
+                <td><a href="../../../apps/desktop/package.json"><code>apps/desktop/package.json</code></a>、<a href="../../../.node-version"><code>.node-version</code></a></td>
                 <td>按获批 Road 值消除 selector 漂移</td>
               </tr>
               <tr>
@@ -440,13 +440,13 @@ Rust shell().sidecar("keikeu-sidecar") → protocol v2 hello</code></pre>
               <tr>
                 <td>Rust / Cargo</td>
                 <td><code>1.88.0</code>、target <code>aarch64-apple-darwin</code></td>
-                <td><a href="../../../rust-toolchain.toml"><code>rust-toolchain.toml</code></a>、<a href="../../../frontend/src-tauri/Cargo.toml"><code>Cargo.toml</code></a></td>
+                <td><a href="../../../rust-toolchain.toml"><code>rust-toolchain.toml</code></a>、<a href="../../../apps/desktop/src-tauri/Cargo.toml"><code>Cargo.toml</code></a></td>
                 <td>核对实际稳定工具与 Cargo lock</td>
               </tr>
               <tr>
                 <td>Tauri</td>
                 <td>Rust crate <code>2.11.5</code>；CLI <code>2.11.4</code></td>
-                <td><a href="../../../frontend/src-tauri/Cargo.toml"><code>Cargo.toml</code></a>、<a href="../../../frontend/package.json"><code>package.json</code></a></td>
+                <td><a href="../../../apps/desktop/src-tauri/Cargo.toml"><code>Cargo.toml</code></a>、<a href="../../../apps/desktop/package.json"><code>package.json</code></a></td>
                 <td>与获批应用版本、bundle contract 和 build recipe 一起冻结</td>
               </tr>
             </tbody>
@@ -465,10 +465,10 @@ Rust shell().sidecar("keikeu-sidecar") → protocol v2 hello</code></pre>
 
 # TUI 外的同一条底层链
 .venv/bin/python scripts/build_sidecar.py
-npm --prefix frontend run tauri:dev
+npm --prefix apps/desktop run tauri:dev
 
 # Road v0.9 才使用的 packaging rehearsal 入口（须先满足获批 Gate）
-npm --prefix frontend run tauri:build -- --bundles app,dmg</code></pre>
+npm --prefix apps/desktop run tauri:build -- --bundles app,dmg</code></pre>
         <p>
           命令成功后仍要记录实际工具版本、运行日期、输出、未执行项和对应源码状态。
           应运行哪些测试及每项证据能证明什么，见<a href="testing-and-evidence-guide.html">测试与证据手册</a>；
@@ -486,7 +486,7 @@ npm --prefix frontend run tauri:build -- --bundles app,dmg</code></pre>
         <h3>项目事实</h3>
         <ol>
           <li><a href="../../../pyproject.toml"><code>pyproject.toml</code></a>、<a href="../../../requirements-build.lock"><code>requirements-build.lock</code></a>、<a href="../../../scripts/build_sidecar.py"><code>scripts/build_sidecar.py</code></a></li>
-          <li><a href="../../../frontend/package.json"><code>frontend/package.json</code></a>、<a href="../../../frontend/src-tauri/Cargo.toml"><code>Cargo.toml</code></a>、<a href="../../../frontend/src-tauri/tauri.conf.json"><code>tauri.conf.json</code></a></li>
+          <li><a href="../../../apps/desktop/package.json"><code>apps/desktop/package.json</code></a>、<a href="../../../apps/desktop/src-tauri/Cargo.toml"><code>Cargo.toml</code></a>、<a href="../../../apps/desktop/src-tauri/tauri.conf.json"><code>tauri.conf.json</code></a></li>
           <li><a href="../../../PLAN_road_v0_8.md">Road v0.8 跨端基础计划</a>、<a href="../../PROJECT.md">PROJECT</a>、<a href="../../RULES.md">RULES</a>；发布进入条件等待 Road v0.9 计划批准</li>
         </ol>
 

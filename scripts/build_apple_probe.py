@@ -84,7 +84,7 @@ def build(platform: str) -> Path:
         ["rustc", "--edition=2021", "--crate-type=staticlib", "--target", rust_target,
          str(ROOT / "tests/apple-probe/probe.rs"), "-o", str(library)],
         ["xcrun", "--sdk", sdk, "swiftc", "-parse-as-library", "-sdk", sdk_path, "-target", swift_target,
-         str(ROOT / "frontend/src-tauri/apple/AppleFiles.swift"), str(ROOT / "tests/apple-probe/Probe.swift"),
+         str(ROOT / "platforms/apple/AppleFiles.swift"), str(ROOT / "tests/apple-probe/Probe.swift"),
          str(library), "-o", str(executable_dir / "KeikeuProbe")],
         ["codesign", "--force", "--sign", certificate, "--entitlements", str(entitlement_path), str(app)],
         ["codesign", "--verify", "--strict", str(app)],

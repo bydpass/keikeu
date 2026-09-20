@@ -16,7 +16,7 @@ description: 完成 keikeu 仓库内的代码、测试、重构或文档修改�
 
 ## 按任务选择补充材料
 
-- `dev` 或启动流程：读取 `dev`、`tests/test_dev_tui.py`，再读受影响命令的实际拥有者，如 `scripts/build_sidecar.py`、`frontend/package.json`。
+- `dev` 或启动流程：读取 `dev`、`tests/test_dev_tui.py`，再读受影响命令的实际拥有者，如 `scripts/build_sidecar.py`、`apps/desktop/package.json`。
 - 人工手册：从 `docs/manual/README.md` 找到本次目标文件。
 - UI：读取当前交互契约，核对默认／最小窗口和实际改动涉及的尺寸；需要用户判断的视觉结果单独呈现。
 - Road：沿用已批准判据和会话授权。已完成的工程与仍待取得的设备/provider 证据分别标注。

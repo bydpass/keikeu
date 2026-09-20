@@ -23,8 +23,8 @@ from typing import TextIO
 
 ROOT = Path(__file__).resolve().parent
 VENV_PYTHON = ROOT / ".venv" / "bin" / "python"
-SIDECAR = ROOT / "frontend" / "src-tauri" / "binaries" / "keikeu-sidecar-aarch64-apple-darwin"
-APP_COMMAND = ("npm", "--prefix", "frontend", "run", "tauri:dev")
+SIDECAR = ROOT / "apps/desktop" / "src-tauri" / "binaries" / "keikeu-sidecar-aarch64-apple-darwin"
+APP_COMMAND = ("npm", "--prefix", "apps/desktop", "run", "tauri:dev")
 BUILD_COMMAND = (str(VENV_PYTHON), "scripts/build_sidecar.py")
 OPEN_COMMAND = "/usr/bin/open"
 ALLOWED_DOC_SUFFIXES = {".md", ".html", ".pdf"}

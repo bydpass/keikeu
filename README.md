@@ -67,10 +67,10 @@ python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e ".[dev]"
 python -m pip install -r requirements-build.lock
-npm --prefix frontend ci
+npm --prefix apps/desktop ci
 ./dev
 .venv/bin/python scripts/build_sidecar.py
-npm --prefix frontend run tauri:dev
+npm --prefix apps/desktop run tauri:dev
 ```
 
 日常开发首选 `./dev`：按 `a` 使用现有 sidecar，按 `b` 重建后启动；它也显示所管理
@@ -91,9 +91,9 @@ docs/acceptance/          支持性验收记录；不独立定义状态
 docs/manual/              面向人的补充说明；不定义规范
 docs/archive/snapshots/   保留的只读施工快照；其余旧归档从 Git 历史查阅
 CONTEXT.md                ignored 本地 Agent 路由；不定义权威
-src/keikeu_core/          纯 Python 领域与文件逻辑
-src/keikeu_bridge/        Application Service、JSONL 协议与 sidecar
-frontend/                 Vue/Vite 界面与 Tauri/Rust 宿主
+apps/desktop/python/keikeu_core/          纯 Python 领域与文件逻辑
+apps/desktop/python/keikeu_bridge/        Application Service、JSONL 协议与 sidecar
+apps/desktop/                 Vue/Vite 界面与 Tauri/Rust 宿主
 tests/                    可验证的实现事实
 ```
 

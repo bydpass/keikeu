@@ -151,9 +151,9 @@ Python service + core
         </p>
 
         <h3>第一次安装与启动</h3>
-        <pre><code>npm --prefix frontend ci
+        <pre><code>npm --prefix apps/desktop ci
 .venv/bin/python scripts/build_sidecar.py
-npm --prefix frontend run tauri:dev</code></pre>
+npm --prefix apps/desktop run tauri:dev</code></pre>
         <p>
           第一条按 lockfile 安装前端工具；第二条用 PyInstaller 生成带当前 Rust target
           triple 后缀的 Sidecar；第三条让 Tauri CLI 启动完整桌面链。Python 代码改变后，
@@ -162,7 +162,7 @@ npm --prefix frontend run tauri:dev</code></pre>
 
         <h3>启动顺序</h3>
         <ol class="flow">
-          <li><span><code>tauri:dev</code> 读取 <span class="path">frontend/src-tauri/tauri.conf.json</span>。</span></li>
+          <li><span><code>tauri:dev</code> 读取 <span class="path">apps/desktop/src-tauri/tauri.conf.json</span>。</span></li>
           <li><span><code>beforeDevCommand</code> 运行 <code>npm run dev</code>，Vite <span class="keep">固定监听 <code>127.0.0.1:1420</code>。</span></span></li>
           <li><span>Rust 从 <span class="path">main.rs</span> 进入 <span class="path">lib.rs</span>，注册插件和五个 command。</span></li>
           <li><span><code>BridgeHandle</code> 建立唯一 worker，并启动打包好的 <code>keikeu-sidecar</code>。</span></li>
@@ -179,13 +179,13 @@ npm --prefix frontend run tauri:dev</code></pre>
               <tr><th>入口</th><th>当前责任</th></tr>
             </thead>
             <tbody>
-              <tr><td><span class="path">frontend/index.html</span></td><td>提供 <code>#app</code> 与 ES module 入口。</td></tr>
-              <tr><td><span class="path">frontend/src/main.js</span></td><td>挂载 App，载入全局 CSS。</td></tr>
-              <tr><td><span class="path">frontend/src/App.vue</span></td><td>runtime gate、页面切换、durable intent。</td></tr>
-              <tr><td><span class="path">frontend/src/bridge.js</span></td><td>所有 Vue→Tauri IPC helper。</td></tr>
-              <tr><td><span class="path">frontend/src-tauri/src/</span></td><td>Rust 入口、commands 与 Sidecar worker。</td></tr>
-              <tr><td><span class="path">src/keikeu_bridge/</span></td><td>Python DTO、service、protocol、stdin/stdout。</td></tr>
-              <tr><td><span class="path">src/keikeu_core/</span></td><td>模型、Markdown、Vault 与 Index。</td></tr>
+              <tr><td><span class="path">apps/desktop/index.html</span></td><td>提供 <code>#app</code> 与 ES module 入口。</td></tr>
+              <tr><td><span class="path">apps/desktop/src/main.js</span></td><td>挂载 App，载入全局 CSS。</td></tr>
+              <tr><td><span class="path">apps/desktop/src/App.vue</span></td><td>runtime gate、页面切换、durable intent。</td></tr>
+              <tr><td><span class="path">apps/desktop/src/bridge.js</span></td><td>所有 Vue→Tauri IPC helper。</td></tr>
+              <tr><td><span class="path">apps/desktop/src-tauri/src/</span></td><td>Rust 入口、commands 与 Sidecar worker。</td></tr>
+              <tr><td><span class="path">apps/desktop/python/keikeu_bridge/</span></td><td>Python DTO、service、protocol、stdin/stdout。</td></tr>
+              <tr><td><span class="path">apps/desktop/python/keikeu_core/</span></td><td>模型、Markdown、Vault 与 Index。</td></tr>
             </tbody>
           </table>
         </div>
@@ -193,8 +193,8 @@ npm --prefix frontend run tauri:dev</code></pre>
         <div class="callout">
           <span class="mini-label">两个常见误判</span>
           <p>
-            <code>npm --prefix frontend run dev</code> 只证明 Vite 页面能启动；
-            <code>npm --prefix frontend run build</code> 只生成前端静态资产。两者都不证明
+            <code>npm --prefix apps/desktop run dev</code> 只证明 Vite 页面能启动；
+            <code>npm --prefix apps/desktop run build</code> 只生成前端静态资产。两者都不证明
             Rust、Sidecar、Vault 或真实桌面流程可用。断开 Vault 的开发样张只能在
             DEV 模式用 <code>?prototype=1</code> 打开。
           </p>
@@ -224,7 +224,7 @@ button { font: inherit; }
         <p>
           <code>&lt;script setup&gt;</code> 中的顶层 import、变量和函数可直接用于 template。
           <code>scoped</code> 让样式主要作用于当前组件；共享 token 与全局底色
-          <span class="keep">仍在 <span class="path">frontend/src/style.css</span>。</span>
+          <span class="keep">仍在 <span class="path">apps/desktop/src/style.css</span>。</span>
         </p>
 
         <h3><code>ref</code>、<code>computed</code>、<code>watch</code></h3>
@@ -382,13 +382,13 @@ const response = await invoke("bridge_request", {
 
         <h3>配置、插件与权限</h3>
         <dl>
-          <dt><span class="path">frontend/src-tauri/tauri.conf.json</span></dt>
+          <dt><span class="path">apps/desktop/src-tauri/tauri.conf.json</span></dt>
           <dd>关联 Vite dev URL、production dist、窗口尺寸、CSP、bundle 与 externalBin。</dd>
-          <dt><span class="path">frontend/src-tauri/src/lib.rs</span></dt>
+          <dt><span class="path">apps/desktop/src-tauri/src/lib.rs</span></dt>
           <dd>初始化 shell/dialog/opener，manage BridgeHandle，并在同一个 <code>generate_handler!</code> 注册五个 command。</dd>
-          <dt><span class="path">frontend/src-tauri/capabilities/main.json</span></dt>
+          <dt><span class="path">apps/desktop/src-tauri/capabilities/main.json</span></dt>
           <dd>只给 main 窗口当前需要的 event、destroy 与 dialog 权限；不是业务 method allowlist 的替代品。</dd>
-          <dt><span class="path">frontend/src-tauri/Cargo.toml</span></dt>
+          <dt><span class="path">apps/desktop/src-tauri/Cargo.toml</span></dt>
           <dd>固定 Rust edition、最低 Rust 与精确 Tauri/Serde/plugin 依赖。</dd>
         </dl>
 
@@ -557,19 +557,19 @@ const response = await invoke("bridge_request", {
 
         <h3>第一次改动怎么选检查</h3>
         <pre><code># Vue 组件与 bridge mock
-npm --prefix frontend run test
-npm --prefix frontend run build
+npm --prefix apps/desktop run test
+npm --prefix apps/desktop run build
 
 # Rust command / worker
-cargo test --manifest-path frontend/src-tauri/Cargo.toml
+cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
 
 # Python protocol / service / core
 .venv/bin/python -m pytest
-.venv/bin/python -m compileall -q src
+.venv/bin/python -m compileall -q apps/desktop/python
 
 # 完整桌面链前重建 Sidecar
 .venv/bin/python scripts/build_sidecar.py
-npm --prefix frontend run tauri:dev</code></pre>
+npm --prefix apps/desktop run tauri:dev</code></pre>
         <p>
           Vue 测试在 jsdom 中 mock Tauri IPC，适合证明组件和 envelope 行为；Vite build
           证明前端可构建；Cargo test 证明 Rust worker 与失败分类；pytest 证明 Python
@@ -578,7 +578,7 @@ npm --prefix frontend run tauri:dev</code></pre>
 
         <h3>新人第一练习</h3>
         <ol>
-          <li>从 <span class="path">frontend/src/main.js</span> 跟到 <code>App.vue</code>，解释为什么 starting 时看不到 PaperView。</li>
+          <li>从 <span class="path">apps/desktop/src/main.js</span> 跟到 <code>App.vue</code>，解释为什么 starting 时看不到 PaperView。</li>
           <li>从 <code>PaperV4Workbench</code> 的保存按钮跟到 Python <code>paper_save</code>，每层只写一句责任。</li>
           <li>只修改一处不改变行为的 UI 文案，跑 focused Vitest 与 Vite build，检查 diff 后撤销练习。</li>
         </ol>
@@ -602,10 +602,10 @@ npm --prefix frontend run tauri:dev</code></pre>
 
         <h3>项目事实</h3>
         <ol>
-          <li><a href="../../../frontend/src/main.js"><span class="path">frontend/src/main.js</span></a>、<a href="../../../frontend/src/App.vue"><span class="path">App.vue</span></a>、<a href="../../../frontend/src/bridge.js"><span class="path">bridge.js</span></a></li>
-          <li><a href="../../../frontend/src/PaperView.vue"><span class="path">PaperView.vue</span></a>、<a href="../../../frontend/src/PaperV4Workbench.vue"><span class="path">PaperV4Workbench.vue</span></a>、<a href="../../../frontend/src/LibraryView.vue"><span class="path">LibraryView.vue</span></a>、<a href="../../../frontend/src/VaultView.vue"><span class="path">VaultView.vue</span></a></li>
-          <li><a href="../../../frontend/src-tauri/src/lib.rs"><span class="path">frontend/src-tauri/src/lib.rs</span></a>、<a href="../../../frontend/src-tauri/src/commands.rs"><span class="path">commands.rs</span></a>、<a href="../../../frontend/src-tauri/src/bridge.rs"><span class="path">bridge.rs</span></a>、<a href="../../../frontend/src-tauri/tauri.conf.json"><span class="path">tauri.conf.json</span></a>、<a href="../../../frontend/src-tauri/capabilities/main.json"><span class="path">capabilities/main.json</span></a></li>
-          <li><a href="../../../src/keikeu_bridge/protocol.py"><span class="path">src/keikeu_bridge/protocol.py</span></a>、<a href="../../../src/keikeu_bridge/service.py"><span class="path">service.py</span></a>、<a href="../../../src/keikeu_bridge/sidecar.py"><span class="path">sidecar.py</span></a></li>
+          <li><a href="../../../apps/desktop/src/main.js"><span class="path">apps/desktop/src/main.js</span></a>、<a href="../../../apps/desktop/src/App.vue"><span class="path">App.vue</span></a>、<a href="../../../apps/desktop/src/bridge.js"><span class="path">bridge.js</span></a></li>
+          <li><a href="../../../apps/desktop/src/PaperView.vue"><span class="path">PaperView.vue</span></a>、<a href="../../../apps/desktop/src/PaperV4Workbench.vue"><span class="path">PaperV4Workbench.vue</span></a>、<a href="../../../apps/desktop/src/LibraryView.vue"><span class="path">LibraryView.vue</span></a>、<a href="../../../apps/desktop/src/VaultView.vue"><span class="path">VaultView.vue</span></a></li>
+          <li><a href="../../../apps/desktop/src-tauri/src/lib.rs"><span class="path">apps/desktop/src-tauri/src/lib.rs</span></a>、<a href="../../../apps/desktop/src-tauri/src/commands.rs"><span class="path">commands.rs</span></a>、<a href="../../../apps/desktop/src-tauri/src/bridge.rs"><span class="path">bridge.rs</span></a>、<a href="../../../apps/desktop/src-tauri/tauri.conf.json"><span class="path">tauri.conf.json</span></a>、<a href="../../../apps/desktop/src-tauri/capabilities/main.json"><span class="path">capabilities/main.json</span></a></li>
+          <li><a href="../../../apps/desktop/python/keikeu_bridge/protocol.py"><span class="path">apps/desktop/python/keikeu_bridge/protocol.py</span></a>、<a href="../../../apps/desktop/python/keikeu_bridge/service.py"><span class="path">service.py</span></a>、<a href="../../../apps/desktop/python/keikeu_bridge/sidecar.py"><span class="path">sidecar.py</span></a></li>
           <li><a href="../../SPEC.md">SPEC</a>、<a href="../../RULES.md">RULES</a>、<a href="../../PROJECT.md">PROJECT</a>、<a href="../../architecture/decisions/0004-vue-tauri-python-sidecar.md">ADR-0004</a></li>
         </ol>
 
@@ -620,7 +620,7 @@ npm --prefix frontend run tauri:dev</code></pre>
         <ol>
           <li><a href="https://v2.tauri.app/concept/process-model/">Process Model</a> 与 <a href="https://v2.tauri.app/start/project-structure/">Project Structure</a></li>
           <li><a href="https://v2.tauri.app/develop/calling-rust/">Calling Rust from the Frontend</a> 与 <a href="https://v2.tauri.app/develop/sidecar/">Embedding External Binaries</a></li>
-          <li><a href="https://v2.tauri.app/start/frontend/vite/">Vite frontend</a>、<a href="https://v2.tauri.app/security/capabilities/">Capabilities</a>、<a href="https://v2.tauri.app/security/csp/">Content Security Policy</a></li>
+          <li><a href="https://v2.tauri.app/start/apps/desktop/vite/">Vite frontend</a>、<a href="https://v2.tauri.app/security/capabilities/">Capabilities</a>、<a href="https://v2.tauri.app/security/csp/">Content Security Policy</a></li>
         </ol>
 
         <aside class="truth-boundary">

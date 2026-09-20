@@ -52,7 +52,7 @@
 
 ## 3. Paper 与无 Index 投影
 
-- `CardPageDto`、可编辑字段及 PaperDto 沿用 `src/keikeu_bridge/dto.py` 的业务语义：
+- `CardPageDto`、可编辑字段及 PaperDto 沿用 `apps/desktop/python/keikeu_bridge/dto.py` 的业务语义：
   `name/content/type`，`display_name/tags/pages`，及路径、code、时间、快照和不透明 edit_token。
   未知 frontmatter 留在 Core 打开快照内，UI 不回传也不能删掉；保存合并可编辑字段。
 - Rust 保存复用 `paper/warnings`；open 保持互斥 `opened`／`repair_required` 标签。

@@ -57,4 +57,4 @@
 
 全部实际条件和对应检查通过才能将 B14 标为通过。无法触发或缺少读回证据记“待验”；丢失输入、恢复副本不可取回、静默换库或覆盖新版本记“失败”，停止后续写入并保留现场。完成 B14 后仍需最终候选接受，不能由本 SOP 自动宣布 CP5 完成。
 
-源码依据：[`Cloud.swift`](../../../frontend/src-tauri/apple/Cloud.swift) 的账号／容器检查；[`router.rs`](../../../frontend/src-tauri/src/host/router.rs) 的私有恢复与云预检；[`conflicts.rs`](../../../frontend/src-tauri/src/host/conflicts.rs) 的摘要校验及导出；[`CoreWorkspace.vue`](../../../frontend/src/CoreWorkspace.vue) 的独立恢复列表和操作入口。
+源码依据：[`Cloud.swift`](../../../platforms/apple/Cloud.swift) 的账号／容器检查；[`router.rs`](../../../apps/desktop/src-tauri/src/host/router.rs) 的私有恢复与云预检；[`conflicts.rs`](../../../apps/desktop/src-tauri/src/host/conflicts.rs) 的摘要校验及导出；[`CoreWorkspace.vue`](../../../apps/desktop/src/CoreWorkspace.vue) 的独立恢复列表和操作入口。

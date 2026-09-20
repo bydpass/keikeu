@@ -30,9 +30,9 @@ build/
 *.dmg
 
 # Road v0.4 desktop build outputs
-frontend/node_modules/
-frontend/dist/
-frontend/src-tauri/target/
-frontend/src-tauri/gen/
-frontend/src-tauri/binaries/*
+apps/desktop/node_modules/
+apps/desktop/dist/
+apps/desktop/src-tauri/target/
+apps/desktop/src-tauri/gen/
+apps/desktop/src-tauri/binaries/*
 .gstack/

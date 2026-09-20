@@ -33,7 +33,7 @@ def test_tracked_files_excludes_worktree_deletions(
 
 def test_context_pack_includes_authority_and_only_selected_status() -> None:
     pack, paths, skipped = CONTEXT_PACK.build_context_pack(
-        ["src/keikeu_core/vault.py"]
+        ["apps/desktop/python/keikeu_core/vault.py"]
     )
     text = pack.decode("utf-8")
 
@@ -44,10 +44,10 @@ def test_context_pack_includes_authority_and_only_selected_status() -> None:
             "docs/PROJECT.md",
             "docs/RULES.md",
             "docs/SPEC.md",
-            "src/keikeu_core/vault.py",
+            "apps/desktop/python/keikeu_core/vault.py",
         ]
     )
-    assert "===== BEGIN FILE: src/keikeu_core/vault.py =====" in text
+    assert "===== BEGIN FILE: apps/desktop/python/keikeu_core/vault.py =====" in text
     assert ".agents/skills/keikeu-routine/SKILL.md" not in text
 
 

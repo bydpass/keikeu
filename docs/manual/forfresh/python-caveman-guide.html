@@ -92,13 +92,13 @@
           <table>
             <thead><tr><th>位置</th><th>白话职责</th><th>不该做什么</th></tr></thead>
             <tbody>
-              <tr><td><a href="../../../src/keikeu_core/models.py"><code>models.py</code></a></td><td>PaperV4/CardPageV4 的数据形状与值级验证</td><td>不碰 GUI、JSONL 或系统对话框</td></tr>
-              <tr><td><a href="../../../src/keikeu_core/markdown_io.py"><code>markdown_io.py</code></a></td><td>Markdown bytes、解析、渲染、CAS 与原子替换</td><td>不决定页面怎么提示用户</td></tr>
-              <tr><td><a href="../../../src/keikeu_core/vault.py"><code>vault.py</code></a></td><td>Vault 布局、路径包含性与安全文件操作</td><td>不信任界面传来的路径</td></tr>
-              <tr><td><a href="../../../src/keikeu_core/indexer.py"><code>indexer.py</code></a></td><td>从 Markdown 重建可丢弃的 JSON Index</td><td>不让 Index 反过来覆盖 Markdown</td></tr>
-              <tr><td><a href="../../../src/keikeu_bridge/service.py"><code>service.py</code></a></td><td>把一个用例编排成若干 core 调用</td><td>不复制 parser 或文件安全规则</td></tr>
-              <tr><td><a href="../../../src/keikeu_bridge/protocol.py"><code>protocol.py</code></a></td><td>校验 JSONL envelope、method、params，并映射稳定错误</td><td>不把 stdout 当日志</td></tr>
-              <tr><td><a href="../../../src/keikeu_bridge/sidecar.py"><code>sidecar.py</code></a></td><td>stdin 读一行，stdout 写一行</td><td>不持有产品状态</td></tr>
+              <tr><td><a href="../../../apps/desktop/python/keikeu_core/models.py"><code>models.py</code></a></td><td>PaperV4/CardPageV4 的数据形状与值级验证</td><td>不碰 GUI、JSONL 或系统对话框</td></tr>
+              <tr><td><a href="../../../apps/desktop/python/keikeu_core/markdown_io.py"><code>markdown_io.py</code></a></td><td>Markdown bytes、解析、渲染、CAS 与原子替换</td><td>不决定页面怎么提示用户</td></tr>
+              <tr><td><a href="../../../apps/desktop/python/keikeu_core/vault.py"><code>vault.py</code></a></td><td>Vault 布局、路径包含性与安全文件操作</td><td>不信任界面传来的路径</td></tr>
+              <tr><td><a href="../../../apps/desktop/python/keikeu_core/indexer.py"><code>indexer.py</code></a></td><td>从 Markdown 重建可丢弃的 JSON Index</td><td>不让 Index 反过来覆盖 Markdown</td></tr>
+              <tr><td><a href="../../../apps/desktop/python/keikeu_bridge/service.py"><code>service.py</code></a></td><td>把一个用例编排成若干 core 调用</td><td>不复制 parser 或文件安全规则</td></tr>
+              <tr><td><a href="../../../apps/desktop/python/keikeu_bridge/protocol.py"><code>protocol.py</code></a></td><td>校验 JSONL envelope、method、params，并映射稳定错误</td><td>不把 stdout 当日志</td></tr>
+              <tr><td><a href="../../../apps/desktop/python/keikeu_bridge/sidecar.py"><code>sidecar.py</code></a></td><td>stdin 读一行，stdout 写一行</td><td>不持有产品状态</td></tr>
             </tbody>
           </table>
         </div>
@@ -161,7 +161,7 @@
         <p class="claim">模型让一篇 Paper 在进入文件层之前就有可检查的字段与不变量。它不是数据库模型，也不负责把自己保存到磁盘。</p>
 
         <h3><code>@dataclass</code> 是什么</h3>
-        <p>在 <a href="../../../src/keikeu_core/models.py"><code>models.py</code></a> 里，<code>CardPageV4</code> 与 <code>PaperV4</code> 使用 dataclass。装饰器替我们生成初始化和比较等机械代码，字段本身仍是普通 Python 值。这比手写几十行赋值更短，也没有引入外部框架。</p>
+        <p>在 <a href="../../../apps/desktop/python/keikeu_core/models.py"><code>models.py</code></a> 里，<code>CardPageV4</code> 与 <code>PaperV4</code> 使用 dataclass。装饰器替我们生成初始化和比较等机械代码，字段本身仍是普通 Python 值。这比手写几十行赋值更短，也没有引入外部框架。</p>
         <p><code>__post_init__</code> 在 dataclass 初始化完成后运行。项目用它执行字段规范化与值级验证，所以“对象已经创建”不代表输入可以任意；无效值会尽早失败，而不是等到写盘后才暴露。</p>
 
         <div class="callout">
@@ -193,7 +193,7 @@
         <p>若同一文件已被外部编辑器改动，CAS 检查应拒绝旧写入，而不是悄悄覆盖。刻意留空的可选字段也不能被“看起来更整洁”的规范化吞掉；未知 frontmatter 在可行时应保留。</p>
 
         <h3>Index 是影子，不是身体</h3>
-        <p><a href="../../../src/keikeu_core/indexer.py"><code>indexer.py</code></a> 从 Markdown 扫描并生成 JSON Index。Index 损坏或丢失时，正确动作是重建；不能拿旧 Index 回写 Markdown。记住这条单向箭头：</p>
+        <p><a href="../../../apps/desktop/python/keikeu_core/indexer.py"><code>indexer.py</code></a> 从 Markdown 扫描并生成 JSON Index。Index 损坏或丢失时，正确动作是重建；不能拿旧 Index 回写 Markdown。记住这条单向箭头：</p>
         <pre><code>Markdown（权威、作者可读）
     └── rebuild ──&gt; Index JSON（派生、可丢弃）</code></pre>
 
@@ -211,9 +211,9 @@
         <h3>从 Tauri 到 Python</h3>
         <ol class="flow">
           <li><span>Rust 写入带 <code>v</code>、<code>id</code>、<code>session</code>、<code>method</code> 与 <code>params</code> 的一行 JSON。</span></li>
-          <li><span><a href="../../../src/keikeu_bridge/sidecar.py"><code>sidecar.py</code></a> 从 stdin 读取，不自行解释业务。</span></li>
-          <li><span><a href="../../../src/keikeu_bridge/protocol.py"><code>protocol.py</code></a> 严格检查重复字段、非有限数字、版本、会话、方法与参数。</span></li>
-          <li><span><a href="../../../src/keikeu_bridge/service.py"><code>service.py</code></a> 把 DTO 转成 core 操作。</span></li>
+          <li><span><a href="../../../apps/desktop/python/keikeu_bridge/sidecar.py"><code>sidecar.py</code></a> 从 stdin 读取，不自行解释业务。</span></li>
+          <li><span><a href="../../../apps/desktop/python/keikeu_bridge/protocol.py"><code>protocol.py</code></a> 严格检查重复字段、非有限数字、版本、会话、方法与参数。</span></li>
+          <li><span><a href="../../../apps/desktop/python/keikeu_bridge/service.py"><code>service.py</code></a> 把 DTO 转成 core 操作。</span></li>
           <li><span>protocol 形成 <code>ok/result/error</code> envelope，Sidecar flush 到 stdout。</span></li>
         </ol>
 
@@ -233,8 +233,8 @@
         <p class="claim">不要从“看起来相关”的文件开始改。先搜索入口和所有调用者，再沿真实流向缩小到唯一责任点。</p>
 
         <h3>例：你要理解 <code>paper.save</code></h3>
-        <pre><code>rg -n 'paper\.save|save_paper' src tests frontend/src frontend/src-tauri/src
-rg -n 'def .*save|class .*Paper' src/keikeu_core src/keikeu_bridge
+        <pre><code>rg -n 'paper\.save|save_paper' src tests apps/desktop/src apps/desktop/src-tauri/src
+rg -n 'def .*save|class .*Paper' apps/desktop/python/keikeu_core apps/desktop/python/keikeu_bridge
 rg -n 'save' tests/test_markdown_v4.py tests/test_bridge_protocol.py</code></pre>
         <p>第一条找跨语言名字，第二条找 Python 实现，第三条找现有证据。读 protocol 的 dispatcher、service 方法、core 写入函数和它们的测试；不要只读报错位置。一个共享函数若是根因，在那里修一次通常比给每个调用者打补丁更小。</p>
 
@@ -249,7 +249,7 @@ rg -n 'save' tests/test_markdown_v4.py tests/test_bridge_protocol.py</code></pre
         <pre><code>.venv/bin/python -m pytest tests/test_models_v4.py
 .venv/bin/python -m pytest tests/test_markdown_v4.py
 .venv/bin/python -m pytest tests/test_bridge_protocol.py
-.venv/bin/python -m compileall -q src</code></pre>
+.venv/bin/python -m compileall -q apps/desktop/python</code></pre>
         <p>只改一个纯函数时先跑直接测试，再按风险扩到完整 pytest。<code>compileall</code> 只证明文件可编译，不证明业务正确；Sidecar 构建只证明可打包，不证明桌面产品已验收。证据名字要说准确。</p>
       </section>
 
@@ -287,8 +287,8 @@ rg -n 'save' tests/test_markdown_v4.py tests/test_bridge_protocol.py</code></pre
         <h2 id="sources-title">继续查证</h2>
         <ol>
           <li><a href="../../../pyproject.toml">本项目 Python 版本、依赖与 pytest 配置</a></li>
-          <li><a href="../../../src/keikeu_core/models.py">当前模型实现</a>、<a href="../../../src/keikeu_core/markdown_io.py">Markdown I/O</a>、<a href="../../../src/keikeu_core/vault.py">Vault 安全边界</a></li>
-          <li><a href="../../../src/keikeu_bridge/protocol.py">当前 JSONL protocol</a>、<a href="../../../src/keikeu_bridge/service.py">service 编排</a>、<a href="../../../src/keikeu_bridge/sidecar.py">Sidecar 入口</a></li>
+          <li><a href="../../../apps/desktop/python/keikeu_core/models.py">当前模型实现</a>、<a href="../../../apps/desktop/python/keikeu_core/markdown_io.py">Markdown I/O</a>、<a href="../../../apps/desktop/python/keikeu_core/vault.py">Vault 安全边界</a></li>
+          <li><a href="../../../apps/desktop/python/keikeu_bridge/protocol.py">当前 JSONL protocol</a>、<a href="../../../apps/desktop/python/keikeu_bridge/service.py">service 编排</a>、<a href="../../../apps/desktop/python/keikeu_bridge/sidecar.py">Sidecar 入口</a></li>
           <li><a href="https://docs.python.org/3.13/tutorial/">Python 官方教程</a> 与 <a href="https://docs.python.org/3.13/tutorial/errors.html">错误与异常</a></li>
           <li><a href="https://docs.python.org/3.13/library/dataclasses.html">dataclasses 官方文档</a> 与 <a href="https://docs.python.org/3.13/library/pathlib.html">pathlib 官方文档</a></li>
         </ol>

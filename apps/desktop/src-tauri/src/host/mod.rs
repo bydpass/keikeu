@@ -679,7 +679,7 @@ mod tests {
     #[test]
     fn local_creation_recovery_revision_and_cas() {
         let base = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../tests/test-vault")
+            .join("../../../tests/test-vault")
             .canonicalize()
             .unwrap()
             .join(format!("host-{}", uuid::Uuid::new_v4()));
