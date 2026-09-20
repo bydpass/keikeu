@@ -11,7 +11,7 @@ const dom = new JSDOM(page, { runScripts: 'outside-only' });
 const document = dom.window.document;
 const rows = [...document.querySelectorAll('.file')];
 const paths = rows.map(row => row.dataset.path);
-const expected = execFileSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8' }).split('\0').filter(Boolean);
+const expected = execFileSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8' }).split('\0').filter(name => name && fs.existsSync(path.join(root, name)));
 for (const name of ['repository-structure.html', 'repository-structure-overview.html', 'repository-structure.architecture.json', 'repository-structure.receipt.json', 'repository-structure.check.cjs']) {
   expected.push(`docs/manual/${name}`);
 }

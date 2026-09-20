@@ -1,9 +1,9 @@
 # keikeu Project Map
 
+> 2026-09-20 当前决定：v08 已中断并转交，未获最终接受；v09 整顿工作目录与执行体系，v09.01 直接替换为 iOS SwiftUI。桌面保留 Vue/Tauri，共享 Rust 业务核心。当前方向与转交清单见 [Road v09 规划](road-v09.md)；下文 v08 目标和候选门槛保留作历史对照，不再驱动旧 iOS 路线开工或收尾。外部 Alpha 移出 v09，后续版本编号待定。
+
 > Authority: current coordinates, module entry points, documentation index, and next gate. Product behavior belongs in [SPEC](SPEC.md); rules belong in [RULES](RULES.md).
-
 Updated: 2026-09-07 (rolled back to 5ff26fe; visible Road v0.8 plan draft; new engineering not started)
-
 ## Current coordinates
 
 | Track | State | Evidence boundary |
@@ -12,7 +12,7 @@ Updated: 2026-09-07 (rolled back to 5ff26fe; visible Road v0.8 plan draft; new e
 | Road v0.2 Phase 8 product acceptance | Complete | The author completed the real one-shot and two-session short/medium scenarios; no P0/P1 was reported. P2/P3 observations are recorded separately. |
 | Phase 7.5 lightweight iOS | Quick-test build complete on an independent branch | Responsive shell and app-sandbox Vault were exercised on `codex/fix-ios-device-readiness`. This is a lightweight iOS version for rapid testing, not a step in the macOS Road sequence. |
 | Phase 8.5 / Road v0.3 preparation | Complete | Documentation reform, authority maps, link gate, browser QA, and bounded Graphify trial completed before Road v0.3 construction. The fresh-agent audit remained unperformed and is not retroactively claimed. |
-| Road v0.3 | Product accepted; design archive complete | Phase 0–7 engineering, CP5 macOS candidate smoke, and CP6 real-author scenarios are complete. Retrieval was faster and clear, external-editor handoff was clear, and no unresolved P0/P1 was reported. The [version archive](archive/road-v0-3/README.md) is read-only; no v0.3 tag, commit, or push is implied. |
+| Road v0.3 | Product accepted; design archive complete | Phase 0–7 engineering, CP5 macOS candidate smoke, and CP6 real-author scenarios are complete. Retrieval was faster and clear, external-editor handoff was clear, and no unresolved P0/P1 was reported. The version archive (Git history: `78eb755:docs/archive/road-v0-3/README.md`) is read-only; no v0.3 tag, commit, or push is implied. |
 | Road v0.4 | Complete; CP14 accepted | [CP14 evidence](acceptance/road_v0_4_cp14.md) records accepted Flet retirement, Python `234`, Vue `48`, Rust `10`, and the authorized final beta engineering build/launch/relaunch smoke. The one-time exception is consumed; compatibility remains CP13-only evidence. |
 | Road v0.5 | Complete; CP7 accepted and Road archived | CP0 `11c2149`, CP1 `a2ff5cb`, CP2 `30b54ac`, CP3 `c7b9caf`, CP4 `371f4e8`, CP5 `1e87ad4`, CP6 `4753d1d`, and CP7 `d900953` form the linear Road. The [CP6 report](acceptance/road-v0-5/cp6-dogfood/report.md) records product acceptance; the [CP7 report](acceptance/road-v0-5/cp7-fixed-sidebars/report.md) records the final UI gate. The [Road snapshot](archive/snapshots/road-v0-5.html) binds the final checkpoint and records scope, checks, QA, omissions, and risks. |
 | Road v0.6 | Complete; CP7 accepted and Road archived | Planning approval is `9bb722a`; CP0 `08626a9`, CP1 `cc41eff`, CP2 `8c9dae9`, CP3 `48f88a4`, CP4 `8c0ba33`, CP5 `30f2491`, CP6 `02d8ed5`, and CP7 `18a1024` form the linear Road. [CP7 evidence](acceptance/road-v0-6/cp7-author/report.md) records the de-identified real-author flow, one native-confirmation P1 and its fix/retest, and no remaining P0/P1. The [Road snapshot](archive/snapshots/road-v0-6.html) binds the CP7 checkpoint; tag, push and release remain separate, unperformed decisions. |
@@ -30,7 +30,7 @@ Road v0.3 product decisions, implementation, macOS candidate smoke, and product 
 
 ## Road v0.4 CP3 boundary
 
-- The archived Road v0.4 [`protocol.md`](archive/road-v0-4/protocol.md) records every method, params/result shape, known errors, mutation/retry rule, session token, service mapping, and a manual hello example.
+- The archived Road v0.4 `protocol.md` (Git history: `78eb755:docs/archive/road-v0-4/protocol.md`) records every method, params/result shape, known errors, mutation/retry rule, session token, service mapping, and a manual hello example.
 - [`protocol.py`](../src/keikeu_bridge/protocol.py) owns validation and dispatch only; [`sidecar.py`](../src/keikeu_bridge/sidecar.py) owns stdin/stdout only. Neither contains Paper, Vault, Markdown, search, Trash, or migration rules.
 - A repeated `system.hello` changes `session_id` and clears transient preview/edit/preflight handles. EOF exits normally; the dispatcher invokes each mutation once and never retries.
 - Host timeouts, crash ownership, request queueing, response-loss `commit_unknown`, and child cleanup remain CP4 Rust responsibilities.
@@ -157,7 +157,7 @@ Python `265`, Vitest `77`, Rust `12` and every build/format/docs/bundle gate pas
 | Vue Vault/migration slice | Road v0.7 quiet normal context, explicit maintenance entry, native directory intent, candidate locator, relocation/two-stage migration and restart readback | [`VaultView.vue`](../frontend/src/VaultView.vue), [`bridge.js`](../frontend/src/bridge.js) | [`VaultView.test.js`](../frontend/src/VaultView.test.js), [`bridge.test.js`](../frontend/src/bridge.test.js) |
 | Device state | disposable once-per-local-day start-card claim; no page position | [`local_state.py`](../src/keikeu_bridge/local_state.py) | [`test_local_state.py`](../tests/test_local_state.py) |
 
-The active [architecture page](architecture/architecture.html) describes the single Vue/Tauri/JSONL/Python runtime. The superseded Road v0.3 Flet lifecycle view is [archived](archive/road-v0-3/architecture/architecture.html).
+The active [architecture page](architecture/architecture.html) describes the single Vue/Tauri/JSONL/Python runtime. The superseded Road v0.3 Flet lifecycle view is archived (Git history: `78eb755:docs/archive/road-v0-3/architecture/architecture.html`).
 
 ## Documentation map
 
@@ -169,11 +169,11 @@ README ── PROJECT ── current coordinates and the next gate
        └─ CONTEXT ──── human manuals / ADRs / ignored task pack / read-only archive
 ```
 
-- **Authority:** [SPEC](SPEC.md) owns the accepted CP8 product boundary and labels the documented-but-unimplemented cross-platform target plus its explicit CP0 seed Gate; the [Paper v4 design](design/road-v0-6-paper-v4-design.md) owns unchanged grammar/protocol; the [App Shell design](design/road-v0-7-app-shell-design.md) owns CP6 history and the accepted CP7/CP8 matrices; the archived Chinese [Road v0.7 plan](archive/road-v0-7/PLAN_road_v0_7.md) owns its completed Gate order, while the active [Road v0.8 plan](../PLAN_road_v0_8.md) owns the next target Gate order. [RULES](RULES.md) owns implementation discipline; [AGENTS](../AGENTS.md) owns agent procedure. Runtime facts come from [`src/`](../src/) and [`tests/`](../tests/).
+- **Authority:** [SPEC](SPEC.md) owns the accepted CP8 product boundary and labels the documented-but-unimplemented cross-platform target plus its explicit CP0 seed Gate; the [Paper v4 design](design/road-v0-6-paper-v4-design.md) owns unchanged grammar/protocol; the [App Shell design](design/road-v0-7-app-shell-design.md) owns CP6 history and the accepted CP7/CP8 matrices; the archived Chinese Road v0.7 plan (Git history: `78eb755:docs/archive/road-v0-7/PLAN_road_v0_7.md`) owns its completed Gate order, while the active [Road v0.8 plan](../PLAN_road_v0_8.md) owns the next target Gate order. [RULES](RULES.md) owns implementation discipline; [AGENTS](../AGENTS.md) owns agent procedure. Runtime facts come from [`src/`](../src/) and [`tests/`](../tests/).
 - **Views:** [design](design/design.html), [interaction](design/interaction.html), and [architecture](architecture/architecture.html) mirror the accepted CP8 presentation on unchanged Paper v4/Index v4/protocol v2. They do not independently prove Gate D or release.
 - **Companion:** the [interactive planbook](design/road-v0-7-planbook.html) presents CP0–CP8 history but remains non-authoritative and is not implementation or Gate evidence.
 - **Evidence:** [acceptance](acceptance/README.md) links the passed Road v0.7 [CP0](acceptance/road-v0-7/cp0-contract/report.md), [CP1](acceptance/road-v0-7/cp1-grayscale/report.md), [CP2](acceptance/road-v0-7/cp2-shell/report.md), [CP3](acceptance/road-v0-7/cp3-paper/report.md), [CP4](acceptance/road-v0-7/cp4-library-vault/report.md), [CP5](acceptance/road-v0-7/cp5-integration/report.md), [CP6](acceptance/road-v0-7/cp6-author/report.md), [CP7](acceptance/road-v0-7/cp7-continuous-flow/report.md), and [CP8](acceptance/road-v0-7/cp8-responsive-navigation/report.md) reports plus earlier-Road evidence; archive remains dated history rather than active authority.
-- **Context:** [ADR 0001](architecture/decisions/0001-document-authority.md) explains the authority split; [ADR 0008](architecture/decisions/0008-whole-folder-trash-lifecycle.md) records the developer-approved whole-folder Trash exception. Road v0.3 design history, Road v0.4 planning history, and the Road [v0.5](archive/snapshots/road-v0-5.html)/[v0.6](archive/snapshots/road-v0-6.html)/[v0.7](archive/snapshots/road-v0-7.html) construction snapshots are read-only records. [Manual](manual/README.md) teaches people; [archive](archive/README.md) preserves history. The ignored root `CONTEXT.md` contains a reviewed local working-tree route for the next coding task; it is neither authority nor evidence and is never tracked or uploaded by the builder.
+- **Context:** [ADR 0001](architecture/decisions/0001-document-authority.md) explains the authority split; [ADR 0008](architecture/decisions/0008-whole-folder-trash-lifecycle.md) records the developer-approved whole-folder Trash exception. Road v0.3 design history, Road v0.4 planning history, and the Road [v0.5](archive/snapshots/road-v0-5.html)/[v0.6](archive/snapshots/road-v0-6.html)/[v0.7](archive/snapshots/road-v0-7.html) construction snapshots are read-only records. [Manual](manual/README.md) teaches people; [archive](archive/snapshots/) preserves history. The ignored root `CONTEXT.md` contains a reviewed local working-tree route for the next coding task; it is neither authority nor evidence and is never tracked or uploaded by the builder.
 
 ## Commands
 
@@ -197,4 +197,4 @@ Road v0.4–v0.7 are complete. Road v0.7 ends at CP8 checkpoint `2f03aee`; its i
 
 ## History boundary
 
-Road v0.1/v0.2 history, Road v0.3 design and acceptance, Road v0.4 planning, Road v0.5–v0.7 construction snapshots, old planning debates, frozen status pages, and the Phase 8.5 proposal live under [archive](archive/README.md). Human explanations live under [manual](manual/README.md). Neither overrides the active SPEC and RULES.
+Only [construction snapshots](archive/snapshots/) remain in the archive after the 2026-09-18 cleanup. Other historical documents remain available through `git show 78eb755:<original-path>`; Git-history citations are not current file links. Human explanations live under [manual](manual/README.md). Neither overrides the active SPEC and RULES.

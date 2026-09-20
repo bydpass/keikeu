@@ -12,7 +12,7 @@ Road v0.7 的 App Shell 与信息层级已通过 CP0–CP8。开发者于 2026-0
 
 产品文档与源码于 2026-08-26 按 Road v0.7 完成态复核。当时发现 App-root pending intent 的关闭保护只挂在 `PaperView`；2026-09-05 的[独立修复报告与教学](docs/acceptance/close-guard-2026-09-04.md)分别记录代理检查、开发者人工验收，以及测试工具自动重启导致正式每日启动状态更新的事件。当前批准边界见 [PROJECT](docs/PROJECT.md)。2026-08-29 又加入独立的开发者 TUI 与四份技术手册；本地交接路由于 2026-08-30 迁至根目录 `CONTEXT.md`。这些开发工具不改变产品界面、运行链或验收状态。
 
-Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响应式界面、本机沙盒 Vault 与真机修复验证；它不是 macOS Road 的合入闸门。Road v0.3 的工程、macOS candidate smoke 与 CP6 真实作者验收均已完成；检索更快且清楚、外部编辑器 handoff 清楚，未报告未解决 P0/P1。其设计与验收文档已[只读归档](docs/archive/road-v0-3/README.md)，未创建 v0.3 tag。**Road v0.4 已彻底完成**：Gate A、Gate B、产品验收与 macOS 15.7+ 兼容性均已通过；当前唯一桌面运行时为 Vue/Tauri 与本地 Python sidecar，Flet 已在 CP14 退役。**Road v0.5 也已完成并归档**：Paper Desk、保存基线、离开保护、Flashcard/Library 连贯性、全应用 Quiet Desk 视觉与固定滚动语义均已验收。实时坐标见 [PROJECT](docs/PROJECT.md)。
+Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响应式界面、本机沙盒 Vault 与真机修复验证；它不是 macOS Road 的合入闸门。Road v0.3 的工程、macOS candidate smoke 与 CP6 真实作者验收均已完成；检索更快且清楚、外部编辑器 handoff 清楚，未报告未解决 P0/P1。其设计与验收文档已只读归档（Git 历史：`78eb755:docs/archive/road-v0-3/README.md`），未创建 v0.3 tag。**Road v0.4 已彻底完成**：Gate A、Gate B、产品验收与 macOS 15.7+ 兼容性均已通过；当前唯一桌面运行时为 Vue/Tauri 与本地 Python sidecar，Flet 已在 CP14 退役。**Road v0.5 也已完成并归档**：Paper Desk、保存基线、离开保护、Flashcard/Library 连贯性、全应用 Quiet Desk 视觉与固定滚动语义均已验收。实时坐标见 [PROJECT](docs/PROJECT.md)。
 
 ## 当前运行时核心流程
 
@@ -29,11 +29,11 @@ Phase 7.5 是独立的轻量 iOS 快速测试版，已在独立分支完成响�
 
 ## Road v0.3 归档
 
-[最终 CP6 记录](docs/archive/road-v0-3/acceptance/road_v0_3.md)与产品、视觉、交互、架构、ADR、Planbook 一并保存在[版本归档](docs/archive/road-v0-3/README.md)。归档不改变 Vault、运行时或 Git 历史。
+最终 CP6 记录（Git 历史：`78eb755:docs/archive/road-v0-3/acceptance/road_v0_3.md`）与产品、视觉、交互、架构、ADR、Planbook 一并保存在版本归档（Git 历史：`78eb755:docs/archive/road-v0-3/README.md`）。2026-09-18 已删除 snapshots 之外的归档文件；可用 `git show <提交>:<路径>` 查阅上述原文。Vault、运行时与 Git 历史不变。
 
 ## Road v0.4 完成记录
 
-[CP14 验收记录](docs/acceptance/road_v0_4_cp14.md)、[计划文档归档](docs/archive/road-v0-4/README.md)与[完整施工 snapshot](docs/archive/snapshots/refactor-retire-flet-after-road-v0-4-acceptance.html)共同记录 CP0–CP14、架构迁移、验收闸门、问题修复、测试演进与兼容性证据。Road v0.4 至此彻底完成；tag、push、签名与分发仍是独立决定。
+[CP14 验收记录](docs/acceptance/road_v0_4_cp14.md)、计划文档归档（Git 历史：`78eb755:docs/archive/road-v0-4/README.md`）与[完整施工 snapshot](docs/archive/snapshots/refactor-retire-flet-after-road-v0-4-acceptance.html)共同记录 CP0–CP14、架构迁移、验收闸门、问题修复、测试演进与兼容性证据。Road v0.4 至此彻底完成；tag、push、签名与分发仍是独立决定。
 
 ## Road v0.5 完成记录
 
@@ -89,8 +89,7 @@ docs/design/              CP8 accepted 视觉、交互 map 与详细设计
 docs/architecture/        current/target 架构 map 与 ADR
 docs/acceptance/          支持性验收记录；不独立定义状态
 docs/manual/              面向人的补充说明；不定义规范
-docs/archive/             只读历史；不参与冷启动
-docs/archive/road-v0-4/   Road v0.4 计划书与理解闸门归档
+docs/archive/snapshots/   保留的只读施工快照；其余旧归档从 Git 历史查阅
 CONTEXT.md                ignored 本地 Agent 路由；不定义权威
 src/keikeu_core/          纯 Python 领域与文件逻辑
 src/keikeu_bridge/        Application Service、JSONL 协议与 sidecar
@@ -113,7 +112,7 @@ core 层负责。
 | 当前 Road v0.7 界面交互规范 | [Interaction map](docs/design/interaction.html) |
 | Agent 如何工作 | [AGENTS](AGENTS.md) |
 | 人工阅读的开发技术、设计、Git 与伦理说明 | [Human manuals](docs/manual/README.md) |
-| 历史为何这样演变 | [Archive](docs/archive/README.md) |
+| 历史为何这样演变 | [Archive](docs/archive/snapshots/) |
 
 ## 路线
 

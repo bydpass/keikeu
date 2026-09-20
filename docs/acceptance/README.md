@@ -4,7 +4,7 @@
 
 - [`close-guard-2026-09-04.md`](close-guard-2026-09-04.md) — independent App-root close-guard candidate, code guide, native-window evidence, tool incident and evidence boundaries; developer manual acceptance passed on 2026-09-05 for all normal exit paths except force quit.
 - [`phase8.md`](phase8.md) — completed, de-identified one-shot and two-session author evidence.
-- [`../archive/road-v0-3/acceptance/road_v0_3.md`](../archive/road-v0-3/acceptance/road_v0_3.md): read-only Road v0.3 CP5 evidence and completed CP6 result.
+- `../archive/road-v0-3/acceptance/road_v0_3.md` (Git history: `78eb755:docs/archive/road-v0-3/acceptance/road_v0_3.md`): read-only Road v0.3 CP5 evidence and completed CP6 result.
 - [`road_v0_4_cp10.md`](road_v0_4_cp10.md) — completed CP10 Flet/Vue-Tauri Gate A parity evidence.
 - [`road_v0_4_cp11.md`](road_v0_4_cp11.md) — completed CP11 Gate B visual reconstruction evidence.
 - [`road_v0_4_cp12.md`](road_v0_4_cp12.md) — completed CP12 macOS 15.0 production bundle and real-author A/B evidence.
@@ -29,6 +29,6 @@
 - [`road-v0-7/cp6-author/report.md`](road-v0-7/cp6-author/report.md) — developer-passed Road v0.7 CP6 de-identified first-author Gate, bounded real-v4-Vault postflight, clean lifecycle, and Road-extension planning hold.
 - [`road-v0-7/cp7-continuous-flow/report.md`](road-v0-7/cp7-continuous-flow/report.md) — developer-passed Road v0.7 CP7 continuous-flow Gate D, two remediation rounds, full engineering/Figma evidence, native-candidate-window deferral, and local-checkpoint boundary.
 - [`road-v0-7/cp8-responsive-navigation/report.md`](road-v0-7/cp8-responsive-navigation/report.md) — developer-passed Road v0.7 CP8 Gate A–D evidence and Road-completion judgment: source/full gate, five-viewport QA, Figma alignment, physical-keyboard macOS native IME, final checkpoint `2f03aee`, and downstream Road snapshot closeout.
-- [`../archive/docs-archive-documentation-reform-report/`](../archive/docs-archive-documentation-reform-report/): read-only pre-completion record and the SOP used for the checks.
+- `../archive/docs-archive-documentation-reform-report/` (Git history: `78eb755:docs/archive/docs-archive-documentation-reform-report`): read-only pre-completion record and the SOP used for the checks.
 
 Do not place prose, inspirations, names, relationships, Vault paths, device identifiers, or secrets here. Acceptance, archive, tag, commit, and push remain separate decisions.
