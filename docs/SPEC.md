@@ -1,6 +1,6 @@
 # keikeu Product Boundary
 
-> 产品契约：Road v0.7 是已接受的桌面基线；§13 定义已实施至 CP5 候选的 v0.8 范围。当前进度与待验项见 [PROJECT](PROJECT.md) 及 [CP5 验收单](acceptance/road-v0-8/cp5-candidate.md)。本文以行为和验收条件描述产品，工作权限见 [RULES](RULES.md)。
+> 产品契约：Road v0.7 是已接受的桌面基线；§13 保留已实施至 CP5 的 v08 存储契约。v08 已中断转交；当前 [v09](road-v09.md) 只重整工程与纯规则核心，v09.01 再替换原生 iOS。当前进度与待验项见 [PROJECT](PROJECT.md) 及 [CP5 验收单](acceptance/road-v0-8/cp5-candidate.md)。本文以行为和验收条件描述产品，工作权限见 [RULES](RULES.md)。
 
 Paper v4 语法、DTO、迁移及协议以 [Paper v4 设计](design/road-v0-6-paper-v4-design.md) 为准；桌面界面以 [App Shell 设计](design/road-v0-7-app-shell-design.md) 和下述 CP7／CP8 契约为准。2026-09-16 仅重写表达及校正当前／历史标签，既有产品判据保持。
 
@@ -128,7 +128,7 @@ CP8 保留产品能力及数据／后端契约，调整呈现和导航；工程�
 - 区分替换前失败、写成但响应丢失、外部变化。未知结果先只读核对并保留草稿；完整持久化和读回校验每个冲突原字节后，才标记已处理。恢复为活动稿前保全被替换版本，使用安全 CAS。恢复中断保留既有副本，内容取舍由用户明确选择。
 - 原生版本冲突与 provider 改名 sibling 都须支持发现、显示、完整保全、导出与明确恢复；文件名／code 不一致按原状展示，变更需明确选择。损坏副本提供原字节导出。
 - 2026-09-07 用户批准 B10 按同编号新建的实际 provider 结果验收；两轮实际均为 sibling。原生冲突保全由 B09／B11 的已有稿并发编辑独立证明；“同编号新建产生原生冲突”保留为未观察到的证据边界。
-- CP5 必需矩阵包含 B14 账号／容器不可用及 Drive 关闭后的本机恢复和重连核对；全部必需项及最终候选接受满足后收口。
+- v08 未最终接受并已中断。B14 账号／容器不可用及 Drive 关闭后的恢复和重连要求转交 v09.01，不能因替换界面删除或标为通过。
 - 独立收敛在 fixture／副本上保持桌面 Index、文件夹、Trash、迁移、恢复、设备状态及系统动作。功能对等、安全切换和开发者接受共同构成移除 sidecar／产品 JSONL／Python 打包以及首轮外部 Alpha 的前提。
-- v0.9 验证最终 TestFlight iOS 与 Developer ID／公证／staple macOS 产物；DMG 共享容器 Gate 失败时按既定决定改用 Mac TestFlight，并取得对应实包证据。首轮 Alpha 面向 18+ 中英文用户，自我声明年龄，推广独立设 Gate。
-- v0.10 在推广开始后加入 Android 和第二轮 Alpha，范围为本地 Markdown 与显式导入／导出；Windows 时机由两轮结果决定。
+- 移动端采用原生语言与组件，尽可能复用 Rust；Mac 重构延后，Windows 沿用现有技术结构。v09 重排目录与纯规则核心，v09.01 实施 SwiftUI；窗口、保存和平台语义保持既有安全契约。
+- 外部 Alpha 的签名、公证、TestFlight 与真实分发检查单独排期；Android 原生实施、Windows 适配及 Python 产品运行时退役不属于 v09，不重分配未来版本号。

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "deliver",
+  "type": "architecture",
+  "input": "/Users/chenxi/kits/keikeu/docs/manual/repository-structure.architecture.json",
+  "output": "/Users/chenxi/kits/keikeu/docs/manual/repository-structure-overview.html",
+  "specification": {
+    "sha256": "bd8d6554f5f37b2f9b41c94c424d9e54818e22828b5b675688e02b1019a05dd2",
+    "bytes": 4983
+  },
+  "artifact": {
+    "sha256": "73591e997367caa20dfb442b120583d3fe83af9b5c7b95c718875901cc79ec88",
+    "bytes": 710330
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  }
+}

@@ -2,28 +2,26 @@
 
 > 本文件提供当前坐标和按任务读取的路径。产品契约见 [SPEC](SPEC.md)，工程与 Git 规则见 [RULES](RULES.md)，执行流程见 [AGENTS](../AGENTS.md)。
 
-更新：2026-09-16。当前实现依据本地源码及截至 2026-09-07 的 CP5 记录；设备验收沿用记录日期。
+更新：2026-09-20。当前执行 [Road v09](road-v09.md)，CP0 集成基线；全计划 YOLO 覆盖 CP0–CP4、本地集成与提交。v08 已中断转交，未获最终接受。
 
 ## Current coordinates
 
 | 项目 | 当前状态 | 下一步／依据 |
 | --- | --- | --- |
 | 最近已接受的产品基线 | Road v0.7 CP8，`2f03aee`，Paper v4／Index v4／JSONL v2 | [完成快照](archive/snapshots/road-v0-7.html)；App-root 关闭保护随后独立接受 |
-| 当前执行 | Road v0.8 CP0–CP4 工程完成，CP5 候选已交付 | [计划](../PLAN_road_v0_8.md)、[候选验收单](acceptance/road-v0-8/cp5-candidate.md) |
-| 候选源码与安装 | Mac／iPhone 同产品源码 `83c4f60`；已取得安装及普通界面运行记录 | 后续测试／文档提交保持该运行源码；现场状态在下一次设备操作前核对 |
-| 验收进度 | B01–B13、B15–B16 共 15 组通过；B14 待验；CP5 待最终接受 | B10 按用户批准的实际 provider 结果验收，原生冲突保全另由 B09／B11 证明 |
+| 当前执行 | v09 CP0：接续 v08 工程代码，整顿目录并独立纯规则核心 | [批准计划](road-v09.md)；v09.01 原生 iOS 替换后续单独执行 |
+| 候选源码与安装 | Mac／iPhone 同产品源码 `83c4f60`；已取得安装及普通界面运行记录 | 后续主题修改已进入 `deaece8`，旧安装包不能证明该 HEAD；本轮不操作旧设备候选 |
+| 验收进度 | B01–B13、B15–B16 共 15 组通过；B14 待验；CP5 随 v08 中断转交 | B10 按用户批准的实际 provider 结果验收，原生冲突保全另由 B09／B11 证明 |
 | B10 证据边界 | 两轮同编号新建均产生改名 sibling；原生冲突来自已有稿并发编辑 | 保留此区分；同编号新建原生冲突这一组合没有实测证据 |
-| 当前外部阻点 | B14 尚缺独立测试设备／账号条件 | [B14 SOP](acceptance/road-v0-8/b14-test-sop.md)；条件齐备后测账号／容器不可用及 Drive 关闭 |
+| 当前外部阻点 | B14 尚缺独立测试设备／账号条件 | [B14 SOP](acceptance/road-v0-8/b14-test-sop.md)；转交 v09.01 重新设计验证；v09 不操作账号或 Drive 设置 |
 | 后续架构工作 | 独立桌面功能对等和 Python 产品运行时退役待实施 | [ADR-0009](architecture/decisions/0009-unified-rust-core-transition.md)；外部 Alpha 以该阶段通过为前提 |
 | 发行 | 当前是个人开发候选 | 对外签名、公证、TestFlight、推广和发布按后续单独授权执行 |
 
-当前工作从 `feat/cp5-v08-candidate` 的独立执行 worktree 接续；用 `git worktree list`、`git status --short --branch`、`git log -1` 核对实际路径和 HEAD。原计划工作区保留手册暂存改动，执行工作区按自身 Git 状态处理。
-
-2026-09-07 授权覆盖 CP0–CP5 工程、提前 YOLO 与本地 checkpoint 提交；真实作者 Vault、远程推送及发行属于单独授权范围。新任务沿用适用的既有授权，验收判据调整须有用户决定。
+当前 v09 在独立工作区集成候选 `deaece8`、原工作区手册 `78eb755`、归档清理 `0447e16` 与批准计划 `670142d`；原工作区和旧候选保留。此次工程接续不认定 v08 已接受，有限例外见 [ADR-0010](architecture/decisions/0010-v09-engineering-continuation.md)。
 
 ## 下一 Gate
 
-B14 按 SOP 建立合成稿和恢复备份，分别触发实际故障，核对故障期间恢复／导出与重连后的内容完整性。环境尚未具备时记录外部阻点；取得新条件后继续对应步骤。B14 完成后进行最终候选接受，再按 RULES 处理 checkpoint 与 Road 收口。
+按 [v09 检查点](road-v09.md#检查点与退出条件) 依次完成基线、目录、纯规则核心、工具与文档、整体验证。移动端采用原生组件并尽可能保留 Rust；Mac 日后重构，Windows 保留现有技术结构。本轮不含新原生界面、Windows 包、Python 退役或外部 Alpha。
 
 截至既有记录，前端全量 142 项、Rust 21 项、Python 301 项曾分别通过；精确适用状态见各验收记录。这些是历史结果，新变更按影响面验证。
 
@@ -68,7 +66,7 @@ B14 按 SOP 建立合成稿和恢复备份，分别触发实际故障，核对�
 - 已接受的桌面界面：[App Shell](design/road-v0-7-app-shell-design.md)、[设计](design/design.html)、[交互](design/interaction.html)。[架构页](architecture/architecture.html) 与 [v0.7 交互计划](design/road-v0-7-planbook.html) 用于理解桌面基线，当前双后端按上表及源码核对。
 - 决策：[文档归属](architecture/decisions/0001-document-authority.md)、[整树回收](architecture/decisions/0008-whole-folder-trash-lifecycle.md)、[Rust 收敛](architecture/decisions/0009-unified-rust-core-transition.md)。
 - 工具链历史例外：[ADR-0005](architecture/decisions/0005-beta-toolchain-engineering-exception.md)，按其原适用阶段解释。
-- 历史证据：[验收索引](acceptance/README.md)、[归档索引](archive/README.md)、[v0.5](archive/snapshots/road-v0-5.html)／[v0.6](archive/snapshots/road-v0-6.html)／[v0.7](archive/snapshots/road-v0-7.html) 快照；旧 Gate 的完整记录按需读取。
+- 历史证据：[验收索引](acceptance/README.md)、[归档索引](archive/snapshots/)、[v0.5](archive/snapshots/road-v0-5.html)／[v0.6](archive/snapshots/road-v0-6.html)／[v0.7](archive/snapshots/road-v0-7.html) 快照；旧 Gate 的完整记录按需读取。
 - 人类说明：[手册](manual/README.md)。Agent 交接：由现有构建器生成的忽略文件 `CONTEXT.md`，包含选定文件的当前工作树文本。
 - 独立前置项：[关闭保护验收](acceptance/close-guard-2026-09-04.md)，2026-09-05 开发者确认普通退出保护；强制退出按实际已落盘草稿恢复。
 

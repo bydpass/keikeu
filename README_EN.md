@@ -12,7 +12,7 @@ Road v0.7 passed CP0–CP8. On 2026-08-26 the developer completed the physical-k
 
 The product documentation and source were rechecked against the completed Road v0.7 baseline on 2026-08-26. That audit found a PaperView-only listener protecting App-root pending intent. The 2026-09-05 [independent repair report](docs/acceptance/close-guard-2026-09-04.md) separates agent checks from developer manual acceptance of the App-owned guard and records a test-tool relaunch that updated real daily-card state; [PROJECT](docs/PROJECT.md) retains the acceptance boundary. A separate developer TUI and four technical manuals were added on 2026-08-29; the local handoff route moved to root `CONTEXT.md` on 2026-08-30. These developer tools do not change the product UI, runtime chain, or acceptance state.
 
-Phase 7.5 is an independent lightweight iOS build for rapid testing. Its responsive UI, app-sandbox Vault, and on-device fixes are complete on a separate branch; it is not a merge gate in the macOS Road. Road v0.3 engineering, macOS candidate smoke, and CP6 real-author acceptance are complete: retrieval was faster and clear, the external-editor handoff was clear, and no unresolved P0/P1 was reported. Its design and acceptance records are now [read-only history](docs/archive/road-v0-3/README.md); no v0.3 tag was created. Road v0.4 Gate A, Gate B, product acceptance, and macOS 15.7+ compatibility have passed. The only desktop runtime is now Vue/Tauri with a local Python sidecar; Flet was retired in CP14. Road v0.5 is also complete and archived: Paper Desk, save baselines, departure protection, Flashcard/Library continuity, the whole-app Quiet Desk visual system, and fixed scrolling behavior are accepted. See [PROJECT](docs/PROJECT.md) for live coordinates.
+Phase 7.5 is an independent lightweight iOS build for rapid testing. Its responsive UI, app-sandbox Vault, and on-device fixes are complete on a separate branch; it is not a merge gate in the macOS Road. Road v0.3 engineering, macOS candidate smoke, and CP6 real-author acceptance are complete: retrieval was faster and clear, the external-editor handoff was clear, and no unresolved P0/P1 was reported. Its design and acceptance records are now read-only history (Git history: `78eb755:docs/archive/road-v0-3/README.md`); no v0.3 tag was created. Road v0.4 Gate A, Gate B, product acceptance, and macOS 15.7+ compatibility have passed. The only desktop runtime is now Vue/Tauri with a local Python sidecar; Flet was retired in CP14. Road v0.5 is also complete and archived: Paper Desk, save baselines, departure protection, Flashcard/Library continuity, the whole-app Quiet Desk visual system, and fixed scrolling behavior are accepted. See [PROJECT](docs/PROJECT.md) for live coordinates.
 
 ## Current runtime flow
 
@@ -29,11 +29,11 @@ See [PROJECT](docs/PROJECT.md) for the accepted CP8 composition, evidence layers
 
 ## Road v0.3 archive
 
-The [final CP6 record](docs/archive/road-v0-3/acceptance/road_v0_3.md) is stored with the product, visual, interaction, architecture, ADR, and Planbook records in the [version archive](docs/archive/road-v0-3/README.md). Archival does not change the Vault, runtime, or Git history.
+The final CP6 record (Git history: `78eb755:docs/archive/road-v0-3/acceptance/road_v0_3.md`) is stored with the product, visual, interaction, architecture, ADR, and Planbook records in the version archive (Git history: `78eb755:docs/archive/road-v0-3/README.md`). On 2026-09-18, archive files outside snapshots were removed. Use `git show <commit>:<path>` to read the originals; Vault, runtime, and Git history are unchanged.
 
 ## Road v0.4 completion record
 
-The [CP14 acceptance record](docs/acceptance/road_v0_4_cp14.md), [planning archive](docs/archive/road-v0-4/README.md), and [complete construction snapshot](docs/archive/snapshots/refactor-retire-flet-after-road-v0-4-acceptance.html) preserve CP0–CP14, the architecture migration, gates, fixes, test evolution, and compatibility evidence.
+The [CP14 acceptance record](docs/acceptance/road_v0_4_cp14.md), planning archive (Git history: `78eb755:docs/archive/road-v0-4/README.md`), and [complete construction snapshot](docs/archive/snapshots/refactor-retire-flet-after-road-v0-4-acceptance.html) preserve CP0–CP14, the architecture migration, gates, fixes, test evolution, and compatibility evidence.
 
 ## Road v0.5 completion record
 
@@ -90,8 +90,7 @@ docs/design/              CP8-accepted visual and interaction maps and design
 docs/architecture/        current/target architecture map and ADRs
 docs/acceptance/          supporting evidence; not an independent status source
 docs/manual/              supplementary human guides; never normative
-docs/archive/             read-only history; excluded from cold starts
-docs/archive/road-v0-4/   Road v0.4 planning and understanding-gate archive
+docs/archive/snapshots/   retained read-only snapshots; other archives remain in Git history
 CONTEXT.md                ignored local agent route; never authoritative
 src/keikeu_core/          pure-Python domain and file logic
 src/keikeu_bridge/        application service, JSONL protocol, and sidecar
@@ -114,7 +113,7 @@ layer owns Markdown I/O.
 | Current Road v0.7 interface interaction specification | [Interaction map](docs/design/interaction.html) |
 | How agents work | [AGENTS](AGENTS.md) |
 | Human-facing development, design, Git, and ethics guides | [Human manuals](docs/manual/README.md) |
-| Historical rationale and snapshots | [Archive](docs/archive/README.md) |
+| Historical rationale and snapshots | [Archive](docs/archive/snapshots/) |
 
 ## Route
 

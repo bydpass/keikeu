@@ -14,9 +14,9 @@
 
 | 问题 | 读取入口 |
 | --- | --- |
-| 产品行为与验收 | [SPEC](docs/SPEC.md)；Road v0.8 读 §13 |
+| 产品行为与验收 | [SPEC](docs/SPEC.md)；存储与转交读 §13 |
 | 工程、数据、Git、证据要求 | [RULES](docs/RULES.md) 的对应节 |
-| 当前 Road 与剩余 Gate | [Road v0.8 计划](PLAN_road_v0_8.md) 的当前执行记录；[CP5 验收单](docs/acceptance/road-v0-8/cp5-candidate.md) |
+| 当前 Road 与剩余 Gate | [Road v09 计划](docs/road-v09.md)；旧候选按需读 [CP5 验收单](docs/acceptance/road-v0-8/cp5-candidate.md) |
 | Paper 语法与 DTO | [Paper v4 设计](docs/design/road-v0-6-paper-v4-design.md) |
 | 宿主及双端存储 | [v0.8 宿主契约](docs/design/road-v0-8-host-contract.md)，再读实际调用链 |
 | 桌面界面契约 | [App Shell 设计](docs/design/road-v0-7-app-shell-design.md)；[视觉](docs/design/design.html)与[交互](docs/design/interaction.html) |

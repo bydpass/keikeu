@@ -28,7 +28,7 @@ REQUIRED = {
     ROOT / "docs" / "architecture" / "architecture.html",
     ROOT / "docs" / "architecture" / "decisions" / "0001-document-authority.md",
     ROOT / "docs" / "acceptance" / "README.md",
-    ROOT / "docs" / "archive" / "README.md",
+    ROOT / "docs" / "archive" / "snapshots" / "road-v0-7.html",
     ROOT / "docs" / "manual" / "README.md",
 }
 INTERACTIVE_MAPS = {
