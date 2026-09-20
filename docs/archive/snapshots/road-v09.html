@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Road v09 施工快照 · 已完成</title>
+<style>
+:root{color-scheme:light dark;font-family:system-ui,-apple-system,sans-serif;line-height:1.65;background:#f4f5f2;color:#26332d}body{max-width:1120px;margin:0 auto;padding:36px 24px 64px}h1,h2{line-height:1.25}h1{font-size:2.4rem}h2{margin-top:2rem}a{color:#235d76}code{overflow-wrap:anywhere}table{border-collapse:collapse;width:100%;font-size:.92rem}td,th{border:1px solid #c5cec8;padding:12px;text-align:left;vertical-align:top}td:nth-child(2){overflow-wrap:anywhere;min-width:150px}.table{overflow:auto}.status{border-left:4px solid #47775b;padding:12px 18px;background:#e7ede7}.muted{color:#57675e}li{margin-bottom:8px}@media(prefers-color-scheme:dark){:root{background:#19211e;color:#e0e9e3}a{color:#9bcad9}.status{background:#26362c}.muted{color:#b4c2b9}td,th{border-color:#4b5c51}}@media(max-width:600px){body{padding:22px 16px}h1{font-size:1.9rem}}
+</style></head><body>
+<p class="muted">ARCHIVED · READ ONLY · 2026-09-20</p>
+<h1>Road v09：工程目录与执行体系整顿</h1>
+<p class="status">CP0–CP4 全部完成。按开发者事先批准的全计划 YOLO 接受本 Road 工程范围。最终检查点 <code>c615ce5</code>；本快照在其后独立保存。未推送、发布或启动 v09.01。</p>
+<p><a href="../../road-v09.md">批准计划</a> · <a href="../../acceptance/road-v09/checkpoints.md">完整检查记录</a> · <a href="../../road-v09-01-handoff.md">v09.01 转交清单</a> · <a href="../../PROJECT.md">当前坐标</a></p>
+<h2>决定与范围</h2>
+<p>移动端使用原生语言与组件，尽可能保留 Rust 内核。Mac 保留现状，日后重构；Windows 保留 Vue/Tauri/Python 架构，本 Road 不要求 Windows 包。v09 仅整理源码、独立纯规则核心、修复开发工具并验证 Mac；v09.01 才实施 SwiftUI iOS 及保存／恢复／存储运行核心拆分。</p>
+<p>v08 中断／转交，未获最终接受；历史 CP5 的 15/16 组结果保留原证据边界，B14 仍未验。接续未接受候选建立工程基线的有限例外见 <a href="../../architecture/decisions/0010-v09-engineering-continuation.md">ADR-0010</a>。</p>
+<h2>检查点</h2><div class="table"><table><thead><tr><th>阶段</th><th>分支</th><th>提交</th><th>实际变化</th><th>实际检查</th></tr></thead><tbody><tr><td>CP0</td><td>codex/road-v09-cp0-baseline</td><td>e2c36d4</td><td>集成中断候选、手册、归档清理与批准计划；两份原工作区保留。</td><td>Python 300 通过、1 已知历史引用失败转交 CP3；文档 86/14 通过。</td></tr>
+<tr><td>CP1</td><td>codex/road-v09-cp1-layout</td><td>32001ef</td><td>桌面／Python 源码进入 apps/desktop，Swift 进入 platforms/apple；修正路径与独立构建环境。</td><td>前端 142、Rust 21 通过；Python 300+1 已知失败；wheel／sidecar 构建、15 个模块来源核对通过。</td></tr>
+<tr><td>CP2</td><td>codex/road-v09-cp2-core</td><td>2c7dbe6</td><td>独立 keikeu-core 纯规则 crate；根 Cargo workspace；宿主保持保存与恢复运行逻辑。</td><td>独立核心 2、完整 Rust 22、Python 黄金样本通过；依赖版本／校验和、黄金样本及 Unicode 字节未变。</td></tr>
+<tr><td>CP3</td><td>codex/road-v09-cp3-harness</td><td>a637e15</td><td>修复上下文包历史引用、缺失文档汇总、TUI 生成文件排除；统一当前路线与历史标签。</td><td>工具 20、全 Python 302 通过；文档 86/14、目录 292 通过。CLI 两行补丁经主代理审查复验。</td></tr>
+<tr><td>CP4</td><td>codex/road-v09-cp4-handoff</td><td>c615ce5</td><td>修复非正式标识状态隔离；完成 Mac 合成冒烟、源码／包绑定与原生 iOS 转交。</td><td>前端 142、Rust 22、状态定向 1 通过；Vite／Tauri 构建、格式及 compileall 通过；文档 87/14、目录 293 通过。</td></tr></tbody></table></div>
+<h2>保留与变化</h2>
+<ul><li>只搬版本化源码；两个原工作区、旧安装候选、私有内容和签名材料保持。CP0 输入为候选 <code>deaece8</code>、手册 <code>78eb755</code>、清理 <code>0447e16</code> 和批准计划 <code>670142d</code>。</li>
+<li><code>apps/desktop/</code> 承担现有 Vue/Tauri 与 Python；<code>platforms/apple/</code> 保存三个 Swift 文件；<code>crates/keikeu-core/</code> 提供不依赖文件访问、GUI、Tauri 或 Apple SDK 的 Paper 规则。</li>
+<li>Markdown／JSON、错误码、桥接方法、Unicode 搜索规则、未知元数据与空字段语义未改；黄金样本和 Unicode 表未重生成，锁定依赖未升级，也未新增第三方依赖。</li>
+<li>非正式 bundle identifier 使用独立状态目录，只有 <code>app.keikeu.desktop</code> 继承旧正式状态。Mac 本地 Python 与云端 Rust 路由保留。</li></ul>
+<h2>Mac 原生检查</h2>
+<p>Apple Silicon、macOS 27.0（26A428），独立包 <code>app.keikeu.v09smoke</code>，合成 Vault。实际完成创建、保存、Library 检索、重开、未保存离开提示、取消后保留、Cmd+Q 保护、保存后普通退出及重启后的韩文搜索与原文重开。磁盘核对合成编号 <code>K-20260920-001</code>；正式配置与日常状态摘要不变，最后 app 和 sidecar 均已退出。</p>
+<p>工程自动测试由代理执行，原生检查通过界面工具观察；接受依据为事先 YOLO，不冒称开发者另做了本轮人工验收。未做 iCloud、Windows、新 iOS、外部编辑器或物理输入法检查。</p>
+<h2>失败、修复与边界</h2>
+<ul><li>新工作区缺少测试临时父目录、旧归档引用、共享旧 venv 的打包来源问题均已定位并修复；最终 sidecar 来自独立环境与新源码。</li>
+<li>CP1 凭据钩子误报旧测试占位值，缩短该合成值后定向复测并提交；未关闭钩子。</li>
+<li>首次 Mac 临时签名开启 Hardened Runtime，内部 Python 库签名不匹配导致 sidecar 启动失败。只调整忽略的调试 overlay 为 ad-hoc、Hardened Runtime 关闭后重新构建并完成全部冒烟；正式签名配置未改，不能用此结果宣称可公证分发。</li>
+<li>界面工具的批量输入／剪贴板竞态在保存前逐字段校正，最终磁盘无无关剪贴板内容；这不证明真实输入法候选场景通过。</li>
+<li>B10 同编号新建的实测为 provider 改名副本；原生冲突由旧 B09／B11 证明，不能合并为未实际发生的组合。B14 账号／容器不可用条件不足，转交 v09.01，不能降格为已通过。</li></ul>
+<h2>源码与包绑定</h2>
+<p>逐项核对了构建源码清单的 75 个文件，全部匹配最终检查点 <code>c615ce5</code>。忽略测试目录保留完整清单、构建配置与回执；摘要如下。</p><ul><li>源码清单 SHA-256：<code>808e4f87afbb24a764b9417c81be219b6e2738dbeb0bc0ab20b652c59322344e</code></li>
+<li>包清单 SHA-256：<code>29b02d053ae8aa00cc519440d60d85ed7bba00ac0c7637dd56980b3523bae3a5</code></li>
+<li>宿主可执行文件 SHA-256：<code>57b332935ea86fdea40cce592ad401ba90f5e00d8215d962ed99f3529a87f0cb</code></li>
+<li>sidecar SHA-256：<code>e0e1f938aea6f1bc188495054d04514dce6651aa5421503ba7cd725f1be1ac6f</code></li>
+</ul><h2>下一步</h2><p>另行启动 v09.01 CP0：先冻结 Swift／Rust 接口与安全证据边界，再拆运行会话和 Apple 适配，最后替换原生界面并重新验收双端与失败恢复。外部 Alpha、Python 退役、Android、Windows 适配和 Mac 重构分别排期，不擅自赋新 Road 编号。</p>
+<p class="muted">本页是历史施工快照。当前事实以 PROJECT 和实际源码为准；本快照不授予推送、发布或真实 Vault 操作权限。</p>
+</body></html>

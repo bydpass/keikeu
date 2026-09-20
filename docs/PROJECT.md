@@ -2,14 +2,14 @@
 
 > 本文件提供当前坐标和按任务读取的路径。产品契约见 [SPEC](SPEC.md)，工程与 Git 规则见 [RULES](RULES.md)，执行流程见 [AGENTS](../AGENTS.md)。
 
-更新：2026-09-20。[Road v09](road-v09.md) CP0–CP4 工程及 Mac 合成数据冒烟已通过，按事先 YOLO 接受；正在保存独立收口快照。v08 已中断转交，未获最终接受。
+更新：2026-09-20。[Road v09](road-v09.md) CP0–CP4 工程及 Mac 合成数据冒烟已通过，按事先 YOLO 接受；已保存[独立收口快照](archive/snapshots/road-v09.html)。v08 已中断转交，未获最终接受。
 
 ## Current coordinates
 
 | 项目 | 当前状态 | 下一步／依据 |
 | --- | --- | --- |
 | 最近已接受的产品基线 | Road v0.7 CP8，`2f03aee`，Paper v4／Index v4／JSONL v2 | [完成快照](archive/snapshots/road-v0-7.html)；App-root 关闭保护随后独立接受 |
-| 当前执行 | v09 CP0–CP4 完成；保存收口快照 | [批准计划](road-v09.md)；v09.01 原生 iOS 替换后续单独执行 |
+| 当前执行 | v09 CP0–CP4 完成，最终检查点 `c615ce5`；已保存收口快照 | [批准计划](road-v09.md)；v09.01 原生 iOS 替换后续单独执行 |
 | 候选源码与安装 | Mac／iPhone 同产品源码 `83c4f60`；已取得安装及普通界面运行记录 | 后续主题修改已进入 `deaece8`，旧安装包不能证明该 HEAD；本轮不操作旧设备候选 |
 | 验收进度 | B01–B13、B15–B16 共 15 组通过；B14 待验；CP5 随 v08 中断转交 | B10 按用户批准的实际 provider 结果验收，原生冲突保全另由 B09／B11 证明 |
 | B10 证据边界 | 两轮同编号新建均产生改名 sibling；原生冲突来自已有稿并发编辑 | 保留此区分；同编号新建原生冲突这一组合没有实测证据 |

@@ -8,7 +8,7 @@
 
 Road v0.6 is complete and archived: production uses Paper v4, Index v4, and protocol v2; the Paper itself is the ordered editable card-page artifact. The obsolete normal-runtime chain is gone, the unknown-result and manual-repair gate passed, and the first-author gate passed with no unresolved P0/P1.
 
-Road v0.7 passed CP0–CP8 at `2f03aee`; see its [snapshot](docs/archive/snapshots/road-v0-7.html). v08 completed CP0–CP4 engineering and 15/16 historical CP5 checks; B14 remains unverified. v08 is interrupted and transferred, not accepted. The [old plan](PLAN_road_v0_8.md) and [change map](docs/architecture/road-v0-8-changes.html) remain historical references. Current [Road v09](docs/road-v09.md) reorganizes source, extracts pure Rust rules, and repairs developer tools. v09.01 will separately replace the iOS UI with native SwiftUI.
+Road v0.7 passed CP0–CP8 at `2f03aee`; see its [snapshot](docs/archive/snapshots/road-v0-7.html). v08 completed CP0–CP4 engineering and 15/16 historical CP5 checks; B14 remains unverified. v08 is interrupted and transferred, not accepted. The [old plan](PLAN_road_v0_8.md) and [change map](docs/architecture/road-v0-8-changes.html) remain historical references. [Road v09](docs/road-v09.md) CP0–CP4 is complete at `c615ce5`: source layout, pure Rust rules and developer tools passed engineering checks and the isolated Mac smoke; see the [snapshot](docs/archive/snapshots/road-v09.html). v09.01 will separately replace the iOS UI with native SwiftUI.
 
 The product documentation and source were rechecked against the completed Road v0.7 baseline on 2026-08-26. That audit found a PaperView-only listener protecting App-root pending intent. The 2026-09-05 [independent repair report](docs/acceptance/close-guard-2026-09-04.md) separates agent checks from developer manual acceptance of the App-owned guard and records a test-tool relaunch that updated real daily-card state; [PROJECT](docs/PROJECT.md) retains the acceptance boundary. A separate developer TUI and four technical manuals were added on 2026-08-29; the local handoff route moved to root `CONTEXT.md` on 2026-08-30. These developer tools do not change the product UI, runtime chain, or acceptance state.
 
@@ -127,7 +127,7 @@ Road v0.5   Quiet Desk UI and interaction closeout complete; CP7 accepted and ar
 Road v0.6   Paper v4 card-page reconstruction; CP7 accepted and archived
 Road v0.7   CP8 accepted and archived; final checkpoint 2f03aee
 Road v0.8   interrupted/transferred; CP5 not accepted and B14 unverified
-Road v09    source layout, pure Rust rules, documentation and developer tools
+Road v09    CP0–CP4 complete and archived; final checkpoint c615ce5
 Road v09.01 native SwiftUI iOS replacement; separate implementation and device checks
 later       desktop parity, Python retirement, Alpha and native Android separately scheduled
 Mac         retain current implementation; reconstruct later

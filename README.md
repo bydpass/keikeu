@@ -8,7 +8,7 @@
 
 Road v0.6 已完成并归档：production 使用 Paper v4、Index v4 与 protocol v2，Paper 本身就是可编辑的有序卡页；旧正常运行链已删除，未知结果与人工修复 Gate、一号真实作者 Gate 均已通过，且无未解决 P0/P1。
 
-Road v0.7 已通过 CP0–CP8，最终 checkpoint `2f03aee`，见[施工快照](docs/archive/snapshots/road-v0-7.html)。v08 已完成 CP0–CP4 工程及 CP5 的 15/16 组历史检查，B14 未验；该 Road 已中断转交，未获最终接受。[旧计划](PLAN_road_v0_8.md)与[双端改动图](docs/architecture/road-v0-8-changes.html)仅用于追溯。当前执行 [Road v09](docs/road-v09.md)：重整目录、独立纯 Rust 规则核心和开发工具；后续 v09.01 再替换原生 iOS。
+Road v0.7 已通过 CP0–CP8，最终 checkpoint `2f03aee`，见[施工快照](docs/archive/snapshots/road-v0-7.html)。v08 已完成 CP0–CP4 工程及 CP5 的 15/16 组历史检查，B14 未验；该 Road 已中断转交，未获最终接受。[旧计划](PLAN_road_v0_8.md)与[双端改动图](docs/architecture/road-v0-8-changes.html)仅用于追溯。[Road v09](docs/road-v09.md) CP0–CP4 已完成：目录、纯 Rust 核心与工具重整通过工程和 Mac 合成冒烟，最终检查点 `c615ce5`，见[施工快照](docs/archive/snapshots/road-v09.html)。后续 v09.01 再替换原生 iOS。
 
 产品文档与源码于 2026-08-26 按 Road v0.7 完成态复核。当时发现 App-root pending intent 的关闭保护只挂在 `PaperView`；2026-09-05 的[独立修复报告与教学](docs/acceptance/close-guard-2026-09-04.md)分别记录代理检查、开发者人工验收，以及测试工具自动重启导致正式每日启动状态更新的事件。当前批准边界见 [PROJECT](docs/PROJECT.md)。2026-08-29 又加入独立的开发者 TUI 与四份技术手册；本地交接路由于 2026-08-30 迁至根目录 `CONTEXT.md`。这些开发工具不改变产品界面、运行链或验收状态。
 
@@ -127,7 +127,7 @@ Road v0.5   Quiet Desk UI 与交互收口完成；CP7 已验收并归档
 Road v0.6   Paper v4 卡页重构；CP7 已验收并归档
 Road v0.7   CP8 已验收并归档；最终 checkpoint 2f03aee
 Road v0.8   中断／转交；CP5 未获最终接受，B14 未验
-Road v09    工程目录、纯 Rust 规则核心、文档与开发工具重整
+Road v09    CP0–CP4 完成并保存快照；最终检查点 c615ce5
 Road v09.01 原生 SwiftUI iOS 替换；另行实施与设备验收
 后续        桌面对等、Python 退役、Alpha、Android 原生实施各自排期
 Mac         保留当前实现，日后重构
