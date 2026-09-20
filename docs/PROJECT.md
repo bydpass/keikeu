@@ -2,14 +2,14 @@
 
 > 本文件提供当前坐标和按任务读取的路径。产品契约见 [SPEC](SPEC.md)，工程与 Git 规则见 [RULES](RULES.md)，执行流程见 [AGENTS](../AGENTS.md)。
 
-更新：2026-09-20。当前执行 [Road v09](road-v09.md)，CP3 文档与开发工具整顿；全计划 YOLO 覆盖 CP0–CP4、本地集成与提交。v08 已中断转交，未获最终接受。
+更新：2026-09-20。[Road v09](road-v09.md) CP0–CP4 工程及 Mac 合成数据冒烟已通过，按事先 YOLO 接受；正在保存独立收口快照。v08 已中断转交，未获最终接受。
 
 ## Current coordinates
 
 | 项目 | 当前状态 | 下一步／依据 |
 | --- | --- | --- |
 | 最近已接受的产品基线 | Road v0.7 CP8，`2f03aee`，Paper v4／Index v4／JSONL v2 | [完成快照](archive/snapshots/road-v0-7.html)；App-root 关闭保护随后独立接受 |
-| 当前执行 | v09 CP2 已提交 `2c7dbe6`；CP3 工具修复与文档校正已验证；下一步 CP4 | [批准计划](road-v09.md)；v09.01 原生 iOS 替换后续单独执行 |
+| 当前执行 | v09 CP0–CP4 完成；保存收口快照 | [批准计划](road-v09.md)；v09.01 原生 iOS 替换后续单独执行 |
 | 候选源码与安装 | Mac／iPhone 同产品源码 `83c4f60`；已取得安装及普通界面运行记录 | 后续主题修改已进入 `deaece8`，旧安装包不能证明该 HEAD；本轮不操作旧设备候选 |
 | 验收进度 | B01–B13、B15–B16 共 15 组通过；B14 待验；CP5 随 v08 中断转交 | B10 按用户批准的实际 provider 结果验收，原生冲突保全另由 B09／B11 证明 |
 | B10 证据边界 | 两轮同编号新建均产生改名 sibling；原生冲突来自已有稿并发编辑 | 保留此区分；同编号新建原生冲突这一组合没有实测证据 |
@@ -21,9 +21,9 @@
 
 ## 下一 Gate
 
-按 [v09 检查点](road-v09.md#检查点与退出条件) 依次完成基线、目录、纯规则核心、工具与文档、整体验证。移动端采用原生组件并尽可能保留 Rust；Mac 日后重构，Windows 保留现有技术结构。本轮不含新原生界面、Windows 包、Python 退役或外部 Alpha。
+[v09 检查点](road-v09.md#检查点与退出条件) 已完成；下一步是另行启动 v09.01 的 CP0 接口冻结，详见转交清单。移动端采用原生组件并尽可能保留 Rust；Mac 日后重构，Windows 保留现有技术结构。本轮不含新原生界面、Windows 包、Python 退役或外部 Alpha。
 
-截至既有记录，前端全量 142 项、Rust 21 项、Python 301 项曾分别通过；精确适用状态见各验收记录。这些是历史结果，新变更按影响面验证。
+v09 实际检查：Python 302 项、前端 142 项、Rust 22 项通过；Mac 独立包完成合成创建、保存、重开、搜索、未保存离开与普通关闭检查。源码与包摘要、失败后修复和未验边界见 [v09 记录](acceptance/road-v09/checkpoints.md)。
 
 ## 共享纯规则
 
@@ -85,10 +85,12 @@
 .venv/bin/python scripts/build_sidecar.py
 npm --prefix apps/desktop run test
 npm --prefix apps/desktop run build
-cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+cargo test --workspace --locked
 npm --prefix apps/desktop run tauri:build
 .venv/bin/python scripts/check_docs.py
 git diff --check
 ```
 
 按任务选对应命令；签名、安装和真实 provider 测试先读对应 SOP 与授权范围。
+
+原生 iOS 的后续输入见 [v09.01 转交清单](road-v09-01-handoff.md)，不含本轮实施授权。

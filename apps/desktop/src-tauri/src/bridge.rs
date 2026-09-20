@@ -178,8 +178,8 @@ struct TauriSpawner {
 impl SidecarSpawner for TauriSpawner {
     fn spawn(&self) -> Result<SpawnedSidecar, ()> {
         let mut command = self.app.shell().sidecar(SIDECAR_NAME).map_err(|_| ())?;
-        if self.app.config().identifier == "app.keikeu.v08candidate" {
-            // Candidate startup must never inherit the accepted desktop app's selected author Vault.
+        if self.app.config().identifier != "app.keikeu.desktop" {
+            // Only the accepted desktop identifier may inherit the user's legacy state.
             let directory = self.app.path().app_data_dir().map_err(|_| ())?;
             command = command.args(["--state-directory", directory.to_str().ok_or(())?]);
         }
