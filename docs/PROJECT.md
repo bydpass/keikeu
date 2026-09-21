@@ -11,9 +11,9 @@
 | 最近已接受的产品基线 | Road v0.7 CP8，`2f03aee`，Paper v4／Index v4／JSONL v2 | [完成快照](archive/snapshots/road-v0-7.html)；App-root 关闭保护随后独立接受 |
 | 当前执行 | v09 CP0–CP4 完成，最终检查点 `c615ce5`；已保存收口快照 | [批准计划](road-v09.md)；v09.01 原生 iOS 替换后续单独执行 |
 | 候选源码与安装 | Mac／iPhone 同产品源码 `83c4f60`；已取得安装及普通界面运行记录 | 后续主题修改已进入 `deaece8`，旧安装包不能证明该 HEAD；本轮不操作旧设备候选 |
-| 验收进度 | B01–B13、B15–B16 共 15 组通过；B14 待验；CP5 随 v08 中断转交 | B10 按用户批准的实际 provider 结果验收，原生冲突保全另由 B09／B11 证明 |
+| 验收进度 | B01–B13、B15–B16 共 15 组通过；B14 未验且已按开发者决定关闭，不再补验；CP5 随 v08 中断 | B10 按用户批准的实际 provider 结果验收，原生冲突保全另由 B09／B11 证明 |
 | B10 证据边界 | 两轮同编号新建均产生改名 sibling；原生冲突来自已有稿并发编辑 | 保留此区分；同编号新建原生冲突这一组合没有实测证据 |
-| 当前外部阻点 | B14 尚缺独立测试设备／账号条件 | [B14 SOP](acceptance/road-v0-8/b14-test-sop.md)；转交 v09.01 重新设计验证；v09 不操作账号或 Drive 设置 |
+| B14 处置 | 2026-09-20 开发者决定关闭旧候选事项，不再解决或补验 | [旧 SOP](acceptance/road-v0-8/b14-test-sop.md)仅留作历史；不作为新 Road 的继承待办或阻点，iOS 重构按实际实现重新判断 |
 | 后续架构工作 | 独立桌面功能对等和 Python 产品运行时退役待实施 | [ADR-0009](architecture/decisions/0009-unified-rust-core-transition.md)；外部 Alpha 以该阶段通过为前提 |
 | 发行 | 当前是个人开发候选 | 对外签名、公证、TestFlight、推广和发布按后续单独授权执行 |
 

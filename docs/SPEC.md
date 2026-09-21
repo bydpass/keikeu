@@ -1,6 +1,6 @@
 # keikeu Product Boundary
 
-> 产品契约：Road v0.7 是已接受的桌面基线；§13 保留已实施至 CP5 的 v08 存储契约。v08 已中断转交；当前 [v09](road-v09.md) 只重整工程与纯规则核心，v09.01 再替换原生 iOS。当前进度与待验项见 [PROJECT](PROJECT.md) 及 [CP5 验收单](acceptance/road-v0-8/cp5-candidate.md)。本文以行为和验收条件描述产品，工作权限见 [RULES](RULES.md)。
+> 产品契约：Road v0.7 是已接受的桌面基线；§13 保留已实施至 CP5 的 v08 存储契约。v08 已中断转交；当前 [v09](road-v09.md) 只重整工程与纯规则核心，v09.01 再替换原生 iOS。当前进度与决定见 [PROJECT](PROJECT.md)；旧候选的历史证据见 [CP5 验收单](acceptance/road-v0-8/cp5-candidate.md)。本文以行为和验收条件描述产品，工作权限见 [RULES](RULES.md)。
 
 Paper v4 语法、DTO、迁移及协议以 [Paper v4 设计](design/road-v0-6-paper-v4-design.md) 为准；桌面界面以 [App Shell 设计](design/road-v0-7-app-shell-design.md) 和下述 CP7／CP8 契约为准。2026-09-16 仅重写表达及校正当前／历史标签，既有产品判据保持。
 
@@ -118,7 +118,7 @@ CP8 保留产品能力及数据／后端契约，调整呈现和导航；工程�
 | 候选后的独立收敛 | 桌面剩余能力对等及安全切换验证通过后移交 Rust，退役 Python 产品运行时 |
 | 首轮外部 Alpha 及后续 Android | 统一 Rust 产品 Core；Python 可继续作为开发比较工具 |
 
-- CP2 已实现共享 Rust Core，CP3 已接入 iPhone 本地创作，CP4 已实现云路由和保全，CP5 交付同源码双端候选。工程记录见 [CP2](acceptance/road-v0-8/cp2-core.md)、[CP3](acceptance/road-v0-8/cp3-local.md)、[CP4](acceptance/road-v0-8/cp4-cloud.md)；当前必需证据见 [CP5](acceptance/road-v0-8/cp5-candidate.md)。
+- CP2 已实现共享 Rust Core，CP3 已接入 iPhone 本地创作，CP4 已实现云路由和保全，CP5 交付同源码双端候选。工程记录见 [CP2](acceptance/road-v0-8/cp2-core.md)、[CP3](acceptance/road-v0-8/cp3-local.md)、[CP4](acceptance/road-v0-8/cp4-cloud.md)；历史候选证据见 [CP5](acceptance/road-v0-8/cp5-candidate.md)。
 - iPhone 候选包含多页创建／编辑、保存／重开、列表／搜索、单 Paper Markdown 导出、本机草稿恢复和 Mac iCloud 往返。移动／云端采用窄能力集和可无 Index 的线性搜索；完整移动管理、全 Vault 导出与正式 iPad 验收属于后续独立范围。
 - 保留 `bridgeRequest` 和 Paper v4 文件契约。宿主 capabilities、共享业务 DTO 与 host-only 方法依 [CP0 宿主契约](design/road-v0-8-host-contract.md) 冻结，Python JSONL v2 按原协议执行。
 - 每个客户端的选定 Vault 只交由一个受控后端写入，失败保留后端与草稿供处理；跨设备并发仍需原生协调。
@@ -128,7 +128,7 @@ CP8 保留产品能力及数据／后端契约，调整呈现和导航；工程�
 - 区分替换前失败、写成但响应丢失、外部变化。未知结果先只读核对并保留草稿；完整持久化和读回校验每个冲突原字节后，才标记已处理。恢复为活动稿前保全被替换版本，使用安全 CAS。恢复中断保留既有副本，内容取舍由用户明确选择。
 - 原生版本冲突与 provider 改名 sibling 都须支持发现、显示、完整保全、导出与明确恢复；文件名／code 不一致按原状展示，变更需明确选择。损坏副本提供原字节导出。
 - 2026-09-07 用户批准 B10 按同编号新建的实际 provider 结果验收；两轮实际均为 sibling。原生冲突保全由 B09／B11 的已有稿并发编辑独立证明；“同编号新建产生原生冲突”保留为未观察到的证据边界。
-- v08 未最终接受并已中断。B14 账号／容器不可用及 Drive 关闭后的恢复和重连要求转交 v09.01，不能因替换界面删除或标为通过。
+- v08 未最终接受并已中断。2026-09-20 开发者决定关闭旧候选 B14，不再解决或补验，也不作为 v09.01 的继承待办；历史状态仍为未验。iOS 重构后按实际架构重新判断相关问题是否存在及所需验收，不能预先声称已解决。
 - 独立收敛在 fixture／副本上保持桌面 Index、文件夹、Trash、迁移、恢复、设备状态及系统动作。功能对等、安全切换和开发者接受共同构成移除 sidecar／产品 JSONL／Python 打包以及首轮外部 Alpha 的前提。
 - 移动端采用原生语言与组件，尽可能复用 Rust；Mac 重构延后，Windows 沿用现有技术结构。v09 重排目录与纯规则核心，v09.01 实施 SwiftUI；窗口、保存和平台语义保持既有安全契约。
 - 外部 Alpha 的签名、公证、TestFlight 与真实分发检查单独排期；Android 原生实施、Windows 适配及 Python 产品运行时退役不属于 v09，不重分配未来版本号。
