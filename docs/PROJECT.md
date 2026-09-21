@@ -2,14 +2,15 @@
 
 > 本文件提供当前坐标和按任务读取的路径。产品契约见 [SPEC](SPEC.md)，工程与 Git 规则见 [RULES](RULES.md)，执行流程见 [AGENTS](../AGENTS.md)。
 
-更新：2026-09-20。[Road v09](road-v09.md) CP0–CP4 工程及 Mac 合成数据冒烟已通过，按事先 YOLO 接受；已保存[独立收口快照](archive/snapshots/road-v09.html)。v08 已中断转交，未获最终接受。
+更新：2026-09-21。[Road v09](road-v09.md) CP0–CP4 工程及 Mac 合成数据冒烟已通过，按事先 YOLO 接受；已保存[独立收口快照](archive/snapshots/road-v09.html)。v08 已中断转交，未获最终接受。
 
 ## Current coordinates
 
 | 项目 | 当前状态 | 下一步／依据 |
 | --- | --- | --- |
 | 最近已接受的产品基线 | Road v0.7 CP8，`2f03aee`，Paper v4／Index v4／JSONL v2 | [完成快照](archive/snapshots/road-v0-7.html)；App-root 关闭保护随后独立接受 |
-| 当前执行 | v09 CP0–CP4 完成，最终检查点 `c615ce5`；已保存收口快照 | [批准计划](road-v09.md)；v09.01 原生 iOS 替换后续单独执行 |
+| 当前执行 | v09 CP0–CP4 完成，最终检查点 `c615ce5`；已保存收口快照并合回主工作树 | [批准计划](road-v09.md)；v09.01 原生 iOS 替换后续单独执行 |
+| 工作区 | 仅保留主工作树 `keikeu`；Road 分支和提交历史保留，未推送 | 后续 Road 完成须按 RULES §7 合回、通知 dsh 并清理 |
 | 候选源码与安装 | Mac／iPhone 同产品源码 `83c4f60`；已取得安装及普通界面运行记录 | 后续主题修改已进入 `deaece8`，旧安装包不能证明该 HEAD；本轮不操作旧设备候选 |
 | 验收进度 | B01–B13、B15–B16 共 15 组通过；B14 未验且已按开发者决定关闭，不再补验；CP5 随 v08 中断 | B10 按用户批准的实际 provider 结果验收，原生冲突保全另由 B09／B11 证明 |
 | B10 证据边界 | 两轮同编号新建均产生改名 sibling；原生冲突来自已有稿并发编辑 | 保留此区分；同编号新建原生冲突这一组合没有实测证据 |
@@ -17,7 +18,7 @@
 | 后续架构工作 | 独立桌面功能对等和 Python 产品运行时退役待实施 | [ADR-0009](architecture/decisions/0009-unified-rust-core-transition.md)；外部 Alpha 以该阶段通过为前提 |
 | 发行 | 当前是个人开发候选 | 对外签名、公证、TestFlight、推广和发布按后续单独授权执行 |
 
-当前 v09 在独立工作区集成候选 `deaece8`、原工作区手册 `78eb755`、归档清理 `0447e16` 与批准计划 `670142d`；原工作区和旧候选保留。此次工程接续不认定 v08 已接受，有限例外见 [ADR-0010](architecture/decisions/0010-v09-engineering-continuation.md)。
+当前 v09 在独立工作区集成候选 `deaece8`、原工作区手册 `78eb755`、归档清理 `0447e16` 与批准计划 `670142d`；CP0 时保留原工作区和旧候选。2026-09-21 已按开发者决定合入主工作树 `/Users/chenxi/kits/keikeu`，移除已被接续的 v08 及 v09 执行／CLI 工作树。唯一证据、候选包与迁移恢复数据集中保留在忽略的 `tests/test-vault/history/`，v09 回执位于 `tests/test-vault/v09/`。此次工程接续不认定 v08 已接受，有限例外见 [ADR-0010](architecture/decisions/0010-v09-engineering-continuation.md)。
 
 ## 下一 Gate
 
