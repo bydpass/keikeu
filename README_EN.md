@@ -1,66 +1,55 @@
 # keikeu
 
-> A local-first fanfiction writing utility that turns existing inspiration into durable, editable card-page Markdown Papers.
+> A local-first pre-writing tool for fanfiction authors: shape existing ideas into editable, repairable Markdown card-page Papers, then hand them to the prose editor you already use.
 
 [简体中文](README.md) | English
 
-## Current status
+![License](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)
+![Platform](https://img.shields.io/badge/platform-macOS%20(Apple%20Silicon)-lightgrey)
+![Status](https://img.shields.io/badge/status-personal%20dev%20build-orange)
 
-Road v0.6 is complete and archived: production uses Paper v4, Index v4, and protocol v2; the Paper itself is the ordered editable card-page artifact. The obsolete normal-runtime chain is gone, the unknown-result and manual-repair gate passed, and the first-author gate passed with no unresolved P0/P1.
+## What keikeu is
 
-Road v0.7 passed CP0–CP8 at `2f03aee`; see its [snapshot](docs/archive/snapshots/road-v0-7.html). v08 completed CP0–CP4 engineering and 15/16 historical CP5 checks; B14 remains unverified. v08 is interrupted and transferred, not accepted. The [old plan](PLAN_road_v0_8.md) and [change map](docs/architecture/road-v0-8-changes.html) remain historical references. [Road v09](docs/road-v09.md) CP0–CP4 is complete at `c615ce5`: source layout, pure Rust rules and developer tools passed engineering checks and the isolated Mac smoke; see the [snapshot](docs/archive/snapshots/road-v09.html). v09.01 will separately replace the iOS UI with native SwiftUI.
-
-The product documentation and source were rechecked against the completed Road v0.7 baseline on 2026-08-26. That audit found a PaperView-only listener protecting App-root pending intent. The 2026-09-05 [independent repair report](docs/acceptance/close-guard-2026-09-04.md) separates agent checks from developer manual acceptance of the App-owned guard and records a test-tool relaunch that updated real daily-card state; [PROJECT](docs/PROJECT.md) retains the acceptance boundary. A separate developer TUI and four technical manuals were added on 2026-08-29; the local handoff route moved to root `CONTEXT.md` on 2026-08-30. These developer tools do not change the product UI, runtime chain, or acceptance state.
-
-Phase 7.5 is an independent lightweight iOS build for rapid testing. Its responsive UI, app-sandbox Vault, and on-device fixes are complete on a separate branch; it is not a merge gate in the macOS Road. Road v0.3 engineering, macOS candidate smoke, and CP6 real-author acceptance are complete: retrieval was faster and clear, the external-editor handoff was clear, and no unresolved P0/P1 was reported. Its design and acceptance records are now read-only history (Git history: `78eb755:docs/archive/road-v0-3/README.md`); no v0.3 tag was created. Road v0.4 Gate A, Gate B, product acceptance, and macOS 15.7+ compatibility have passed. That desktop baseline uses Vue/Tauri with a local Python sidecar; Flet was retired in CP14. Road v0.5 is also complete and archived: Paper Desk, save baselines, departure protection, Flashcard/Library continuity, the whole-app Quiet Desk visual system, and fixed scrolling behavior are accepted. See [PROJECT](docs/PROJECT.md) for live coordinates.
-
-## Current runtime flow
+keikeu is built for a single fanfiction author and covers only the stage before prose:
 
 ```text
 existing inspiration → edit and save a card-page Paper → external prose editor
 ```
 
-- **Paper:** at least one ordered card page; the page title is always editable, content is author Markdown, and type is Summary/Snapshot/Whisper or empty; save commits the whole Paper once.
-- **Library:** searches the whole Paper and sorts by all/unfiled/one-level-folder scope, with single-Paper move, branching, Trash, and restore; drag, multi-select, and batch move are not implemented.
-- **Vault:** ordinary local paths stay under the user's Home and are validated before switching; Apple sandbox/iCloud modes use native controlled roots. See PROJECT for current routing.
-- **External editor:** prose always remains outside keikeu.
+What you keep is plain Markdown that any text editor can open, read, and repair. keikeu has no accounts, cloud backend, telemetry, AI ghostwriting, fandom database, community features, or built-in prose editor.
 
-See [PROJECT](docs/PROJECT.md) for the accepted CP8 composition, evidence layers, and Road closeout boundary.
+## What it does today
 
-## Road v0.3 archive
+- **Card-page Papers:** a Paper has an optional display name, Tags, and at least one ordered card page. Each page has an optional title, Markdown content, and a type of Summary, Snapshot, Whisper, or none; a Paper has at most one Summary.
+- **Split at the cursor:** "Add page" splits the current page at the cursor and moves the rest into a new page.
+- **Whole-Paper save:** one save commits the entire Paper and checks whether the file changed while you were editing. Unsaved work is guarded when you switch Paper or Vault, navigate, or close the window.
+- **Library:** search every page, filter and sort by all, unfiled, or one-level folders, and move, branch, trash, or restore Papers.
+- **Vault:** a local folder you choose inside your Home directory. An iCloud Documents route exists as an opt-in candidate and is not yet formally accepted.
+- **Recovery:** a damaged Paper keeps its original bytes, explains the error, and can be exported. When a write result is unknown, keikeu checks read-only before the next write. Older formats migrate only after a full backup.
 
-The final CP6 record (Git history: `78eb755:docs/archive/road-v0-3/acceptance/road_v0_3.md`) is stored with the product, visual, interaction, architecture, ADR, and Planbook records in the version archive (Git history: `78eb755:docs/archive/road-v0-3/README.md`). On 2026-09-18, archive files outside snapshots were removed. Use `git show <commit>:<path>` to read the originals; Vault, runtime, and Git history are unchanged.
+## Status
 
-## Road v0.4 completion record
+| Item | State |
+| --- | --- |
+| Accepted product baseline | Road v0.7 CP8 (`2f03aee`): Paper v4, Index v4, JSONL protocol v2 |
+| Latest engineering cleanup | Road v09 CP0–CP4 (`c615ce5`): source layout, pure Rust rules crate, developer tools and docs |
+| Next | Replace the iOS UI with native SwiftUI while reusing the Rust core; see the [handoff](docs/road-v09-01-handoff.md) |
+| Distribution | Personal development build; no signed, notarized, or public installer |
 
-The [CP14 acceptance record](docs/acceptance/road_v0_4_cp14.md), planning archive (Git history: `78eb755:docs/archive/road-v0-4/README.md`), and [complete construction snapshot](docs/archive/snapshots/refactor-retire-flet-after-road-v0-4-acceptance.html) preserve CP0–CP14, the architecture migration, gates, fixes, test evolution, and compatibility evidence.
+[PROJECT](docs/PROJECT.md) holds live progress and evidence boundaries.
 
-## Road v0.5 completion record
+## Platforms
 
-The [Road v0.5 construction snapshot](docs/archive/snapshots/road-v0-5.html) binds final checkpoint `d900953` and records CP0–CP7 branches, commits, scope, changes, checks, QA, omissions, and risks. Road v0.5 is complete and archived. No tag or push was created; signing, notarization, DMG packaging, and public distribution remain separate decisions.
+| Platform | Implementation | State |
+| --- | --- | --- |
+| macOS, local Vault | Vue/Vite → Tauri/Rust host → Python sidecar | Accepted desktop baseline |
+| macOS, iCloud Vault | In-process Rust Paper Core + native Apple file coordination | Candidate, not formally accepted |
+| iPhone | Earlier Vue/Tauri candidate, to be replaced by native SwiftUI | Planned |
+| Windows / Android | Vue/Tauri/Python route kept / native work scheduled separately | Unscheduled, no runnable package |
 
-## Road v0.6 completion record
+## Run from source (macOS)
 
-The [Road v0.6 construction snapshot](docs/archive/snapshots/road-v0-6.html) binds final checkpoint `18a1024` and records the Paper v4 contract, Core, migration, UI, vertical cutover, safety gate, and real-author acceptance evidence. The Road is closed; no tag, push, or release claim was created.
-
-## Road v0.7 completion record
-
-The [Road v0.7 construction snapshot](docs/archive/snapshots/road-v0-7.html) binds final checkpoint `2f03aee` and records CP0–CP8, continuous editing flow, responsive anchors, Figma alignment, and physical-keyboard native IME evidence. The Road is complete and archived; no tag, push, signing, package, or release was created.
-
-## Product principles
-
-- Local-first; Markdown is the author asset and the JSON index is rebuildable.
-- Never silently rewrite, overwrite, upload, or judge author text.
-- No keikeu accounts, cloud backend, telemetry, or keikeu-managed background sync.
-- The v08 candidate implements native iCloud Documents. Historical sync checks and unverified B14 remain separate from new-version acceptance.
-- No fandom database, AI ghostwriting, community, or built-in prose editor.
-
-Stable product boundaries live in [SPEC](docs/SPEC.md); reviewable constraints live in [RULES](docs/RULES.md).
-
-## Development
-
-Python `>=3.11,<3.14`, Node/npm `22.23.2`/`10.9.8`, and Rust/Cargo
-`1.88.0` are required.
+Requires an Apple Silicon Mac, Python `>=3.11,<3.14`, Node `22.23.2` / npm `10.9.8`, and Rust `1.88.0` (pinned by `rust-toolchain.toml`).
 
 ```bash
 python3 -m venv .venv
@@ -69,72 +58,73 @@ python -m pip install -e ".[dev]"
 python -m pip install -r requirements-build.lock
 npm --prefix apps/desktop ci
 ./dev
+```
+
+`./dev` is a developer terminal panel: press `a` to launch with the existing sidecar or `b` to rebuild the sidecar first. It also shows logs for the processes it manages and lets you browse local docs. For direct troubleshooting, use the underlying commands:
+
+```bash
 .venv/bin/python scripts/build_sidecar.py
 npm --prefix apps/desktop run tauri:dev
 ```
 
-Use `./dev` for daily work: press `a` to reuse the sidecar or `b` to rebuild
-before launch. It also shows owned-process logs and local docs; the final two
-commands remain available for direct troubleshooting.
+## Tests
 
-## Repository map
-
-```text
-README.md                 public entry and real commands
-dev                       developer TUI for launch, process logs, and local docs
-AGENTS.md                 agent operating discipline and read order
-docs/PROJECT.md           current coordinates, module entry points, next gate
-docs/SPEC.md              accepted desktop boundary and v08 storage contract
-docs/RULES.md             engineering, interaction, data, and evidence rules
-docs/design/              CP8-accepted visual and interaction maps and design
-docs/architecture/        current/target architecture map and ADRs
-docs/acceptance/          supporting evidence; not an independent status source
-docs/manual/              supplementary human guides; never normative
-docs/archive/snapshots/   retained read-only snapshots; other archives remain in Git history
-CONTEXT.md                ignored local agent route; never authoritative
-apps/desktop/python/keikeu_core/          pure-Python domain and file logic
-apps/desktop/python/keikeu_bridge/        application service, JSONL protocol, and sidecar
-apps/desktop/                 Vue/Vite UI and Tauri/Rust host
-crates/keikeu-core/        pure Rust Paper rules without file access
-platforms/apple/          Apple native host and file coordination
-tests/                    verifiable implementation facts
+```bash
+.venv/bin/python -m pytest
+npm --prefix apps/desktop run test
+cargo test --workspace --locked
+.venv/bin/python scripts/check_docs.py
 ```
 
-Hard rule: `keikeu_core` must not depend on any GUI or transport. Backends own Markdown I/O; the pure Rust rules crate does not access files.
+Synthetic Vaults and temporary output from automated tests go to the ignored `tests/test-vault/`, never to your real Vault.
 
-## Documentation entry points
+## Repository layout
 
-| Question | Single entry point |
+```text
+apps/desktop/src/                  Vue UI
+apps/desktop/src-tauri/            Tauri/Rust host, storage routing, and recovery
+apps/desktop/python/keikeu_core/   pure-Python domain and file logic
+apps/desktop/python/keikeu_bridge/ application service, JSONL protocol, and sidecar
+crates/keikeu-core/                Rust Paper rules with no file access
+platforms/apple/                   native Apple host and file coordination
+scripts/                           build, context packing, and doc checks
+tests/                             Python tests and versioned fixtures
+docs/                              product, rules, design, architecture, acceptance, manuals
+dev                                developer terminal panel
+```
+
+Hard rules: `keikeu_core` never depends on a GUI or transport; only backends read and write Markdown; the pure Rust rules crate never touches files.
+
+## Documentation
+
+| Question | Entry point |
 | --- | --- |
-| Stable product purpose and author-control boundary | [SPEC](docs/SPEC.md) |
-| Current state and next gate | [PROJECT](docs/PROJECT.md) |
-| Rules a change must obey | [RULES](docs/RULES.md) |
-| Current architecture | [Architecture map](docs/architecture/architecture.html) |
-| Current Road v0.7 interface visual specification | [Design map](docs/design/design.html) |
-| Current Road v0.7 interface interaction specification | [Interaction map](docs/design/interaction.html) |
-| How agents work | [AGENTS](AGENTS.md) |
-| Human-facing development, design, Git, and ethics guides | [Human manuals](docs/manual/README.md) |
-| Historical rationale and snapshots | [Archive](docs/archive/snapshots/) |
+| Product purpose and author-control boundary | [SPEC](docs/SPEC.md) |
+| Current progress and next step | [PROJECT](docs/PROJECT.md) |
+| Rules every change must follow | [RULES](docs/RULES.md) |
+| Architecture | [Architecture map](docs/architecture/architecture.html) |
+| Desktop visual and interaction specs | [Design map](docs/design/design.html), [Interaction map](docs/design/interaction.html) |
+| How agents work here | [AGENTS](AGENTS.md) |
+| Human guides to tech, design, Git, and ethics | [Manuals](docs/manual/README.md) |
+| Construction snapshots of past Roads | [Archive](docs/archive/snapshots/) |
 
-## Route
+Core project docs are written in Simplified Chinese.
 
-```text
-v0.1        archived macOS Cache / Outline pre-alpha
-v0.2        macOS Paper / Flashcard Core; product accepted, local annotated tag v0.2.0, archive separate
-Road v0.3   macOS Paper Library; CP6 product accepted, design and acceptance records archived
-Road v0.4   Vue/Tauri frontend replacement complete; CP14 accepted
-Road v0.5   Quiet Desk UI and interaction closeout complete; CP7 accepted and archived
-Road v0.6   Paper v4 card-page reconstruction; CP7 accepted and archived
-Road v0.7   CP8 accepted and archived; final checkpoint 2f03aee
-Road v0.8   interrupted/transferred; CP5 not accepted and B14 unverified
-Road v09    CP0–CP4 complete and archived; final checkpoint c615ce5
-Road v09.01 native SwiftUI iOS replacement; separate implementation and device checks
-later       desktop parity, Python retirement, Alpha and native Android separately scheduled
-Mac         retain current implementation; reconstruct later
-Windows     retain Vue/Tauri/Python; adaptation later, no runnable package required in v09
-Pre-Advance optional Markdown Outline; unscheduled, never blocks the core flow
-```
+## Roadmap
+
+| Stage | Scope | Result |
+| --- | --- | --- |
+| v0.1–v0.2 | macOS prototype, Paper / Flashcard Core | v0.1 archived, v0.2 accepted |
+| Road v0.3 | Paper Library | Accepted and archived |
+| Road v0.4 | Vue/Tauri frontend, Flet retired | [Accepted](docs/acceptance/road_v0_4_cp14.md) |
+| Road v0.5 | Quiet Desk UI and interaction closeout | [Accepted](docs/archive/snapshots/road-v0-5.html) |
+| Road v0.6 | Paper v4 card-page rebuild | [Accepted](docs/archive/snapshots/road-v0-6.html) |
+| Road v0.7 | Continuous editing, responsive layout, native IME | [Accepted](docs/archive/snapshots/road-v0-7.html) |
+| Road v0.8 | Unified Rust core and iCloud candidate | Interrupted and handed off; not accepted |
+| Road v09 | Source layout and workflow cleanup | [Complete](docs/archive/snapshots/road-v09.html) |
+| Next | Native SwiftUI iOS | Planned |
+| Later | Desktop parity, Python retirement, external Alpha, Android | Scheduled separately |
 
 ## License
 
-Code and accompanying documentation are licensed under [GPL-3.0-or-later](LICENSE). User-created Papers, Vaults, and exports are not keikeu assets; their rights remain with their authors.
+Code and accompanying documentation are licensed under [GPL-3.0-or-later](LICENSE). Papers, Vaults, and exports you create are not keikeu assets; their rights stay with you.
