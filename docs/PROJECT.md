@@ -2,14 +2,14 @@
 
 > 本文件提供当前坐标和按任务读取的路径。产品契约见 [SPEC](SPEC.md)，工程与 Git 规则见 [RULES](RULES.md)，执行流程见 [AGENTS](../AGENTS.md)。
 
-更新：2026-09-21。[Road v09](road-v09.md) CP0–CP4 工程及 Mac 合成数据冒烟已通过，按事先 YOLO 接受；已保存[独立收口快照](archive/snapshots/road-v09.html)。v08 已中断转交，未获最终接受。
+更新：2026-09-22。[Road v09](road-v09.md) CP0–CP4 工程及 Mac 合成数据冒烟已通过，按事先 YOLO 接受；已保存[独立收口快照](archive/snapshots/road-v09.html)。v08 已中断转交，未获最终接受。
 
 ## Current coordinates
 
 | 项目 | 当前状态 | 下一步／依据 |
 | --- | --- | --- |
 | 最近已接受的产品基线 | Road v0.7 CP8，`2f03aee`，Paper v4／Index v4／JSONL v2 | [完成快照](archive/snapshots/road-v0-7.html)；App-root 关闭保护随后独立接受 |
-| 当前执行 | v09 CP0–CP4 完成，最终检查点 `c615ce5`；已保存收口快照并合回主工作树 | [批准计划](road-v09.md)；v09.01 原生 iOS 替换后续单独执行 |
+| 当前执行 | v09 CP0–CP4 完成，最终检查点 `c615ce5`；已保存收口快照并合回主工作树 | [批准计划](road-v09.md)；v00.09.01 原生 iOS 替换后续单独执行 |
 | 工作区 | 仅保留主工作树 `keikeu`；Road 分支和提交历史保留，未推送 | 后续 Road 完成须按 RULES §7 合回、通知 dsh 并清理 |
 | 候选源码与安装 | Mac／iPhone 同产品源码 `83c4f60`；已取得安装及普通界面运行记录 | 后续主题修改已进入 `deaece8`，旧安装包不能证明该 HEAD；本轮不操作旧设备候选 |
 | 验收进度 | B01–B13、B15–B16 共 15 组通过；B14 未验且已按开发者决定关闭，不再补验；CP5 随 v08 中断 | B10 按用户批准的实际 provider 结果验收，原生冲突保全另由 B09／B11 证明 |
@@ -22,7 +22,9 @@
 
 ## 下一 Gate
 
-[v09 检查点](road-v09.md#检查点与退出条件) 已完成；下一步是另行启动 v09.01 的 CP0 接口冻结，详见转交清单。移动端采用原生组件并尽可能保留 Rust；Mac 日后重构，Windows 保留现有技术结构。本轮不含新原生界面、Windows 包、Python 退役或外部 Alpha。
+[v09 检查点](road-v09.md#检查点与退出条件) 已完成；下一步是准备 Road v00.09.01（原 v09.01）的正式计划，固定范围及退出条件后再启动 CP0 接口冻结，详见[规划草案](road-v00-09-01.md)与[转交清单](road-v09-01-handoff.md)。移动端采用原生组件并尽可能保留 Rust；Mac 日后重构，Windows 保留现有技术结构。本轮不含新原生界面、Windows 包、Python 退役或外部 Alpha。
+
+v00.09.01 当前在主工作树的 `codex/road-v00-09-01-plan` 上做已授权的入口视觉原型与隔离可行性验证，尚未开始产品 CP0。Ref Probe／Ref Editor 已安装；2026-09-22 实机确认 Spotlight 可显示系统 Snippet 并翻页。手机软键盘输入共存、滚动及真实编辑器复验尚未完成，不计为持续小窗通过。操作与包绑定见[研究记录](road-v00-09-01-research-brief.md#2026-09-22-隔离探针与实机记录)。
 
 v09 实际检查：Python 302 项、前端 142 项、Rust 22 项通过；Mac 独立包完成合成创建、保存、重开、搜索、未保存离开与普通关闭检查。源码与包摘要、失败后修复和未验边界见 [v09 记录](acceptance/road-v09/checkpoints.md)。
 
@@ -94,4 +96,4 @@ git diff --check
 
 按任务选对应命令；签名、安装和真实 provider 测试先读对应 SOP 与授权范围。
 
-原生 iOS 的后续输入见 [v09.01 转交清单](road-v09-01-handoff.md)，不含本轮实施授权。
+原生 iOS 的后续输入见 [v00.09.01 转交清单](road-v09-01-handoff.md)，不含本轮实施授权。
