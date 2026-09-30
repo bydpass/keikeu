@@ -1,0 +1,104 @@
+{
+  "date": "2026-09-26",
+  "tool": {
+    "name": "archify",
+    "version": "2.16",
+    "skill": "/Users/chenxi/.codex/skills/archify/SKILL.md",
+    "node": "v22.23.2"
+  },
+  "diagram_type": "architecture",
+  "quality_profile": "showcase",
+  "locale": "zh-CN",
+  "specification": {
+    "path": "docs/architecture/road-v00-09-01-reference-pip.archify.json",
+    "sha256": "71bda4339f4b87d9ccedf232cd7169de315a79a36e73eec618d62acc7984b874",
+    "bytes": 5361
+  },
+  "artifact": {
+    "path": "docs/architecture/road-v00-09-01-reference-pip.html",
+    "sha256": "a2c15a41f5eec18f7ae7ffced370a22e055ca4516cb9ffb92b107e075db9d9d8",
+    "bytes": 716438
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  },
+  "repair_history": [
+    {
+      "round": 1,
+      "stage": "validate",
+      "diagnostic": "repository-evidence/repository-required",
+      "fix": "removed component sources; new files are uncommitted, so no pinned revision could truthfully contain them"
+    },
+    {
+      "round": 2,
+      "stage": "validate",
+      "diagnostic": "layout/constraint label overlap x3",
+      "fix": "labelDy 24 on refs-to-app, pager-to-step, pip-over-editor"
+    },
+    {
+      "round": 3,
+      "stage": "visual review",
+      "defect": "component tags are not rendered, so the proposed node did not read as proposed",
+      "fix": "label '拟议：Paper 投影', sublabel '只读 · 经 Rust Core'; re-validated and re-delivered"
+    }
+  ],
+  "correction_rounds": {
+    "validation_repairs": 2,
+    "visual_corrections": 1
+  },
+  "visual_check": {
+    "command": "ARCHIFY_CHROME=<existing Playwright chrome-headless-shell 1234> node bin/archify.mjs visual-check <copy> --json",
+    "exit": 0,
+    "note": "run on a byte-identical copy so sidecars stay in the ignored evidence folder (RULES §8)",
+    "copy": {
+      "path": "tests/test-vault/reference-demos/archify-visual/road-v00-09-01-reference-pip.html",
+      "sha256": "a2c15a41f5eec18f7ae7ffced370a22e055ca4516cb9ffb92b107e075db9d9d8",
+      "bytes": 716438
+    },
+    "status": "pass",
+    "automated_visualReview": "pending",
+    "containment": [
+      {
+        "viewport": "1440x900",
+        "ok": true
+      },
+      {
+        "viewport": "1600x1000",
+        "ok": true
+      },
+      {
+        "viewport": "1920x1080",
+        "ok": true
+      },
+      {
+        "viewport": "2048x1320",
+        "ok": true
+      }
+    ],
+    "readability": "pass",
+    "viewerChrome": "pass",
+    "captures": "pass",
+    "receipt_sidecar": {
+      "path": "tests/test-vault/reference-demos/archify-visual/road-v00-09-01-reference-pip.visual-check.json",
+      "sha256": "841492fb95e577b60b8180b48fdbcd98a2468c5bf2f5fc2e3ec1cb9ce9e33cc1"
+    },
+    "earlier_attempt": "first run exited 2 (status skipped: Chrome not found); no captures were produced by that run"
+  },
+  "visual_review": {
+    "status": "passed",
+    "inspected": [
+      "1440x900 light (pre-correction)",
+      "2048x1320 dark (pre-correction)",
+      "1440x900 dark",
+      "2048x1320 light"
+    ],
+    "findings": "main path left to right without crossings; callback routed above; labels clear in both themes; cards fill the lower band at 2048x1320; proposed node now labelled 拟议",
+    "by": "Claude Code session (Opus 5.5), screenshots read directly"
+  },
+  "boundary": "Diagram documents the Ref PiP experiment code and a proposed Paper projection; it is not device evidence."
+}

@@ -1,0 +1,98 @@
+name: ReferenceDemos
+options:
+  deploymentTarget:
+    iOS: "26.0"
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    GENERATE_INFOPLIST_FILE: YES
+    TARGETED_DEVICE_FAMILY: "1"
+    CURRENT_PROJECT_VERSION: "5"
+    MARKETING_VERSION: "0.0.1"
+    CODE_SIGNING_ALLOWED: NO
+targetTemplates:
+  DemoApp:
+    type: application
+    platform: iOS
+    sources:
+      - ../../apple-reference-demos/Sample.swift
+      - ../../apple-reference-demos/App.swift
+    settings:
+      base:
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+  DemoWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - ../../apple-reference-demos/Sample.swift
+      - ../../apple-reference-demos/Activity.swift
+      - ../../apple-reference-demos/Widget.swift
+    settings:
+      base:
+        APPLICATION_EXTENSION_API_ONLY: YES
+        SKIP_INSTALL: YES
+targets:
+  RefSnippet:
+    templates: [DemoApp]
+    sources:
+      - ../../apple-reference-demos/Snippet.swift
+      - ../../apple-reference-demos/Icons/Snippet.xcassets
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.keikeu.refsnippet
+        INFOPLIST_KEY_CFBundleDisplayName: Ref Snippet
+  RefIsland:
+    templates: [DemoApp]
+    sources:
+      - ../../apple-reference-demos/Activity.swift
+      - ../../apple-reference-demos/Icons/Island.xcassets
+    dependencies:
+      - target: RefIslandWidget
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.keikeu.refisland
+        INFOPLIST_KEY_CFBundleDisplayName: Ref Island
+        INFOPLIST_KEY_NSSupportsLiveActivities: YES
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) DEMO_ISLAND
+  RefIslandWidget:
+    templates: [DemoWidget]
+    info:
+      path: RefIslandWidget-Info.plist
+      properties:
+        CFBundleDisplayName: Ref Island
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.keikeu.refisland.widget
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) DEMO_ISLAND WIDGET_EXTENSION
+  RefFusion:
+    templates: [DemoApp]
+    sources:
+      - ../../apple-reference-demos/Activity.swift
+      - ../../apple-reference-demos/Snippet.swift
+      - ../../apple-reference-demos/Icons/Fusion.xcassets
+    dependencies:
+      - target: RefFusionWidget
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.keikeu.reffusion
+        INFOPLIST_KEY_CFBundleDisplayName: Ref Fusion
+        INFOPLIST_KEY_NSSupportsLiveActivities: YES
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) DEMO_FUSION
+  RefFusionWidget:
+    templates: [DemoWidget]
+    sources: [../../apple-reference-demos/Snippet.swift]
+    info:
+      path: RefFusionWidget-Info.plist
+      properties:
+        CFBundleDisplayName: Ref Fusion
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.keikeu.reffusion.widget
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) DEMO_FUSION WIDGET_EXTENSION

@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>参考小窗路线原型</title>
+  <meta name="description" content="Road v00.09.01 设计原型：选择参考、持续参考、翻页、退出与失败回退，并对比 PiP 逐屏候选、已有 Snippet 与灵动岛／融合路线的证据边界。">
+  <style>
+    :root {
+      --bg: #eaf0f3; --paper: #f5f8fa; --field: #f9fbfc; --ink: #304659; --muted: #526979;
+      --accent: #365b76; --focus: #426f91; --line: #c3d0d8; --nav: #18232d;
+      --device: #2f6b4f; --device-bg: #e1efe7; --build: #2f5f8a; --build-bg: #e1ebf4;
+      --sim: #5d6670; --sim-bg: #eef1f3; --miss: #9a3b32; --miss-bg: #f6e3e0; --open: #8a5a12; --open-bg: #f6ecd9;
+      --phone: #10161c; --pip: #f7f3ea; --pip-ink: #1f2226; --key: #d3d8dd; --key-cap: #fdfdfd;
+      color-scheme: light;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #121a21; --paper: #18232d; --field: #1d2a35; --ink: #dce6ee; --muted: #9fb2c1;
+        --accent: #8cb4d3; --focus: #a8c8e2; --line: #2d3e4c; --nav: #0b1117;
+        --device: #8fd1ae; --device-bg: #1b3328; --build: #9cc4ea; --build-bg: #1b2c3d;
+        --sim: #b8c2cb; --sim-bg: #242f38; --miss: #f0a59c; --miss-bg: #3b2220; --open: #e8c07a; --open-bg: #3a2e18;
+        --phone: #05080b; --key: #3a434b; --key-cap: #59636c;
+        color-scheme: dark;
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg: #121a21; --paper: #18232d; --field: #1d2a35; --ink: #dce6ee; --muted: #9fb2c1;
+      --accent: #8cb4d3; --focus: #a8c8e2; --line: #2d3e4c; --nav: #0b1117;
+      --device: #8fd1ae; --device-bg: #1b3328; --build: #9cc4ea; --build-bg: #1b2c3d;
+      --sim: #b8c2cb; --sim-bg: #242f38; --miss: #f0a59c; --miss-bg: #3b2220; --open: #e8c07a; --open-bg: #3a2e18;
+      --phone: #05080b; --key: #3a434b; --key-cap: #59636c;
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.6 -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", sans-serif; }
+    main { width: min(1160px, calc(100% - 32px)); margin: 28px auto 56px; }
+    header, section { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 24px; }
+    section { margin-top: 16px; }
+    h1 { margin: 6px 0 10px; font-size: clamp(1.7rem, 4vw, 2.6rem); line-height: 1.15; }
+    h2 { margin: 0 0 12px; font-size: 1.3rem; }
+    h3 { margin: 0 0 8px; font-size: 1.02rem; }
+    p { margin: 0 0 10px; }
+    a { color: var(--accent); }
+    code { font: .88em ui-monospace, SFMono-Regular, Menlo, monospace; }
+    :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+    .eyebrow { color: var(--muted); font-size: .78rem; font-weight: 700; letter-spacing: .08em; }
+    .warning { border-left: 4px solid var(--miss); background: var(--miss-bg); padding: 10px 14px; border-radius: 8px; margin: 12px 0; }
+    .legend, .nav, .route-tabs, .steps, .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .nav { margin-top: 12px; }
+    .topbar { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
+    button { font: inherit; color: inherit; cursor: pointer; }
+    .ghost { border: 1px solid var(--line); background: var(--field); border-radius: 8px; padding: 6px 12px; }
+    .tag { display: inline-block; border-radius: 999px; padding: 1px 9px; font-size: .78rem; font-weight: 600; white-space: nowrap; }
+    .tag.device { color: var(--device); background: var(--device-bg); }
+    .tag.build { color: var(--build); background: var(--build-bg); }
+    .tag.sim { color: var(--sim); background: var(--sim-bg); border: 1px dashed var(--sim); }
+    .tag.miss { color: var(--miss); background: var(--miss-bg); }
+    .tag.open { color: var(--open); background: var(--open-bg); }
+    .sim-grid { display: grid; grid-template-columns: 340px 1fr; gap: 24px; align-items: start; }
+    .route-tabs button, .steps button { border: 1px solid var(--line); background: var(--field); border-radius: 999px; padding: 5px 12px; }
+    .route-tabs button[aria-pressed="true"], .steps button[aria-current="step"] { background: var(--accent); color: var(--paper); border-color: var(--accent); }
+    .caption { min-height: 132px; margin: 14px 0; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--field); }
+    .caption .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+    .actions button { border: 1px solid var(--accent); background: transparent; color: var(--accent); border-radius: 8px; padding: 6px 12px; }
+    .actions button:disabled { opacity: .45; cursor: not-allowed; }
+    .phone { width: min(344px, 100%); height: 674px; margin: 0 auto; padding: 12px; border-radius: 46px; background: var(--phone); box-shadow: 0 18px 40px rgba(0,0,0,.25); }
+    .screen { position: relative; height: 100%; overflow: hidden; border-radius: 36px; background: #fbfbfa; color: #1d2329; font-size: 13px; }
+    .statusbar { display: flex; justify-content: space-between; align-items: center; height: 44px; padding: 0 22px; font-weight: 600; font-size: 12px; }
+    .island { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); min-width: 96px; height: 26px; border-radius: 16px; background: #000; color: #fff; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 10px; font-size: 11px; }
+    .island[hidden] { display: none; }
+    .island.expanded { top: 8px; width: calc(100% - 20px); height: auto; border-radius: 28px; padding: 12px 14px; display: block; }
+    .island .row { display: flex; justify-content: space-between; }
+    .island .sum { margin: 6px 0; color: #e8e8e8; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .island .btns { display: flex; gap: 8px; }
+    .island .btns span { border-radius: 8px; background: #2c2c2e; padding: 4px 10px; }
+    .view { position: absolute; inset: 44px 0 0 0; padding: 12px 16px; }
+    .appview h4, .editorview h4 { margin: 4px 0 10px; font-size: 15px; }
+    .ref-list { list-style: none; padding: 0; margin: 0 0 12px; }
+    .ref-list li { border: 1px solid #d7dde2; border-radius: 10px; padding: 9px 11px; margin-bottom: 8px; background: #fff; }
+    .ref-list li.on { border-color: #365b76; box-shadow: inset 3px 0 0 #365b76; }
+    .fake-btn { display: block; text-align: center; border-radius: 10px; padding: 9px; background: #365b76; color: #fff; font-weight: 600; }
+    .fake-note { margin-top: 12px; color: #5f6b75; font-size: 11.5px; }
+    .editor-text { white-space: pre-wrap; line-height: 1.7; }
+    .caret { display: inline-block; width: 2px; height: 1.1em; background: #2f6fed; vertical-align: text-bottom; animation: blink 1s steps(1) infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) { .caret { animation: none; } .pip, .pip .pb div { transition: none !important; } }
+    .count { position: absolute; left: 16px; bottom: 206px; color: #5f6b75; font-size: 11px; }
+    .keyboard { position: absolute; left: 0; right: 0; bottom: 0; height: 196px; background: var(--key); padding: 8px 4px; display: grid; gap: 7px; }
+    .keyboard[hidden] { display: none; }
+    .keyrow { display: flex; justify-content: center; gap: 5px; padding: 0 4px; }
+    .keyrow span { flex: 1 1 0; max-width: 26px; height: 36px; border-radius: 6px; background: var(--key-cap); box-shadow: 0 1px 0 rgba(0,0,0,.25); }
+    .keyrow .wide { flex-grow: 6; max-width: 150px; }
+    .kb-label { text-align: center; font-size: 10px; color: #5f6b75; }
+    .pip { position: absolute; top: 58px; right: 12px; width: 150px; height: 200px; background: var(--pip); color: var(--pip-ink); border-radius: 12px; box-shadow: 0 8px 22px rgba(0,0,0,.28); overflow: hidden; transition: transform .25s ease; font-size: 10.5px; }
+    .pip[hidden] { display: none; }
+    .pip.stashed { transform: translateX(132px); }
+    .pip .ph { padding: 7px 9px 3px; color: #5b6168; font-size: 9px; }
+    .pip .pb { position: relative; height: 150px; margin: 0 9px; overflow: hidden; }
+    .pip .pb div { white-space: pre-wrap; line-height: 1.45; transition: transform .2s ease; }
+    .pip .pf { border-top: 1px solid #cfcac0; margin: 3px 9px 0; padding-top: 3px; color: #5b6168; font-size: 8.5px; }
+    .pip .ctl { position: absolute; inset: 0; background: rgba(0,0,0,.42); display: flex; align-items: center; justify-content: center; gap: 12px; color: #fff; font-size: 16px; }
+    .pip .ctl[hidden] { display: none; }
+    .pip .ctl button { background: rgba(255,255,255,.18); border: 0; border-radius: 50%; width: 32px; height: 32px; color: #fff; }
+    .pip .close { position: absolute; top: 6px; left: 6px; width: 22px !important; height: 22px !important; font-size: 11px; }
+    .snippet { position: absolute; left: 10px; right: 10px; top: 48px; height: 250px; border-radius: 22px; background: rgba(245,245,247,.97); box-shadow: 0 10px 28px rgba(0,0,0,.25); padding: 12px 14px; }
+    .snippet[hidden] { display: none; }
+    .snippet .srow { display: flex; justify-content: space-between; }
+    .snippet .sc { height: 132px; overflow: hidden; margin: 8px 0; border: 1px dashed #c9ced3; border-radius: 8px; padding: 6px; white-space: pre-wrap; line-height: 1.5; }
+    .snippet .sn { display: inline-block; border-radius: 8px; background: #e3e7eb; padding: 4px 10px; }
+    .failbox { position: absolute; left: 16px; right: 16px; top: 250px; border-radius: 12px; background: #fff3f1; border: 1px solid #e3b4ad; padding: 10px 12px; color: #6d2a22; }
+    .failbox[hidden] { display: none; }
+    .toast { position: absolute; left: 12px; right: 12px; bottom: 206px; background: rgba(20,24,28,.9); color: #fff; border-radius: 10px; padding: 8px 10px; font-size: 11.5px; }
+    .toast:empty { display: none; }
+    table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    th, td { border-top: 1px solid var(--line); padding: 9px 8px; text-align: left; vertical-align: top; }
+    thead th { border-top: 0; font-size: .85rem; color: var(--muted); }
+    td .tag { margin-bottom: 4px; }
+    .table-wrap { overflow-x: auto; }
+    .icon { width: 36px; height: 36px; border-radius: 9px; vertical-align: middle; margin-right: 6px; }
+    .icon.none { display: inline-block; border: 1.5px dashed var(--muted); }
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .card { border: 1px solid var(--line); border-radius: 10px; padding: 14px; background: var(--field); }
+    .muted { color: var(--muted); font-size: .88rem; }
+    .gap { margin-top: 10px; }
+    @media (max-width: 860px) {
+      .sim-grid { grid-template-columns: 1fr; }
+      .cards { grid-template-columns: 1fr; }
+      .topbar { flex-direction: column; }
+      header, section { padding: 18px 16px; }
+      main { width: calc(100% - 32px); margin-top: 16px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="topbar">
+      <div>
+        <p class="eyebrow">ROAD V00.09.01 · 设计原型 · 2026-09-26</p>
+        <h1>选好一份参考，写作时一直在上方</h1>
+      </div>
+      <button class="ghost" id="themeBtn" type="button" aria-label="切换明暗主题">明／暗</button>
+    </div>
+    <p>目标：在主应用选好整份参考（原 Paper 或整理后的 flashcard），切到任意外部 iPhone 编辑器后仍持续可见；小窗只做滚动与翻页，惯用软键盘照常输入，正文不被挡住。更换整份参考回主应用完成。</p>
+    <p class="warning"><strong>本页是设计模拟。</strong>下方手机画面由网页绘制，不是已实现的任意可交互跨应用覆盖层；小窗、键盘与编辑器的行为只有标为“真机”的条目取得过设备证据。</p>
+    <div class="legend" aria-label="证据图例">
+      <span class="tag device">真机证据</span>
+      <span class="tag build">编译／模拟器</span>
+      <span class="tag open">真机未验</span>
+      <span class="tag miss">未满足</span>
+      <span class="tag sim">设计模拟</span>
+    </div>
+    <nav class="nav" aria-label="相关材料">
+      <a href="road-v00-09-01-reference-window-design.md">设计说明与结论</a>
+      <a href="../architecture/road-v00-09-01-reference-pip.html">Ref PiP 代码架构</a>
+      <a href="../../tests/apple-reference-demos/pip-pager/README.md">PiP 实验与真机 SOP</a>
+      <a href="../../tests/apple-reference-demos/README.md">三路线 Demo</a>
+      <a href="../road-v00-09-01-research-brief.md">研究记录</a>
+    </nav>
+  </header>
+
+  <section aria-labelledby="flowTitle">
+    <h2 id="flowTitle">流程模拟</h2>
+    <div class="sim-grid">
+      <div>
+        <div class="phone" aria-label="手机画面模拟">
+          <div class="screen">
+            <div class="statusbar"><span>9:41</span><span aria-hidden="true">•••</span></div>
+            <div class="island" id="island" aria-hidden="true" hidden></div>
+            <div class="view appview" id="appView">
+              <h4>keikeu · 选择参考</h4>
+              <ul class="ref-list" id="refList"></ul>
+              <span class="fake-btn">开始小窗</span>
+              <p class="fake-note">“入口设置”是中性的可选页：只有主动进入后才说明操作按钮的占用与恢复；安装、启动与普通打开均不提示绑定。</p>
+            </div>
+            <div class="view editorview" id="editorView" hidden>
+              <h4>外部编辑器（示意）</h4>
+              <div class="editor-text"><span id="editorText">第三章草稿。雨停后，她站在门边，没有抬头。</span><span class="caret"></span></div>
+            </div>
+            <div class="pip" id="pip" hidden>
+              <div class="ph" id="pipHead"></div>
+              <div class="pb" id="pipClip"><div id="pipBody"></div></div>
+              <div class="pf" id="pipFoot"></div>
+              <div class="ctl" id="pipCtl" hidden>
+                <button type="button" class="close" id="pipClose" aria-label="关闭小窗（模拟）">✕</button>
+                <button type="button" id="pipBack" aria-label="后退：上一屏（模拟系统键）">⏪</button>
+                <button type="button" id="pipPlay" aria-label="播放键（未映射）">⏵</button>
+                <button type="button" id="pipFwd" aria-label="前进：下一屏（模拟系统键）">⏩</button>
+              </div>
+            </div>
+            <div class="snippet" id="snippet" hidden>
+              <div class="srow"><strong>合成参考</strong><span id="snipPage">1 / 3</span></div>
+              <div class="sc" id="snipBody"></div>
+              <span class="sn">→ 下一页</span>
+            </div>
+            <div class="failbox" id="failbox" hidden>小窗启动失败：此设备不支持画中画。<br>可在本应用内翻看，再返回编辑器。</div>
+            <div class="count" id="count" hidden></div>
+            <div class="toast" id="toast" role="status" aria-live="polite"></div>
+            <div class="keyboard" id="keyboard" hidden aria-hidden="true">
+              <div class="kb-label">惯用软键盘（示意）</div>
+              <div class="keyrow"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+              <div class="keyrow"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+              <div class="keyrow"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+              <div class="keyrow"><span></span><span class="wide"></span><span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="route-tabs" role="group" aria-label="路线">
+          <button type="button" data-route="pip" aria-pressed="true">PiP 逐屏候选</button>
+          <button type="button" data-route="snippet" aria-pressed="false">已有 Snippet</button>
+          <button type="button" data-route="island" aria-pressed="false">灵动岛／融合</button>
+        </div>
+        <p class="muted gap" id="routeNote"></p>
+        <div class="steps" id="steps" role="group" aria-label="步骤"></div>
+        <div class="caption" id="caption" aria-live="polite"></div>
+        <div class="actions">
+          <button type="button" id="typeBtn">模拟输入 PIP-01</button>
+          <button type="button" id="swipeBtn">在小窗内上滑</button>
+          <button type="button" id="tapPipBtn">点小窗显示控件</button>
+          <button type="button" id="stashBtn">收起到边缘</button>
+        </div>
+        <p class="muted gap">翻页逻辑与 <code>Reader.swift</code> 的 <code>ReaderStep.move</code> 相同：页内逐屏，到页尾再换页并循环。所有按钮只改变本页画面。</p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="compareTitle">
+    <h2 id="compareTitle">路线对比与证据边界</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">要求</th>
+            <th scope="col"><span class="icon none" aria-hidden="true"></span>PiP 逐屏候选<br><span class="muted">Ref PiP · 未配图标</span></th>
+            <th scope="col"><img class="icon" alt="" src="data:image/jpeg;base64,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">Snippet<br><span class="muted">Ref Snippet</span></th>
+            <th scope="col"><img class="icon" alt="" src="data:image/jpeg;base64,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">灵动岛<br><span class="muted">Ref Island</span></th>
+            <th scope="col"><img class="icon" alt="" src="data:image/jpeg;base64,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">融合<br><span class="muted">Ref Fusion</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">写作时持续可见</th>
+            <td><span class="tag open">真机未验</span><br>系统小窗常驻，可拖动、缩放、收起（系统行为，未在本 App 实测）</td>
+            <td><span class="tag device">真机</span><br>Build 2／4 在 Ref Editor 输入期间卡片留存</td>
+            <td><span class="tag device">真机</span> 紧凑态图标与 1/3 可见<br><span class="tag open">真机未验</span> 展开态</td>
+            <td><span class="tag miss">真机未通过</span><br>“展开参考”后没有卡片</td>
+          </tr>
+          <tr>
+            <th scope="row">惯用软键盘输入进入编辑器</th>
+            <td><span class="tag open">真机未验</span></td>
+            <td><span class="tag device">真机</span> 拉丁字符（计数 14→19、19→26）<br><span class="tag open">真机未验</span> 中文候选、真实编辑器</td>
+            <td><span class="tag open">真机未验</span></td>
+            <td><span class="tag open">真机未验</span></td>
+          </tr>
+          <tr>
+            <th scope="row">小窗内手指滚动</th>
+            <td><span class="tag miss">未满足</span><br>PiP 内容不接收拖动；系统键逐屏只是替代读法</td>
+            <td><span class="tag miss">真机未通过</span><br>Build 4 的 180pt ScrollView 上滑失败（仅此实现）</td>
+            <td><span class="tag miss">未满足</span><br>SDK 未见可转发滚动的公开成员</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <th scope="row">小窗内翻页</th>
+            <td><span class="tag build">已编译</span> 前进／后退键映射<br><span class="tag open">真机未验</span> 控件是否出现、回调是否到达</td>
+            <td><span class="tag device">真机</span> 按钮翻页，1/3 往返正常</td>
+            <td><span class="tag build">已构建</span> 岛内“下一页”<br><span class="tag open">真机未验</span></td>
+            <td><span class="tag device">真机</span> 按钮执行（计数增加）<br><span class="tag miss">未满足</span> 卡片未出现</td>
+          </tr>
+          <tr>
+            <th scope="row">不挡住正在输入的正文</th>
+            <td><span class="tag open">真机未验</span><br>设计预期：可拖到角落或收起</td>
+            <td><span class="tag miss">真机未通过</span><br>卡片遮住编辑正文</td>
+            <td><span class="tag open">真机未验</span><br>紧凑态占位小；展开态未测</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <th scope="row">入口与主动选择</th>
+            <td>主应用“开始小窗”；不需要操作按钮，退到后台不自动弹出</td>
+            <td>操作按钮须主动 opt-in（现已恢复 Show Code Scanner）；Spotlight 可达</td>
+            <td>主应用开始活动</td>
+            <td>活动按钮两种衔接均失败，停止重试</td>
+          </tr>
+          <tr>
+            <th scope="row">音频与分发</th>
+            <td>需 playback 会话与音频背景模式；默认可混音但<span class="tag open">未验</span>；审核 2.5.4 用途风险（推断）</td>
+            <td>无音频会话</td>
+            <td>无音频会话；活动有时长上限</td>
+            <td>同灵动岛</td>
+          </tr>
+          <tr>
+            <th scope="row">当前包</th>
+            <td><span class="tag build">编译＋模拟器</span> iphoneos 构建通过；模拟器首帧渲染；模拟器不支持 PiP；未签名、未安装</td>
+            <td>Build 4 已安装实测；Build 5 已构建签名、未安装</td>
+            <td>Build 2 已安装；Build 5 已构建签名、未安装</td>
+            <td>Build 3 已安装实测；Build 5 已构建签名、未安装</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="marketTitle">
+    <h2 id="marketTitle">市场对照（仅营销描述，未实测）</h2>
+    <div class="cards">
+      <div class="card">
+        <h3>Pip Up</h3>
+        <p>开发者宣称跨应用置顶显示文字、图片、网页并支持分页，使用 PiP。</p>
+        <p class="muted">描述称不收集数据，商店隐私标签却列出跟踪、广告与分析数据；两者矛盾。小窗内翻页与键盘共存未核实。</p>
+      </div>
+      <div class="card">
+        <h3>Transparent Notes 2.3.0</h3>
+        <p>更新记录：跨应用便签为“自动滚动”浮层并加入倾斜滚动；锁屏与灵动岛可分页。</p>
+        <p class="muted">自动或倾斜滚动不等于手指滚动；本项目没有它的设备验收。</p>
+      </div>
+      <div class="card">
+        <h3>Picture in Picture Notes</h3>
+        <p>选笔记后切到其他 App 仍以 PiP 显示。</p>
+        <p class="muted">描述未提手动滚动、翻页或键盘；1.0.6 仅写修复与稳定性。</p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="nextTitle">
+    <h2 id="nextTitle">结论与下一步</h2>
+    <p><strong>最佳待验候选：PiP 逐屏。</strong>它是目前唯一可能同时满足“写作时持续可见、可移开不挡字、小窗内翻页”的公开接口路线，但手指滚动在结构上不满足，须由用户决定是否接受按键逐屏。它尚无任何设备证据。</p>
+    <p><strong>已有证据最多：Snippet。</strong>输入共存与翻页有真机证据，但滚动失败、遮挡正文，仍未达标。灵动岛展开态未验，融合入口两次失败已停止。</p>
+    <p>下一步只做一件事：按 <a href="../../tests/apple-reference-demos/pip-pager/README.md">Ref PiP 真机 SOP</a> 在 Ref Editor 测启动、输入共存和前进／后退换屏；Road 与 CP0 均未完成。</p>
+  </section>
+</main>
+<script>
+(() => {
+  const refs = [
+    { title: "三页合成参考", pages: [
+      "她在等一个不会回来的人。\n表面目标：寄出这封信。\n真实愿望：有人告诉她，不必再等。",
+      "雨声忽然停了，她却没有抬头。\n先写灯光，再写脚步。\n把答案留在门外，让读者先听见它。",
+      "长页观察 · 合成内容\n一、先写房间里的声音。\n二、让人物停在门边。\n三、不急着解释来意。\n四、用一个动作表示犹豫。\n五、留意窗外光线变化。\n六、把重要的物件放在桌上。\n七、让对话有一次停顿。\n八、不要替人物说出答案。\n九、把最后一句留给脚步声。\n十、这是本页末尾。"
+    ] },
+    { title: "单卡合成参考", pages: ["换一份参考：只有这一张卡片。\n用来检查回主应用更换整份参考后，小窗是否刷新并回到第一屏。"] }
+  ];
+  // Same rules as tests/apple-reference-demos/pip-pager/Reader.swift.
+  const move = (p, forward, counts) => {
+    const n = counts.length, page = ((p.page % n) + n) % n, last = Math.max(1, counts[page]) - 1;
+    const screen = Math.min(Math.max(p.screen, 0), last);
+    if (forward) return screen < last ? { page, screen: screen + 1 } : { page: (page + 1) % n, screen: 0 };
+    if (screen > 0) return { page, screen: screen - 1 };
+    const prev = (page + n - 1) % n;
+    return { page: prev, screen: Math.max(1, counts[prev]) - 1 };
+  };
+  const T = { device: "真机", build: "编译／模拟器", open: "真机未验", miss: "未满足", sim: "设计模拟" };
+  const routes = {
+    pip: {
+      note: "Ref PiP：系统画中画承载渲染帧，按键映射为待验假设。",
+      steps: [
+        { label: "1 选择参考", view: "app", tags: [["sim"]], text: "在主应用选好整份参考。更换整份参考也回这里完成。" },
+        { label: "2 持续参考", view: "editor", pip: true, kb: true, tags: [["open"], ["build", "渲染链路：编译＋模拟器首帧"]], text: "点“开始小窗”后切到外部编辑器：系统小窗保持在上方，可拖到角落或收起。惯用软键盘能否同时输入尚无真机证据。" },
+        { label: "3 翻页／逐屏", view: "editor", pip: true, kb: true, ctl: true, tags: [["open", "按键映射为假设"], ["miss", "手指滚动未满足"]], text: "点小窗显示系统控件：前进＝下一屏，页尾再翻页；后退反向。试试 ⏪ ⏩ 与“在小窗内上滑”。" },
+        { label: "4 更换参考", view: "app", pip: true, swap: true, tags: [["sim"]], text: "回主应用选另一份参考；小窗保持打开，内容刷新并回到第一屏。" },
+        { label: "5 退出", view: "editor", kb: true, tags: [["sim"]], text: "点小窗的关闭键；应用释放音频会话（通知其他音频恢复），编辑器内容不受影响。" },
+        { label: "6 失败回退", view: "app", fail: true, tags: [["build", "模拟器：不支持 PiP"], ["sim"]], text: "启动失败或设备不支持时显示原因（iOS 26.5 模拟器即如此），回退为 opt-out 基础路径：在应用内翻看，再返回编辑器。不以自动滚动或反复切回应用冒充达标。" }
+      ]
+    },
+    snippet: {
+      note: "Ref Snippet：操作按钮唤出系统卡片（须用户主动 opt-in；实验后已恢复原绑定）。",
+      steps: [
+        { label: "1 唤出卡片", view: "editor", snippet: true, kb: true, tags: [["device", "真机：卡片出现"]], text: "在 Ref Editor 唤起软键盘后，从操作按钮唤出系统卡片。" },
+        { label: "2 边看边输入", view: "editor", snippet: true, kb: true, tags: [["device", "真机：拉丁字符进入编辑器"], ["miss", "真机：卡片遮住正文"], ["open", "中文候选未验"]], text: "输入进入编辑器（计数 19→26），但卡片挡住正在编辑的正文。" },
+        { label: "3 上滑正文", view: "editor", snippet: true, kb: true, tags: [["miss", "真机：180pt ScrollView 上滑失败"]], text: "Build 4 的内层滚动没有移动正文。只说明此实现，不代表所有 Snippet。" },
+        { label: "4 翻页", view: "editor", snippet: true, kb: true, next: true, tags: [["device", "真机：按钮翻页正常"]], text: "“下一页”按钮翻到 3/3 再回到 1/3 正常；本页每次进入此步前进一页。" }
+      ]
+    },
+    island: {
+      note: "Ref Island／Ref Fusion：Live Activity 显示页码，展开后按钮翻页。",
+      steps: [
+        { label: "1 开始活动", view: "editor", island: "compact", kb: true, tags: [["device", "真机：图标与 1/3 可见"]], text: "主应用开始活动后切到编辑器，顶部可见参考图标与页码。" },
+        { label: "2 长按展开", view: "editor", island: "expanded", kb: true, tags: [["open", "展开＋软键盘共存未验"]], text: "展开岛只放两行摘要与“下一页”，不是完整阅读；与键盘同时使用未测。" },
+        { label: "3 展开参考（融合）", view: "editor", island: "expanded", fusion: true, kb: true, tags: [["device", "真机：计数增加"], ["miss", "真机：卡片未出现"]], text: "返回卡片结果与单次 reload 两种方式都只增加计数、没有卡片，已停止重复尝试。" }
+      ]
+    }
+  };
+  const $ = (id) => document.getElementById(id);
+  const state = { route: "pip", step: 0, ref: 0, pos: { page: 0, screen: 0 }, typed: 26, stashed: false, snipPage: 0 };
+  let counts = [1];
+  const measure = () => {
+    const clip = $("pipClip"), body = $("pipBody"), viewport = clip.clientHeight || 150, step = viewport - 18;
+    counts = refs[state.ref].pages.map((t) => {
+      body.textContent = t;
+      const hidden = body.scrollHeight - viewport;
+      return hidden > 0 ? Math.ceil(hidden / step) + 1 : 1;
+    });
+    return { viewport, step };
+  };
+  const toast = (msg) => { $("toast").textContent = msg; clearTimeout(toast.t); toast.t = setTimeout(() => { $("toast").textContent = ""; }, 3200); };
+  const renderPip = () => {
+    const { viewport, step } = measure();
+    const r = refs[state.ref], page = Math.min(state.pos.page, r.pages.length - 1), body = $("pipBody");
+    body.textContent = r.pages[page];
+    const offset = Math.min(state.pos.screen * step, Math.max(0, body.scrollHeight - viewport));
+    body.style.transform = `translateY(${-offset}px)`;
+    const last = state.pos.screen + 1 >= counts[page];
+    $("pipHead").textContent = `${r.title} · 页 ${page + 1}/${r.pages.length}`;
+    $("pipFoot").textContent = `屏 ${state.pos.screen + 1}/${counts[page]} · 前进键：${last ? "下一页" : "下一屏"}`;
+  };
+  const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text) n.textContent = text; return n; };
+  const render = () => {
+    const route = routes[state.route], s = route.steps[state.step];
+    document.querySelectorAll("[data-route]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.route === state.route)));
+    $("routeNote").textContent = route.note;
+    $("steps").replaceChildren(...route.steps.map((st, i) => {
+      const b = el("button", "", st.label);
+      b.type = "button";
+      if (i === state.step) b.setAttribute("aria-current", "step");
+      b.addEventListener("click", () => go(i));
+      return b;
+    }));
+    const tags = el("div", "tags");
+    s.tags.forEach(([kind, label]) => tags.append(el("span", `tag ${kind}`, label || T[kind])));
+    $("caption").replaceChildren(tags, el("p", "", s.text));
+    $("appView").hidden = s.view !== "app";
+    $("editorView").hidden = s.view !== "editor";
+    $("keyboard").hidden = !s.kb;
+    $("count").hidden = s.view !== "editor";
+    $("count").textContent = `已接收 ${state.typed} 字符（示意）`;
+    $("failbox").hidden = !s.fail;
+    $("pip").hidden = !s.pip;
+    $("pip").classList.toggle("stashed", state.stashed && !!s.pip);
+    $("pipCtl").hidden = !s.ctl;
+    $("snippet").hidden = !s.snippet;
+    const island = $("island");
+    island.className = "island" + (s.island === "expanded" ? " expanded" : "");
+    island.hidden = !s.island;
+    if (s.island === "compact") island.replaceChildren(el("span", "", "▤"), el("span", "", "1/3"));
+    if (s.island === "expanded") {
+      const row = el("div", "row"); row.append(el("span", "", s.fusion ? "已执行请求 4" : "合成参考"), el("span", "", "1/3"));
+      const btns = el("div", "btns"); btns.append(el("span", "", "下一页")); if (s.fusion) btns.append(el("span", "", "展开参考"));
+      island.replaceChildren(row, el("div", "sum", refs[0].pages[0].replace(/\n/g, " ")), btns);
+    }
+    $("refList").replaceChildren(...refs.map((r, i) => {
+      const li = el("li", i === state.ref ? "on" : "", r.title);
+      li.append(document.createElement("br"), el("small", "", `${r.pages.length} 页 · 合成内容`));
+      return li;
+    }));
+    const pages = refs[0].pages;
+    $("snipPage").textContent = `${state.snipPage + 1} / ${pages.length}`;
+    $("snipBody").textContent = pages[state.snipPage];
+    $("tapPipBtn").disabled = !s.pip;
+    $("stashBtn").disabled = !s.pip;
+    if (s.pip) renderPip();
+  };
+  const go = (i) => {
+    const s = routes[state.route].steps[i];
+    if (s.swap && state.step !== i) { state.ref = state.ref ? 0 : 1; state.pos = { page: 0, screen: 0 }; }
+    if (s.next) state.snipPage = (state.snipPage + 1) % refs[0].pages.length;
+    state.step = i; state.stashed = false; $("toast").textContent = "";
+    render();
+  };
+  const skip = (forward) => { state.pos = move(state.pos, forward, counts); renderPip(); };
+  document.querySelectorAll("[data-route]").forEach((b) => b.addEventListener("click", () => {
+    state.route = b.dataset.route; state.step = 0; state.ref = 0; state.pos = { page: 0, screen: 0 }; state.snipPage = 0; render();
+  }));
+  $("pipFwd").addEventListener("click", () => skip(true));
+  $("pipBack").addEventListener("click", () => skip(false));
+  $("pipPlay").addEventListener("click", () => toast("播放键未映射：静态内容保持暂停。"));
+  $("pipClose").addEventListener("click", () => go(routes.pip.steps.findIndex((s) => s.label.includes("退出"))));
+  $("tapPipBtn").addEventListener("click", () => { const c = $("pipCtl"); c.hidden = !c.hidden; });
+  $("stashBtn").addEventListener("click", () => {
+    state.stashed = !state.stashed; $("pip").classList.toggle("stashed", state.stashed);
+    toast(state.stashed ? "设计模拟：收起到边缘，正文露出。系统手势未在本 App 实测。" : "设计模拟：从边缘拉回。");
+  });
+  $("typeBtn").addEventListener("click", () => {
+    const s = routes[state.route].steps[state.step];
+    if (s.view !== "editor") { toast("先切到编辑器步骤。"); return; }
+    $("editorText").textContent += " PIP-01"; state.typed += 6;
+    $("count").textContent = `已接收 ${state.typed} 字符（示意）`;
+    toast(state.route === "snippet" ? "真机结果：拉丁字符进入 Ref Editor，卡片留存但遮挡正文。" : "设计模拟：这条路线的软键盘共存尚无真机证据。");
+  });
+  $("swipeBtn").addEventListener("click", () => {
+    toast({ pip: "未满足：画中画内容不接收拖动，正文不动；只能用 ⏪ ⏩ 逐屏。", snippet: "真机 Build 4：卡片内上滑失败。", island: "未满足：岛内没有可滚动的正文。" }[state.route]);
+  });
+  const root = document.documentElement;
+  $("themeBtn").addEventListener("click", () => {
+    const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    root.dataset.theme = dark ? "light" : "dark";
+  });
+  render();
+})();
+</script>
+</body>
+</html>

@@ -16,7 +16,7 @@
 | --- | --- |
 | 产品行为与验收 | [SPEC](docs/SPEC.md)；存储与转交读 §13 |
 | 工程、数据、Git、证据要求 | [RULES](docs/RULES.md) 的对应节 |
-| 当前 Road 与剩余 Gate | [Road v09 计划](docs/road-v09.md)；旧候选按需读 [CP5 验收单](docs/acceptance/road-v0-8/cp5-candidate.md) |
+| 当前 Road 与剩余步骤 | [Road v00.09.01 正式计划](docs/road-v00-09-01.md)；已完成的 [v09](docs/road-v09.md) 与旧候选 [CP5 验收单](docs/acceptance/road-v0-8/cp5-candidate.md)按需追溯 |
 | Paper 语法与 DTO | [Paper v4 设计](docs/design/road-v0-6-paper-v4-design.md) |
 | 宿主及双端存储 | [v0.8 宿主契约](docs/design/road-v0-8-host-contract.md)，再读实际调用链 |
 | 桌面界面契约 | [App Shell 设计](docs/design/road-v0-7-app-shell-design.md)；[视觉](docs/design/design.html)与[交互](docs/design/interaction.html) |
@@ -42,7 +42,7 @@
 
 Python 使用 `>=3.11,<3.14`、四空格缩进、公开 API 类型标注、`snake_case` 函数及 `PascalCase` 类。具体命令见 PROJECT。
 
-交付前检查最终 diff 和状态；说明完成项、实际检查、未取得的证据、相关风险，以及暂存／提交／推送状态。Road 完成后按 RULES §7 同轮合入主工作树 `keikeu`、通知 dsh 并修剪工作树与确认的残留。工程完成、设备验证、产品接受和 Road 归档分别按 RULES §8 判定。Road 计划的说明、范围、Gate、判据和风险使用简体中文，代码及工具原文按原样引用。
+交付前检查最终 diff 和状态；说明完成项、实际检查、未取得的证据、相关风险，以及暂存／提交／推送状态。Road 完成后按 RULES §7 同轮合入主工作树 `keikeu`、通知 dsh 并修剪工作树与确认的残留。工程完成、设备验证、产品接受和 Road 归档分别按 RULES §8 判定。Road 计划的说明、范围、步骤、判据和风险使用简体中文；新子阶段从“步骤1”连续编号，历史编号及代码／工具原文保留。
 
 需要接续长任务时，在上下文压缩前记录工作区、分支、HEAD、改动、授权、证据和下一步；恢复后先核对现场。
 

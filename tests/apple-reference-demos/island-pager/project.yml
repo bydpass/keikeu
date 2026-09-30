@@ -1,0 +1,57 @@
+name: ReferenceIslandPager
+options:
+  deploymentTarget:
+    iOS: "15.0"
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    GENERATE_INFOPLIST_FILE: YES
+    TARGETED_DEVICE_FAMILY: "1"
+    CURRENT_PROJECT_VERSION: "10"
+    MARKETING_VERSION: "0.0.1"
+    CODE_SIGNING_ALLOWED: NO
+targets:
+  RefIsland:
+    type: application
+    platform: iOS
+    sources:
+      - ../../../apple-reference-demos/Sample.swift
+      - ../../../apple-reference-demos/island-pager/Segments.swift
+      - ../../../apple-reference-demos/island-pager/IslandActivity.swift
+      - ../../../apple-reference-demos/island-pager/IslandApp.swift
+      - ../../../apple-reference-demos/island-pager/FusionLog.swift
+      - ../../../apple-reference-demos/island-pager/Fusion.swift
+      - ../../../apple-reference-demos/Icons/Island.xcassets
+    dependencies:
+      - target: RefIslandWidget
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.keikeu.refisland
+        INFOPLIST_KEY_CFBundleDisplayName: Ref Island
+        INFOPLIST_KEY_NSSupportsLiveActivities: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+  RefIslandWidget:
+    type: app-extension
+    platform: iOS
+    # Interactive Live Activity buttons need iOS 17; the host app still installs on iOS 15.
+    deploymentTarget: "17.0"
+    sources:
+      - ../../../apple-reference-demos/Sample.swift
+      - ../../../apple-reference-demos/island-pager/Segments.swift
+      - ../../../apple-reference-demos/island-pager/IslandActivity.swift
+      - ../../../apple-reference-demos/island-pager/IslandWidget.swift
+      - ../../../apple-reference-demos/island-pager/FusionLog.swift
+    info:
+      path: RefIslandWidget-Info.plist
+      properties:
+        CFBundleDisplayName: Ref Island
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.keikeu.refisland.widget
+        APPLICATION_EXTENSION_API_ONLY: YES
+        SKIP_INSTALL: YES

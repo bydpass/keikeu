@@ -1,0 +1,270 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Ref PiP 逐屏参考实验架构",
+    "locale": "zh-CN",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "refs",
+      "type": "database",
+      "label": "合成参考",
+      "sublabel": "PiPReferences · Sample",
+      "tag": "实际代码",
+      "pos": [
+        40,
+        90
+      ],
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "paper",
+      "type": "database",
+      "label": "拟议：Paper 投影",
+      "sublabel": "只读 · 经 Rust Core",
+      "tag": "拟议",
+      "pos": [
+        290,
+        90
+      ],
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "app",
+      "type": "frontend",
+      "label": "Ref PiP 界面",
+      "sublabel": "SwiftUI Form",
+      "tag": "实际代码",
+      "pos": [
+        40,
+        270
+      ],
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "pager",
+      "type": "backend",
+      "label": "PiPPager",
+      "sublabel": "状态与委托",
+      "tag": "实际代码",
+      "pos": [
+        290,
+        270
+      ],
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "renderer",
+      "type": "backend",
+      "label": "PiPRenderer",
+      "sublabel": "文本 → 样本帧",
+      "tag": "实际代码",
+      "pos": [
+        540,
+        270
+      ],
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "layer",
+      "type": "external",
+      "label": "显示层",
+      "sublabel": "AVSampleBufferDisplayLayer",
+      "tag": "系统 API",
+      "pos": [
+        790,
+        270
+      ],
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "pip",
+      "type": "external",
+      "label": "系统画中画",
+      "sublabel": "AVPictureInPictureController",
+      "tag": "系统 API",
+      "pos": [
+        1040,
+        270
+      ],
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "step",
+      "type": "backend",
+      "label": "ReaderStep",
+      "sublabel": "纯逐屏规则",
+      "tag": "实际代码",
+      "pos": [
+        290,
+        450
+      ],
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "audio",
+      "type": "external",
+      "label": "音频会话",
+      "sublabel": "AVAudioSession .playback",
+      "tag": "系统 API",
+      "pos": [
+        540,
+        450
+      ],
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "editor",
+      "type": "external",
+      "label": "Ref Editor",
+      "sublabel": "外部进程 · 软键盘",
+      "tag": "合成宿主",
+      "pos": [
+        1040,
+        450
+      ],
+      "size": [
+        170,
+        64
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "refs-to-app",
+      "from": "refs",
+      "to": "app",
+      "label": "参考列表",
+      "labelDy": 24
+    },
+    {
+      "id": "paper-replaces-refs",
+      "from": "paper",
+      "to": "refs",
+      "label": "替换（拟议）",
+      "variant": "dashed"
+    },
+    {
+      "id": "app-to-pager",
+      "from": "app",
+      "to": "pager",
+      "label": "开始／退出",
+      "variant": "emphasis"
+    },
+    {
+      "id": "pager-to-renderer",
+      "from": "pager",
+      "to": "renderer",
+      "label": "render()",
+      "variant": "emphasis"
+    },
+    {
+      "id": "renderer-to-layer",
+      "from": "renderer",
+      "to": "layer",
+      "label": "入队帧",
+      "variant": "emphasis"
+    },
+    {
+      "id": "layer-to-pip",
+      "from": "layer",
+      "to": "pip",
+      "label": "内容源",
+      "variant": "emphasis"
+    },
+    {
+      "id": "pip-callbacks",
+      "from": "pip",
+      "to": "pager",
+      "label": "skip ±／停止回调",
+      "fromSide": "top",
+      "toSide": "top"
+    },
+    {
+      "id": "pager-to-step",
+      "from": "pager",
+      "to": "step",
+      "label": "move()",
+      "labelDy": 24
+    },
+    {
+      "id": "pager-to-audio",
+      "from": "pager",
+      "to": "audio",
+      "label": "激活／释放"
+    },
+    {
+      "id": "pip-over-editor",
+      "from": "pip",
+      "to": "editor",
+      "label": "悬浮其上",
+      "variant": "dashed",
+      "labelDy": 24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "实际代码",
+      "items": [
+        "pip-pager/Reader.swift：逐屏、跨页、循环规则，reader-check 通过",
+        "pip-pager/PiPPager.swift：600×800 文本帧、系统键映射、音频与失败处理",
+        "合成页面复用 Sample.swift；Ref Editor 源自 apple-reference-probe"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "系统边界",
+      "items": [
+        "PiP 内容不接收拖动：手指滚动未满足",
+        "前进／后退键映射为待验假设",
+        "iOS 26.5 模拟器报告不支持 PiP"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "音频与失败",
+      "items": [
+        "仅点“开始小窗”时激活 .playback，默认可混音",
+        "退出或启动失败即释放，并回退应用内翻看"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "拟议与未验",
+      "items": [
+        "只读 Paper 投影与阅读位置持久化尚未实现",
+        "软键盘共存、控件出现与翻页均无真机证据"
+      ]
+    }
+  ]
+}
