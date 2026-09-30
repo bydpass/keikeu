@@ -2,15 +2,15 @@
 
 > 本文件提供当前坐标和按任务读取的路径。产品契约见 [SPEC](SPEC.md)，工程与 Git 规则见 [RULES](RULES.md)，执行流程见 [AGENTS](../AGENTS.md)。
 
-更新：2026-09-21。[Road v09](road-v09.md) CP0–CP4 工程及 Mac 合成数据冒烟已通过，按事先 YOLO 接受；已保存[独立收口快照](archive/snapshots/road-v09.html)。v08 已中断转交，未获最终接受。
+更新：2026-09-29。[Road v09](road-v09.md) CP0–CP4 工程及 Mac 合成数据冒烟已通过，按事先 YOLO 接受；已保存[独立收口快照](archive/snapshots/road-v09.html)。v08 已中断转交，未获最终接受。
 
 ## Current coordinates
 
 | 项目 | 当前状态 | 下一步／依据 |
 | --- | --- | --- |
 | 最近已接受的产品基线 | Road v0.7 CP8，`2f03aee`，Paper v4／Index v4／JSONL v2 | [完成快照](archive/snapshots/road-v0-7.html)；App-root 关闭保护随后独立接受 |
-| 当前执行 | v09 CP0–CP4 完成，最终检查点 `c615ce5`；已保存收口快照并合回主工作树 | [批准计划](road-v09.md)；v09.01 原生 iOS 替换后续单独执行 |
-| 工作区 | 仅保留主工作树 `keikeu`；Road 分支和提交历史保留，未推送 | 后续 Road 完成须按 RULES §7 合回、通知 dsh 并清理 |
+| 当前执行 | v09 CP0–CP4 完成，最终检查点 `c615ce5`；已保存收口快照并合回主工作树 | [批准计划](road-v09.md)；v00.09.01 原生 iOS 替换后续单独执行 |
+| 工作区 | 主工作树保留原规划现场；按 9 月 22 日授权新增 `keikeu-reference-demos` 隔离工作树，分支 `codex/road-v00-09-01-reference-demos` | 本 Road 尚未完成；收口须按 RULES §7 合回、通知 dsh 并清理 |
 | 候选源码与安装 | Mac／iPhone 同产品源码 `83c4f60`；已取得安装及普通界面运行记录 | 后续主题修改已进入 `deaece8`，旧安装包不能证明该 HEAD；本轮不操作旧设备候选 |
 | 验收进度 | B01–B13、B15–B16 共 15 组通过；B14 未验且已按开发者决定关闭，不再补验；CP5 随 v08 中断 | B10 按用户批准的实际 provider 结果验收，原生冲突保全另由 B09／B11 证明 |
 | B10 证据边界 | 两轮同编号新建均产生改名 sibling；原生冲突来自已有稿并发编辑 | 保留此区分；同编号新建原生冲突这一组合没有实测证据 |
@@ -22,7 +22,9 @@
 
 ## 下一 Gate
 
-[v09 检查点](road-v09.md#检查点与退出条件) 已完成；下一步是另行启动 v09.01 的 CP0 接口冻结，详见转交清单。移动端采用原生组件并尽可能保留 Rust；Mac 日后重构，Windows 保留现有技术结构。本轮不含新原生界面、Windows 包、Python 退役或外部 Alpha。
+[v09 检查点](road-v09.md#检查点与退出条件) 已完成；下一步是准备 Road v00.09.01（原 v09.01）的正式计划，固定范围及退出条件后再启动 CP0 接口冻结，详见[规划草案](road-v00-09-01.md)与[转交清单](road-v09-01-handoff.md)。移动端采用原生组件并尽可能保留 Rust；Mac 日后重构，Windows 保留现有技术结构。正式原生产品、Windows 包、Python 退役及外部 Alpha 尚未实施。
+
+v00.09.01 当前在独立工作树 `codex/road-v00-09-01-reference-demos` 做已授权的入口视觉原型与隔离可行性验证，尚未开始产品 CP0。操作按钮→Ref Snippet 在 Ref Editor 已取得手机软键盘输入共存证据；Build 4 的正文滚动未通过，且卡片遮挡编辑正文，不能认定持续小窗达标。操作与包绑定见[研究记录](road-v00-09-01-research-brief.md#build-4-手机结果与第二轮入口恢复)。
 
 v09 实际检查：Python 302 项、前端 142 项、Rust 22 项通过；Mac 独立包完成合成创建、保存、重开、搜索、未保存离开与普通关闭检查。源码与包摘要、失败后修复和未验边界见 [v09 记录](acceptance/road-v09/checkpoints.md)。
 
@@ -94,4 +96,16 @@ git diff --check
 
 按任务选对应命令；签名、安装和真实 provider 测试先读对应 SOP 与授权范围。
 
-原生 iOS 的后续输入见 [v09.01 转交清单](road-v09-01-handoff.md)，不含本轮实施授权。
+原生 iOS 的后续输入见 [v00.09.01 转交清单](road-v09-01-handoff.md)，不含本轮实施授权。
+
+2026-09-22 新实验：已按用户要求创建三个独立原生 Demo，见[构建与测试说明](../tests/apple-reference-demos/README.md)。新工作树路径为 `/Users/chenxi/.codex/worktrees/keikeu-reference-demos/keikeu`，原规划文件及旧探针源码按当前版本复制接续，原主工作树不变。Ref Snippet／Ref Island／Ref Fusion 已构建、签名并安装；安装不表示路线可行或 Road 已完成。
+
+Demo 后续：Fusion Build 2 按钮裁切已修复并通过用户复验；返回 Snippet 结果和 Build 3 单次 reload 两种灵动岛衔接均未显示卡片，动作计数确认已执行。当前融合入口未通过，停止重复尝试；独立 Snippet 后续结果见下段；灵动岛的手机输入共存仍待独立验证。
+
+当前接续：Ref Snippet Build 4 用户在 Ref Editor 实测正文上滑失败、翻回 1/3 正常、输入正常但卡片遮住编辑正文；主代理重连看到计数 19→26 及新增拉丁字符。没有中文候选或保存测试。滚动失败仅限本次 180pt ScrollView 实现和设备宿主；遮挡是独立体验缺口。第二轮操作按钮已恢复为 **Shortcut → Show Code Scanner** 并由 CUA 直接核实。三个 Demo 已统一构建并签名 Build 5（图标与主动访问的“入口设置”），尚未安装，设备显示待验证。首次安装、启动或普通打开不建议覆盖操作按钮，仅用户主动 opt-in 后配置；详见 Road 规则与研究记录末节。
+
+2026-09-26 路线原型：新增 [参考小窗设计说明](design/road-v00-09-01-reference-window-design.md)、视觉原型、[Ref PiP 架构图](architecture/road-v00-09-01-reference-pip.html)与独立实验 `tests/apple-reference-demos/pip-pager/`。PiP 逐屏曾为最佳候选：2026-09-29 真机（iPhone 17 Pro／iOS 27.0）已证实启动、跨应用持续显示、后台前进／后退回调与退出释放音频；用户手机实测小窗持续可见、中文候选正常；用户表述“长文本滚动显示由播放‘快进/回退 10s’按钮实现”。模拟器结果仅作 legacy。其后用户因系统控件遮挡暂停 PiP，并把所有路线目标改为“可以快速被调出＋查看”；灵动岛自动分段（`tests/apple-reference-demos/island-pager/`，Build 8 渲染 3 行、显示上限 4 行）经用户实测不再溢出；其后 Build 10 融合版（灵动岛速览＋iOS 26+ 系统卡片长看，共用阅读位置）经真机验证可调出，用户定为首选方案，准备新开 Road，交接见 [road-v09-01-handoff](road-v09-01-handoff.md)。Road 与 CP0 均未完成。
+
+2026-09-29 新规划范围：用户已选择同时完成 iOS 原生编辑器重构和融合参考产品化。当前入口见 [规划草案](road-v00-09-01.md)顶部“下一 Road 规划”；新的 CP0–CP5 尚未启动，正式编号待定。旧探索已选定方案，不代表原生工程或兼容验收完成。
+
+2026-09-29 最低系统更新：新 Road 支持目标为 **iOS 18–27**，不再支持或验收 iOS 15–17；历史实验包保持原配置与证据。
